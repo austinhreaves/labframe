@@ -782,6 +782,400 @@ single-lab experience.
 
 ---
 
+### Phase 1.5 — Primitive corrections (paste fidelity, markdown, charts, equation editor, iframe stability)
+
+**Goal:** Close the gaps left by Phase 1's happy-path implementation before Phase 2 builds persistence on top of them. Six concrete fixes; no new surface area, no new lab content. The Phase 1 test suite must remain green throughout, and new tests pin down each fix so the bug does not return.
+
+**Why this phase exists.** Phase 1 shipped working scaffolding and a green CI, but six primitives were stubbed in ways that will mislead downstream phases:
+
+- `markFieldActivity` records the *entire post-paste field text* as `PasteEvent.text` instead of the inserted substring, with `offset = text.length` instead of the insertion point. Phase 3's `attributePastes(text, pastes)` will either italicize the entire field or fail to match anything. This is the highest-priority fix because Phase 2 will start persisting these wrong records.
+- IME `compositionstart`/`compositionend` are not handled, so CJK/IME users will record one paste event per logical character.
+- `keystrokes` increments on every non-delete `inputType`, including pastes and replacements. Spec §5.4 defines `keystrokes` as the count of `insertText` events.
+- `InstructionsSectionView` splits on `\n` and emits `<p>` tags. Snell's Law contains `## Headers`, `**bold**`, and equation references that render as literal source. The Phase 1 prompt explicitly required `react-markdown + rehype-sanitize + KaTeX`.
+- `Chart` renders points as an `<li>` list. Schema declares `fits: [...]` overlays that have nowhere to live.
+- `EquationEditor` is a `<Field multiline>` rename — `mathlive` is not in `package.json`.
+- `LabPage` builds the simulation iframe inline and passes it as a `ReactNode` prop into either `<TabsView>` or `<SideBySideView>`. Toggling `layout` unmounts one wrapper and mounts the other, taking the iframe with it. Spec: *"Iframe should not re-mount on layout change."*
+
+**Deliverables:**
+
+1. **Field-value capture correctness.**
+   - `markFieldActivity(previous, target, event)` (signature change) computes the inserted substring from `target.value`, `previous.text`, and the InputEvent's `data` plus `target.selectionStart`. Records `{text: <substring>, at, offset, source}` with the actual insertion offset.
+   - `keystrokes` increments only on `inputType === 'insertText'`. `deletes` continues to increment on any `inputType.startsWith('delete')`. Paste/composition/replacement events do not bump either counter.
+   - `Field.tsx` registers `compositionstart` / `compositionend` handlers; during composition, `insertCompositionText` events do *not* push paste events. On `compositionend`, a single `PasteEvent {source: 'ime'}` is pushed with the composed text and the offset where composition began.
+   - Drop and autocomplete events are mapped per spec: `insertFromDrop` → `clipboard`, `insertFromPaste` → `clipboard`, `insertReplacementText` → `autocomplete`.
+   - `meta.activeMs` continues to accumulate from focus/blur as today.
+
+2. **Sanitized markdown pipeline for instructions.**
+   - Add `react-markdown`, `remark-gfm`, `remark-math`, `rehype-katex`, `rehype-sanitize`, and `katex` (CSS imported once at app entry).
+   - Rewrite `InstructionsSectionView` to render `section.html` through the pipeline. Sanitization schema is the rehype default plus `sub`, `sup`, and KaTeX's required spans/classes. No `dangerouslySetInnerHTML` escape hatch.
+   - Confirm against Snell's Law's instruction blocks: headers render as `<h2>`/`<h3>`, bold/italic/lists/inline code/inline math (`$...$` or `\(...\)`) all display correctly.
+
+3. **Real Chart primitive.**
+   - Add `chart.js` and `react-chartjs-2`.
+   - `Chart.tsx` renders a scatter plot of the (x, y) points pulled from the source table. Axes labeled per `section.xLabel` / `section.yLabel`.
+   - For each `section.fits[]` entry, render the fit overlay using the simplest correct implementation (linear least-squares is fine for now; nonlinear fits are deferred until `domain/fit/` is ported in Phase 3). If a fit kind is not yet supported, render the points without an overlay and emit a single `console.warn` in dev only — do not silently ignore.
+   - Chart re-renders when underlying table data changes. Verify there is no visible chart.js leak between mount/unmount cycles (chart.js needs explicit `destroy()`; `react-chartjs-2` handles this, but unit-test that mounting and unmounting the section twice in succession does not throw).
+
+4. **Mathlive-backed EquationEditor.**
+   - Add `mathlive`. Lazy-load via dynamic `import('mathlive')` inside a `useEffect` so the bundle cost does not hit catalog/lab pages that don't need it.
+   - `EquationEditor` renders a `<math-field>` web component, controlled by `value.text` (LaTeX source) and emitting `FieldValue` patches via the same `markFieldActivity` contract. Paste/IME tracking still flows through the canonical capture layer.
+   - During the dynamic import, render a `<Field multiline>` fallback so the field is usable before mathlive resolves. After mathlive loads, swap in the math editor without losing the in-flight `FieldValue`.
+   - Verify mathlive's CSS is loaded only when the component mounts.
+
+5. **Iframe stability across layout toggle.**
+   - Hoist the simulation iframe out of the layout-toggle subtree. Render it once in `LabPage` at a stable location in the React tree; pass slot tokens (e.g., a `simulationSlotId`) to `TabsView` / `SideBySideView` and use a portal (`createPortal`) or a CSS-grid template that places the same iframe DOM node in the right cell regardless of layout. Toggling `layout` must not unmount the iframe.
+   - Add a Playwright E2E that flips layout twice and asserts the iframe element identity is preserved (e.g., assert a stamped `data-mount-id` attribute set on first paint via a one-shot `useEffect` does not change after layout flips).
+
+6. **Tests pinning each fix.**
+   - Vitest unit: `markFieldActivity` captures the inserted substring on `insertFromPaste`, the correct offset on a mid-string paste, and a single `ime` paste event after a `compositionstart` → multiple `insertCompositionText` → `compositionend` sequence. Add explicit assertions that `keystrokes` does not increment on paste/composition/replacement.
+   - Vitest unit: an instruction section containing a header, bold span, list, and inline math renders to the corresponding sanitized DOM with no script/iframe leakage from a hostile fixture (`<script>alert(1)</script>` in `html` source must not produce a `<script>` element).
+   - Vitest unit: `Chart` renders for a 3-point fixture, axes labels appear in the rendered SVG/canvas DOM (use jsdom's canvas mock or a snapshot of chart.js's metadata), and `fits: [{id: 'linear'}]` produces a slope/intercept that matches a hand-computed value to 1e-9.
+   - Vitest unit: `EquationEditor` mounts, dynamic import resolves, `<math-field>` is in the DOM, and a typed character produces a `FieldValue` patch with `keystrokes: 1`.
+   - Playwright E2E (extension to `smoke.spec.ts` or new file): flip `layout` from side-by-side to tabs and back; assert the iframe's `data-mount-id` is unchanged.
+
+**Definition of done:** All Phase 1 tests still green; six new tests added and green; `npm run lint && npm run typecheck && npm test` clean; `npx playwright test` green locally (paid forward as a CI requirement when CI is set up). Bundle size for the catalog page does not regress past the Phase 1 baseline + 50KB gzip (mathlive should be in its own async chunk).
+
+#### Phase 1.5 — Agent prompt
+
+```
+Phase 1 left six primitives stubbed. Fix them in place. No new lab content,
+no new sections, no persistence work. Test suite must stay green.
+
+Read REBUILD_SPEC.md sections 5.4, 5.13, and the Phase 1.5 deliverables list
+above. Read the current implementations:
+- src/state/labStore.ts (markFieldActivity)
+- src/ui/primitives/Field.tsx
+- src/ui/primitives/Chart.tsx
+- src/ui/primitives/EquationEditor.tsx
+- src/ui/sections/InstructionsSectionView.tsx
+- src/ui/LabPage.tsx + src/ui/layout/{TabsView,SideBySideView}.tsx
+
+Tasks:
+
+1. Fix markFieldActivity + Field.tsx FieldValue capture.
+   a. Change the signature to take (previous, target, event) so the function
+      can read target.selectionStart and event.data. Compute the inserted
+      substring as the diff between previous.text and target.value at the
+      insertion point — do NOT just record target.value.
+   b. Map inputType → PasteEvent.source: insertFromPaste/insertFromDrop →
+      'clipboard', insertReplacementText → 'autocomplete', insertCompositionText
+      → 'ime' (but see (c)). Other inputType values do not produce a paste
+      event.
+   c. Add compositionstart/compositionend handlers on the input/textarea.
+      During composition, suppress paste-event creation. On compositionend,
+      push a single PasteEvent{source: 'ime', text: <composed substring>,
+      offset: <offset where composition began>}.
+   d. keystrokes increments ONLY on inputType === 'insertText'. deletes
+      increments on inputType.startsWith('delete'). All other inputTypes
+      touch neither counter.
+   e. Unit-test edge cases listed in §6 of Phase 1.5. Pin paste substring
+      capture, IME single-event behavior, and keystroke gating.
+
+2. Add markdown pipeline.
+   Install react-markdown, remark-gfm, remark-math, rehype-katex,
+   rehype-sanitize, katex. Import katex CSS once in src/main.tsx.
+   Rewrite InstructionsSectionView to render section.html through the
+   pipeline. Default rehype-sanitize schema, extended with KaTeX's
+   required attributes (use the schema export from rehype-katex docs).
+   Verify Snell's Law's instruction blocks render correctly. Add the
+   hostile-fixture XSS test from §6.
+
+3. Add chart.js and react-chartjs-2.
+   Replace Chart.tsx with a scatter plot. Pull (x, y) from the source
+   table by xCol/yCol. Render axes from xLabel/yLabel. For each fit
+   in section.fits, render the overlay. Implement linear least-squares
+   inline (it's 10 lines); other fit kinds emit console.warn in dev and
+   render points without overlay. Add tests per §6.
+
+4. Add mathlive, lazy-loaded.
+   EquationEditor uses a dynamic import inside useEffect. Render a
+   <Field multiline> fallback during the import. After mathlive resolves,
+   render a <math-field> controlled by value.text. Wire input events
+   through markFieldActivity so paste/IME/keystroke tracking continues
+   to work. Test mounts, dynamic import resolution, and a single
+   keystroke patch.
+
+5. Hoist the simulation iframe.
+   The iframe element must not re-mount when layout toggles. Two
+   acceptable approaches:
+   a. Render the iframe once in LabPage and use createPortal to place
+      it in a slot exposed by TabsView / SideBySideView.
+   b. Render TabsView and SideBySideView at the same time with CSS that
+      hides the inactive layout, with the iframe living in a stable
+      grid cell that both layouts reuse.
+   Pick one; document the choice in a comment. Add the data-mount-id
+   E2E from §6.
+
+6. Run npm run lint && npm run typecheck && npm test && npx playwright test.
+   All green before declaring done.
+
+Constraints:
+- No persistence work (still Phase 2's job).
+- No new section kinds or schema changes.
+- No security/anti-tamper code. Ever.
+- Keep mathlive in its own async chunk; verify with a bundle-analyzer
+  pass or by inspecting the Vite manifest.
+- Bundle size budget for the catalog page: Phase 1 baseline + 50KB gzip.
+- Markdown sanitization must reject <script>, <iframe>, on* handlers,
+  and javascript: URLs. Test with a hostile fixture.
+
+Deliverable: six fixes in place, six new tests green, full suite green,
+no Phase 1 regressions. Phase 2 can now build persistence on a correct
+FieldValue.
+```
+
+---
+
+### Phase 1.6 — Baseline legibility (color scheme, form-control contrast, toggle button hierarchy)
+
+**Goal:** Make the app legible *right now* in both light and dark OS preferences, without trying to be Phase 5's full design system. This phase is the bridge between Phase 1's minimal CSS and Phase 5's WCAG-AA + axe-core polish, scoped narrowly enough to ship in one sitting.
+
+**Why this phase exists.** Phase 1's `main.css` declares `background: #fff` on form controls (`input`, `textarea`, `button`, `math-field`) but never declares an explicit `color`. The `index.html` `<meta name="color-scheme" content="light dark">` tells the browser the page supports both schemes; in OS dark mode, the browser applies its dark UA stylesheet to form controls — the white background stays, but text inherits the UA's near-white color. Result: white text on white background inside every input, textarea, and button. Body prose is fine because `body { color: #111 }` is explicit.
+
+The same root cause makes toggle buttons appear "switched": `button[aria-pressed='true']` declares `color: #1558d6` (blue), so the *selected* state is visible. The unpressed state has no explicit `color`, so it inherits the UA's white in dark mode — invisible. Austin sees the highlighted button and a blank space where the off-state button should be, which reads as the toggle being inverted.
+
+Phase 5 (§5.10, §5.11) explicitly plans WCAG-AA contrast in both modes plus axe-core in CI. That work stays scoped to Phase 5. This phase is *not* a substitute — no design tokens, no theme toggle, no component variants, no typography pass. It is one targeted CSS fix plus a regression guard.
+
+**Deliverables:**
+
+1. **Force a single color scheme until Phase 5.**
+   - `index.html`: change `<meta name="color-scheme" content="light dark">` to `content="light"`.
+   - `src/main.css` `:root`: add `color-scheme: light;` so form-control UA defaults stay in the light-mode track regardless of OS preference.
+   - Document the deferral in a one-line CSS comment pointing at Phase 5 for the proper dark-mode treatment.
+
+2. **Explicit `color` on every form control and section surface.**
+   - `input, textarea, math-field, button` all get `color: #111` (matching body).
+   - `.section` already has `background: #fff`; add `color: #111` to make the surface independent of body inheritance.
+   - Table cells `th, td` get explicit `color: #111` and `th` gets a subtle background (`#f3f4f6` or similar) so headers are distinguishable from data rows.
+   - `.field-label` already has `font-weight: 600`; verify it inherits a readable color and add explicit `color: #111` if not.
+
+3. **Toggle button visual hierarchy.**
+   - Unpressed (`button[aria-pressed='false']` and bare `button`): outlined chip — white background, `#111` text, `#bbb` border.
+   - Pressed (`button[aria-pressed='true']`): filled chip — `#1558d6` background, white text, same blue border. This is the inversion of the current rule (blue text on white) and reads correctly in both schemes regardless of UA quirks.
+   - Hover and focus-visible states get a slightly darker blue (`#0f4ab8`) and a 2px focus ring. Focus rings stay visible on both pressed and unpressed.
+   - Disabled state (any `button:disabled`): muted gray text, no pointer cursor.
+
+4. **Visual hierarchy between sections.**
+   - `.section` gets a subtle elevation: `box-shadow: 0 1px 2px rgba(17, 17, 17, 0.06); border: 1px solid #e0e0e0;`. Just enough to separate sections from page background without committing to a design language.
+   - `.section h2, .section h3` get explicit `color: #111` and a tighter top margin so the markdown-rendered headers from Phase 1.5 don't float above their containers.
+
+5. **Catalog page legibility.**
+   - Disabled lab entries (`<span>` for `enabled: false` labs) currently inherit body color and look identical to enabled `<Link>` text. Add a `.catalog-lab--disabled` class, give it `color: #6b7280` (gray) and `font-style: italic`, so "(coming soon)" entries are visually distinct without a separate widget.
+   - Active lab links keep the existing `a { color: #1558d6 }`. Add `:hover { text-decoration: underline; }` for a touch of feedback.
+
+6. **Regression guard.**
+   - Vitest unit (jsdom-based): mount `<LayoutToggle layout='side' onChange={noop} />`, read computed styles, and assert that both buttons have a non-transparent foreground color and that the pressed/unpressed pair have *different* visible backgrounds. This catches "buttons disappear in dark mode" specifically. (jsdom doesn't apply UA dark-mode styles by default, but the test pins the explicit values, which is what we care about.)
+   - Playwright E2E (extension to `smoke.spec.ts` or a new `tests/e2e/legibility.spec.ts`): launch with `colorScheme: 'dark'` in the browser context, navigate to Snell's Law, screenshot, and assert via DOM inspection that an unpressed `<button>` has a foreground color whose computed value is *not* white-ish (rule out `rgb(255, 255, 255)` and the four nearest near-whites). Add a second case with `colorScheme: 'light'` to confirm parity.
+
+**Definition of done:** All Phase 1 + Phase 1.5 tests still green; two new tests added (one unit, one E2E) and green in both `light` and `dark` browser color schemes; Austin can read the app on his current setup without changing OS preferences. Lighthouse contrast score not measured here — that's Phase 5.
+
+**Explicit non-goals (deferred to Phase 5):**
+- Dark-mode theme. The page is light-only until Phase 5 builds the proper two-theme system.
+- WCAG AA contrast audit across every text/background pair. Phase 1.6 only fixes the legibility cliff.
+- Design tokens / CSS custom properties for color. Phase 5 introduces those alongside the theme system.
+- Typography (font sizes, line heights, font stack changes).
+- Spacing rhythm, vertical baseline alignment.
+- Component visual variants (primary/secondary/danger/ghost button styles).
+- axe-core integration. Phase 5.
+
+#### Phase 1.6 — Agent prompt
+
+```
+The app is legible in OS light mode and unreadable in OS dark mode because
+form controls and buttons have explicit backgrounds but no explicit text
+color. In OS dark mode, the browser's UA stylesheet supplies a near-white
+text color, producing white text on the white background set in main.css.
+Toggle buttons appear "switched" for the same reason — only the pressed
+state has an explicit color rule.
+
+This is a tactical legibility pass, not Phase 5's full a11y work. Do not
+introduce design tokens, theme toggle, or component variants. Stay narrow.
+
+Read REBUILD_SPEC.md Phase 1.6 deliverables (six items above) and
+sections 5.10–5.11 for what Phase 5 will do later (WCAG AA, axe-core,
+Lighthouse) — to make sure you don't accidentally do that work here.
+
+Tasks:
+
+1. index.html: change <meta name="color-scheme" content="light dark"> to
+   content="light".
+
+2. src/main.css :root: add `color-scheme: light;` with a one-line comment
+   noting that Phase 5 will reintroduce dark mode properly.
+
+3. Add explicit `color: #111` to:
+   - input, textarea, math-field, button (existing rules)
+   - .section
+   - th, td (and give th a subtle #f3f4f6 background)
+
+4. Replace the existing `button[aria-pressed='true']` rule with a filled-
+   chip treatment: background #1558d6, color #fff, border #1558d6.
+   Confirm bare buttons and aria-pressed='false' read as outlined chips
+   (#fff bg, #111 text, #bbb border). Add :hover {background: #0f4ab8}
+   on pressed buttons and a 2px focus-visible ring on all buttons.
+
+5. .section: add `box-shadow: 0 1px 2px rgba(17,17,17,0.06)` and bump
+   the border color to #e0e0e0. Add explicit color to .section h2/h3.
+
+6. Catalog: add a `.catalog-lab--disabled` class on the <span> for
+   disabled labs in src/ui/Catalog.tsx; style it `color: #6b7280;
+   font-style: italic;` in main.css. Add :hover underline to `a`.
+
+7. Tests:
+   - Add tests/unit/layoutToggle.contrast.test.tsx: mount LayoutToggle,
+     assert both buttons have explicit non-empty `color` style and that
+     pressed/unpressed have different background-color computed values.
+   - Add (or extend) tests/e2e/legibility.spec.ts: two cases with
+     colorScheme: 'dark' and 'light' browser contexts; navigate to a lab,
+     pick an unpressed button, assert window.getComputedStyle(btn).color
+     is not in the set of white-ish values (rgb(255, 255, 255) and the
+     three nearest neighbors).
+
+8. Run npm run lint && npm run typecheck && npm test && npx playwright test.
+   All green before declaring done.
+
+Constraints:
+- One CSS file (src/main.css). Do not split into modules or themes.
+- No new dependencies.
+- No design-token CSS custom properties; just explicit hex values for
+  now. Phase 5 introduces tokens.
+- Do not touch anything outside index.html, src/main.css, src/ui/Catalog.tsx
+  (one className addition only), and the two new tests.
+- Bundle size budget: identical to Phase 1.5 baseline ± 2KB gzip.
+
+Deliverable: legible app in both OS color schemes; toggle buttons read
+correctly; two new tests green; full suite green; no regressions to
+Phase 1 or 1.5. Phase 5 still owns the proper a11y/dark-mode work.
+```
+
+---
+
+### Phase 1.7 — Layout polish (sticky header slot, larger sim default, draggable splitter)
+
+**Goal:** Make the side-by-side layout actually pleasant to work in. Three targeted changes: a sticky header that behaves as a stable slot for controls Phases 2/3/5 will add, a default split that gives the PhET sim more room, and a horizontal drag handle so students can rebalance the panes mid-task. No persistence work, no mobile flow, no design system.
+
+**Why this phase exists.** PhET sims are pixel-hungry — Bending Light's ray box, sliders, and material picker need ~1024×768 to be usable, and a `1fr 1fr` grid on a 1440px viewport hands each pane roughly 700×500 after gutters. Snell's Law has 47 sections post-Phase-0 widening, so students scroll a lot; the layout toggle and back link disappear up the page within seconds, forcing a scroll-to-top to switch views. And students don't have a single best ratio — measurement-heavy parts want a big sim, writing-heavy parts want a big worksheet. A binary tab/side toggle forces extremes that neither mode satisfies.
+
+Phase 1.7 does not solve mobile (Phase 5), does not persist the split fraction (Phase 2 owns persistence), does not introduce design tokens (Phase 5), and does not touch the tabs view. It ships three things and leaves room for the rest.
+
+**Deliverables:**
+
+1. **Sticky header slot.**
+   - `.lab-header` becomes `position: sticky; top: 0; z-index: 10;` with the same `#fafafa` background as body and a 1px bottom border to separate it from scrolled content.
+   - Header contents become a three-region flex layout: left (`Back to {course.title}` link), center (a `<div className="lab-header-slot">` placeholder for Phases 2/3/5), right (`<LayoutToggle/>`). The center slot renders nothing today — it's deliberately empty so Phase 2's "Saved 14:32" indicator and Phase 3's "Generate PDF" button drop into a stable home without a refactor.
+   - Header height stays ≤ 56px to preserve vertical real estate for the lab body.
+   - Document the slot contract in a comment in `src/ui/LabPage.tsx`: *"Phase 2 mounts the save indicator here; Phase 3 mounts the PDF generate button here."*
+
+2. **Default split favors the simulation.**
+   - Default split fraction is 60% sim / 40% worksheet, not 50/50.
+   - `.lab-layout-side`'s `grid-template-columns` becomes `var(--split-sim) var(--split-divider) 1fr` where `--split-sim` is set inline from React state (default `60%`), `--split-divider` is the 8px drag handle, and `1fr` claims the remainder for the worksheet.
+   - `.simulation-frame` `min-height` bumps from 500px to 720px to keep PhET tools readable when the sim pane is at default width.
+   - Delete the dead `.side-by-side` rule in `src/main.css` (LabPage uses `.lab-layout-side` now; the older class is leftover scaffolding from the deprecated `<SideBySideView>` wrapper).
+
+3. **Resizable splitter (drag + keyboard).**
+   - New `src/ui/layout/SplitHandle.tsx`: an 8px-wide vertical bar between the panes. Hover/active state widens the visible affordance to 12px; cursor is `col-resize`.
+   - Pointer interaction: `pointerdown` captures the pointer, `pointermove` updates the split fraction (clamped 25%–75%), `pointerup` releases. Use `event.target.setPointerCapture` so dragging over the iframe doesn't lose the event.
+   - Keyboard interaction: handle is `tabIndex={0}` with `role="separator"` and `aria-orientation="vertical"`. Arrow Left/Right adjust by ±2%, Shift+Arrow by ±10%, Home/End jump to bounds. `aria-valuenow`, `aria-valuemin`, `aria-valuemax` reflect current state for screen readers.
+   - State lives in Zustand (`useLabStore` adds a `splitFraction: number` slice with a setter). Not persisted — Phase 2 will fold it into the persisted lab state. No URL sync; the split is per-session UI state, not part of the shareable lab address.
+   - Iframe stability: the split handle MUST NOT re-mount the iframe. The fix from Phase 1.5 #5 (single iframe in a stable grid cell) carries forward; the splitter only updates the grid template column, not the DOM tree.
+   - Splitter is hidden in tabs layout (no panes to split).
+
+4. **Tests pinning the new behavior.**
+   - Vitest unit: `SplitHandle` mounts with default fraction, arrow key advances fraction by 2%, shift+arrow by 10%, Home/End hit bounds, fraction clamps at 25%/75%. Mock `setPointerCapture`.
+   - Vitest unit: header is sticky (`getComputedStyle(header).position === 'sticky'`) and the center slot is a labeled empty container that future phases can target by class.
+   - Playwright E2E (extension to `smoke.spec.ts` or new `tests/e2e/layout.spec.ts`):
+     - Open Snell's Law in side-by-side. Assert the iframe's `clientWidth` is at least 55% of the lab body width (default 60% minus rounding tolerance).
+     - Drag the split handle 100px to the right. Assert the iframe is now narrower; the worksheet wider.
+     - Reload the page. Assert the iframe is back to default width (no persistence yet — that's Phase 2).
+     - Assert the iframe's `data-mount-id` from Phase 1.5 is unchanged across the drag (the splitter must not re-mount the iframe).
+
+**Definition of done:** All previous phase tests still green; four new tests added and green; sticky header doesn't visually overlap the lab body's first section (verify with a Playwright screenshot at scroll depth 1000px); drag splitter feels responsive at 60fps on a typical 2020-era laptop (no formal benchmark — eyeball test). `npm run lint && npm run typecheck && npm test && npx playwright test` all clean.
+
+**Explicit non-goals (deferred):**
+- *Phase 2:* Persisted split fraction. The splitter resets on reload until persistence ships.
+- *Phase 5:* Mobile responsive flow (collapse to single-column with stacked sim/worksheet at narrow viewports). PhET isn't usable below ~768px wide regardless.
+- *Phase 5:* Pop-out simulation into a separate window.
+- *Future, unscheduled:* Multi-sim tab strip when a lab has more than one PhET (currently no lab does).
+- *Future, unscheduled:* Full-screen sim mode beyond what dragging the splitter to its 75% extreme already provides.
+- *Phase 5:* Design tokens / CSS custom properties for the splitter's color/width. Hardcoded hex values for now.
+
+#### Phase 1.7 — Agent prompt
+
+```
+The side-by-side layout is functional but cramped: PhET sims need more
+horizontal room than 50% of a 1440px viewport gives them, the layout
+toggle scrolls out of reach on long worksheets, and students can't
+rebalance the panes when their attention shifts between simulating and
+writing. Three fixes, narrowly scoped.
+
+Read REBUILD_SPEC.md Phase 1.7 deliverables (above) and section 5.6 for
+the lab page structure. Read src/ui/LabPage.tsx as it stands today —
+the iframe-stability fix from Phase 1.5 #5 is in place; do not regress
+that. Read src/main.css to find the dead .side-by-side rule that should
+be removed alongside this work.
+
+Tasks:
+
+1. Sticky header.
+   - src/main.css `.lab-header`: position: sticky; top: 0; z-index: 10;
+     background: #fafafa; border-bottom: 1px solid #e0e0e0; max-height
+     56px.
+   - LabPage.tsx: restructure header into three flex regions (left = back
+     link, center = empty slot div with className 'lab-header-slot',
+     right = LayoutToggle). Add a comment over the slot div noting that
+     Phase 2's save indicator and Phase 3's PDF button mount here.
+   - Verify the sticky header does not introduce a stacking-context issue
+     with the iframe (use a Playwright screenshot at scroll 1000px).
+
+2. Larger default sim.
+   - .lab-layout-side: change grid-template-columns to
+     `var(--split-sim, 60%) 8px 1fr`. Default value 60% is the fallback
+     when the React state hasn't set it yet.
+   - .simulation-frame: bump min-height from 500px to 720px.
+   - Delete the obsolete .side-by-side CSS rule. Confirm no component
+     references it before removing.
+
+3. Resizable splitter.
+   - Create src/ui/layout/SplitHandle.tsx: a focusable, draggable, ARIA-
+     compliant vertical separator. Implementation per §3 of the
+     deliverables list above. Use pointer events (pointerdown,
+     pointermove, pointerup) with setPointerCapture so dragging over the
+     iframe doesn't lose tracking. Keyboard support: ArrowLeft/Right ±2%,
+     Shift+Arrow ±10%, Home/End to bounds. Clamp 25%–75%.
+   - Update useLabStore: add `splitFraction: number` (default 0.6) and
+     `setSplitFraction(value: number): void`. Not persisted — leave a
+     TODO comment for Phase 2.
+   - LabPage.tsx: when layout === 'side', render the split handle between
+     the simulation and worksheet sections. Apply the fraction as
+     `style={{'--split-sim': `${splitFraction * 100}%`}}` on the
+     .lab-layout-side container.
+   - When layout === 'tabs', do not render the split handle.
+
+4. Tests per §4 of the deliverables list. Use Playwright's mouse drag
+   API (mouse.move + mouse.down/up) for the drag E2E.
+
+5. Run lint, typecheck, vitest, playwright. All clean.
+
+Constraints:
+- No new dependencies.
+- No persistence (Phase 2 owns it). splitFraction is in-memory only.
+- No URL sync for splitFraction (it's per-session UI state).
+- The iframe's data-mount-id from Phase 1.5 must not change during a
+  drag — the splitter only updates a CSS variable on the parent grid,
+  not the iframe's DOM tree.
+- Header height ≤ 56px. Center slot empty by design.
+- No design tokens, no theme variables beyond the one CSS variable for
+  the split fraction. Hardcoded #fafafa, #e0e0e0, etc. consistent with
+  Phase 1.6.
+- Tabs view is unchanged. Splitter is side-by-side only.
+
+Deliverable: roomier sim, sticky controls that don't disappear on scroll,
+drag-to-resize that respects iframe stability and a11y. Four new tests
+green; full suite green; no regressions.
+```
+
+---
+
 ### Phase 2 — Persistence + course/student keying + recovery UX
 
 **Goal:** Students can close the tab and resume. Per-`(course, lab, student)` isolation. Image attachments survive without quota cliffs.

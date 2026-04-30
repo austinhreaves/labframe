@@ -109,7 +109,7 @@ This repo is a Vercel project. The Vite build output (`dist/`) is the static sit
 ## Phase status
 
 - [x] Scaffold (this commit)
-- [ ] **Phase 0** — Schema + one migrated lab (Snell's Law)
+- [x] **Phase 0** — Schema + one migrated lab (Snell's Law)
 - [ ] **Phase 1** — Schema-driven renderer, in-memory state, paste capture
 - [ ] **Phase 2** — Persistence (localStorage + IndexedDB), per-(course, lab, student) keying
 - [ ] **Phase 3** — PDF service: render, sign, embed canonical JSON

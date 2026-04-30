@@ -1,7 +1,6 @@
-/* Minimal placeholder styles. Real theme arrives in Phase 1. */
-
 :root {
-  color-scheme: light dark;
+  /* Phase 5 will reintroduce dark mode with proper contrast and tokens. */
+  color-scheme: light;
   font-family:
     system-ui,
     -apple-system,
@@ -14,14 +13,286 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: light-dark(#fafafa, #111);
-  color: light-dark(#111, #eee);
+  background: #fafafa;
+  color: #111;
 }
 
-.placeholder {
-  max-width: 640px;
-  margin: 4rem auto;
-  padding: 0 1.5rem;
+a {
+  color: #1558d6;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.catalog,
+.lab-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 2rem;
+}
+
+.lab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #fafafa;
+  border-bottom: 1px solid #e0e0e0;
+  max-height: 56px;
+}
+
+.lab-header-left,
+.lab-header-right {
+  flex: 0 0 auto;
+}
+
+.lab-header-slot {
+  flex: 1 1 auto;
+  min-height: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.lab-student-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.lab-student-name input {
+  width: 180px;
+}
+
+.lab-save-status {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #374151;
+}
+
+.persistence-error-banner {
+  margin: 0.75rem 0;
+  border: 1px solid #d97706;
+  background: #fff7ed;
+  color: #7c2d12;
+  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+}
+
+.persistence-error-banner p {
+  margin: 0.2rem 0;
+}
+
+.persistence-error-list {
+  margin: 0.3rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.persistence-error-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0.2rem 0;
+}
+
+.layout-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.lab-layout-side {
+  display: grid;
+  grid-template-columns: var(--split-sim, 60%) 8px 1fr;
+  gap: 0;
+  align-items: start;
+}
+
+.lab-layout-tabs .layout-pane {
+  display: block;
+}
+
+.layout-pane.is-hidden {
+  display: none;
+}
+
+.layout-pane {
+  min-width: 0;
+}
+
+.simulation-frame {
+  width: 100%;
+  min-height: 720px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.split-handle {
+  width: 8px;
+  cursor: col-resize;
+  position: relative;
+  align-self: stretch;
+  min-height: 100%;
+  user-select: none;
+  touch-action: none;
+  outline: none;
+}
+
+.split-handle::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  background: #d1d5db;
+  border-radius: 999px;
+  transition: width 120ms ease, left 120ms ease, background-color 120ms ease;
+}
+
+.split-handle:hover::before,
+.split-handle:focus-visible::before,
+.split-handle:active::before {
+  width: 12px;
+  left: -2px;
+  background: #1558d6;
+}
+
+.worksheet-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.section {
+  color: #111;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(17, 17, 17, 0.06);
+  padding: 0.75rem;
+}
+
+.section :is(h2, h3) {
+  color: #111;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+input,
+textarea,
+math-field,
+button {
+  font: inherit;
+  color: #111;
+}
+
+input,
+textarea,
+math-field {
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  padding: 0.45rem 0.55rem;
+  background: #fff;
+}
+
+math-field {
+  min-height: 120px;
+}
+
+textarea {
+  resize: vertical;
+}
+
+button {
+  border: 1px solid #bbb;
+  background: #fff;
+  color: #111;
+  border-radius: 6px;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+}
+
+button[aria-pressed='true'] {
+  background: #1558d6;
+  border-color: #1558d6;
+  color: #fff;
+}
+
+button[aria-pressed='true']:hover {
+  background: #0f4ab8;
+  border-color: #1558d6;
+}
+
+button:focus-visible {
+  outline: 2px solid #1558d6;
+  outline-offset: 2px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  color: #111;
+  border: 1px solid #ccc;
+  padding: 0.35rem;
+  vertical-align: top;
+}
+
+th {
+  background: #f3f4f6;
+}
+
+.table-wrap .field-label {
+  font-size: 0.75rem;
+}
+
+.image-uploader img {
+  max-width: 100%;
+  max-height: 280px;
+  display: block;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.catalog-lab--disabled {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.section-instructions :is(h1, h2, h3, h4) {
+  margin: 0.3rem 0 0.5rem;
+}
+
+.section-instructions p {
+  margin: 0.35rem 0;
+}
+
+.chart canvas {
+  max-width: 100%;
 }
 
 code {

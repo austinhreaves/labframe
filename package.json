@@ -14,6 +14,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
+    "verify:phase0": "vitest run tests/unit/phase0.dod.test.ts --reporter=verbose",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
@@ -21,10 +22,23 @@
     "ci": "npm run typecheck && npm run lint && npm run format:check && npm test"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.5.1",
+    "chart.js": "^4.5.1",
+    "idb-keyval": "^6.2.2",
+    "katex": "^0.16.45",
+    "mathlive": "^0.109.2",
+    "pdf-lib": "^1.17.1",
     "react": "^18.3.1",
+    "react-chartjs-2": "^5.3.1",
     "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^6.26.2",
-    "zod": "^3.23.8"
+    "rehype-katex": "^7.0.1",
+    "rehype-sanitize": "^6.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "zod": "^3.23.8",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@playwright/test": "^1.47.2",

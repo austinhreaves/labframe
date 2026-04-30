@@ -2,46 +2,67 @@ import { describe, expect, it } from 'vitest';
 import { snellsLawLab } from '@/content/labs';
 
 describe("snellsLawLab derived formulas", () => {
-  it('evaluates sin columns and ratio for a known row', () => {
+  it('evaluates Part 2 sin columns for a known row', () => {
     const dataTableSection = snellsLawLab.sections.find(
-      (section) => section.kind === 'dataTable' && section.tableId === 'snellsMeasurements',
+      (section) => section.kind === 'dataTable' && section.tableId === 'part2Table',
     );
 
     expect(dataTableSection).toBeDefined();
     if (!dataTableSection || dataTableSection.kind !== 'dataTable') {
-      throw new Error('Expected snellsMeasurements dataTable section');
+      throw new Error('Expected part2Table dataTable section');
     }
 
-    const sinIncident = dataTableSection.columns.find((column) => column.id === 'sinIncident');
-    const sinRefracted = dataTableSection.columns.find((column) => column.id === 'sinRefracted');
-    const ratio = dataTableSection.columns.find((column) => column.id === 'indexRatio');
+    const sinIncident = dataTableSection.columns.find((column) => column.id === 'sinIncidentAngle');
+    const sinRefracted = dataTableSection.columns.find((column) => column.id === 'sinRefractedAngle');
 
     expect(sinIncident?.kind).toBe('derived');
     expect(sinRefracted?.kind).toBe('derived');
-    expect(ratio?.kind).toBe('derived');
 
-    if (
-      !sinIncident ||
-      sinIncident.kind !== 'derived' ||
-      !sinRefracted ||
-      sinRefracted.kind !== 'derived' ||
-      !ratio ||
-      ratio.kind !== 'derived'
-    ) {
+    if (!sinIncident || sinIncident.kind !== 'derived' || !sinRefracted || sinRefracted.kind !== 'derived') {
       throw new Error('Expected derived columns to exist');
     }
 
     const numericRow = {
-      incidentDeg: 30,
-      refractedDeg: 19.47122063449069,
-      sinIncident: sinIncident.formula({ incidentDeg: 30 }),
-      sinRefracted: sinRefracted.formula({ refractedDeg: 19.47122063449069 }),
+      incidentAngle: 30,
+      refractedAngle: 19.47122063449069,
     };
 
-    const indexRatio = ratio.formula(numericRow);
+    const sinIncidentValue = sinIncident.formula(numericRow);
+    const sinRefractedValue = sinRefracted.formula(numericRow);
 
-    expect(numericRow.sinIncident).toBeCloseTo(0.5, 6);
-    expect(numericRow.sinRefracted).toBeCloseTo(1 / 3, 6);
-    expect(indexRatio).toBeCloseTo(1.5, 6);
+    expect(sinIncidentValue).toBeCloseTo(0.5, 6);
+    expect(sinRefractedValue).toBeCloseTo(1 / 3, 6);
+  });
+
+  it('evaluates Part 3 sin columns for a known row', () => {
+    const dataTableSection = snellsLawLab.sections.find(
+      (section) => section.kind === 'dataTable' && section.tableId === 'part3Table',
+    );
+
+    expect(dataTableSection).toBeDefined();
+    if (!dataTableSection || dataTableSection.kind !== 'dataTable') {
+      throw new Error('Expected part3Table dataTable section');
+    }
+
+    const sinIncident = dataTableSection.columns.find((column) => column.id === 'sinIncidentAngle');
+    const sinRefracted = dataTableSection.columns.find((column) => column.id === 'sinRefractedAngle');
+
+    expect(sinIncident?.kind).toBe('derived');
+    expect(sinRefracted?.kind).toBe('derived');
+
+    if (!sinIncident || sinIncident.kind !== 'derived' || !sinRefracted || sinRefracted.kind !== 'derived') {
+      throw new Error('Expected derived columns to exist');
+    }
+
+    const numericRow = {
+      incidentAngle: 40,
+      refractedAngle: 25,
+    };
+
+    const sinIncidentValue = sinIncident.formula(numericRow);
+    const sinRefractedValue = sinRefracted.formula(numericRow);
+
+    expect(sinIncidentValue).toBeCloseTo(Math.sin((40 * Math.PI) / 180), 6);
+    expect(sinRefractedValue).toBeCloseTo(Math.sin((25 * Math.PI) / 180), 6);
   });
 });

@@ -2,6 +2,13 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
+/**
+ * Phase 0 migration helper (heuristic stub).
+ *
+ * This script intentionally uses lightweight string heuristics instead of full
+ * AST parsing. It produces a draft object to accelerate hand migration, then a
+ * human finalizes prompts, points, units, formulas, and report sections.
+ */
 type DraftSection = {
   kind: string;
   note: string;
@@ -44,6 +51,7 @@ function buildDraft(source: string, filePath: string): DraftLab {
   const sections: DraftSection[] = [];
   const migrationNotes: string[] = [
     'Best-effort migration only. Review prompts, points, units, and formulas manually.',
+    'This stub does not parse a JavaScript AST; it scans source text for known legacy markers.',
     'Do not carry over anti-paste, anti-tamper, or dangerouslySetInnerHTML usage.',
   ];
 

@@ -1,0 +1,43 @@
+import type { Course, LabAnswers } from '@/domain/schema';
+import type { LabStoreState } from '@/state/labStore';
+
+export function buildAnswersFromStore(course: Course, store: LabStoreState): LabAnswers {
+  return {
+    schemaVersion: 1,
+    meta: {
+      studentName: store.studentName || 'Student',
+      semester: 'Fall',
+      session: 'C',
+      year: String(new Date().getFullYear()),
+      taName: course.title,
+    },
+    integrity: {
+      signedAs: store.studentName || 'Student',
+    },
+    fields: store.fields,
+    tables: store.tables,
+    images: Object.fromEntries(
+      Object.entries(store.images).map(([imageId, image]) => [
+        imageId,
+        {
+          idbKey: image.idbKey,
+          mime: image.mime,
+          bytes: image.bytes,
+        },
+      ]),
+    ),
+    fits: Object.fromEntries(
+      Object.entries(store.fits).map(([plotId, fit]) => [
+        plotId,
+        {
+          model: fit.model,
+          parameters: fit.parameters,
+        },
+      ]),
+    ),
+    status: {
+      submitted: store.status.submitted,
+      lastSavedAt: store.status.lastSavedAt,
+    },
+  };
+}
