@@ -43,3 +43,4 @@ Thumbs.db
 # explicitly excluded from version control.
 physics-labs.up.railway.app/
 
+.vercel
