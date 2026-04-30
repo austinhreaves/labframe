@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.vite/
+
+# Vercel
+.vercel/
+
+# Environment files (NEVER commit secrets — LAB_SIGNING_SECRET goes in Vercel dashboard)
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Testing
+coverage/
+playwright-report/
+test-results/
+.vitest/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# OS
+*.pid
+
+# Legacy reference code — kept on disk for content migration in Phases 0–4,
+# explicitly excluded from version control.
+physics-labs.up.railway.app/
+

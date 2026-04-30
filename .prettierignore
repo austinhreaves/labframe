@@ -1,0 +1,12 @@
+dist/
+build/
+coverage/
+.vercel/
+node_modules/
+playwright-report/
+physics-labs.up.railway.app/
+_DataURI/
+*.lock
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
