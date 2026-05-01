@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { PDFDocument, PDFName } from 'pdf-lib';
+import {
+  PDFDict,
+  PDFDocument,
+  PDFHexString,
+  PDFName,
+  PDFRawStream,
+  decodePDFRawStream,
+} from 'pdf-lib';
+import type { PDFArray } from 'pdf-lib';
 
 import { canonicalize } from '@/services/integrity/canonicalize';
 import { sealPDF } from '@/services/pdf/seal';
@@ -7,10 +15,12 @@ import { sealPDF } from '@/services/pdf/seal';
 describe('PDF seal roundtrip', () => {
   it('embeds lab.json and signature footer material', async () => {
     const canonical = canonicalize({
-      schemaVersion: 1,
+      schemaVersion: 2,
       fields: {
         objective: { text: 'hello', pastes: [], meta: { activeMs: 100, keystrokes: 2, deletes: 0 } },
       },
+      selectedFits: {},
+      fits: {},
     });
     const signedAt = 1714450000000;
     const signature = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
@@ -33,9 +43,47 @@ describe('PDF seal roundtrip', () => {
 
     const bytes = await sealPDF(inputPdf, { canonical, signature, signedAt, title: 'Test Report' });
     const sealedDoc = await PDFDocument.load(bytes);
-    const names = (sealedDoc.catalog as unknown as { get: (name: unknown) => unknown }).get(PDFName.of('Names'));
+    type DictLike = { get: (name: PDFName) => unknown };
+    type ContextLike = { lookup: (key: unknown) => unknown };
+    const catalog = sealedDoc.catalog as unknown as DictLike;
+    const context = sealedDoc.context as unknown as ContextLike;
+    const dictGet = (dict: PDFDict, key: string): unknown => (dict as unknown as DictLike).get(PDFName.of(key));
+
+    const namesDict = context.lookup(catalog.get(PDFName.of('Names'))) as PDFDict | undefined;
+    const embeddedFilesDict = namesDict
+      ? (context.lookup(dictGet(namesDict, 'EmbeddedFiles')) as PDFDict | undefined)
+      : undefined;
+    const entriesArray = embeddedFilesDict
+      ? (context.lookup(dictGet(embeddedFilesDict, 'Names')) as PDFArray | undefined)
+      : undefined;
+    let attachedJson: string | null = null;
+
+    if (entriesArray) {
+      for (let index = 0; index < entriesArray.size(); index += 2) {
+        const filenameObject = context.lookup(entriesArray.get(index));
+        const filename = filenameObject instanceof PDFHexString ? filenameObject : undefined;
+        if (!filename || filename.decodeText() !== 'lab.json') {
+          continue;
+        }
+
+        const fileSpecObject = context.lookup(entriesArray.get(index + 1));
+        const fileSpec = fileSpecObject instanceof PDFDict ? fileSpecObject : undefined;
+        const embeddedObject = fileSpec ? context.lookup(dictGet(fileSpec, 'EF')) : undefined;
+        const embedded = embeddedObject instanceof PDFDict ? embeddedObject : undefined;
+        const streamObject = embedded ? context.lookup(dictGet(embedded, 'F')) : undefined;
+        const stream = streamObject instanceof PDFRawStream ? streamObject : undefined;
+        if (!(stream instanceof PDFRawStream)) {
+          continue;
+        }
+
+        const decoded = decodePDFRawStream(stream).decode();
+        attachedJson = new TextDecoder().decode(decoded);
+        break;
+      }
+    }
 
     expect(sealedDoc.getTitle()).toBe('Test Report');
-    expect(names).toBeDefined();
+    expect(namesDict).toBeDefined();
+    expect(attachedJson).toBe(canonical);
   });
 });

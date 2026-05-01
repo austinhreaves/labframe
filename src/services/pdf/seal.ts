@@ -40,7 +40,9 @@ export async function sealPDF(inputBytes: Uint8Array, args: SealArgs): Promise<U
     drawFooter(page, footer);
   }
 
-  await pdfDoc.attach(args.canonical, 'lab.json', {
+  // pdf-lib treats string attachments as base64; canonical JSON must be UTF-8 bytes.
+  const canonicalBytes = new Uint8Array(await new Response(args.canonical).arrayBuffer());
+  await pdfDoc.attach(canonicalBytes, 'lab.json', {
     mimeType: 'application/json',
     description: 'Canonical signed lab answers',
     creationDate: new Date(args.signedAt),

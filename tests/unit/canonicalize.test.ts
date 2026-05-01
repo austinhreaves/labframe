@@ -11,7 +11,7 @@ const baseFieldValue = {
 describe('canonicalize', () => {
   it('produces identical output for equivalent LabAnswers permutations', () => {
     const answersA: LabAnswers = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       meta: {
         studentName: 'Test Student',
         semester: 'Spring',
@@ -31,6 +31,9 @@ describe('canonicalize', () => {
             refractedDeg: { ...baseFieldValue, text: '19.47' },
           },
         ],
+      },
+      selectedFits: {
+        part2FitPlot: 'proportional',
       },
       images: {
         setupPhoto: { idbKey: 'img:general:snellsLaw:test:setupPhoto', mime: 'image/png', bytes: 4567 },
@@ -57,6 +60,9 @@ describe('canonicalize', () => {
           },
         ],
       },
+      selectedFits: {
+        part2FitPlot: 'proportional',
+      },
       fields: {
         conclusion: { ...baseFieldValue, text: 'Conclusion text' },
         objective: baseFieldValue,
@@ -69,7 +75,7 @@ describe('canonicalize', () => {
         semester: 'Spring',
         studentName: 'Test Student',
       },
-      schemaVersion: 1,
+      schemaVersion: 2,
     };
 
     expect(canonicalize(answersA)).toBe(canonicalize(answersB));

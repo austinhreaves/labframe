@@ -5,10 +5,12 @@ import type { PersistedLabState, PersistenceAdapter } from '@/state/persistence/
 import type { LabStoreState } from '@/state/labStore';
 
 const PERSIST_DEBOUNCE_MS = 250;
+export const CURRENT_PERSISTED_SCHEMA_VERSION = 2 as const;
+const LEGACY_PERSISTED_SCHEMA_VERSION = 1 as const;
 
 type PersistedSlices = Pick<
   LabStoreState,
-  'courseId' | 'labId' | 'studentName' | 'fields' | 'tables' | 'fits' | 'images' | 'splitFraction'
+  'courseId' | 'labId' | 'studentName' | 'fields' | 'tables' | 'selectedFits' | 'fits' | 'images' | 'splitFraction'
 > & {
   submitted: boolean;
 };
@@ -20,6 +22,7 @@ function selectPersistedSlices(state: LabStoreState): PersistedSlices {
     studentName: state.studentName,
     fields: state.fields,
     tables: state.tables,
+    selectedFits: state.selectedFits,
     fits: state.fits,
     images: state.images,
     splitFraction: state.splitFraction,
@@ -34,11 +37,48 @@ function hasPersistableChange(next: PersistedSlices, previous: PersistedSlices):
     next.studentName !== previous.studentName ||
     next.fields !== previous.fields ||
     next.tables !== previous.tables ||
+    next.selectedFits !== previous.selectedFits ||
     next.fits !== previous.fits ||
     next.images !== previous.images ||
     next.splitFraction !== previous.splitFraction ||
     next.submitted !== previous.submitted
   );
+}
+
+type HydratedPersistedLabState = Omit<PersistedLabState, 'schemaVersion' | 'selectedFits' | 'fits'> & {
+  schemaVersion: typeof CURRENT_PERSISTED_SCHEMA_VERSION;
+  selectedFits: Record<string, string | null>;
+  fits: Record<string, unknown>;
+};
+
+export function migratePersistedLabState(raw: unknown, keyForLogging: string): HydratedPersistedLabState | null {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+
+  const persisted = raw as PersistedLabState;
+  if (persisted.schemaVersion === LEGACY_PERSISTED_SCHEMA_VERSION) {
+    return {
+      ...persisted,
+      schemaVersion: CURRENT_PERSISTED_SCHEMA_VERSION,
+      selectedFits: persisted.selectedFits ?? {},
+      fits: persisted.fits ?? {},
+    };
+  }
+
+  if (persisted.schemaVersion === CURRENT_PERSISTED_SCHEMA_VERSION) {
+    return {
+      ...persisted,
+      schemaVersion: CURRENT_PERSISTED_SCHEMA_VERSION,
+      selectedFits: persisted.selectedFits ?? {},
+      fits: persisted.fits ?? {},
+    };
+  }
+
+  console.warn(
+    `[persistence] Unsupported schemaVersion "${String((persisted as { schemaVersion?: unknown }).schemaVersion)}" for ${keyForLogging}; skipping hydrate.`,
+  );
+  return null;
 }
 
 export function attachLabPersistence(

@@ -139,7 +139,6 @@ export function LabPage({ course, lab }: Props) {
   // Keep simulation mounted in one stable cell and change layout with CSS/tabs only.
   const simulationPane = (
     <div className="simulation-pane">
-      <h2>Simulation</h2>
       {Object.entries(lab.simulations).map(([id, simulationDef]) => (
         <StableSimulationFrame
           key={id}

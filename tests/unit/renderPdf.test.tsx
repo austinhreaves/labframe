@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Course, Lab, LabAnswers } from '@/domain/schema';
+import type { Course, Lab, LabAnswers, TableData } from '@/domain/schema';
+import { computeClippedFitLineInPdfSvg } from '@/services/pdf/fitLine';
 import { renderPDF } from '@/services/pdf/render';
 
 const courseFixture: Course = {
@@ -21,7 +22,7 @@ const labFixture: Lab = {
 };
 
 const answersFixture: LabAnswers = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   meta: {
     studentName: 'Student',
     semester: 'Fall',
@@ -34,6 +35,7 @@ const answersFixture: LabAnswers = {
   },
   fields: {},
   tables: {},
+  selectedFits: {},
   images: {},
   fits: {},
   status: {
@@ -54,5 +56,62 @@ describe('renderPDF', () => {
 
     expect(bytes).toBeInstanceOf(Uint8Array);
     expect(bytes.byteLength).toBeGreaterThan(0);
+  });
+
+  it('keeps golden fit-line coordinates for proportional and linear fixtures', () => {
+    const width = 360;
+    const height = 220;
+    const pad = 20;
+    const table: TableData = [
+      {
+        x: { text: '1', pastes: [], meta: { activeMs: 0, keystrokes: 0, deletes: 0 } },
+        y: { text: '2', pastes: [], meta: { activeMs: 0, keystrokes: 0, deletes: 0 } },
+      },
+      {
+        x: { text: '2', pastes: [], meta: { activeMs: 0, keystrokes: 0, deletes: 0 } },
+        y: { text: '4', pastes: [], meta: { activeMs: 0, keystrokes: 0, deletes: 0 } },
+      },
+      {
+        x: { text: '3', pastes: [], meta: { activeMs: 0, keystrokes: 0, deletes: 0 } },
+        y: { text: '6', pastes: [], meta: { activeMs: 0, keystrokes: 0, deletes: 0 } },
+      },
+    ];
+
+    const points = table.map((row) => ({
+      x: Number.parseFloat(row.x?.text ?? ''),
+      y: Number.parseFloat(row.y?.text ?? ''),
+    }));
+    const xs = points.map((point) => point.x);
+    const ys = points.map((point) => point.y);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    const rangeX = maxX - minX || 1;
+    const rangeY = maxY - minY || 1;
+    const mapX = (x: number) => pad + ((x - minX) / rangeX) * (width - pad * 2);
+    const mapY = (y: number) => height - pad - ((y - minY) / rangeY) * (height - pad * 2);
+
+    const proportionalLine = computeClippedFitLineInPdfSvg({
+      minX,
+      maxX,
+      a: 2,
+      b: 0,
+      mapX,
+      mapY,
+      plotBounds: { minX: pad, maxX: width - pad, minY: pad, maxY: height - pad },
+    });
+    const linearLine = computeClippedFitLineInPdfSvg({
+      minX,
+      maxX,
+      a: 2,
+      b: 3,
+      mapX,
+      mapY,
+      plotBounds: { minX: pad, maxX: width - pad, minY: pad, maxY: height - pad },
+    });
+
+    expect(proportionalLine).toEqual({ x1: 20, y1: 200, x2: 340, y2: 20 });
+    expect(linearLine).toEqual({ x1: 20, y1: 65, x2: 100, y2: 20 });
   });
 });

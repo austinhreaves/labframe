@@ -6,12 +6,13 @@ export type PersistedImageMeta = {
 };
 
 export type PersistedLabState = {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
   courseId: string;
   labId: string;
   studentName: string;
   fields: Record<string, unknown>;
   tables: Record<string, unknown>;
+  selectedFits?: Record<string, string | null>;
   fits: Record<string, unknown>;
   images: Record<string, PersistedImageMeta>;
   splitFraction: number;

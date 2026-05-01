@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Document,
   Page,
@@ -12,6 +11,7 @@ import {
 
 import type { Course, FieldValue, Lab, LabAnswers, PlotSection, Section, TableData } from '@/domain/schema';
 import { attributePastes } from '@/services/pdf/attributePastes';
+import { computeClippedFitLineInPdfSvg } from '@/services/pdf/fitLine';
 
 type PDFProps = {
   lab: Lab;
@@ -57,7 +57,7 @@ function getPlotPoints(section: PlotSection, table: TableData): Array<{ x: numbe
     .filter((point): point is { x: number; y: number } => point !== null);
 }
 
-function fieldView(value: FieldValue | undefined): React.ReactNode {
+function fieldView(value: FieldValue | undefined): JSX.Element {
   if (!value) {
     return <Text style={styles.row}>-</Text>;
   }
@@ -71,8 +71,7 @@ function fieldView(value: FieldValue | undefined): React.ReactNode {
         ) : (
           attributed.spans.map((span, index) => (
             <Text
-              // eslint-disable-next-line react/no-array-index-key
-              key={index}
+              key={`${span.kind}-${span.text}-${index}`}
               style={
                 span.kind === 'pasted-clipboard'
                   ? styles.pasteClipboard
@@ -206,7 +205,25 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
     const mapX = (x: number) => pad + ((x - minX) / rangeX) * (width - pad * 2);
     const mapY = (y: number) => height - pad - ((y - minY) / rangeY) * (height - pad * 2);
 
-    const slope = typeof fit?.parameters?.a === 'number' ? fit.parameters.a : undefined;
+    const a = typeof fit?.parameters?.a === 'number' ? fit.parameters.a : undefined;
+    const b = typeof fit?.parameters?.b === 'number' ? fit.parameters.b : 0;
+    const fitLine =
+      a === undefined
+        ? null
+        : computeClippedFitLineInPdfSvg({
+            minX,
+            maxX,
+            a,
+            b,
+            mapX,
+            mapY,
+            plotBounds: {
+              minX: pad,
+              maxX: width - pad,
+              minY: pad,
+              maxY: height - pad,
+            },
+          });
 
     return (
       <View key={`section-${index}`} style={styles.section}>
@@ -217,12 +234,12 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
           {points.map((point, pointIndex) => (
             <Circle key={`${section.plotId}-p-${pointIndex}`} cx={mapX(point.x)} cy={mapY(point.y)} r={2} fill="#1f5ad6" />
           ))}
-          {slope !== undefined ? (
+          {fitLine ? (
             <Line
-              x1={mapX(minX)}
-              y1={mapY(slope * minX)}
-              x2={mapX(maxX)}
-              y2={mapY(slope * maxX)}
+              x1={fitLine.x1}
+              y1={fitLine.y1}
+              x2={fitLine.x2}
+              y2={fitLine.y2}
               stroke="#d26c00"
               strokeWidth={1}
             />

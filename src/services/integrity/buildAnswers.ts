@@ -3,7 +3,7 @@ import type { LabStoreState } from '@/state/labStore';
 
 export function buildAnswersFromStore(course: Course, store: LabStoreState): LabAnswers {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     meta: {
       studentName: store.studentName || 'Student',
       semester: 'Fall',
@@ -16,6 +16,7 @@ export function buildAnswersFromStore(course: Course, store: LabStoreState): Lab
     },
     fields: store.fields,
     tables: store.tables,
+    selectedFits: store.selectedFits,
     images: Object.fromEntries(
       Object.entries(store.images).map(([imageId, image]) => [
         imageId,

@@ -1,3 +1,5 @@
+import { useEffect, useMemo } from 'react';
+
 import type { PlotSection, TableData } from '@/domain/schema';
 import {
   Chart as ChartJS,
@@ -11,6 +13,14 @@ import {
   type ScatterDataPoint,
 } from 'chart.js';
 import { Scatter } from 'react-chartjs-2';
+import {
+  formatFitLabel,
+  linearLeastSquares,
+  proportionalLeastSquares,
+  type FitResult,
+  type XYPoint,
+} from '@/services/math/leastSquares';
+import { useLabStore } from '@/state/labStore';
 
 type ChartProps = {
   section: PlotSection;
@@ -20,36 +30,14 @@ type ChartProps = {
 ChartJS.register(LinearScale, PointElement, LineElement, Tooltip, Legend);
 const isDev = Boolean((import.meta as ImportMeta & { env?: { DEV?: boolean } }).env?.DEV);
 
-type XYPoint = {
-  x: number;
-  y: number;
-};
-
 function asNumber(value: string): number | null {
   const parsed = Number.parseFloat(value);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function linearLeastSquares(points: XYPoint[]): { slope: number; intercept: number } | null {
-  if (points.length < 2) {
-    return null;
-  }
-
-  const n = points.length;
-  const sumX = points.reduce((acc, point) => acc + point.x, 0);
-  const sumY = points.reduce((acc, point) => acc + point.y, 0);
-  const sumXY = points.reduce((acc, point) => acc + point.x * point.y, 0);
-  const sumXX = points.reduce((acc, point) => acc + point.x * point.x, 0);
-  const denominator = n * sumXX - sumX * sumX;
-  if (denominator === 0) {
-    return null;
-  }
-  const slope = (n * sumXY - sumX * sumY) / denominator;
-  const intercept = (sumY - slope * sumX) / n;
-  return { slope, intercept };
-}
-
 export function Chart({ section, data }: ChartProps) {
+  const selectedFitId = useLabStore((state) => state.selectedFits[section.plotId] ?? null);
+  const setFitSelection = useLabStore((state) => state.setFitSelection);
   const points: XYPoint[] = data
     .map((row) => {
       const x = asNumber(row[section.xCol]?.text ?? '');
@@ -70,25 +58,56 @@ export function Chart({ section, data }: ChartProps) {
   const minX = points.reduce((acc, point) => Math.min(acc, point.x), Number.POSITIVE_INFINITY);
   const maxX = points.reduce((acc, point) => Math.max(acc, point.x), Number.NEGATIVE_INFINITY);
 
-  for (const fit of section.fits ?? []) {
-    if (fit.id !== 'linear') {
-      if (isDev) {
-        console.warn(`[Chart] Unsupported fit "${fit.id}" for plot "${section.plotId}".`);
-      }
-      continue;
+  const selectedFit = selectedFitId ? (section.fits ?? []).find((fit) => fit.id === selectedFitId) : null;
+  if (selectedFitId && !selectedFit && isDev) {
+    console.warn(`[Chart] Selected fit "${selectedFitId}" not found for plot "${section.plotId}".`);
+  }
+
+  const fitResult = useMemo<FitResult | null>(() => {
+    if (!selectedFit) {
+      return null;
     }
 
-    const linear = linearLeastSquares(points);
-    if (!linear || !Number.isFinite(minX) || !Number.isFinite(maxX)) {
-      continue;
+    if (selectedFit.id === 'linear') {
+      return linearLeastSquares(points);
+    }
+    if (selectedFit.id === 'proportional') {
+      return proportionalLeastSquares(points);
+    }
+    if (isDev) {
+      console.warn(`[Chart] Unsupported fit "${selectedFit.id}" for plot "${section.plotId}".`);
+    }
+    return null;
+  }, [points, section.plotId, selectedFit]);
+
+  const pointSignature = useMemo(
+    () => points.map((point) => `${point.x.toPrecision(12)}:${point.y.toPrecision(12)}`).join('|'),
+    [points],
+  );
+
+  useEffect(() => {
+    if (!selectedFit || !fitResult) {
+      setFitSelection(section.plotId, null);
+      return;
     }
 
+    const parameters =
+      fitResult.intercept === undefined ? { a: fitResult.slope } : { a: fitResult.slope, b: fitResult.intercept };
+
+    setFitSelection(section.plotId, {
+      model: selectedFit.id,
+      parameters,
+    });
+  }, [fitResult, pointSignature, section.plotId, selectedFit, setFitSelection]);
+
+  if (selectedFit && fitResult && Number.isFinite(minX) && Number.isFinite(maxX)) {
+    const yAt = (x: number) => (fitResult.intercept === undefined ? fitResult.slope * x : fitResult.slope * x + fitResult.intercept);
     const linePoints: ScatterDataPoint[] = [
-      { x: minX, y: linear.slope * minX + linear.intercept },
-      { x: maxX, y: linear.slope * maxX + linear.intercept },
+      { x: minX, y: yAt(minX) },
+      { x: maxX, y: yAt(maxX) },
     ];
     datasets.push({
-      label: fit.label,
+      label: formatFitLabel(selectedFit, fitResult),
       data: linePoints,
       showLine: true,
       pointRadius: 0,
@@ -112,7 +131,7 @@ export function Chart({ section, data }: ChartProps) {
       },
     },
     plugins: {
-      legend: { display: true },
+      legend: { display: true, position: 'bottom' },
     },
   };
 

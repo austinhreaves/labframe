@@ -1,7 +1,11 @@
 import { create } from 'zustand';
 
 import type { FieldValue, Lab, NumericRow, Section, TableData, TableRow } from '@/domain/schema';
-import { attachLabPersistence } from '@/state/persistence/labPersistenceMiddleware';
+import {
+  CURRENT_PERSISTED_SCHEMA_VERSION,
+  attachLabPersistence,
+  migratePersistedLabState,
+} from '@/state/persistence/labPersistenceMiddleware';
 import { browserPersistenceAdapter } from '@/state/persistence/browserAdapter';
 import { makeImageKey, makeLabKey, parseImageKey, parseLabKey } from '@/state/persistence/keys';
 import type { PersistedImageMeta, PersistedLabState, PersistenceAdapter } from '@/state/persistence/types';
@@ -36,6 +40,7 @@ export type LabStoreState = {
   lab: Lab | null;
   fields: Record<string, FieldValue>;
   tables: Record<string, TableData>;
+  selectedFits: Record<string, string | null>;
   images: Record<string, RuntimeImage>;
   fits: Record<string, FitSelection>;
   splitFraction: number;
@@ -44,8 +49,9 @@ export type LabStoreState = {
   setStudentName: (studentName: string) => Promise<void>;
   setField: (fieldId: string, value: FieldValue) => void;
   setTableCell: (tableId: string, rowIndex: number, columnId: string, value: FieldValue) => void;
+  setSelectedFit: (plotId: string, fitId: string | null) => void;
   setImage: (imageId: string, file: File | null) => void;
-  setFitSelection: (plotId: string, fit: FitSelection) => void;
+  setFitSelection: (plotId: string, fit: FitSelection | null) => void;
   setSplitFraction: (value: number) => void;
   setSubmitted: (value: boolean) => void;
   clearCurrentLab: () => Promise<void>;
@@ -55,9 +61,24 @@ export type LabStoreState = {
 
 const DEFAULT_STUDENT_NAME = 'Student';
 const DEFAULT_SPLIT_FRACTION = 0.6;
+export const PROCESS_RECORD_EVENT_NAME = 'lab:process-record';
+
+type FitSelectionProcessRecordEvent = {
+  type: 'fit_selection';
+  plotId: string;
+  fitId: string | null;
+  timestamp: number;
+};
 
 function now(): number {
   return Date.now();
+}
+
+function emitProcessRecordEvent(detail: FitSelectionProcessRecordEvent): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  window.dispatchEvent(new CustomEvent(PROCESS_RECORD_EVENT_NAME, { detail }));
 }
 
 export function createEmptyFieldValue(text = ''): FieldValue {
@@ -170,6 +191,18 @@ function clampSplitFraction(value: number): number {
   return Math.max(0.25, Math.min(0.75, value));
 }
 
+function sameFitSelection(left: FitSelection | undefined, right: FitSelection): boolean {
+  if (!left || left.model !== right.model) {
+    return false;
+  }
+  const leftEntries = Object.entries(left.parameters);
+  const rightEntries = Object.entries(right.parameters);
+  if (leftEntries.length !== rightEntries.length) {
+    return false;
+  }
+  return rightEntries.every(([key, value]) => left.parameters[key] === value);
+}
+
 function serializePersistedState(state: LabStoreState, savedAt: number): PersistedLabState {
   const images = Object.fromEntries(
     Object.entries(state.images)
@@ -186,12 +219,13 @@ function serializePersistedState(state: LabStoreState, savedAt: number): Persist
   );
 
   return {
-    schemaVersion: 1,
+    schemaVersion: CURRENT_PERSISTED_SCHEMA_VERSION,
     courseId: state.courseId,
     labId: state.labId,
     studentName: state.studentName,
     fields: state.fields,
     tables: state.tables,
+    selectedFits: state.selectedFits,
     fits: state.fits,
     images,
     splitFraction: state.splitFraction,
@@ -261,6 +295,7 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
     lab: null,
     fields: {},
     tables: {},
+    selectedFits: {},
     images: {},
     fits: {},
     splitFraction: DEFAULT_SPLIT_FRACTION,
@@ -276,6 +311,7 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
       const defaults = {
         fields: initFieldsFromSchema(lab.sections),
         tables: initTablesFromSchema(lab.sections),
+        selectedFits: {},
         images: {},
         fits: {},
         splitFraction: DEFAULT_SPLIT_FRACTION,
@@ -290,8 +326,19 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
 
       const studentName = get().studentName;
       const key = makeLabKey({ courseId, labId, studentName });
-      const persisted = await adapter.loadJSON<PersistedLabState>(key);
+      const persisted = await adapter.loadJSON<unknown>(key);
       if (!persisted) {
+        set((state) => ({
+          status: {
+            ...state.status,
+            submitted: false,
+            lastSavedAt: 0,
+          },
+        }));
+        return;
+      }
+      const migrated = migratePersistedLabState(persisted, key);
+      if (!migrated) {
         set((state) => ({
           status: {
             ...state.status,
@@ -303,7 +350,7 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
       }
 
       const hydratedImages: Record<string, RuntimeImage> = {};
-      for (const [imageId, imageMeta] of Object.entries(persisted.images ?? {})) {
+      for (const [imageId, imageMeta] of Object.entries(migrated.images ?? {})) {
         const blob = await adapter.loadBlob(imageMeta.idbKey);
         if (!blob) {
           continue;
@@ -318,22 +365,26 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
       set((state) => ({
         fields: {
           ...state.fields,
-          ...(persisted.fields as Record<string, FieldValue>),
+          ...(migrated.fields as Record<string, FieldValue>),
         },
         tables: {
           ...state.tables,
-          ...(persisted.tables as Record<string, TableData>),
+          ...(migrated.tables as Record<string, TableData>),
+        },
+        selectedFits: {
+          ...state.selectedFits,
+          ...migrated.selectedFits,
         },
         fits: {
           ...state.fits,
-          ...(persisted.fits as Record<string, FitSelection>),
+          ...(migrated.fits as Record<string, FitSelection>),
         },
         images: hydratedImages,
-        splitFraction: clampSplitFraction(persisted.splitFraction ?? DEFAULT_SPLIT_FRACTION),
+        splitFraction: clampSplitFraction(migrated.splitFraction ?? DEFAULT_SPLIT_FRACTION),
         status: {
           ...state.status,
-          submitted: persisted.status?.submitted ?? false,
-          lastSavedAt: persisted.status?.lastSavedAt ?? 0,
+          submitted: migrated.status?.submitted ?? false,
+          lastSavedAt: migrated.status?.lastSavedAt ?? 0,
           lastError: null,
         },
       }));
@@ -400,6 +451,24 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
           },
         };
       }),
+    setSelectedFit: (plotId, fitId) => {
+      const current = get().selectedFits[plotId] ?? null;
+      if (current === fitId) {
+        return;
+      }
+      set((state) => ({
+        selectedFits: {
+          ...state.selectedFits,
+          [plotId]: fitId,
+        },
+      }));
+      emitProcessRecordEvent({
+        type: 'fit_selection',
+        plotId,
+        fitId,
+        timestamp: now(),
+      });
+    },
     setImage: (imageId, file) => {
       const state = get();
       const previous = state.images[imageId];
@@ -472,12 +541,27 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
         });
     },
     setFitSelection: (plotId, fit) =>
-      set((state) => ({
-        fits: {
-          ...state.fits,
-          [plotId]: fit,
-        },
-      })),
+      set((state) => {
+        if (fit === null) {
+          if (!(plotId in state.fits)) {
+            return state;
+          }
+          const nextFits = { ...state.fits };
+          delete nextFits[plotId];
+          return { fits: nextFits };
+        }
+
+        if (sameFitSelection(state.fits[plotId], fit)) {
+          return state;
+        }
+
+        return {
+          fits: {
+            ...state.fits,
+            [plotId]: fit,
+          },
+        };
+      }),
     setSplitFraction: (value) =>
       set({
         splitFraction: clampSplitFraction(value),
@@ -510,6 +594,7 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
       set((current) => ({
         fields: initFieldsFromSchema(current.lab?.sections ?? []),
         tables: initTablesFromSchema(current.lab?.sections ?? []),
+        selectedFits: {},
         images: {},
         fits: {},
         splitFraction: DEFAULT_SPLIT_FRACTION,

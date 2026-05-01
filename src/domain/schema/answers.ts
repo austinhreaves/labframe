@@ -47,13 +47,14 @@ export const LabAnswersMetaSchema = z.object({
 });
 
 export const LabAnswersSchema = z.object({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.literal(2),
   meta: LabAnswersMetaSchema,
   integrity: z.object({
     signedAs: z.string(),
   }),
   fields: z.record(idSchema, FieldValueSchema),
   tables: z.record(idSchema, TableDataSchema),
+  selectedFits: z.record(idSchema, z.string().min(1).nullable()),
   images: z.record(idSchema, BlobRefSchema),
   fits: z.record(idSchema, FitResultSchema),
   status: z.object({
