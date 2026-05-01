@@ -21,31 +21,35 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
  */
 const MAX_PAYLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
 
+function reject(res: VercelResponse, status: number, error: string, reason: string): void {
+  console.warn(`[sign] reject status=${status} reason=${reason}`);
+  res.status(status).json({ error });
+}
+
 export default function handler(req: VercelRequest, res: VercelResponse): void {
   if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
+    reject(res, 405, 'Method not allowed', 'invalid_method');
     return;
   }
 
   const secret = process.env.LAB_SIGNING_SECRET;
   if (!secret || secret.length < 32) {
-    console.error('[sign] LAB_SIGNING_SECRET missing or too short (need >=32 chars)');
-    res.status(500).json({ error: 'Server misconfigured' });
+    reject(res, 500, 'Server misconfigured', 'missing_or_short_secret');
     return;
   }
 
   const body = req.body as unknown;
   if (!body || typeof body !== 'object' || !('canonical' in body)) {
-    res.status(400).json({ error: 'Invalid body' });
+    reject(res, 400, 'Invalid body', 'missing_canonical');
     return;
   }
   const { canonical } = body as { canonical: unknown };
   if (typeof canonical !== 'string' || canonical.length === 0) {
-    res.status(400).json({ error: 'Invalid body' });
+    reject(res, 400, 'Invalid body', 'canonical_not_string_or_empty');
     return;
   }
   if (Buffer.byteLength(canonical, 'utf8') > MAX_PAYLOAD_BYTES) {
-    res.status(413).json({ error: 'Payload too large' });
+    reject(res, 413, 'Payload too large', 'payload_too_large');
     return;
   }
 

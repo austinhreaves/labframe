@@ -115,11 +115,8 @@ export function LabPage({ course, lab }: Props) {
         signedAt: signing.signedAt,
         title: `${lab.title} Report`,
       });
-      const sealedArrayBuffer = sealedBytes.buffer.slice(
-        sealedBytes.byteOffset,
-        sealedBytes.byteOffset + sealedBytes.byteLength,
-      ) as ArrayBuffer;
-      const sealed = new Blob([sealedArrayBuffer], { type: 'application/pdf' });
+      const normalizedBytes = Uint8Array.from(sealedBytes);
+      const sealed = new Blob([normalizedBytes], { type: 'application/pdf' });
 
       if (sealed.size > 2 * 1024 * 1024) {
         console.warn(`[pdf] Large PDF generated: ${(sealed.size / (1024 * 1024)).toFixed(2)} MB`);

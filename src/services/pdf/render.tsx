@@ -21,5 +21,7 @@ export async function renderPDF(args: RenderPDFArgs): Promise<Uint8Array> {
       signedAt={args.signedAt}
     />,
   );
-  return instance.toBuffer();
+  const blob = await instance.toBlob();
+  const buffer = await new Response(blob).arrayBuffer();
+  return new Uint8Array(buffer);
 }

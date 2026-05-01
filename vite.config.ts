@@ -3,9 +3,8 @@ import react from '@vitejs/plugin-react';
 import path from 'node:path';
 
 // Vite config for the IPL frontend.
-// Local dev: `npm run dev` runs Vite alone (no /api/* available — use `vercel dev` for that).
-// Local dev with serverless functions: `npm run dev:vercel` runs Vercel's dev server,
-// which proxies Vite output and runs the api/ functions in-process.
+// Local UI-only dev: `npm run dev` (or `npm run dev:vite`) runs Vite without `/api/*`.
+// Full-stack local dev: `npm run dev:vercel` runs Vercel dev with serverless functions.
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -15,8 +14,7 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    // When running plain Vite, /api requests have nowhere to go.
-    // Document this in the README; prefer `vercel dev` for full-stack local work.
+    // Vite-only mode is intentionally UI-only.
   },
   build: {
     sourcemap: true,

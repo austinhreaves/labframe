@@ -22,6 +22,9 @@ function drawFooter(page: PDFPage, text: string): void {
 }
 
 export async function sealPDF(inputBytes: Uint8Array, args: SealArgs): Promise<Uint8Array> {
+  if (!(inputBytes instanceof Uint8Array)) {
+    throw new Error('Could not generate PDF (invalid render output). Try again.');
+  }
   const pdfDoc = await PDFDocument.load(inputBytes);
   pdfDoc.setTitle(args.title);
   pdfDoc.setProducer('LabFrame');

@@ -32,11 +32,16 @@ npm install
 # Dev — UI only, no /api routes
 npm run dev
 
-# Dev — full stack with serverless functions (recommended once /api/sign matters)
+# Dev — full stack with serverless functions
+npm run dev:vercel
+
+# Dev — UI-only Vite server (no /api routes)
+npm run dev:vite
+
+# One-time setup for Vercel local env
 npm i -g vercel        # one-time
 vercel link            # one-time, links to the Vercel project
 vercel env pull .env.development.local
-npm run dev:vercel
 ```
 
 ## Scripts
@@ -45,6 +50,7 @@ npm run dev:vercel
 |---|---|
 | `npm run dev` | Vite dev server only |
 | `npm run dev:vercel` | `vercel dev` — Vite + serverless functions |
+| `npm run dev:vite` | Vite dev server only (no `/api/*`) |
 | `npm run build` | Typecheck + production build |
 | `npm run typecheck` | TS check, no emit |
 | `npm run lint` | ESLint, zero-warning gate |
@@ -97,6 +103,9 @@ Set these in the Vercel dashboard (Settings → Environment Variables), **never*
 | `LAB_SIGNING_SECRET` | `api/sign.ts` | HMAC-SHA256 secret. ≥ 32 chars. Generate with `openssl rand -hex 32`. |
 
 `vercel env pull .env.development.local` syncs them locally for `vercel dev`. The `.env*.local` files are gitignored.
+
+Verification tip: in devtools Network, confirm `POST /api/sign` returns `200` before expecting PDF generation to succeed.
+If local export signing suddenly fails, rerun `vercel env pull .env.development.local` first; `LAB_SIGNING_SECRET` can rotate when changed in Vercel.
 
 ## Deployment
 
