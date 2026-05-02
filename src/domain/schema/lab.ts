@@ -16,6 +16,7 @@ export const DerivedColumnSchema = z.object({
   id: idSchema,
   label: nonEmptyText,
   kind: z.literal('derived'),
+  formulaLabel: z.string().optional(),
   deps: z.array(idSchema).min(1),
   formula: z.function().args(NumericRowSchema).returns(z.number()),
   precision: z.number().int().min(0).optional(),

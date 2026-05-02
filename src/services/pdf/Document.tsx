@@ -12,6 +12,7 @@ import {
 import type { Course, FieldValue, Lab, LabAnswers, PlotSection, Section, TableData } from '@/domain/schema';
 import { attributePastes } from '@/services/pdf/attributePastes';
 import { computeClippedFitLineInPdfSvg } from '@/services/pdf/fitLine';
+import { renderMarkdownToPdf } from '@/services/pdf/markdown/renderMarkdownToPdf';
 
 type PDFProps = {
   lab: Lab;
@@ -20,6 +21,8 @@ type PDFProps = {
   signature: string;
   signedAt: number;
 };
+
+type ProcessRecordSection = Section | { kind: 'equation'; fieldId: string };
 
 const styles = StyleSheet.create({
   page: { padding: 24, fontSize: 10, lineHeight: 1.35 },
@@ -32,6 +35,8 @@ const styles = StyleSheet.create({
   table: { marginTop: 6, marginBottom: 6, borderWidth: 0.5, borderColor: '#777' },
   tableRow: { flexDirection: 'row', borderBottomWidth: 0.5, borderBottomColor: '#ddd' },
   tableCell: { flex: 1, padding: 3, borderRightWidth: 0.5, borderRightColor: '#ddd' },
+  tableHeaderStack: { flexDirection: 'column' },
+  tableFormulaLabel: { fontSize: 8, color: '#555' },
   typed: { fontStyle: 'normal', color: '#111' },
   pasteClipboard: { fontStyle: 'italic', color: '#111' },
   pasteAutocomplete: { color: '#3f3f99' },
@@ -94,18 +99,46 @@ function fieldView(value: FieldValue | undefined): JSX.Element {
   );
 }
 
-function processRecordForSection(section: Section, answers: LabAnswers): { activeMs: number; keystrokes: number; pastes: Record<string, number> } {
+function emptyProcessRecord(): { activeMs: number; keystrokes: number; pastes: Record<string, number> } {
+  return { activeMs: 0, keystrokes: 0, pastes: { clipboard: 0, autocomplete: 0, ime: 0 } };
+}
+
+function processRecordForSection(
+  section: ProcessRecordSection,
+  answers: LabAnswers,
+): { activeMs: number; keystrokes: number; pastes: Record<string, number> } {
   const fieldIds: string[] = [];
-  if (section.kind === 'objective' || section.kind === 'measurement' || section.kind === 'calculation' || section.kind === 'concept') {
-    fieldIds.push(section.fieldId);
-  } else if (section.kind === 'multiMeasurement') {
-    fieldIds.push(...section.rows.map((row) => row.id));
-  } else if (section.kind === 'image') {
-    fieldIds.push(section.captionFieldId);
-  } else if (section.kind === 'dataTable') {
-    const rows = answers.tables[section.tableId] ?? [];
-    for (const row of rows) {
-      fieldIds.push(...Object.keys(row));
+
+  switch (section.kind) {
+    case 'objective':
+    case 'measurement':
+    case 'calculation':
+    case 'concept':
+    case 'equation':
+      fieldIds.push(section.fieldId);
+      break;
+    case 'multiMeasurement':
+      fieldIds.push(...section.rows.map((row) => row.id));
+      break;
+    case 'image':
+      fieldIds.push(section.captionFieldId);
+      break;
+    case 'dataTable': {
+      const rows = answers.tables[section.tableId] ?? [];
+      for (const row of rows) {
+        fieldIds.push(...Object.keys(row));
+      }
+      break;
+    }
+    case 'instructions':
+      // Instructions sections own no fields, so process record is intentionally empty.
+      return emptyProcessRecord();
+    case 'plot':
+      // Plot sections also own no fields directly, so process record is intentionally empty.
+      return emptyProcessRecord();
+    default: {
+      const _exhaustive: never = section;
+      return _exhaustive;
     }
   }
 
@@ -132,7 +165,7 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
     return (
       <View key={`section-${index}`} style={styles.section}>
         <Text style={styles.sectionTitle}>Instructions</Text>
-        <Text>{section.html.replace(/<[^>]+>/g, '').replace(/#+\s/g, '')}</Text>
+        <View>{renderMarkdownToPdf(section.html)}</View>
       </View>
     );
   }
@@ -167,11 +200,17 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
         <Text style={styles.sectionTitle}>Data Table: {section.tableId}</Text>
         <View style={styles.table}>
           <View style={styles.tableRow}>
-            {section.columns.map((column) => (
-              <Text key={column.id} style={styles.tableCell}>
-                {column.label}
-              </Text>
-            ))}
+            {section.columns.map((column) => {
+              const formulaLabel = column.kind === 'derived' ? column.formulaLabel : undefined;
+              return (
+                <View key={column.id} style={styles.tableCell}>
+                  <View style={styles.tableHeaderStack}>
+                    <Text>{column.label}</Text>
+                    {formulaLabel ? <Text style={styles.tableFormulaLabel}>{formulaLabel}</Text> : null}
+                  </View>
+                </View>
+              );
+            })}
           </View>
           {rows.map((row, rowIndex) => (
             <View key={`${section.tableId}-row-${rowIndex}`} style={styles.tableRow}>

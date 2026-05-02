@@ -15,9 +15,21 @@ export function Table({ section, data, onCellChange }: TableProps) {
         <thead>
           <tr>
             <th>Row</th>
-            {section.columns.map((column) => (
-              <th key={column.id}>{column.label}</th>
-            ))}
+            {section.columns.map((column) => {
+              const formulaLabel = column.kind === 'derived' ? column.formulaLabel : undefined;
+              return (
+                <th key={column.id}>
+                  <div className="table-column-header">
+                    <span>{column.label}</span>
+                    {formulaLabel ? (
+                      <small className="table-column-formula" aria-label={`${formulaLabel}, derived column`}>
+                        {formulaLabel}
+                      </small>
+                    ) : null}
+                  </div>
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
