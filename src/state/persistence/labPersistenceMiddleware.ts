@@ -1,5 +1,7 @@
 import type { StoreApi } from 'zustand';
 
+import { FitResultSchema } from '@/domain/schema/answers';
+import type { FitResult } from '@/domain/schema/answers';
 import { makeLabKey } from '@/state/persistence/keys';
 import type { PersistedLabState, PersistenceAdapter } from '@/state/persistence/types';
 import type { LabStoreState } from '@/state/labStore';
@@ -48,8 +50,26 @@ function hasPersistableChange(next: PersistedSlices, previous: PersistedSlices):
 type HydratedPersistedLabState = Omit<PersistedLabState, 'schemaVersion' | 'selectedFits' | 'fits'> & {
   schemaVersion: typeof CURRENT_PERSISTED_SCHEMA_VERSION;
   selectedFits: Record<string, string | null>;
-  fits: Record<string, unknown>;
+  fits: Record<string, FitResult>;
 };
+
+function sanitizeFits(raw: unknown): Record<string, FitResult> {
+  if (!raw || typeof raw !== 'object') {
+    return {};
+  }
+
+  const out: Record<string, FitResult> = {};
+  for (const [plotId, value] of Object.entries(raw as Record<string, unknown>)) {
+    const parsed = FitResultSchema.safeParse(value);
+    if (parsed.success) {
+      out[plotId] = parsed.data;
+    } else {
+      console.warn(`[persistence] Dropping invalid fit "${plotId}" during hydrate`, parsed.error.issues);
+    }
+  }
+
+  return out;
+}
 
 export function migratePersistedLabState(raw: unknown, keyForLogging: string): HydratedPersistedLabState | null {
   if (!raw || typeof raw !== 'object') {
@@ -62,7 +82,7 @@ export function migratePersistedLabState(raw: unknown, keyForLogging: string): H
       ...persisted,
       schemaVersion: CURRENT_PERSISTED_SCHEMA_VERSION,
       selectedFits: persisted.selectedFits ?? {},
-      fits: persisted.fits ?? {},
+      fits: sanitizeFits(persisted.fits),
     };
   }
 
@@ -71,7 +91,7 @@ export function migratePersistedLabState(raw: unknown, keyForLogging: string): H
       ...persisted,
       schemaVersion: CURRENT_PERSISTED_SCHEMA_VERSION,
       selectedFits: persisted.selectedFits ?? {},
-      fits: persisted.fits ?? {},
+      fits: sanitizeFits(persisted.fits),
     };
   }
 

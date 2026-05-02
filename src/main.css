@@ -25,9 +25,13 @@ a:hover {
   text-decoration: underline;
 }
 
-.catalog,
-.lab-page {
+.catalog {
   max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 2rem;
+}
+
+.lab-page {
   margin: 0 auto;
   padding: 1rem 1.5rem 2rem;
 }
@@ -102,6 +106,49 @@ a:hover {
   margin: 0.2rem 0;
 }
 
+.preflight-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  background: rgb(17 24 39 / 55%);
+}
+
+.preflight-dialog {
+  width: min(92vw, 420px);
+  padding: 1rem 1.1rem;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #111827;
+  box-shadow: 0 14px 36px rgb(0 0 0 / 28%);
+}
+
+.preflight-dialog h2 {
+  margin: 0 0 0.55rem;
+  font-size: 1.06rem;
+}
+
+.preflight-dialog p {
+  margin: 0 0 0.45rem;
+}
+
+.preflight-dialog ul {
+  margin: 0.2rem 0 0.7rem;
+  padding-left: 1.2rem;
+}
+
+.preflight-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.preflight-dialog :focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
 .layout-toggle {
   display: flex;
   gap: 0.5rem;
@@ -112,6 +159,14 @@ a:hover {
   grid-template-columns: var(--split-sim, 60%) 8px 1fr;
   gap: 0;
   align-items: start;
+}
+
+/* Keep simulation visible while scrolling the worksheet */
+.lab-layout-side .layout-pane:first-child {
+  position: sticky;
+  top: 56px;
+  max-height: calc(100vh - 56px);
+  overflow: hidden;
 }
 
 .lab-layout-tabs .layout-pane {
@@ -128,7 +183,7 @@ a:hover {
 
 .simulation-frame {
   width: 100%;
-  min-height: 720px;
+  height: calc(100vh - 80px);
   border: 1px solid #ccc;
   border-radius: 8px;
 }
@@ -180,6 +235,10 @@ a:hover {
   padding: 0.75rem;
 }
 
+.section > * {
+  max-width: 100%;
+}
+
 .section :is(h2, h3) {
   color: #111;
 }
@@ -188,6 +247,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  min-width: 0;
 }
 
 .field-label {
@@ -262,8 +322,28 @@ th {
   background: #f3f4f6;
 }
 
+.table-column-header {
+  display: flex;
+  flex-direction: column;
+}
+
+.table-column-formula {
+  font-size: 0.75rem;
+  color: #555;
+  font-weight: 400;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  min-width: 0;
+}
+
 .table-wrap .field-label {
   font-size: 0.75rem;
+}
+
+.table-wrap input {
+  width: 6ch;
 }
 
 .image-uploader img {

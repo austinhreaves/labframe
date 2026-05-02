@@ -1335,6 +1335,659 @@ visual review by Austin matches legacy intent.
 
 ---
 
+### Phase 3.5 — Pre-Phase-4 PDF polish (umbrella)
+
+**Goal:** Close six discrete gaps in Phase 3's PDF pipeline before Phase 4 multiplies labs through it. Each sub-phase is independently shippable in a single agent run, touches mostly disjoint files, and leaves test green at the boundary.
+
+**Why this phase exists.** Phase 3 shipped a working PDF pipeline driven by the lab schema, with HMAC signing and JSON attachment. Review against the Snell's Law output and the spec text turned up six concrete bugs and rough edges:
+
+- **Plot fit rendering drops the intercept.** `src/services/pdf/Document.tsx` reads `fit.parameters.a` (slope) and draws a line through `(minX, slope·minX) → (maxX, slope·maxX)`, which forces the line through the origin. Proportional fits render correctly. Linear fits render an offset line that does not match the UI Chart and does not pass through the student's data. Grading integrity issue.
+- **No preflight on student name.** "Generate PDF" is reachable with the studentName field empty (or whitespace), producing a PDF anchored on a placeholder name with no record of who submitted it.
+- **Filename template is not implemented.** Spec §5.9 calls for `SnellsLaw_AustinReaves_2026-04-29_abc12345.pdf`. Current code (`src/ui/LabPage.tsx`) emits `${lab.id}-${hash}.pdf` → `snellslaw-a1b2c3d4.pdf`.
+- **Instruction rendering is not at parity with UI.** The UI uses react-markdown + rehype-sanitize + KaTeX (Phase 1.5). The PDF does `section.html.replace(/<[^>]+>/g, '').replace(/#+\s/g, '')` and dumps the result into a single `<Text>`. TAs see source markdown, not formatted prose.
+- **Derived columns hide their formula.** Data table rendering in the PDF treats `input` and `derived` columns identically. TAs auditing whether `sin(θᵢ)` was correctly computed have nothing to anchor on.
+- **Process Record appendix is incomplete.** `processRecordForSection` handles fields, multiMeasurement, dataTable, and image (via captionFieldId). It does not handle `equation` or any future section kind that owns user input — those silently render zeros for activity, keystrokes, and pastes.
+- **Paste fuzz tolerance is undocumented.** `attributePastes` normalizes whitespace and punctuation, then does literal substring matching. This is the right behavior, but it's an unwritten contract pinned by exactly one test case. Phase 4 will add labs with different prose styles; the boundary needs explicit tests and a documented decision before that multiplies.
+
+**Recommended order:**
+
+1. **Phase 3.5.1** (plot fit rendering) — integrity issue, smallest fix.
+2. **Phase 3.5.2** (filename template + student info preflight) — UX issue, blocks meaningful Phase 4 fixture data.
+3. **Phase 3.5.4** (derived column formula labels) — schema-touching; lands before Phase 4 starts migrating labs that have derived columns.
+4. **Phase 3.5.6** (fuzz tolerance docs/tests) — pins behavior before Phase 4 multiplies prose styles.
+5. **Phase 3.5.3** (markdown rendering parity in PDF) — largest change; can run in parallel with the others.
+6. **Phase 3.5.5** (Process Record appendix completeness) — smallest audit; can land anywhere.
+
+3.5.1 and 3.5.4 both touch `src/services/pdf/Document.tsx`. Sequence those, or coordinate the merge. The other sub-phases are disjoint at file granularity.
+
+**Explicit non-goals (deferred):**
+
+- Phase 4 lab migration. No new labs migrated in 3.5.
+- Phase 5 a11y / perf / telemetry. No tagged-PDF accessibility, no bundle-splitting, no opt-in error reporting.
+- Block math (display equations) in PDF instructions. Phase 3.5.3 handles inline math via Unicode substitution; block math is deferred unless and until a lab actually needs it.
+- Verification UX (`/api/verify`). §9 open question, separate decision.
+- Signing nonce binding. §5.14 explicitly defers this to v1.1.
+- Per-lab override for fit displayed precision (sig figs in fit label). Currently default; revisit in Phase 5 if reporting changes.
+
+---
+
+### Phase 3.5.1 — Plot fit rendering: full slope + intercept (integrity fix)
+
+**Goal:** The PDF plot section renders the same fit line as the UI Chart, including non-zero intercepts. A regression test fails the next time a developer drops a parameter.
+
+**Why this phase exists.** `src/services/pdf/Document.tsx` (around line 207) reads only `fit.parameters.a` (slope) and constructs line endpoints as `(minX, slope·minX) → (maxX, slope·maxX)` — implicitly `y = slope · x`. For proportional fits (which `domain/fit/` fits as `y = a·x` with no intercept), this is correct. For linear fits (which return `y = a·x + b`), the line is wrong by exactly `b` everywhere along the x-axis. The UI shows the right line; the PDF shows the wrong one.
+
+There is a related question the agent must answer first: **does the fit ever get persisted into `answers.fits`?** §10's v2 envelope changelog (2026-05-01) added `fits: Record<plotId, FitResultSchema>` to the canonical shape, but `Chart.tsx` may compute fits on-render-only without writing. If so, `answers.fits[plotId]` is undefined at PDF time and the PDF currently draws no line at all (the `slope !== undefined` guard short-circuits). That's a different — and worse — integrity bug than "wrong line": it's "no line where there should be one." Verify the data flow before fixing.
+
+**Deliverables:**
+
+1. **Fit persistence audit.**
+   - Locate the UI Chart component (likely `src/ui/primitives/Chart.tsx` or similar). Inspect whether the fit result is written to `useLabStore` when computed.
+   - If not: add a `setFitResult(plotId, fitResult)` action to `useLabStore`. Dispatch from Chart in a `useEffect` keyed on the source-table data hash and the selected fit id. Result must conform to `FitResultSchema` (`{kind, parameters: {a, b?}, rSquared?, ...}`).
+   - If yes: confirm by reading the store value at PDF time and verifying `parameters.b` is populated for linear fits.
+
+2. **PDF plot rendering uses both slope and intercept.**
+   - In `Document.tsx`, replace the `slope`-only computation with `a` and `b` (defaulting `b` to `0` when absent, so proportional fits stay correct).
+   - Compute line endpoints as `(minX, a·minX + b)` and `(maxX, a·maxX + b)`.
+   - The line's `mapY` clamping must continue to use the actual data range, not the fit's extrapolated range; if the fit extends outside the plotted y-range, clip at the plot bounds rather than letting the SVG line escape the axes.
+
+3. **UI/PDF round-trip regression test.**
+   - New test `tests/unit/fitAlignment.test.ts`. Hand-construct an `answers` fixture with a `dataTable` containing 5 points sampled from `y = 2·x + 3` plus small Gaussian noise. Compute the fit via `linearLeastSquares` directly (the canonical truth).
+   - Assert two things:
+     - The store's `fits[plotId]` after running the UI write path matches the canonical truth to 1e-9 on `parameters.a` and `parameters.b`.
+     - The PDF document's rendered SVG line endpoints (extracted from the rendered byte buffer or via a render-tree inspection) match `(minX, a·minX + b)` and `(maxX, a·maxX + b)` to 6 significant figures.
+   - Add a second case for a `proportional` fit (`y = 2·x` with no intercept) to confirm that path still renders correctly — guard against regression where a future change forces non-zero intercept on proportional fits.
+
+4. **Snapshot extension.**
+   - Add a linear-fit fixture to the existing PDF snapshot suite (don't replace the proportional fixture; add a second). Snapshot test must include the SVG line element so future drift is visible in the diff.
+
+**Definition of done:** existing tests still green; two new fit-alignment tests green; the Snell's Law PDF (which uses Snell's-law-style fits) is visually unchanged for proportional sections and now correct for linear sections; `npm run lint && npm run typecheck && npm test` clean.
+
+#### Phase 3.5.1 — Agent prompt
+
+```
+The PDF plot section in src/services/pdf/Document.tsx reads only the
+slope parameter from the stored fit and draws the line through the
+origin, dropping the intercept. For linear fits with non-zero intercept
+this produces a wrong line in the PDF that does not match what the
+student saw in the UI Chart. Fix it.
+
+Before fixing the rendering, verify the data flow: does the UI Chart
+component actually write the computed fit result into the store at
+answers.fits[plotId]? If not, the PDF currently renders no line at all
+(the slope !== undefined guard short-circuits), which is a worse bug
+than "wrong line." Both cases need fixing.
+
+Read REBUILD_SPEC.md sections 3.5 and 3.5.1, plus 5.9 and §10 (envelope
+v2 added the `fits` field to canonical answers). Read these files:
+- src/services/pdf/Document.tsx (around line 207, the plot section)
+- src/services/math/leastSquares.ts (returns {a, b, rSquared, ...})
+- src/state/labStore.ts and the UI Chart component (likely
+  src/ui/primitives/Chart.tsx) — find where fits get computed and
+  whether they get written.
+- src/domain/schema/ for FitResultSchema.
+
+Tasks:
+1. Audit fit persistence. If Chart computes on-render-only without
+   writing to the store, add a setFitResult(plotId, fitResult) action
+   on useLabStore and dispatch it from Chart in a useEffect keyed on
+   the source-table data hash and selected fit id. Result must conform
+   to FitResultSchema.
+2. In Document.tsx, replace the slope-only read with `a` and `b`
+   (default `b = 0` for proportional fits / when absent). Compute line
+   endpoints as (minX, a*minX + b) and (maxX, a*maxX + b). If the line
+   extrapolates outside the plotted y-range, clip at the plot bounds
+   rather than letting the SVG line escape.
+3. Write tests/unit/fitAlignment.test.ts. Two cases:
+   (a) Linear fixture: 5 points from y = 2x + 3 + small noise. Run UI
+       write path; assert store fits[plotId] matches linearLeastSquares
+       output to 1e-9 on a and b. Render PDF; extract SVG line endpoints;
+       assert match to 6 sig figs.
+   (b) Proportional fixture: 5 points from y = 2x. Same assertions. Confirms
+       proportional path is not regressed by the linear fix.
+4. Add a linear-fit case to the existing PDF snapshot suite. Don't replace
+   the proportional snapshot; add a second.
+5. Run npm run lint && npm run typecheck && npm test. All green.
+
+Constraints:
+- Do not change FitResultSchema. The schema already supports {a, b?} per
+  envelope v2.
+- Do not recompute the fit in the PDF render path. Read it from
+  answers.fits. Both UI and PDF must agree on a single canonical computation.
+- If the agent finds the fit is recomputed in the PDF currently, that's a
+  separate bug worth flagging — report it but do not silently re-architect.
+- No DOM screenshotting, no setTimeout, no live-DOM mutation. Phase 3
+  invariants stand.
+- Keep the existing proportional-fit visual output bit-identical.
+
+Deliverable: PDF fit line matches UI fit line for both linear and
+proportional fits on Snell's-Law-shaped fixtures, with regression tests
+that fail loudly if either path drops a parameter again.
+```
+
+---
+
+### Phase 3.5.2 — Filename template + student info preflight
+
+**Goal:** PDF filenames follow the spec template (`SnellsLaw_AustinReaves_2026-04-29_abc12345.pdf`). PDF generation refuses to proceed when required student info fields are empty, surfacing a clear modal listing what is missing.
+
+**Why this phase exists.** Two related issues:
+
+- The current filename `${lab.id}-${hash}.pdf` (e.g., `snellslaw-a1b2c3d4.pdf`) is unrecognizable to a TA collecting a Canvas drop folder of 90 submissions. The spec example `SnellsLaw_AustinReaves_2026-04-29_abc12345.pdf` packs the four fields a TA actually uses to disambiguate: which lab, which student, which date, which signed copy.
+- A student can hit "Generate PDF" with an empty `studentName` field today. The placeholder `studentName: 'Student'` (or whatever the default is in `useLabStore.studentName`) ends up in the PDF metadata, in the cover sheet, and — once Phase 3.5.2 lands the filename template — in the filename itself as `Student_…`. TAs receive anonymous submissions and cannot return them to a roster.
+
+These bundle into one phase because they share the same handler (`generatePdf` in `src/ui/LabPage.tsx`) and the empty-name case is the failure mode the filename template can't handle anyway.
+
+**Deliverables:**
+
+1. **Filename template, exactly defined.**
+   - Build via a pure `buildPdfFilename({lab, studentName, signedAt, signature}) → string` utility in `src/services/pdf/filename.ts`.
+   - Format: `{LabIdTitleCase}_{StudentNameSanitized}_{YYYY-MM-DD}_{sigPrefix8}.pdf`.
+   - **LabIdTitleCase:** derive from `lab.title` (e.g., `"Snell's Law"`) by stripping non-`[A-Za-z0-9]` and concatenating: `SnellsLaw`. Document the choice in a comment. Edge case: if the resulting string is empty (lab.title was all symbols), fall back to `lab.id` verbatim.
+   - **StudentNameSanitized:** ASCII TitleCase, letters and digits only. Algorithm: `String.prototype.normalize('NFKD')` → strip combining marks (`/[̀-ͯ]/g`) → split on whitespace and `[-_'`]` → keep `[A-Za-z0-9]` only per chunk → TitleCase each chunk (first char uppercase, rest lowercase) → join. So `"José Müller-Sánchez"` → `"JoseMullerSanchez"`. CJK and other non-Latin scripts get filtered out entirely; if the result is empty, the preflight (deliverable 2) blocks the path before this is reached.
+   - **YYYY-MM-DD:** derived from `signedAt` (server-supplied) in UTC. Use `new Date(signedAt).toISOString().slice(0, 10)`. Do not use the client clock.
+   - **sigPrefix8:** `signature.slice(0, 8)`. Existing behavior; preserve.
+   - Export the function and unit-test edge cases (see deliverable 4).
+
+2. **Student info preflight modal.**
+   - Define a `validateStudentInfoForPdf(answers, requiredFields) → {ok: true} | {ok: false, missing: FieldId[]}` utility in `src/services/integrity/preflight.ts`.
+   - Required fields for v1: `studentName` (must be non-empty after `.trim()`). Future fields can be added by extending the config; the validator iterates over a list defined in the course manifest or the lab schema's `studentInfo` overrides (per §5.4).
+   - In `generatePdf`, run the preflight before `signAnswers`. On failure, open a modal listing the missing fields by their human label (not their fieldId), with an OK button that closes the modal and does not proceed. PDF generation does not start; the signing endpoint is not called.
+   - Modal must be accessible: `role="dialog"`, `aria-modal="true"`, focus trapped, ESC closes, focus returned to the "Generate PDF" button on close.
+
+3. **Wire it into `generatePdf`.**
+   - `src/ui/LabPage.tsx:99` (`generatePdf` handler): call preflight first; bail with the modal on failure. After signing, build the filename via `buildPdfFilename(...)` instead of the hardcoded template at lines 125-126.
+   - Signing must NOT happen on a preflight failure. Don't burn an API call on a request that won't produce a downloadable file.
+
+4. **Tests.**
+   - `tests/unit/buildPdfFilename.test.ts`. Cases:
+     - Plain ASCII: `"Austin Reaves"` → `AustinReaves`.
+     - Diacritics: `"José Müller-Sánchez"` → `JoseMullerSanchez`.
+     - CJK only: `"李明"` → `""` (empty); preflight is expected to block this path before filename-build, so the test asserts the function returns the chosen empty-name sentinel (e.g., `"Student"`); document the choice.
+     - Mixed: `"Mary O'Brien"` → `MaryOBrien`.
+     - Apostrophes/hyphens: `"Anne-Marie"` → `AnneMarie`.
+     - Lab title with apostrophe: `"Snell's Law"` → `SnellsLaw` chunk.
+     - Date from signedAt = 1714521600000 (a known UTC date) → `2024-05-01`.
+   - `tests/unit/preflight.test.ts`. Empty name returns missing; whitespace-only name returns missing; valid name returns ok.
+   - Playwright E2E: open Snell's Law without typing a name, click Generate PDF, assert a dialog appears and contains the text "Student name", click OK, assert no PDF was downloaded. Then type a name, click Generate again, assert PDF download fires.
+
+**Definition of done:** filename matches spec exactly; PDF cannot be generated with an empty student name; modal is accessible; new tests green; existing tests still green.
+
+#### Phase 3.5.2 — Agent prompt
+
+```
+The PDF filename today is `${lab.id}-${signature.slice(0,8)}.pdf` and
+PDF generation is reachable with an empty student name. Both ship in
+Phase 3.5.2.
+
+Read REBUILD_SPEC.md sections 3.5 and 3.5.2 plus §5.9 (filename) and
+§5.4 (studentInfo). Read these files:
+- src/ui/LabPage.tsx (around line 99 — generatePdf handler; lines
+  125-126 — current filename construction)
+- src/state/labStore.ts (studentName field, setStudentName)
+- src/services/integrity/sign.ts (signAnswers; do not call before
+  preflight passes)
+- src/domain/schema/ (Lab, studentInfo type if present)
+
+Tasks:
+1. Create src/services/pdf/filename.ts exporting
+   buildPdfFilename({lab, studentName, signedAt, signature}). Implement
+   exactly per Phase 3.5.2 deliverable 1: ASCII TitleCase student name
+   via NFKD-strip-combining-marks + chunk on whitespace/punct + keep
+   [A-Za-z0-9]; TitleCase lab.title; YYYY-MM-DD from signedAt in UTC;
+   8-char signature prefix. Empty student-name result returns a sentinel
+   like 'Student' (and is expected to be unreachable in production once
+   preflight is wired up — but keep it defensive).
+2. Create src/services/integrity/preflight.ts exporting
+   validateStudentInfoForPdf(answers, requiredFields = ['studentName']).
+   Returns {ok, missing}. Trim() before non-empty check.
+3. Build a modal component in src/ui/StudentInfoPreflightDialog.tsx.
+   role="dialog", aria-modal, focus trap, ESC closes, focus returns
+   to the Generate PDF button on close. Renders the human-readable
+   labels of missing fields (use a label map keyed by fieldId).
+4. Edit src/ui/LabPage.tsx generatePdf:
+   - Call validateStudentInfoForPdf first.
+   - On failure, open the modal and return without calling
+     signAnswers / renderPDF / sealPDF.
+   - On success, proceed as today; replace the lab.id-hash filename
+     with buildPdfFilename(...).
+5. Tests:
+   - tests/unit/buildPdfFilename.test.ts: ASCII, diacritics, CJK-only,
+     apostrophes, hyphens, lab title with apostrophe, date from a
+     fixed signedAt epoch.
+   - tests/unit/preflight.test.ts: empty, whitespace, valid name.
+   - tests/e2e/pdfPreflight.spec.ts: open Snell's Law, do not type a
+     name, click Generate PDF, assert dialog appears with "Student
+     name" text, click OK, assert no download. Then type a name,
+     click Generate, assert download fires.
+6. npm run lint && npm run typecheck && npm test && npx playwright test.
+   All green.
+
+Constraints:
+- Do not call /api/sign on a preflight failure. Don't burn the round trip.
+- signedAt continues to come from the signing response (server clock).
+  Do NOT format the filename date from Date.now() on the client.
+- Modal must be keyboard-accessible. No "X" button without ESC support.
+  Don't trap focus by hiding the close button.
+- Filename sanitization is pure and synchronous — no async, no I/O.
+- buildPdfFilename does not mutate inputs.
+- Sanitization keeps digits: `"M. Curie III"` → `"MCurieIII"`. Confirm
+  in the test fixtures.
+
+Deliverable: filename template per spec; empty-name PDF generation
+blocked by an accessible preflight modal; tests green; the next time
+someone tries to Generate PDF with an empty name, they see exactly
+which field is missing.
+```
+
+---
+
+### Phase 3.5.3 — Markdown rendering parity in PDF
+
+**Goal:** Instructions in the PDF render with the same formatting the student saw in the UI (headers, bold/italic, lists, inline code, inline math), via a deterministic markdown→@react-pdf primitives pipeline. No regex stripping. No `dangerouslySetInnerHTML`. No live-DOM screenshotting.
+
+**Why this phase exists.** The UI runs `section.html` through react-markdown + remark-gfm + remark-math + rehype-katex + rehype-sanitize (Phase 1.5). The PDF currently does:
+
+```tsx
+<Text>{section.html.replace(/<[^>]+>/g, '').replace(/#+\s/g, '')}</Text>
+```
+
+A line like `## Part 1: Snell's Law` renders in the UI as a level-2 heading. In the PDF it renders as plain `Part 1: Snell's Law` — no font-size differentiation, no bold, no separation from surrounding prose. Bold text loses its emphasis. Lists become run-together sentences. Inline math (`$\sin\theta_i$`) becomes literal source `\sin\theta_i`. The TA grading the PDF cannot tell the structure of the instruction the student was given.
+
+**Approach.** Parse the markdown source via `unified` + `remark-parse` + `remark-gfm` + `remark-math` to an mdast tree, then walk the tree and emit `@react-pdf/renderer` primitives directly. No HTML intermediate. No JSX-from-string runtime. KaTeX is the hardest piece — `@react-pdf` does not natively render math; render LaTeX source through a Unicode substitution table for the common operators encountered in physics labs (`\sin`, `\cos`, `\tan`, `\theta`, `\phi`, `\pi`, `\alpha`, `\beta`, sub/sup, `\le`/`\ge`, `\cdot`, `\times`, `\frac{a}{b}` → `(a)/(b)`). Block math is deferred. Document the limitation.
+
+**Deliverables:**
+
+1. **Markdown→react-pdf renderer.**
+   - New module `src/services/pdf/markdown/`. Exports `renderMarkdownToPdf(markdownSource: string): React.ReactNode[]` returning a list of `@react-pdf` `<View>`/`<Text>` nodes.
+   - Implementation:
+     - Parse with `unified().use(remarkParse).use(remarkGfm).use(remarkMath).parse(...)`.
+     - Walk the mdast tree. For each node kind, emit the corresponding @react-pdf primitive with appropriate styles. Mapping:
+       - `paragraph` → `<Text>` block with default body style
+       - `heading` (depth 1–6) → `<Text>` with size scaled per depth (e.g., 18 / 14 / 12 / 11 / 10 / 10 pt) and `marginTop`/`marginBottom`
+       - `strong` → nested `<Text style={{fontWeight: 700}}>`
+       - `emphasis` → nested `<Text style={{fontStyle: 'italic'}}>`
+       - `inlineCode` → nested `<Text style={{fontFamily: 'Courier'}}>`
+       - `code` (block) → `<View>` wrapping `<Text style={{fontFamily: 'Courier', backgroundColor: '#f5f5f5', padding: 4}}>`
+       - `list` (ordered) → `<View>` containing `<Text>{i+1}. {item}</Text>` per item
+       - `list` (unordered) → `<View>` containing `<Text>• {item}</Text>` per item
+       - `listItem` → recurse into children with the bullet/number prefix
+       - `link` → `<Text>` showing the URL inline (PDFs can't have hover; show URL in parens after the link text: `[label](url)` → `label (url)`)
+       - `inlineMath` → `<Text>` with the LaTeX source after running through `latexToUnicode(value)` (deliverable 2)
+       - `math` (block) → `<Text>` with the LaTeX source as monospace, with a one-time `console.warn` in dev that block math is not yet rendered visually
+       - `thematicBreak` → `<View style={{borderBottomWidth: 0.5, borderBottomColor: '#999', marginVertical: 6}} />`
+       - `blockquote` → `<View style={{borderLeftWidth: 1.5, borderLeftColor: '#999', paddingLeft: 6}}>` recurse
+       - `table` (gfm) → simple PDF table; columns auto-width
+       - `text` → `<Text>{value}</Text>`
+   - Determinism: same markdown source → identical primitive tree across runs.
+
+2. **`latexToUnicode` substitution.**
+   - Module `src/services/pdf/markdown/latexToUnicode.ts`. Maps LaTeX commands common in physics-lab prose to Unicode glyphs:
+     - Greek: `\theta` → θ, `\phi` → φ, `\alpha` → α, `\beta` → β, `\gamma` → γ, `\delta` → δ, `\lambda` → λ, `\mu` → μ, `\pi` → π, `\rho` → ρ, `\sigma` → σ, `\omega` → ω, `\Theta` → Θ, etc.
+     - Operators: `\sin` → sin, `\cos` → cos, `\tan` → tan, `\log` → log, `\ln` → ln, `\sqrt{x}` → √(x), `\cdot` → ·, `\times` → ×, `\div` → ÷, `\pm` → ±, `\le` → ≤, `\ge` → ≥, `\ne` → ≠, `\approx` → ≈, `\to` → →, `\propto` → ∝.
+     - Sub/sup: `_{...}` and `^{...}` map to Unicode subscript/superscript when characters are in the Unicode subscript/superscript blocks; otherwise pass through as `_x` / `^x` literally and add a one-time dev warning.
+     - Fractions: `\frac{a}{b}` → `(a)/(b)`. Yes, ugly. The alternative is a second pass that emits a fraction layout via `@react-pdf` — defer to a later phase.
+     - Anything not in the table passes through verbatim. No silent dropping.
+   - Unit-test against a corpus pulled from current Snell's Law instructions plus a synthetic adversarial fixture (`\unknown_command`, deeply nested sub/sup, malformed braces).
+
+3. **Hostile-input safety.**
+   - Sanitization happens upstream of markdown parsing in the UI (rehype-sanitize). The PDF pipeline does not parse HTML at all — it parses markdown source — so the script-tag attack surface is closed by construction. **Verify this by adding a unit test:** input `'<script>alert(1)</script>'` as `section.html`; assert the rendered primitive tree contains no script-like content (it should render the literal text `<script>alert(1)</script>` as paragraph text, since markdown's HTML embed is allowed but `@react-pdf` doesn't execute scripts). If the test reveals that remark is interpreting embedded HTML, configure remark-parse to disallow HTML or strip it before rendering.
+
+4. **Wire into Document.tsx.**
+   - Replace the regex-replace `<Text>` at the instructions branch (around line 130) with `<View>{renderMarkdownToPdf(section.html)}</View>`.
+   - The `instructions` section title (`<Text style={styles.sectionTitle}>Instructions</Text>`) stays as-is for now; it's a section heading the renderer doesn't need to produce.
+
+5. **Tests.**
+   - `tests/unit/markdownToPdf.test.ts`. Cases:
+     - Header `## Part 1` → primitive tree contains a Text with size 14 and the value "Part 1".
+     - `**bold**` → Text with fontWeight 700.
+     - Unordered list with three items → View containing three Texts each starting with "• ".
+     - Inline math `$\sin\theta_i$` → Text containing "sin θ_i" (or the chosen sub-script form).
+     - Hostile fixture `<script>alert(1)</script>` → tree contains the literal string but no executable element; whatever a "script-like" primitive would be (there isn't one in @react-pdf, so this is mainly about confirming the parser doesn't crash).
+   - `tests/unit/latexToUnicode.test.ts`. Greek letter map, operator map, simple sub/sup, fraction fallback, unknown-command pass-through.
+   - PDF snapshot test extension: add an instructions block with a header, bold, list, and inline math to the Snell's Law fixture; assert the snapshot includes the rendered primitives at the expected positions. Snapshot must be human-readable (text content extracted, not byte-for-byte) so future drift is reviewable.
+
+**Definition of done:** TA opening the Snell's Law PDF sees `## Part 1: Snell's Law` as a sized header, not source text. Bold is bold, lists have bullets, inline math uses Greek letters where defined. No regex stripping anywhere in the PDF instruction path. Hostile fixture neither crashes nor injects content. New tests green; existing tests still green.
+
+**Explicit non-goals (deferred):**
+- Block math (`$$...$$`) visual rendering. Falls back to monospace LaTeX source with a dev warning. Real KaTeX-to-SVG embedding is a future phase if and when a lab actually needs it.
+- Custom @react-pdf fonts beyond the built-ins (Helvetica, Times-Roman, Courier). Phase 5 owns typography.
+- Image rendering inside markdown (`![alt](url)`). Defer until a lab needs it; raise an explicit `not yet supported` warning.
+
+#### Phase 3.5.3 — Agent prompt
+
+```
+The PDF instruction renderer in src/services/pdf/Document.tsx today
+strips HTML tags and `#` characters with regex and dumps the rest into
+a single <Text>. Replace this with a real markdown→@react-pdf pipeline.
+Achieve formatting parity with the UI's react-markdown rendering for
+headers, bold/italic, lists, inline code, links, and inline math.
+
+Read REBUILD_SPEC.md sections 3.5 and 3.5.3 plus the Phase 1.5 markdown
+notes (around §5.4 and Phase 1.5 deliverable 2). Read these files:
+- src/services/pdf/Document.tsx (around line 130 — the instructions branch)
+- src/ui/sections/InstructionsSectionView.tsx (the UI pipeline; reference
+  for sanitization schema)
+- src/content/labs/snellsLaw.lab.ts (real instruction blocks to test against)
+
+Tasks:
+1. Add deps if not present: unified, remark-parse, remark-gfm, remark-math.
+   (Likely already in package.json from Phase 1.5; confirm and reuse.)
+2. Create src/services/pdf/markdown/renderMarkdownToPdf.ts. Parse with
+   unified+remark to mdast, walk, emit @react-pdf primitives per the
+   mapping in Phase 3.5.3 deliverable 1. Determinism: pure function,
+   same input → same primitive tree.
+3. Create src/services/pdf/markdown/latexToUnicode.ts. Implement the
+   Greek-letter, operator, and sub/sup substitution table per
+   deliverable 2. Unknown commands pass through verbatim with a
+   single dev console.warn (not per-occurrence).
+4. Replace the Document.tsx instructions branch with
+   <View>{renderMarkdownToPdf(section.html)}</View>. The section title
+   <Text> stays.
+5. Tests:
+   - tests/unit/markdownToPdf.test.ts: header sizing, bold, list bullets,
+     inline math substitution, hostile <script> fixture (must not crash;
+     literal text okay).
+   - tests/unit/latexToUnicode.test.ts: Greek letters, operators,
+     sub/sup, \frac fallback, unknown-command pass-through.
+   - Extend the Snell's Law PDF snapshot with an instructions block
+     containing all the above; commit a text-based snapshot, not a
+     byte-for-byte diff.
+6. npm run lint && npm run typecheck && npm test. All green.
+
+Constraints:
+- No DOM. The PDF render path stays purely functional; no document/window.
+- No HTML parsing. Markdown source goes straight to mdast.
+- Block math is NOT visually rendered. Falls back to monospace LaTeX
+  source with one dev warning. Document this in a comment in
+  renderMarkdownToPdf.ts.
+- No new fonts beyond @react-pdf built-ins (Helvetica, Times-Roman,
+  Courier). Phase 5 owns typography.
+- Determinism is a hard requirement: no Date.now(), no Math.random().
+- Bundle: this should not pull in react-markdown. The PDF path uses
+  remark directly; react-markdown is the UI's wrapper. If they happen
+  to share remark, fine; if you need a separate dependency, prefer
+  reusing what's already there.
+- Do not parse `section.html` as HTML — it's misnamed; it's actually
+  markdown source per Phase 1.5. Confirm by reading
+  InstructionsSectionView.tsx.
+
+Deliverable: Snell's Law PDF instructions render with sized headers,
+bold/italic, list bullets, and inline-math Unicode glyphs. No regex
+stripping. Tests green. The TA sees structure, not source.
+```
+
+---
+
+### Phase 3.5.4 — Derived column formula labels
+
+**Goal:** TAs auditing a PDF can see, at a glance, which table columns are derived and what their formula is, without opening the schema source. Authors get one optional string per derived column.
+
+**Why this phase exists.** The schema's `Column` discriminated union has `kind: 'derived'` columns with a JS `formula` function. The function is canonical truth — but it's also opaque to humans. TAs reviewing a Snell's Law PDF see `sin θ` as a column header and a list of numbers, with no indication that the values were computed (rather than entered) and no record of what formula produced them. If a derived column's formula has a bug, every student's PDF carries the wrong values silently.
+
+`Function.prototype.toString()` is not a workable substitute: it leaks variable names, parentheses, and `Math.sin(row.thetaIncidence * Math.PI / 180)` instead of a clean `sin(θᵢ)`. The right fix is a small schema addition: `formulaLabel?: string` on derived columns, populated by the lab author with the human-readable formula they want TAs to see.
+
+**Deliverables:**
+
+1. **Schema addition.**
+   - In the `Column` discriminated union (likely `src/domain/schema/lab.ts` or similar), add `formulaLabel?: string` to the `derived` variant.
+   - Update the Zod schema accordingly: `.optional()`.
+   - Update TS types (`z.infer` will pick up the change automatically).
+   - **Not** an envelope bump. This is the *authoring* schema (Lab), not the *answers* schema (LabAnswers). Canonicalization is unaffected.
+
+2. **UI table header rendering.**
+   - In the data-table section component (likely `src/ui/sections/DataTableSectionView.tsx` or wherever the table primitive renders headers), under the column label, render the `formulaLabel` as a small caption when present. Use a `<small>` or styled `<span>` with reduced font size and `aria-label` exposing the formula to screen readers (e.g., `aria-label="sin theta_i, derived column"`).
+   - Don't render anything when `formulaLabel` is absent — backward compatibility.
+
+3. **PDF table header rendering.**
+   - In `Document.tsx`'s `dataTable` branch (around lines 167-184), when rendering the header row, if a column is `derived` and has `formulaLabel`, render the label text below the column label in a smaller font size. Layout: stack the column label and the formula label vertically inside the same `<View>` as the cell.
+   - Style: column label at `fontSize: 10` (same as today); formula label at `fontSize: 8`, color `#555`. Italic optional.
+
+4. **Migrate Snell's Law derived columns.**
+   - In `src/content/labs/snellsLaw.lab.ts`, populate `formulaLabel` on every derived column. Examples:
+     - `sin(θᵢ)` for the incidence-sine column
+     - `sin(θᵣ)` for the refraction-sine column
+     - `sin(θᵢ) / sin(θᵣ)` if there's a ratio column
+   - Use the actual variable names (`θᵢ`, `θᵣ`) the instructions use, not the schema's internal column ids.
+
+5. **Tests.**
+   - `tests/unit/derivedColumnLabel.test.ts`: schema parse with and without `formulaLabel`; both succeed.
+   - PDF snapshot extension: assert the formula label appears under the column label in the snapshot's text extraction.
+   - Component test for the UI: render a data table with one derived column with `formulaLabel`, assert the label appears in the DOM with the expected ARIA attributes.
+
+**Definition of done:** schema accepts `formulaLabel` on derived columns; Snell's Law PDF and UI both show `sin(θᵢ)` (or equivalent) under the column header; unlabeled derived columns continue to render exactly as today; tests green.
+
+**Explicit non-goals:**
+- Auto-extracting the formula label from the JS function. That's what we're avoiding.
+- Rendering the formula in math typesetting (KaTeX). Phase 5 / future. The label is a string.
+
+#### Phase 3.5.4 — Agent prompt
+
+```
+Add an optional `formulaLabel` string to derived columns and surface it
+in both the UI and PDF table headers. Schema-touching, but
+forward-compatible (LabAnswers envelope is unaffected).
+
+Read REBUILD_SPEC.md sections 3.5 and 3.5.4 plus §5.4 (Column type).
+Read these files:
+- src/domain/schema/lab.ts (or wherever Column is declared) — find the
+  derived variant.
+- src/services/pdf/Document.tsx (around lines 167-184 — the dataTable
+  branch and header row).
+- The UI data-table section component (likely
+  src/ui/sections/DataTableSectionView.tsx; locate it).
+- src/content/labs/snellsLaw.lab.ts (derived columns to populate).
+
+Tasks:
+1. Schema: add `formulaLabel: z.string().optional()` to the derived
+   Column variant. Update the TS type via z.infer (should be automatic).
+   Confirm no other code path requires the field.
+2. PDF (Document.tsx, dataTable branch): when rendering the header row,
+   if a column is `derived` and has `formulaLabel`, stack the formula
+   label under the column label in a smaller font (size 8, color #555).
+   Use a vertical <View> wrapper inside the existing cell <Text>'s
+   container. Don't disturb input-column rendering.
+3. UI: in the data-table section component, render the formulaLabel as
+   a <small> under the column header when present, with
+   aria-label="<formulaLabel>, derived column".
+4. Migrate snellsLaw.lab.ts: populate formulaLabel on every derived
+   column with a human-readable formula in the variable names the
+   instructions use (e.g., `sin(θᵢ)`, `sin(θᵣ)`, ratios). If unsure
+   about a column, leave it absent — backward compat.
+5. Tests:
+   - tests/unit/derivedColumnLabel.test.ts: schema parses with and
+     without formulaLabel.
+   - Extend the PDF snapshot test for snellsLaw to include the
+     derived-column label in the extracted text.
+   - Component test: mount a data table with one labeled derived
+     column, assert label and aria-label appear in DOM.
+6. npm run lint && npm run typecheck && npm test. All green.
+
+Constraints:
+- formulaLabel is a free-form string. Do NOT parse it as LaTeX or HTML.
+  Render verbatim.
+- Backward compat: derived columns without formulaLabel must continue
+  to render exactly as today.
+- LabAnswers envelope is NOT affected. Do not bump schemaVersion.
+  Canonicalization is unchanged.
+- Don't auto-derive the label from the formula function via toString().
+  The whole point is that the schema gives authors explicit control.
+
+Deliverable: Snell's Law PDF and UI both show formula labels under
+derived-column headers. Migration applies to snellsLaw only in this
+phase; Phase 4 will populate formulaLabel on the other labs as they
+migrate.
+```
+
+---
+
+### Phase 3.5.5 — Process Record appendix completeness
+
+**Goal:** The Process Record appendix renders correct activity data for every section kind that owns user input — including `equation` sections and any future kind. Currently `equation` silently renders zeros.
+
+**Why this phase exists.** `processRecordForSection` in `Document.tsx` (around lines 96-127) enumerates field IDs by section kind:
+
+```ts
+if (section.kind === 'objective' || section.kind === 'measurement' || ...) {
+  fieldIds.push(section.fieldId);
+} else if (section.kind === 'multiMeasurement') { ... }
+else if (section.kind === 'image') { fieldIds.push(section.captionFieldId); }
+else if (section.kind === 'dataTable') { ... }
+```
+
+There is no branch for `equation`. Equation sections own a math-input field whose `FieldValue.meta` is captured by the same `markFieldActivity` instrumentation as text inputs (per Phase 1.5 #4) — the data is there, but the appendix doesn't read it. The appendix renders `Active time (ms): 0`, `Keystrokes: 0`, etc., for any section using mathlive. A TA looking at the appendix to confirm a student spent meaningful time on a derivation sees a misleading zero.
+
+**Deliverables:**
+
+1. **Equation section support.**
+   - Add an `equation` branch to `processRecordForSection` that pushes `section.fieldId` (assuming the schema field is named `fieldId` per the calculation/concept pattern — verify against the schema).
+   - If the equation section schema uses a different field-id convention, adapt accordingly. Document the chosen mapping with a comment.
+
+2. **Section-kind exhaustiveness.**
+   - Replace the if/else chain with a `switch` on `section.kind` that includes all current section kinds *and* a `default` clause that triggers a TypeScript exhaustiveness check via `never`: if a future Phase adds a new section kind without updating this switch, the type system flags the omission.
+   - Pattern: `const _exhaustive: never = section;` in the default clause (TS will fail compilation if the discriminated union is incomplete).
+
+3. **Plot section auditing.**
+   - Plot sections own no fields directly — they read from `sourceTableId`. The appendix should report `0` for plots, but make this explicit in code (a branch that returns the empty record with a comment) rather than letting plots fall through silently. Improves auditability of the audit code.
+
+4. **Image section: keep existing behavior.**
+   - Caption field already counted via `captionFieldId`. Confirm; do not regress.
+
+5. **Tests.**
+   - `tests/unit/processRecord.test.ts`. Cases:
+     - `equation` section with non-zero `meta` → appendix reports the values.
+     - All section kinds (objective, measurement, multiMeasurement, dataTable, image, plot, equation, instructions) produce a record with the expected shape; instructions and plot may be zero, but they don't crash.
+     - Adding a synthetic 9th kind to the union (in a test-only schema fork) should fail TypeScript compilation — assert this via a `// @ts-expect-error` line on the deliberately broken switch.
+
+**Definition of done:** Process Record appendix renders correct activity data for equation sections; TypeScript catches missing branches at compile time; tests green.
+
+#### Phase 3.5.5 — Agent prompt
+
+```
+The Process Record appendix in src/services/pdf/Document.tsx silently
+renders zeros for equation sections because processRecordForSection
+has no branch for `kind: 'equation'`. Fix that and also harden the
+function against future omissions.
+
+Read REBUILD_SPEC.md sections 3.5 and 3.5.5 plus §5.13 (process
+telemetry). Read these files:
+- src/services/pdf/Document.tsx (around lines 96-127, processRecordForSection)
+- src/domain/schema/ (find the Section discriminated union and the
+  equation variant)
+
+Tasks:
+1. Replace the if/else chain in processRecordForSection with a
+   `switch (section.kind)`. Include every current variant. Add an
+   `equation` branch that pushes the equation section's field id.
+2. Plot and instructions branches: explicit return of an empty record,
+   not an implicit fall-through. Comment why (no fields owned).
+3. default branch: TypeScript exhaustiveness via `const _: never =
+   section;`. This forces compilation to fail when Phase 4+ adds a new
+   Section kind without updating the appendix.
+4. Tests: tests/unit/processRecord.test.ts. Assert non-zero values for
+   equation, the right shape for every kind, and a deliberate
+   exhaustiveness test (// @ts-expect-error on a broken switch).
+5. npm run lint && npm run typecheck && npm test. All green.
+
+Constraints:
+- Do not change the FieldValue capture layer. The bug is purely in
+  what the appendix reads, not in what gets recorded.
+- Keep backward compat: caption field path for image sections still
+  works.
+- Do not introduce new section kinds in this phase. That's Phase 4+.
+
+Deliverable: equation sections report real activity in the appendix;
+TypeScript prevents future regressions; tests green.
+```
+
+---
+
+### Phase 3.5.6 — Paste-attribution fuzz tolerance: pin and document
+
+**Goal:** Pin the current `attributePastes` matching behavior with explicit boundary tests, and document the design choice so future contributors know why this implementation was chosen over Levenshtein/LCS upgrades. No behavior change.
+
+**Why this phase exists.** `attributePastes` in `src/services/pdf/attributePastes.ts` normalizes input by stripping whitespace and a defined set of soft punctuation (`/[\s.,;:!?'"`~\-_()[\]{}\\/|<>+=*]/`), lowercases, then does literal `String.prototype.indexOf` substring matching. It's binary: paste either appears as a contiguous normalized substring of the final text, or it doesn't. There is no edit-distance or LCS fallback.
+
+This is the right behavior for v1. False negatives are tolerable (an edited paste loses inline italics but is still summarized in the Process Record appendix). False positives are not (typed text being marked as pasted is a grading integrity reversal). LCS-ratio and Levenshtein matching would catch more edited pastes inline but introduce a real false-positive risk on short pastes — a 5-char paste of `"1.33"` would LCS-match almost any sentence containing those digits.
+
+But the design call is undocumented. Exactly one test pins exactly one normalization case. Phase 4 will add labs with different prose styles, and it's worth nailing down the boundaries before that multiplies. If a future contributor wants to upgrade matching, they should know what tradeoffs they are reversing.
+
+**Deliverables:**
+
+1. **Header comment.**
+   - Top of `src/services/pdf/attributePastes.ts` gets a 6–10 line block comment stating:
+     - The matching strategy (normalize + literal substring, no edit distance).
+     - Why this strategy was chosen (false negatives tolerable, false positives not — Process Record appendix is the safety net).
+     - Alternatives considered (LCS-ratio, Levenshtein) and why rejected (false-positive risk on short pastes).
+     - A note that future upgrades require revisiting these tradeoffs and updating the test fixtures.
+
+2. **Boundary tests.**
+   - `tests/unit/attributePastes.test.ts` extension. Add cases:
+     - **Paste fully present, no edits:** `"sin theta = n"` pasted into final text `"sin theta = n"` → matches, single pasted-clipboard span.
+     - **Paste fully present with surrounding typed text:** paste `"1.33"` into final text `"The index of refraction is 1.33 for water"` → `"1.33"` italicized, rest typed.
+     - **Paste with whitespace edits only:** paste `"sin theta"` matches final `"sin  theta"` (extra space) or `"sin theta."` (trailing punct).
+     - **Paste fully deleted:** paste `"the answer is 42"` typed, then deleted (final text contains nothing of it) → no inline match; appears in `removedPastes` summary.
+     - **Paste partially edited (word inserted mid-paste):** paste `"the index of refraction"` then student inserts `"approximately"` mid-paste making final text `"the index of approximately refraction"` → no inline match (substring fails), appears in `removedPastes` summary.
+     - **Paste partially deleted (suffix removed):** paste `"the answer is 42 plus seven"`, student deletes `" plus seven"` → final text contains `"the answer is 42"`. Substring match requires the *entire* paste to appear, so this is a no-match → goes to removedPastes. Pin this current behavior.
+     - **Multiple pastes in one field:** pastes `"first part"` and `"second part"` both matched in final text containing both.
+     - **Pastes overlapping in normalized form:** pastes `"abc def"` and `"def ghi"` — both match if both appear; document the rendering behavior (which span wins on overlap).
+     - **Empty paste (zero-length after normalization, e.g., pure punctuation paste):** does not produce a span. Pin this so a `","` paste doesn't claim 100% of the field.
+     - **Unicode paste:** `"José"` pasted, final text contains `"jose"` (lowercase) → matches because normalize lowercases. Pin this.
+     - **Autocomplete-source paste vs clipboard-source paste:** assert spans get the right `kind` per source.
+
+3. **Decision-log entry.**
+   - Add a brief `docs/decisions/0001-paste-fuzz-tolerance.md` if the repo has an ADR convention; otherwise add the rationale as a section in `docs/AUTHORING_A_LAB.md` or in the file header comment from deliverable 1. The agent should ask Austin where this should live before creating a separate file.
+
+**Definition of done:** behavior unchanged; header comment present; ten or so new boundary tests pin the matching cases; future contributors who consider upgrading know exactly which tests they need to update and why; `npm run lint && npm run typecheck && npm test` clean.
+
+#### Phase 3.5.6 — Agent prompt
+
+```
+attributePastes uses normalize-then-substring matching with no edit
+distance. This is the right v1 behavior, but it's undocumented and
+pinned by exactly one test case. Document the design call and add
+boundary tests so Phase 4's lab additions don't accidentally drift
+the behavior.
+
+No code behavior change. Pure docs + tests.
+
+Read REBUILD_SPEC.md sections 3.5 and 3.5.6, plus §5.9 (pasted content
+rendering) and §5.13 (process telemetry). Read these files:
+- src/services/pdf/attributePastes.ts (current implementation)
+- tests/unit/attributePastes.test.ts (existing tests)
+
+Tasks:
+1. Add a 6–10 line header comment to attributePastes.ts per Phase 3.5.6
+   deliverable 1. State the strategy, why it was chosen, what
+   alternatives were rejected, and a note that future upgrades must
+   revisit the tradeoffs.
+2. Extend tests/unit/attributePastes.test.ts with the 10–11 boundary
+   cases listed in deliverable 2. Each case asserts the exact behavior
+   currently produced — this pins, doesn't change.
+3. Ask Austin: does the repo have an ADR convention (e.g., docs/decisions/)?
+   If yes, write a one-page ADR with the same rationale. If no, skip
+   the separate file; the header comment is sufficient.
+4. npm run lint && npm run typecheck && npm test. All green. No source
+   behavior changed.
+
+Constraints:
+- DO NOT change attributePastes runtime behavior. This phase is
+  documentation and test pinning only.
+- If a test case reveals unexpected current behavior (e.g., empty paste
+  claims a span, or overlapping pastes do something surprising),
+  document the surprise but DO NOT fix it in this phase. File a
+  follow-up note for Austin to triage.
+- Do not introduce edit distance, LCS, or any other matching strategy.
+  That's a future phase if and when called for.
+
+Deliverable: attributePastes.ts is documented; tests pin every
+boundary case from the deliverables list; no behavior change. Phase 4
+can multiply labs without ambiguity about what attributePastes will do
+to their prose.
+```
+
+---
+
 ### Phase 4 — Migrate remaining labs + course manifest finalization
 
 **Goal:** All 7 distinct labs (`staticElectricity`, `chargesFields`, `capacitors`, `dcCircuits`, `magneticFieldFaraday`, `snellsLaw`, `geometricOptics`) live as schemas. Both `general` and `phy114` courses are real. Drift between `labs/` and `phy_114/` is explicitly resolved.
@@ -1492,6 +2145,17 @@ Still open and worth answering before or during Phase 0:
 4. **Custom-equation parser sandbox:** The legacy `fitCalculations.js` lets students enter arbitrary math expressions. Has there been any audit of what's reachable through `mathjs`'s `parse`/`evaluate`? (Default `mathjs` is mostly safe, but `import` and a few function paths can be exploited.) Worth one focused security pass during the Phase 0 port — students entering arbitrary expressions in a system that signs their work has interesting implications for forgery vectors.
 5. **Verification UX:** Is `/verify?h=<sig>` (TA scans QR from PDF, sees pass/fail) wanted in v1, or deferred?
 6. **Signing nonce binding (v1.1?):** As §5.14 notes, the v1 signing function is forgeable by anyone who can re-POST to `/api/sign` with edited content. If that becomes a real cheating problem, bind the signature to a server-issued nonce per `(studentName, labId, sessionId)`. Decide whether to design v1's API in a forward-compatible way for that change.
+
+---
+
+## 10. Canonical envelope changelog
+
+## v2 (2026-05-01)
+
+- Added: `selectedFits` (`Record<plotId, fitId | null>`) — student's chosen fit model per plot.
+- Added: `fits` (`Record<plotId, FitResultSchema>`) — computed fit model + parameters at sign time.
+- Migration: persisted v1 state hydrates with empty `selectedFits` and `fits`, then auto-upgrades to v2 on next autosave.
+- Implication: PDFs signed against the v1 envelope cannot be regenerated bit-identical with current code. Their embedded canonical and signature remain mutually consistent (self-validation still works), but their canonical shape differs from what current code now emits.
 
 ---
 

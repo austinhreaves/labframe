@@ -4,9 +4,11 @@ import { Link, useSearchParams } from 'react-router-dom';
 import type { Course, Lab } from '@/domain/schema';
 import { buildAnswersFromStore } from '@/services/integrity/buildAnswers';
 import { canonicalize } from '@/services/integrity/canonicalize';
+import { validateStudentInfoForPdf, type StudentInfoFieldId } from '@/services/integrity/preflight';
 import { signAnswers } from '@/services/integrity/sign';
-import { renderPDF, sealPDF } from '@/services/pdf';
+import { buildPdfFilename, renderPDF, sealPDF } from '@/services/pdf';
 import { useLabStore, type RecoverableAttachment } from '@/state/labStore';
+import { StudentInfoPreflightDialog } from '@/ui/StudentInfoPreflightDialog';
 import { LayoutToggle } from '@/ui/layout/LayoutToggle';
 import { SplitHandle } from '@/ui/layout/SplitHandle';
 import { SectionRenderer } from '@/ui/sections/SectionRenderer';
@@ -43,6 +45,9 @@ export function LabPage({ course, lab }: Props) {
   const [studentNameDraft, setStudentNameDraft] = useState(studentName);
   const [recoverable, setRecoverable] = useState<RecoverableAttachment[]>([]);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [missingPreflightFields, setMissingPreflightFields] = useState<StudentInfoFieldId[]>([]);
+  const [isPreflightDialogOpen, setIsPreflightDialogOpen] = useState(false);
+  const generatePdfButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     void initLab(course.id, lab.id, lab);
@@ -97,9 +102,19 @@ export function LabPage({ course, lab }: Props) {
   };
 
   const generatePdf = async () => {
+    const preflight = validateStudentInfoForPdf({ studentName: studentNameDraft });
+    if (!preflight.ok) {
+      setMissingPreflightFields(preflight.missing);
+      setIsPreflightDialogOpen(true);
+      return;
+    }
+
+    const trimmedStudentName = studentNameDraft.trim();
+    const studentNameForPdf = trimmedStudentName || studentName;
+
     setIsGeneratingPdf(true);
     try {
-      const answers = buildAnswersFromStore(course, store);
+      const answers = buildAnswersFromStore(course, { ...store, studentName: studentNameForPdf });
       const signing = await signAnswers(answers);
       const canonical = canonicalize(answers);
       const rendered = await renderPDF({
@@ -122,8 +137,12 @@ export function LabPage({ course, lab }: Props) {
         console.warn(`[pdf] Large PDF generated: ${(sealed.size / (1024 * 1024)).toFixed(2)} MB`);
       }
 
-      const hash = signing.signature.slice(0, 8);
-      const filename = `${lab.id}-${hash}.pdf`;
+      const filename = buildPdfFilename({
+        lab,
+        studentName: studentNameForPdf,
+        signedAt: signing.signedAt,
+        signature: signing.signature,
+      });
       downloadBlob(sealed, filename);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not sign report (network issue). Try again.';
@@ -131,6 +150,11 @@ export function LabPage({ course, lab }: Props) {
     } finally {
       setIsGeneratingPdf(false);
     }
+  };
+
+  const closePreflightDialog = () => {
+    setIsPreflightDialogOpen(false);
+    generatePdfButtonRef.current?.focus();
   };
 
   const layout = searchParams.get('layout') === 'tabs' ? 'tabs' : 'side';
@@ -195,7 +219,7 @@ export function LabPage({ course, lab }: Props) {
           >
             Start fresh
           </button>
-          <button type="button" onClick={() => void generatePdf()} disabled={isGeneratingPdf}>
+          <button ref={generatePdfButtonRef} type="button" onClick={() => void generatePdf()} disabled={isGeneratingPdf}>
             {isGeneratingPdf ? 'Generating PDF...' : 'Generate PDF'}
           </button>
         </div>
@@ -244,6 +268,7 @@ export function LabPage({ course, lab }: Props) {
           )}
         </section>
       ) : null}
+      <StudentInfoPreflightDialog open={isPreflightDialogOpen} missing={missingPreflightFields} onClose={closePreflightDialog} />
       <div
         className={layout === 'tabs' ? 'lab-layout lab-layout-tabs' : 'lab-layout lab-layout-side'}
         style={layout === 'side' ? ({ '--split-sim': `${splitFraction * 100}%` } as CSSProperties) : undefined}

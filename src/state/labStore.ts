@@ -377,7 +377,7 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
         },
         fits: {
           ...state.fits,
-          ...(migrated.fits as Record<string, FitSelection>),
+          ...migrated.fits,
         },
         images: hydratedImages,
         splitFraction: clampSplitFraction(migrated.splitFraction ?? DEFAULT_SPLIT_FRACTION),

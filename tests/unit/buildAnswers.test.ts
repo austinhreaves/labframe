@@ -42,4 +42,23 @@ describe('buildAnswersFromStore', () => {
       '"fits":{"aaaPlot":{"model":"proportional","parameters":{"a":2}},"zzzPlot":{"model":"linear","parameters":{"a":2,"b":3}}}',
     );
   });
+
+  it('filters null fit entries and does not throw', async () => {
+    const store = createLabStore(createMemoryPersistenceAdapter());
+    await store.getState().initLab('general', 'snellsLaw', snellsLawLab);
+    store.getState().setFitSelection('goodPlot', { model: 'linear', parameters: { a: 2, b: 3 } });
+
+    store.setState((state) => ({
+      fits: {
+        ...state.fits,
+        nullPlot: null as unknown as { model: string; parameters: Record<string, number> },
+      },
+    }));
+
+    expect(() => buildAnswersFromStore(courseFixture, store.getState())).not.toThrow();
+    const answers = buildAnswersFromStore(courseFixture, store.getState());
+    expect(answers.fits).toEqual({
+      goodPlot: { model: 'linear', parameters: { a: 2, b: 3 } },
+    });
+  });
 });

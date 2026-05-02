@@ -1,0 +1,113 @@
+---
+description: Required steps when modifying any part of the LabAnswers integrity envelope (the canonical JSON that gets HMAC-signed). Triggers on changes to schema, canonicalize, buildAnswers, sign endpoint, or persisted-state shape.
+globs:
+  - src/domain/schema/answers.ts
+  - src/domain/schema/index.ts
+  - src/services/integrity/canonicalize.ts
+  - src/services/integrity/buildAnswers.ts
+  - src/services/integrity/sign.ts
+  - src/state/persistence/types.ts
+  - src/state/persistence/labPersistenceMiddleware.ts
+  - api/sign.ts
+alwaysApply: false
+---
+
+# Integrity envelope: change protocol
+
+The "integrity envelope" is the canonical JSON of `LabAnswers` that gets HMAC-signed by `/api/sign` and embedded as `lab.json` inside every exported PDF. It is the ground-truth representation of a student's work for grading and audit.
+
+Any change to its **shape** or **semantics** is a contract change with downstream consequences. This rule defines what counts as such a change and what must accompany one.
+
+## What counts as an envelope change
+
+Any modification to:
+
+1. **`LabAnswersSchema`** in `src/domain/schema/answers.ts` — adding/removing/renaming fields, changing their types, tightening or loosening validation, changing nullable vs. required.
+2. **`buildAnswersFromStore`** in `src/services/integrity/buildAnswers.ts` — what gets pulled from the store, how it's shaped, what defaults are applied.
+3. **`canonicalize`** in `src/services/integrity/canonicalize.ts` — the deterministic serialization rules (key ordering, number normalization, undefined-stripping, etc.). Changing this changes every hash for every existing envelope.
+4. **`/api/sign`** contract in `api/sign.ts` — what fields it accepts, what it returns, how the HMAC is computed (input order, separator).
+5. **`PersistedLabState`** in `src/state/persistence/types.ts` — the shape of state stored in localStorage/IndexedDB. This is not signed directly but it's the source for the canonical, so a shape mismatch here cascades.
+
+If you are unsure whether a change you're making qualifies, **assume it does**. The cost of treating a non-change as a change is small (you bump a version number unnecessarily). The cost of treating a real change as a non-change is what just happened — broken signatures, stale fixtures, and a partially-validated migration path.
+
+## Required steps for any envelope change
+
+Execute all of the following. Do not skip steps because the change "feels small" — the integrity envelope has no small changes.
+
+### 1. Bump `schemaVersion`
+
+In `src/domain/schema/answers.ts`, increment the `z.literal(N)` value by 1. This is non-negotiable. The version number is the contract identifier; if the contract changes, the number changes. There is no "minor" version for the envelope — every shape change is a new major version.
+
+In `src/services/integrity/buildAnswers.ts`, set the matching `schemaVersion: N` on the returned object.
+
+In `src/state/persistence/types.ts`, extend the `PersistedLabState.schemaVersion` union to include the new version. Do not remove old version numbers from the union — they're still valid input shapes for the migration path.
+
+### 2. Add a forward migration
+
+In `src/state/persistence/labPersistenceMiddleware.ts` (or wherever the hydrate/load path lives), add a branch that handles the previous version:
+
+- Load a persisted state at version N-1 → apply the minimum transform to reach version N → use the resulting state.
+- The migration must be **idempotent** (running it twice gives the same result) and **lossless** (no field is dropped without explicit reason).
+- The migrated state should be re-saved at the new version on the next autosave, not eagerly during load.
+- For unknown versions (neither current nor previous), log a warning and refuse to hydrate. Do not coerce unknown shapes.
+
+Add a unit test in `tests/unit/persistence.roundtrip.test.ts` (or a new file) that:
+- Constructs a synthetic state at version N-1.
+- Runs hydrate.
+- Asserts the in-memory state has all version-N fields with appropriate defaults.
+- Asserts the autosave writes version N.
+
+### 3. Update every fixture
+
+The following test files contain fixtures that depend on the envelope shape. Audit each one and update what's stale:
+
+- `tests/unit/canonicalize.test.ts` — any LabAnswers fixture, any pinned canonical string, any pinned hash.
+- `tests/unit/buildAnswers.test.ts` — assertions about the returned shape.
+- `tests/unit/pdfSeal.roundtrip.test.ts` — the canonical embedded in the test PDF and any signature comparison.
+- `tests/unit/persistence.roundtrip.test.ts` — round-trip fixtures.
+- Any test that imports `LabAnswersSchema` and constructs a literal object against it.
+
+If a test pins a hash, the hash legitimately changes. Compute the new hash and update — do not weaken the assertion to make it pass. The point of pinning is to catch shape drift; making the assertion looser defeats the purpose.
+
+### 4. Document the version in REBUILD_SPEC.md
+
+Append an entry to the "Canonical envelope changelog" section (create the section if it doesn't exist):
+
+```
+## vN (YYYY-MM-DD)
+- Added/Changed/Removed: <field> — <one-line semantic description>
+- Migration: <how vN-1 hydrates into vN>
+- Implication: <what existing signed PDFs at vN-1 mean now>
+```
+
+The "Implication" line is the most important. Existing PDFs signed at the old version remain self-consistent (their embedded canonical and signature still match each other), but their canonical no longer matches what current code produces for equivalent student work. Future verification flows must branch on `schemaVersion`.
+
+### 5. Verify end-to-end
+
+Run in this order:
+
+```
+npm run typecheck && npm run lint && npm test
+```
+
+Then locally with `dev:vercel`:
+- Generate a fresh PDF in the new lab.
+- Extract the embedded `lab.json` (open the PDF in Acrobat / Preview / a tool that surfaces attachments).
+- Confirm `schemaVersion` matches the new version and the new fields are present.
+
+If you have access to a previous-version persisted blob (browser IndexedDB), confirm the migration path runs and the resulting hydrated state is correct.
+
+## What this rule explicitly forbids
+
+- **Adding a required field to `LabAnswersSchema` without bumping the version.** This is what just broke the test suite. Don't do it.
+- **Loosening a field from required to optional to "make tests pass."** That hides the problem instead of fixing it. Bump the version and migrate.
+- **Changing `canonicalize`'s sort order, number normalization, or undefined-stripping.** This changes every hash for every existing envelope, current and historical. If there's a real reason to do it, treat it as a v(N+1) bump with a documented migration of the canonicalization rules themselves.
+- **Removing the `schemaVersion` field, "to clean things up."** It's load-bearing. Keep it.
+
+## When this rule does not apply
+
+- **Pure renderer changes** — modifying how the PDF visually presents data, changing the chart styling, updating which fields are surfaced in the UI. These don't affect what gets signed.
+- **Adding a new lab in `src/content/labs/`** — labs declare their own structure within the existing envelope. Adding a new lab doesn't change the envelope shape.
+- **Modifying the process record's contents** — the process record is signed (it's part of LabAnswers via `fields`), but adding new metrics inside an existing field is a content change, not a shape change. Adding a brand-new top-level field for a new metric type is a shape change and triggers this rule.
+
+If you're modifying one of the trigger files but only in a way that doesn't fit the definition above (pure refactor, comment changes, type-level work that doesn't reach runtime), state that explicitly in your commit message and proceed without the version bump.

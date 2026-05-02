@@ -28,13 +28,15 @@ export function buildAnswersFromStore(course: Course, store: LabStoreState): Lab
       ]),
     ),
     fits: Object.fromEntries(
-      Object.entries(store.fits).map(([plotId, fit]) => [
-        plotId,
-        {
-          model: fit.model,
-          parameters: fit.parameters,
-        },
-      ]),
+      Object.entries(store.fits)
+        .filter(([, fit]) => fit && typeof fit === 'object' && 'model' in fit)
+        .map(([plotId, fit]) => [
+          plotId,
+          {
+            model: fit.model,
+            parameters: fit.parameters,
+          },
+        ]),
     ),
     status: {
       submitted: store.status.submitted,
