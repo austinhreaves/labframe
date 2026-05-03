@@ -1,3 +1,17 @@
+/**
+ * Paste attribution for PDF output: map paste telemetry onto the final field text
+ * by normalizing both sides and using literal substring matching only — no edit
+ * distance, LCS, or similarity ratio.
+ *
+ * Rationale: false negatives (an edited paste loses inline italics/underline) are
+ * acceptable because the Process Record still lists the paste; false positives
+ * (typed prose marked as pasted) are not. Heuristic matchers risk the latter on
+ * short strings (e.g. "1.33" appearing incidentally in a sentence).
+ *
+ * Rejected alternatives: Levenshtein / LCS-style recovery — higher recall but
+ * meaningful false-positive risk. Upgrading the matcher requires revisiting these
+ * tradeoffs and updating tests in tests/unit/attributePastes.test.ts.
+ */
 import type { PasteEvent } from '@/domain/schema';
 
 export type SpanKind = 'typed' | 'pasted-clipboard' | 'pasted-autocomplete';

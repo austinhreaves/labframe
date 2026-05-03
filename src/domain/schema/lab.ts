@@ -37,20 +37,27 @@ export const StudentInfoOverridesSchema = z
   })
   .strict();
 
-export const InstructionsSectionSchema = z.object({
+/** Shared optional fields for table-of-contents authoring on every section variant. */
+export const SectionMetadataSchema = z.object({
+  tocHidden: z.boolean().optional(),
+  tocLabel: z.string().optional(),
+});
+
+export const InstructionsSectionSchema = SectionMetadataSchema.extend({
   kind: z.literal('instructions'),
   html: z.string(),
   points: z.number().nonnegative().optional(),
 });
 
-export const ObjectiveSectionSchema = z.object({
+export const ObjectiveSectionSchema = SectionMetadataSchema.extend({
   kind: z.literal('objective'),
   fieldId: idSchema,
+  prompt: z.string().optional(),
   rows: z.number().int().positive().optional(),
   points: z.number().nonnegative().optional(),
 });
 
-export const MeasurementSectionSchema = z.object({
+export const MeasurementSectionSchema = SectionMetadataSchema.extend({
   kind: z.literal('measurement'),
   fieldId: idSchema,
   label: nonEmptyText,
@@ -58,7 +65,7 @@ export const MeasurementSectionSchema = z.object({
   points: z.number().nonnegative().optional(),
 });
 
-export const MultiMeasurementSectionSchema = z.object({
+export const MultiMeasurementSectionSchema = SectionMetadataSchema.extend({
   kind: z.literal('multiMeasurement'),
   rows: z
     .array(
@@ -72,7 +79,7 @@ export const MultiMeasurementSectionSchema = z.object({
   points: z.number().nonnegative().optional(),
 });
 
-export const DataTableSectionSchema = z.object({
+export const DataTableSectionSchema = SectionMetadataSchema.extend({
   kind: z.literal('dataTable'),
   tableId: idSchema,
   columns: z.array(ColumnSchema).min(1),
@@ -85,7 +92,7 @@ export const FitOptionSchema = z.object({
   label: nonEmptyText,
 });
 
-export const PlotSectionSchema = z.object({
+export const PlotSectionSchema = SectionMetadataSchema.extend({
   kind: z.literal('plot'),
   plotId: idSchema,
   sourceTableId: idSchema,
@@ -97,7 +104,7 @@ export const PlotSectionSchema = z.object({
   points: z.number().nonnegative().optional(),
 });
 
-export const ImageSectionSchema = z.object({
+export const ImageSectionSchema = SectionMetadataSchema.extend({
   kind: z.literal('image'),
   imageId: idSchema,
   captionFieldId: idSchema,
@@ -105,7 +112,7 @@ export const ImageSectionSchema = z.object({
   points: z.number().nonnegative().optional(),
 });
 
-export const CalculationSectionSchema = z.object({
+export const CalculationSectionSchema = SectionMetadataSchema.extend({
   kind: z.literal('calculation'),
   fieldId: idSchema,
   prompt: nonEmptyText,
@@ -113,7 +120,7 @@ export const CalculationSectionSchema = z.object({
   points: z.number().nonnegative().optional(),
 });
 
-export const ConceptSectionSchema = z.object({
+export const ConceptSectionSchema = SectionMetadataSchema.extend({
   kind: z.literal('concept'),
   fieldId: idSchema,
   prompt: nonEmptyText,

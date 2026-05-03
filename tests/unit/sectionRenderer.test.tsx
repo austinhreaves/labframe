@@ -7,7 +7,7 @@ import { SectionRenderer } from '@/ui/sections/SectionRenderer';
 
 describe('SectionRenderer', () => {
   it('renders every section kind in Snell schema without crashing', () => {
-    useLabStore.getState().initLab('general', 'snellsLaw', snellsLawLab);
+    useLabStore.getState().initLab('phy132', 'snellsLaw', snellsLawLab);
 
     render(
       <div>

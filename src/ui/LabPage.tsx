@@ -8,9 +8,11 @@ import { validateStudentInfoForPdf, type StudentInfoFieldId } from '@/services/i
 import { signAnswers } from '@/services/integrity/sign';
 import { buildPdfFilename, renderPDF, sealPDF } from '@/services/pdf';
 import { useLabStore, type RecoverableAttachment } from '@/state/labStore';
+import { ProgressBar } from '@/ui/ProgressBar';
 import { StudentInfoPreflightDialog } from '@/ui/StudentInfoPreflightDialog';
 import { LayoutToggle } from '@/ui/layout/LayoutToggle';
 import { SplitHandle } from '@/ui/layout/SplitHandle';
+import { TableOfContents } from '@/ui/layout/TableOfContents';
 import { SectionRenderer } from '@/ui/sections/SectionRenderer';
 
 type Props = {
@@ -27,13 +29,15 @@ type SimulationFrameProps = {
 
 function StableSimulationFrame({ simulationId, title, url, allow }: SimulationFrameProps) {
   const mountId = useRef(`${simulationId}-${Math.random().toString(36).slice(2, 10)}`);
-  return <iframe title={title} src={url} allow={allow} className="simulation-frame" data-mount-id={mountId.current} />;
+  return <iframe title={title} src={url} allow={allow} loading="lazy" className="simulation-frame" data-mount-id={mountId.current} />;
 }
 
 export function LabPage({ course, lab }: Props) {
   const initLab = useLabStore((state) => state.initLab);
   const splitFraction = useLabStore((state) => state.splitFraction);
   const setSplitFraction = useLabStore((state) => state.setSplitFraction);
+  const simSide = useLabStore((state) => state.simSide);
+  const setSimSide = useLabStore((state) => state.setSimSide);
   const status = useLabStore((state) => state.status);
   const studentName = useLabStore((state) => state.studentName);
   const setStudentName = useLabStore((state) => state.setStudentName);
@@ -44,10 +48,10 @@ export function LabPage({ course, lab }: Props) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [studentNameDraft, setStudentNameDraft] = useState(studentName);
   const [recoverable, setRecoverable] = useState<RecoverableAttachment[]>([]);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [missingPreflightFields, setMissingPreflightFields] = useState<StudentInfoFieldId[]>([]);
   const [isPreflightDialogOpen, setIsPreflightDialogOpen] = useState(false);
-  const generatePdfButtonRef = useRef<HTMLButtonElement | null>(null);
+  const exportPdfButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     void initLab(course.id, lab.id, lab);
@@ -101,7 +105,7 @@ export function LabPage({ course, lab }: Props) {
     URL.revokeObjectURL(url);
   };
 
-  const generatePdf = async () => {
+  const exportPdf = async () => {
     const preflight = validateStudentInfoForPdf({ studentName: studentNameDraft });
     if (!preflight.ok) {
       setMissingPreflightFields(preflight.missing);
@@ -112,7 +116,7 @@ export function LabPage({ course, lab }: Props) {
     const trimmedStudentName = studentNameDraft.trim();
     const studentNameForPdf = trimmedStudentName || studentName;
 
-    setIsGeneratingPdf(true);
+    setIsExportingPdf(true);
     try {
       const answers = buildAnswersFromStore(course, { ...store, studentName: studentNameForPdf });
       const signing = await signAnswers(answers);
@@ -148,17 +152,24 @@ export function LabPage({ course, lab }: Props) {
       const message = error instanceof Error ? error.message : 'Could not sign report (network issue). Try again.';
       window.alert(message);
     } finally {
-      setIsGeneratingPdf(false);
+      setIsExportingPdf(false);
     }
   };
 
   const closePreflightDialog = () => {
     setIsPreflightDialogOpen(false);
-    generatePdfButtonRef.current?.focus();
+    exportPdfButtonRef.current?.focus();
   };
 
   const layout = searchParams.get('layout') === 'tabs' ? 'tabs' : 'side';
   const tab = searchParams.get('tab') === 'simulation' ? 'simulation' : 'worksheet';
+  const side = searchParams.get('side') === 'right' ? 'right' : 'left';
+
+  useEffect(() => {
+    if (simSide !== side) {
+      setSimSide(side);
+    }
+  }, [setSimSide, side, simSide]);
 
   // Keep simulation mounted in one stable cell and change layout with CSS/tabs only.
   const simulationPane = (
@@ -179,7 +190,9 @@ export function LabPage({ course, lab }: Props) {
     <div className="worksheet-pane">
       <h2>{lab.title}</h2>
       {lab.sections.map((section, index) => (
-        <SectionRenderer key={`${section.kind}-${index}`} section={section} />
+        <div key={`${section.kind}-${index}`} id={`section-${index}`} className="worksheet-section-anchor">
+          <SectionRenderer section={section} />
+        </div>
       ))}
     </div>
   );
@@ -191,6 +204,8 @@ export function LabPage({ course, lab }: Props) {
           <Link to={`/c/${course.id}`}>Back to {course.title}</Link>
         </div>
         <div className="lab-header-slot">
+          <TableOfContents sections={lab.sections} />
+          <ProgressBar sections={lab.sections} />
           <label className="lab-student-name">
             Student
             <input
@@ -219,22 +234,34 @@ export function LabPage({ course, lab }: Props) {
           >
             Start fresh
           </button>
-          <button ref={generatePdfButtonRef} type="button" onClick={() => void generatePdf()} disabled={isGeneratingPdf}>
-            {isGeneratingPdf ? 'Generating PDF...' : 'Generate PDF'}
+          <button ref={exportPdfButtonRef} type="button" onClick={() => void exportPdf()} disabled={isExportingPdf}>
+            {isExportingPdf ? 'Exporting PDF...' : 'Export PDF'}
           </button>
         </div>
         <div className="lab-header-right">
-          <LayoutToggle
-            layout={layout}
-            onChange={(next) => {
-              const updated = new URLSearchParams(searchParams);
-              updated.set('layout', next);
-              if (next === 'tabs' && !updated.get('tab')) {
-                updated.set('tab', 'worksheet');
-              }
-              setSearchParams(updated);
-            }}
-          />
+          <div className="layout-controls">
+            <LayoutToggle
+              layout={layout}
+              onChange={(next) => {
+                const updated = new URLSearchParams(searchParams);
+                updated.set('layout', next);
+                if (next === 'tabs' && !updated.get('tab')) {
+                  updated.set('tab', 'worksheet');
+                }
+                setSearchParams(updated);
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const updated = new URLSearchParams(searchParams);
+                updated.set('side', simSide === 'left' ? 'right' : 'left');
+                setSearchParams(updated);
+              }}
+            >
+              Swap sides
+            </button>
+          </div>
         </div>
       </header>
       {status.lastError ? (
@@ -269,41 +296,51 @@ export function LabPage({ course, lab }: Props) {
         </section>
       ) : null}
       <StudentInfoPreflightDialog open={isPreflightDialogOpen} missing={missingPreflightFields} onClose={closePreflightDialog} />
-      <div
-        className={layout === 'tabs' ? 'lab-layout lab-layout-tabs' : 'lab-layout lab-layout-side'}
-        style={layout === 'side' ? ({ '--split-sim': `${splitFraction * 100}%` } as CSSProperties) : undefined}
-      >
-        {layout === 'tabs' ? (
-          <div className="tabs">
-            <button
-              type="button"
-              onClick={() => {
-                const updated = new URLSearchParams(searchParams);
-                updated.set('layout', 'tabs');
-                updated.set('tab', 'simulation');
-                setSearchParams(updated);
-              }}
-              aria-pressed={tab === 'simulation'}
-            >
-              Simulation
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                const updated = new URLSearchParams(searchParams);
-                updated.set('layout', 'tabs');
-                updated.set('tab', 'worksheet');
-                setSearchParams(updated);
-              }}
-              aria-pressed={tab === 'worksheet'}
-            >
-              Worksheet
-            </button>
-          </div>
-        ) : null}
-        <section className={layout === 'tabs' && tab !== 'simulation' ? 'layout-pane is-hidden' : 'layout-pane'}>{simulationPane}</section>
-        {layout === 'side' ? <SplitHandle splitFraction={splitFraction} onChange={setSplitFraction} /> : null}
-        <section className={layout === 'tabs' && tab !== 'worksheet' ? 'layout-pane is-hidden' : 'layout-pane'}>{worksheet}</section>
+      <div className={layout === 'tabs' ? 'lab-shell lab-shell-tabs' : 'lab-shell'}>
+        <div
+          className={
+            layout === 'tabs'
+              ? 'lab-layout lab-layout-tabs'
+              : `lab-layout lab-layout-side ${simSide === 'right' ? 'lab-layout-sim-right' : 'lab-layout-sim-left'}`
+          }
+          style={layout === 'side' ? ({ '--split-sim': `${splitFraction * 100}%` } as CSSProperties) : undefined}
+        >
+          {layout === 'tabs' ? (
+            <div className="tabs">
+              <button
+                type="button"
+                onClick={() => {
+                  const updated = new URLSearchParams(searchParams);
+                  updated.set('layout', 'tabs');
+                  updated.set('tab', 'simulation');
+                  setSearchParams(updated);
+                }}
+                aria-pressed={tab === 'simulation'}
+              >
+                Simulation
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const updated = new URLSearchParams(searchParams);
+                  updated.set('layout', 'tabs');
+                  updated.set('tab', 'worksheet');
+                  setSearchParams(updated);
+                }}
+                aria-pressed={tab === 'worksheet'}
+              >
+                Worksheet
+              </button>
+            </div>
+          ) : null}
+          <section className={layout === 'tabs' && tab !== 'simulation' ? 'layout-pane layout-pane-simulation is-hidden' : 'layout-pane layout-pane-simulation'}>
+            {simulationPane}
+          </section>
+          {layout === 'side' ? <SplitHandle splitFraction={splitFraction} onChange={setSplitFraction} /> : null}
+          <section className={layout === 'tabs' && tab !== 'worksheet' ? 'layout-pane layout-pane-worksheet is-hidden' : 'layout-pane layout-pane-worksheet'}>
+            {worksheet}
+          </section>
+        </div>
       </div>
     </main>
   );

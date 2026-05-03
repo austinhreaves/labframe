@@ -1,5 +1,6 @@
 import type { CalculationSection } from '@/domain/schema';
 import { useLabStore } from '@/state/labStore';
+import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
 import { EquationEditor } from '@/ui/primitives/EquationEditor';
 import { Field } from '@/ui/primitives/Field';
 
@@ -13,6 +14,7 @@ export function CalculationSectionView({ section }: Props) {
 
   return (
     <section className="section">
+      <SectionPointsCaption points={section.points} />
       {section.equationEditor ? (
         <EquationEditor
           id={section.fieldId}

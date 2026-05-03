@@ -1,5 +1,6 @@
 import type { DataTableSection, TableData } from '@/domain/schema';
 import { useLabStore } from '@/state/labStore';
+import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
 import { Table } from '@/ui/primitives/Table';
 
 const EMPTY_TABLE: TableData = [];
@@ -15,6 +16,7 @@ export function DataTableSectionView({ section }: Props) {
 
   return (
     <section className="section">
+      <SectionPointsCaption points={section.points} />
       <Table
         section={section}
         data={tableData}

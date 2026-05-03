@@ -1988,60 +1988,1050 @@ to their prose.
 
 ---
 
-### Phase 4 — Migrate remaining labs + course manifest finalization
+### Phase 3.5.7 — Section card points integration
 
-**Goal:** All 7 distinct labs (`staticElectricity`, `chargesFields`, `capacitors`, `dcCircuits`, `magneticFieldFaraday`, `snellsLaw`, `geometricOptics`) live as schemas. Both `general` and `phy114` courses are real. Drift between `labs/` and `phy_114/` is explicitly resolved.
+**Goal:** Every section's `points` value renders consistently in both UI and PDF section headers, and the PDF cover sheet shows a total. Snell's Law's per-section points are migrated from prose into the schema field.
+
+**Why this phase exists.** §5.4's Section schema already supports `points?: number` on every variant, but the UI section components and PDF renderer don't surface it. Snell's Law has points baked into the prose for some sections and missing entirely for others. TAs can't tally per-section credit without reading prose; students can't see what's worth what. Phase 4 will multiply this inconsistency by 12 labs — fix once, before Phase 4.
 
 **Deliverables:**
-- 6 more `*.lab.ts` files migrated from legacy.
-- Resolution document: a short markdown listing every place the two duplicate trees diverged, with a chosen canonical version for each.
-- Both courses fully populated; phy114 has the lab-numbering and access gating from the legacy `LAB_ACCESS_CONFIG`.
-- Per-lab snapshot PDF tests.
-- One Playwright E2E per lab: open, fill in a deterministic fixture, generate PDF, assert text snapshot.
 
-**Definition of done:** Feature parity with legacy for content. Legacy `physics-labs.up.railway.app` folder can be deleted once Austin signs off.
+1. **UI section header points caption.** Render a small caption next to each section title: `({N} points)`. Apply uniformly via the SectionRenderer (or each section view component, whichever is the cleaner insertion point). Hide entirely when `points` is absent — no `0 points`, no `?`.
+2. **PDF section title points suffix.** In `Document.tsx`, every section's title `<Text>` gets a ` (N pts)` suffix when `section.points` is defined.
+3. **PDF cover sheet total.** Cover page subtitle gains a `Total: N points` line, computed at render time as the sum of all section `points` values.
+4. **Snell's Law schema migration.** Audit every section in `src/content/labs/snellsLaw.lab.ts`. Set `points` from the legacy lab manual (or by inspection, if the manual is ambiguous — flag those for Austin). Strip any `(N points)` mention from prose so the value lives in the schema only.
+5. **Tests.** Component test asserts the points caption renders when defined and is absent otherwise. PDF unit test asserts cover sheet contains the expected total. Snapshot test confirms snellsLaw section headers all show points.
+
+**Definition of done:** every Snell's Law section shows points in both UI and PDF; cover sheet shows the correct total; no points duplication between schema and prose; new tests green; existing tests still green.
+
+#### Phase 3.5.7 — Agent prompt
+
+```
+The Lab schema's Section variants all support `points?: number` per
+spec §5.4. The schema accepts it; the UI section components and PDF
+renderer don't surface it. Snell's Law has points baked into prose for
+some sections and missing entirely for others. Phase 4 will multiply
+this inconsistency — fix it once, before Phase 4.
+
+Read REBUILD_SPEC.md sections 3.5.7 and §5.4. Read these files:
+- src/ui/sections/SectionRenderer.tsx (or wherever the section header
+  is rendered)
+- src/services/pdf/Document.tsx (every section branch + cover page)
+- src/content/labs/snellsLaw.lab.ts
+
+Tasks:
+1. UI: section header points caption. Render `({N} points)` near each
+   section title via SectionRenderer or per-section view. Omit when
+   points is undefined.
+2. PDF: section title points suffix. In Document.tsx, every section's
+   title <Text> gets ` (N pts)` suffix when points is defined.
+3. PDF: cover sheet total. Cover page subtitle gains a "Total: N points"
+   line, computed as the sum across all sections.
+4. snellsLaw migration. Audit every section, set `points` from the
+   legacy lab manual (or by inspection). Remove any "(N points)" from
+   prose so the value lives in the schema. If a section's point value
+   is ambiguous, flag with a TODO comment for Austin to confirm.
+5. Tests:
+   - tests/unit/sectionPoints.test.tsx: SectionRenderer shows the
+     caption when defined; omits when absent.
+   - tests/unit/pdfCoverTotal.test.tsx: render LabReportDocument with a
+     fixture lab; assert cover text contains expected "Total: N points".
+   - Extend the snellsLaw PDF snapshot to include the section-points
+     suffix in the extracted text.
+6. npm run lint && npm run typecheck && npm test. All green.
+
+Constraints:
+- Do not bump LabAnswers schemaVersion. This is authoring schema, not
+  state.
+- Backward compat: undefined points must continue to render exactly as
+  today (no caption, no suffix).
+- The PDF cover total is computed at render time. Do not store it in
+  answers.
+- No new section kinds. No schema additions beyond what already exists.
+
+Deliverable: every Snell's Law section shows points in UI and PDF; cover
+sheet shows total; no inconsistency; tests green.
+```
+
+---
+
+### Phase 3.5.8 — Equation editor upgrade (full UX)
+
+**Goal:** Promote the equation editor from "mathlive widget that mostly works" to "first-class physics-lab equation tool." Add toggleable LaTeX source ↔ rendered math view, side-by-side preview, physics symbol palette, copy/paste LaTeX. Lock down paste/IME test coverage that's currently missing. Pre-Phase-4 because Phase 4 labs (capacitors, dcCircuits, magneticFieldFaraday) lean on equation inputs.
+
+**Why this phase exists.** The Phase 1.5 #4 mathlive integration audit confirms the editor works at the basic level — dynamic import resolves, `<math-field>` mounts, `markFieldActivity` is wired, fallback `<Field multiline>` serves during the dynamic import, IME composition is captured. What's missing:
+
+- Students who think in LaTeX have no way to type LaTeX directly; they're forced through mathlive's WYSIWYG keyboard.
+- Students who type in the WYSIWYG mode can't see, copy, or share the underlying LaTeX.
+- The physics-lab symbol vocabulary (`∇`, `∂`, `∫`, `∑`, Greek letters, `\vec`, `\hat`, sub/sup) requires command memorization that a beginner doesn't have. A clickable palette removes that friction.
+- Paste and IME handling exists in code but isn't covered by the test suite. The audit found tests cover keystrokes and mounting only.
+
+These are real friction points students hit; Phase 4 will dramatically increase the volume of equation input across labs.
+
+**Deliverables:**
+
+1. **Audit + fix any breakage.** Run the existing tests; manually verify in dev. The Phase 1.5 audit (recorded in this spec's verification step) showed the integration is functional, but if anything is broken at the time the agent picks this up, fix first. Document each fix.
+
+2. **Mode toggle: LaTeX source ↔ rendered math.**
+   - Per-field toggle button in the editor's toolbar. Two modes:
+     - `math` (default): mathlive `<math-field>` controlled by `value.text` (LaTeX source).
+     - `latex`: a `<textarea>` editing `value.text` directly.
+   - Toggle state is component-local (`useState`), not persisted. Per-session UX.
+   - Switching modes preserves the in-flight `value.text`; both modes operate on the same source string.
+
+3. **Side-by-side preview pane.**
+   - In `math` mode: small below-the-editor box showing the LaTeX source as monospace, with a "Copy LaTeX" button.
+   - In `latex` mode: small below-the-editor box rendering the LaTeX as KaTeX (use `katex.renderToString` and `dangerouslySetInnerHTML` inside the box; KaTeX output is known-safe).
+   - Layout: side-by-side on viewports ≥ 720px; stacked vertically below.
+
+4. **Physics symbol palette.**
+   - New component `src/ui/primitives/EquationSymbolPalette.tsx`.
+   - Toolbar above the editor with category tabs: Greek (α β γ δ ε θ λ μ π σ φ ω + uppercase variants), Operators (∇ ∂ ∫ ∑ ∏ √ ± × ÷ · ≤ ≥ ≠ ≈ → ∝), Vectors (`\vec{x}`, `\hat{x}`, `\dot{x}`, `\ddot{x}`), Sub/Sup (`x_i`, `x^2`, `x_{ab}`, `x^{ab}`).
+   - Each button shows the rendered glyph; click inserts the LaTeX command at the current cursor position. Works in both modes (math mode dispatches a mathlive insert action; LaTeX mode inserts text at `selectionStart`).
+   - Constants live in `src/ui/primitives/equationSymbols.ts` so future labs with specialized symbol needs (E&M wants `\hbar`, `\epsilon_0`, etc.) can extend without touching the component.
+
+5. **Copy / paste LaTeX.**
+   - "Copy LaTeX" button copies `value.text` to clipboard via `navigator.clipboard.writeText`.
+   - On paste in either mode, detect LaTeX (heuristic: contains `\` and at least one `{...}` pair), insert as-is. Continue to record `PasteEvent` with `source: 'clipboard'` via `markFieldActivity` so paste tracking still works.
+
+6. **Backfill the missing test coverage from the Phase 1.5 audit.**
+   - Paste capture: paste a LaTeX string in math mode, assert a `PasteEvent` with `source: 'clipboard'` is recorded.
+   - IME composition: simulate `compositionstart` → `insertCompositionText` events → `compositionend`, assert a single `PasteEvent` with `source: 'ime'` is recorded.
+   - These tests are missing today (the Phase 1.5 audit confirmed). Don't ship 3.5.8 without them.
+
+7. **Tests for new functionality.**
+   - Mode toggle test: mount, click toggle, assert mode swap and value preservation across the swap.
+   - Symbol palette: click "α" button, assert `\alpha` inserted at cursor in both modes.
+   - Copy: click Copy button, assert clipboard call with `value.text`.
+   - Side-by-side preview: in latex mode, type `\sin\theta`, assert the preview box renders KaTeX HTML containing `sin` and `θ`.
+
+**Definition of done:** equation editor has mode toggle + side-by-side preview + symbol palette + copy/paste LaTeX; mathlive still lazy-loads; FieldValue capture continues to work in both modes; the missing paste/IME tests are now in place and green; full suite green.
+
+**Explicit non-goals (deferred):**
+- Persisted preference (mode per-user / per-field). Per-session only for v1.
+- Custom symbol palettes per-lab. v1 ships one default palette; per-lab override is post-Phase-4.
+- Equation grading / autograding. Out of scope; the equation field's `value.text` remains a free-form LaTeX string graded manually by TAs.
+- Math input on mobile. Mathlive has its own mobile keyboard; v1 uses it as-is. Mobile UX is Phase 5.
+
+#### Phase 3.5.8 — Agent prompt
+
+```
+The Phase 1.5 mathlive integration is functional but bare. Upgrade it
+to a full-featured equation editor: mode toggle (LaTeX source ↔
+rendered math), side-by-side preview pane, physics symbol palette, copy
+and paste LaTeX. Also backfill the paste/IME test coverage that Phase
+1.5 left missing.
+
+Read REBUILD_SPEC.md sections 3.5.8 and Phase 1.5 #4. Read these files:
+- src/ui/primitives/EquationEditor.tsx (existing implementation)
+- tests/unit/equationEditor.test.tsx (existing tests; covers mounting
+  + keystrokes only)
+- src/state/labStore.ts (markFieldActivity — must continue to work
+  through both modes)
+- package.json (mathlive and katex are present)
+
+Tasks:
+
+1. AUDIT FIRST. Run the existing tests. Manually verify in dev that:
+   - Dynamic import resolves (no console error).
+   - <math-field> mounts when import completes.
+   - Typing in math mode produces FieldValue patches with keystrokes
+     incrementing.
+   - Pasting in math mode records a PasteEvent.
+   - IME composition records a single PasteEvent on compositionend.
+   - Reload preserves the value.
+   If anything is broken, fix it before continuing. Document each fix.
+
+2. Mode toggle. Add a toolbar above the editor with a "View as math /
+   View as LaTeX" toggle. Component-local useState, not persisted.
+   Math mode: mathlive <math-field> as today. LaTeX mode: <textarea>
+   editing value.text directly. Switching preserves value.text.
+
+3. Side-by-side preview.
+   - Math mode: below-the-editor box showing value.text as monospace
+     with a "Copy LaTeX" button.
+   - LaTeX mode: below-the-editor box rendering KaTeX via
+     katex.renderToString + dangerouslySetInnerHTML (KaTeX output is
+     known-safe).
+   - Side-by-side at viewport ≥ 720px; stacked below.
+
+4. Symbol palette. New component
+   src/ui/primitives/EquationSymbolPalette.tsx. Constants in
+   src/ui/primitives/equationSymbols.ts. Categories: Greek, Operators,
+   Vectors, Sub/Sup (see Phase 3.5.8 deliverable 4 for the symbol set).
+   Each button click inserts the LaTeX command at the current cursor
+   position — works in both modes (math mode dispatches a mathlive
+   insert action; latex mode inserts text at selectionStart). Test
+   inserts in both modes.
+
+5. Copy/paste.
+   - "Copy LaTeX" button: navigator.clipboard.writeText(value.text).
+   - Paste in either mode: detect LaTeX heuristic (contains "\" and a
+     "{...}" pair); insert as-is; record PasteEvent with
+     source: 'clipboard' via markFieldActivity.
+
+6. Backfill missing tests from the Phase 1.5 audit:
+   - Paste capture: simulate paste event in math mode, assert PasteEvent
+     recorded.
+   - IME composition: simulate compositionstart → insertCompositionText
+     → compositionend, assert single PasteEvent with source: 'ime'.
+   These tests are MISSING today; don't ship without them.
+
+7. Tests for new functionality:
+   - Toggle: assert mode swap preserves value.text.
+   - Palette: click "α" button, assert "\alpha" inserted at cursor in
+     both modes.
+   - Copy: assert clipboard call with value.text.
+   - Preview: in latex mode, type "\sin\theta", assert preview HTML
+     contains "sin" and "θ".
+
+8. npm run lint && npm run typecheck && npm test && npx playwright test.
+   All green.
+
+Constraints:
+- Mathlive stays lazy-loaded. Symbol palette is sync (just buttons).
+- KaTeX is already in the bundle from Phase 1.5. Reuse, don't dup.
+- FieldValue capture must continue to work in both modes — explicit
+  test required.
+- Mode toggle is per-session UX, not persisted in store.
+- Don't break the dynamic-import fallback (<Field multiline> serves
+  while mathlive resolves).
+- Bundle: target ≤ 80KB gzip added (palette + UI shell, not counting
+  mathlive which is already there).
+- Don't auto-format the LaTeX source. The student types; we record.
+
+Deliverable: equation editor with mode toggle + side-by-side preview +
+symbol palette + copy/paste LaTeX; paste/IME tests backfilled; full
+suite green; Phase 4 labs can now ship real equations.
+```
+
+---
+
+### Phase 3.5.9 — Equation editor: multi-line math + hybrid symbol palette
+
+**Goal:** Two follow-on UX fixes after 3.5.8 ships. (1) Enter in math mode currently does nothing useful — `<math-field>` only honors line breaks inside a multi-line environment. Wrap the existing value in `\begin{gathered}…\end{gathered}` on the first Enter; add a row on subsequent Enters. (2) The 4-tab category palette costs two clicks for the most-used physics glyphs. Promote 10 high-frequency symbols to a single-click quick row; keep the rest behind a `<details>` "More" popover.
+
+**Why this phase exists.** Phase 4 labs (capacitors, dcCircuits, magneticFieldFaraday) need multi-step derivations — students will routinely write 2- to 4-line equation chains. Without multi-line support they'll either jam everything onto one line (illegible PDFs) or paste-bomb from elsewhere (which pollutes paste analytics). The hybrid palette is a click-economy fix: in 3.5.8 every symbol cost 2 clicks (tab + symbol); the most common 10 should cost 1.
+
+**Deliverables:**
+
+1. **Enter-to-wrap in math mode.**
+   - Add `onKeyDown` to the math-mode `<math-field>`. Branch on `event.key === 'Enter' && !event.shiftKey`.
+   - `event.preventDefault()` always (we own this key in math mode).
+   - **First Enter** (when `target.value` does not contain `\begin{gathered}`): wrap as `\begin{gathered}<current> \\ \end{gathered}` — empty trailing row, **no `\placeholder{}`**. Set `target.value` directly; position the caret just before the closing `\end{gathered}` so typing lands in the new row.
+   - **Subsequent Enter**: call `target.executeCommand?.(['addRowAfter'])`. MathLive handles the caret; read it back via `getSelectionStart(target)` for the patch.
+   - **Both paths must set `ignoreNextInputValue.current = target.value` BEFORE calling `commitInsertedText`.** MathLive fires its own `input` event on the value mutation; without this guard the keystroke double-counts. The existing `insertIntoMathInput` uses the same pattern — copy it.
+   - Reuse the existing `commitInsertedText({ ...effective, text: prevText }, target.value, caret, 'insertText', '\\\\')` pipeline so `markFieldActivity` records exactly one keystroke per Enter.
+   - Use `gathered` (not `aligned`): no `&` columns required, lines are centered, supported by both MathLive and KaTeX (LaTeX-mode preview renders correctly).
+   - **Shift+Enter** is NOT intercepted — leave MathLive's default behavior alone.
+   - LaTeX-mode `<textarea>` already accepts Enter natively. No change needed; `\begin{gathered}…\end{gathered}` round-trips through KaTeX.
+
+2. **Quick-row + popover symbol palette.**
+   - In `src/ui/primitives/equationSymbols.ts`: **promote** these 10 symbols out of `EQUATION_SYMBOL_CATEGORIES` into a new exported `QUICK_SYMBOLS: EquationSymbol[]` constant, in this order: α, θ, π, Δ, μ, σ, ±, →, √, ≈ (inserts: `\alpha`, `\theta`, `\pi`, `\Delta`, `\mu`, `\sigma`, `\pm`, `\to`, `\sqrt{}`, `\approx`). They are **removed** from their original categories — single source of truth, one button per symbol, no aria-label collisions.
+   - In `src/ui/primitives/EquationSymbolPalette.tsx`: replace current layout with a single horizontal row containing 10 quick-insert buttons (`.equation-symbol-quick`) followed by `<details class="equation-symbol-more"><summary>More ▾</summary><div>…existing category tabs + grid…</div></details>`.
+   - `<details>` chosen for built-in keyboard a11y, no click-outside logic, and stays open across multiple inserts.
+   - After every insert (quick row OR popover), restore focus to the active editor. Plumb a focus callback from `EquationEditor` (which knows whether `mode === 'math'` and owns `mathFieldRef` / `latexInputRef`) into the palette so it can call the right `.focus()` after each click.
+
+3. **CSS in `src/main.css`:**
+   - Smaller buttons: `.equation-symbol-quick, .equation-symbol-button { padding: 0.15rem 0.35rem; min-height: 1.7rem; font-size: 0.85rem; }`.
+   - Popover container: `.equation-symbol-more { position: relative; }`.
+   - Popover body: `.equation-symbol-more > div { position: absolute; z-index: 5; background: #fff; border: 1px solid #d0d0d0; border-radius: 6px; padding: 0.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); min-width: 18rem; }`.
+   - Tighter category grid: `.equation-symbol-grid { grid-template-columns: repeat(auto-fill, minmax(2.4rem, 1fr)); }`.
+   - Bump `math-field { min-height: 140px; }` (from 120px) so the wrapped form has room; mathlive auto-grows beyond min-height.
+
+4. **Tests in `tests/unit/equationEditor.test.tsx`.**
+   - **New:** `Enter in math mode wraps value in \begin{gathered}` — render with `initialText: 'a+b'`, set caret at end, fire `keyDown` with `key: 'Enter', shiftKey: false`. Assert latest `value.text` contains `\begin{gathered}`, `a+b`, and `\\` (the row separator). Assert `value.meta.keystrokes` incremented by **exactly 1** (proves the `ignoreNextInputValue` guard).
+   - **New:** `subsequent Enter calls addRowAfter` — after wrapping, set `mathField.executeCommand = vi.fn()`, fire Enter again, assert called with `['addRowAfter']`. (Note: the existing test setup mocks `mathlive` entirely via `vi.mock('mathlive', () => ({}))`; `executeCommand` does NOT exist on math-field by default — the test must define it.)
+   - **New:** `quick-row alpha button is reachable without opening popover` — render fresh editor; assert `getAllByRole('button', { name: 'Insert \\alpha' })` returns exactly **one** element; that element's `closest('details')` is `null`.
+   - **New:** `popover starts closed and opens on summary click` — assert `<summary>More ▾</summary>` present and parent `<details>` has no `open` attribute initially; click summary; assert `details[open]` and that one popover-only symbol (e.g., `Insert \nabla`) is now reachable via `getByRole`.
+   - **Existing test continues unchanged:** `inserts alpha from palette in both math and latex modes` keeps working because α now lives only in the quick row — exactly one button matches `Insert \alpha`. No edit needed beyond verifying it still passes.
+   - **Untouched existing tests:** paste capture, IME composition, mode toggle, KaTeX preview, copy LaTeX, field activity across modes.
+
+**Definition of done:** Enter in math mode produces a multi-line `gathered` block; subsequent Enters add rows; LaTeX-mode preview of multi-line still renders cleanly through KaTeX. Quick row of 10 symbols inserts in one click; "More" popover holds the remaining categories; both paths return focus to the active editor after insert. Field activity capture, paste, IME, copy, and mode toggle all still work. New tests green; full suite green; bundle delta ≤ 1KB.
+
+**Explicit non-goals (deferred):**
+- **No `\placeholder{}` in the wrapped output.** It's a MathLive-specific macro: KaTeX renders it as an error span (preview shows red) and `Document.tsx` would print it verbatim into the PDF (it just emits `value.text` as plain text). Empty trailing row is the v1 behavior. If a "click-here-to-type" affordance turns out to be necessary, revisit in a follow-on phase.
+- **Don't intercept Shift+Enter** — leave to MathLive default.
+- **Don't auto-collapse `<details>` after insert.** Staying open across multiple inserts is the point.
+- **Don't change the `FieldValue` schema.** Multi-line wrap only changes text content.
+- **No new dependencies.** Uses what's already in the bundle (mathlive, katex).
+- **No mobile-specific palette.** Existing layout flexes; mobile UX is Phase 5.
+
+#### Phase 3.5.9 — Agent prompt
+
+```
+Two follow-on UX fixes for the equation editor that landed in 3.5.8:
+multi-line support in math mode, and a hybrid quick-row + "More"
+popover palette. Read REBUILD_SPEC.md section 3.5.9 in full before
+starting.
+
+Read these files first:
+- src/ui/primitives/EquationEditor.tsx (math-field handler lives
+  here; copy the ignoreNextInputValue guard pattern from
+  insertIntoMathInput)
+- src/ui/primitives/EquationSymbolPalette.tsx (current 4-tab layout)
+- src/ui/primitives/equationSymbols.ts (categories + symbols)
+- src/main.css (.equation-* rules around line 314; math-field rule
+  around line 281)
+- tests/unit/equationEditor.test.tsx (NOTE: mathlive is fully mocked
+  via vi.mock('mathlive', () => ({})); executeCommand does NOT
+  exist on the math-field unless the test sets it explicitly)
+- src/services/pdf/Document.tsx (sanity check: prints value.text as
+  plain text, no LaTeX rendering — wrapped source flows through fine)
+- src/state/labStore.ts (markFieldActivity must keep working)
+
+Tasks:
+
+1. MULTI-LINE ENTER WRAP.
+   Add onKeyDown to the math-mode <math-field>. On
+   event.key === 'Enter' && !event.shiftKey:
+   a. event.preventDefault().
+   b. const prev = target.value.
+   c. If prev does NOT contain '\\begin{gathered}':
+      - wrapped = '\\begin{gathered}' + prev + ' \\\\ \\end{gathered}'
+      - target.value = wrapped
+      - position caret just before \\end{gathered}
+      - DO NOT include \\placeholder{}. KaTeX renders it as an error
+        and Document.tsx would print it raw into the PDF.
+   d. Else:
+      - target.executeCommand?.(['addRowAfter'])
+      - read caret = getSelectionStart(target) AFTER the command
+   e. ignoreNextInputValue.current = target.value
+      ^ critical. Without this, MathLive's own input event will
+      double-count the keystroke. insertIntoMathInput uses the same
+      guard — copy that pattern.
+   f. commitInsertedText({ ...effective, text: prev }, target.value,
+                          caret, 'insertText', '\\\\').
+   Shift+Enter is NOT intercepted — let MathLive default fire.
+   LaTeX-mode <textarea> needs no change; Enter is native and
+   \\begin{gathered}…\\end{gathered} round-trips through KaTeX.
+
+2. HYBRID PALETTE.
+   In src/ui/primitives/equationSymbols.ts:
+   - Export QUICK_SYMBOLS: EquationSymbol[] containing exactly, in
+     this order: α (\\alpha), θ (\\theta), π (\\pi), Δ (\\Delta),
+     μ (\\mu), σ (\\sigma), ± (\\pm), → (\\to), √ (\\sqrt{}),
+     ≈ (\\approx).
+   - REMOVE these 10 entries from EQUATION_SYMBOL_CATEGORIES. Each
+     symbol must live in exactly one place — single source of truth,
+     no aria-label collisions in tests.
+
+   In src/ui/primitives/EquationSymbolPalette.tsx:
+   - Replace current layout with: horizontal row of 10
+     .equation-symbol-quick buttons (from QUICK_SYMBOLS), followed by
+     <details class="equation-symbol-more"><summary>More ▾</summary>
+     <div>… existing category tabs + grid …</div></details>.
+   - <details> stays open across inserts; users close it manually.
+   - After every insert (quick row OR popover), restore focus to
+     the active editor. Plumb a focus callback from EquationEditor
+     (which owns mathFieldRef / latexInputRef and knows the current
+     mode) into the palette so it can call the right .focus() after
+     each click.
+
+3. CSS in src/main.css:
+   - .equation-symbol-quick, .equation-symbol-button {
+       padding: 0.15rem 0.35rem; min-height: 1.7rem;
+       font-size: 0.85rem;
+     }
+   - .equation-symbol-more { position: relative; }
+   - .equation-symbol-more > div {
+       position: absolute; z-index: 5; background: #fff;
+       border: 1px solid #d0d0d0; border-radius: 6px;
+       padding: 0.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+       min-width: 18rem;
+     }
+   - .equation-symbol-grid {
+       grid-template-columns: repeat(auto-fill, minmax(2.4rem, 1fr));
+     }
+   - math-field { min-height: 140px; } (was 120px). Auto-grows from
+     there once value contains \\\\.
+
+4. TESTS in tests/unit/equationEditor.test.tsx.
+   New tests:
+   - "Enter in math mode wraps value in \\begin{gathered}":
+     render initialText='a+b'; set caret at end; fire keyDown
+     { key: 'Enter', shiftKey: false }; assert latest value.text
+     contains \\begin{gathered}, 'a+b', and \\\\; assert
+     value.meta.keystrokes incremented by EXACTLY 1 (proves
+     ignoreNextInputValue guard).
+   - "subsequent Enter calls addRowAfter":
+     after the wrap, set mathField.executeCommand = vi.fn(); fire
+     Enter again; assert called with ['addRowAfter'].
+   - "quick-row alpha button is reachable without opening popover":
+     render fresh editor; expect getAllByRole('button',
+     { name: 'Insert \\alpha' }) to return exactly one element;
+     that element's closest('details') is null.
+   - "popover starts closed and opens on summary click":
+     assert <summary>More ▾</summary> present and parent details
+     has no 'open' attr; click summary; assert details has 'open'
+     attr and a popover-only symbol (e.g. Insert \\nabla) is
+     reachable.
+   Existing test "inserts alpha from palette in both math and latex
+   modes" should pass without modification — α now lives only in
+   the quick row, so there's exactly one matching button.
+   Run the full equationEditor suite and verify no regressions.
+
+5. npm run lint && npm run typecheck && npm test && npx playwright
+   test. All green.
+
+Constraints:
+- Don't change the FieldValue schema.
+- Don't add new dependencies. Bundle delta ≤ 1KB.
+- Don't intercept Shift+Enter.
+- Don't auto-collapse <details>.
+- Don't include \\placeholder{} anywhere in the wrap output.
+- Mathlive stays lazy-loaded.
+- KaTeX preview must continue to render in latex mode (gathered is
+  supported; manually verify with a 3-line wrapped equation).
+
+Deliverable: math mode supports multi-line via Enter; palette has
+10-symbol quick row + popover; existing tests pass without edits;
+new tests in place and green.
+```
+
+---
+
+### Phase 3.7 — Layout & navigation polish (single-edge scroll, swap sides, TOC, progress bar)
+
+**Goal:** Side-by-side layout has one scrollbar at the page edge (no captive scroll). Sim/worksheet sides are swappable. Sticky TOC sidebar lets students jump to sections. Header progress bar shows completion. Phase 1.5's iframe-stability invariant is preserved through all of these.
+
+**Why this phase exists.** Captive scroll regions in the worksheet pane feel cramped — scrollwheel doesn't behave naturally because the viewport contains two competing scroll regions (page + worksheet). Sim placement isn't user-configurable; some students prefer sim on the right. Long worksheets in Phase 4 will be hard to navigate without TOC. Progress bar gives "I have 4 sections left" feedback that the current UI doesn't surface. All four are scoped to a single sub-phase because they touch the same layout surface and benefit from being designed together.
+
+**Deliverables:**
+
+1. **Single page-edge scrollbar.**
+   - Remove `overflow: auto` from the worksheet pane.
+   - Iframe `.simulation-frame` gets a fixed height (e.g., `720px` or a viewport-relative value); does not scroll internally.
+   - Worksheet contributes to the page's natural height.
+   - Page itself is the only scroller; the existing sticky header (Phase 1.7) stays at top.
+   - Sim-pane sticky behavior: in side-by-side, the sim sticks at the top of the left/right column until the worksheet ends, then scrolls off naturally. Use `position: sticky; top: <header-height>` on the sim wrapper.
+
+2. **Swap sim ↔ worksheet placement.**
+   - New layout state: `simSide: 'left' | 'right'` (default `'left'`).
+   - URL search param sync: `?side=left` / `?side=right`.
+   - Toggle button placed adjacent to the existing layout toggle in the header.
+   - CSS approach: when `simSide === 'right'`, swap grid column order via a CSS variable or class (don't re-render the cells; just reorder).
+   - **Iframe `data-mount-id` MUST NOT change on swap.** Use the same single iframe element, just reposition.
+
+3. **Sticky TOC sidebar.**
+   - New component `src/ui/layout/TableOfContents.tsx`.
+   - Receives `lab.sections`; renders a list of section titles (or "Section N: <kind>" labels for sections without a title).
+   - Each item is an anchor link `href="#section-{index}"` with smooth-scroll behavior.
+   - Sticky on the left edge of the page, outside the sim/worksheet grid.
+   - Highlights the currently-visible section using `IntersectionObserver`.
+   - Hidden in tabs layout (or shown collapsed — agent picks one and documents).
+   - Worksheet sections must add an `id="section-{index}"` to their wrapper element.
+
+4. **Header progress bar.**
+   - New component `src/ui/ProgressBar.tsx`.
+   - Mounted in the `lab-header-slot` area (Phase 1.7 reserved this slot).
+   - Computes `filledCount` = count of sections with at least one field whose `text.trim()` is non-empty.
+   - `totalCount` = `lab.sections.length` minus the count of `instructions` and `plot` sections (no fields owned).
+   - Renders `Progress: {filledCount}/{totalCount}` plus a thin `<progress>` element or custom bar.
+   - Updates live via Zustand selector.
+
+5. **Tests.**
+   - `tests/e2e/layoutEdgeScroll.spec.ts`: open Snell's Law in side-by-side, dispatch a scroll event, assert `window.scrollY` changed (i.e., the page scrolled, not a captive region).
+   - `tests/e2e/swapSides.spec.ts`: click swap, assert grid order changed via computed style; assert iframe `data-mount-id` unchanged.
+   - `tests/unit/tableOfContents.test.tsx`: mount with snellsLaw, assert section titles render; click first, assert `scrollIntoView` called with `behavior: 'smooth'`.
+   - `tests/unit/progressBar.test.tsx`: mount with answers having one filled field, assert `1/{N}` rendered.
+   - The Phase 1.5 iframe-stability E2E (data-mount-id unchanged across layout flip) must still pass after these changes.
+
+**Definition of done:** scroll feels natural in side-by-side; sim can be on either side; TOC navigates correctly; progress bar reflects filled state; iframe doesn't re-mount on any toggle; all new tests green; Phase 1.5 iframe-stability E2E still green.
+
+**Explicit non-goals (deferred):**
+- Persisted `simSide` preference per-user. URL-synced only for v1.
+- TOC fold/collapse on narrow viewports. Hidden in tabs layout, shown in side-by-side. Mobile is Phase 5.
+- Progress bar segmented by Part (visual chunking). Single bar for v1.
+- Section-completion telemetry export. Future phase if instructor-facing analytics emerge.
+
+#### Phase 3.7 — Agent prompt
+
+```
+Four layout/nav improvements before Phase 4 multiplies content. Single
+page-edge scrollbar, swap-sides toggle, TOC sidebar, progress bar.
+The Phase 1.5 iframe-stability invariant must be preserved.
+
+Read REBUILD_SPEC.md sections 3.7 and Phase 1.7. Read these files:
+- src/ui/LabPage.tsx (current layout)
+- src/main.css (.lab-layout-side, .lab-layout-tabs, .simulation-frame)
+- src/ui/layout/SplitHandle.tsx (existing splitter)
+- src/state/labStore.ts (lab state, fields)
+
+Tasks:
+
+1. Single page-edge scrollbar.
+   - Remove overflow:auto from the worksheet pane.
+   - .simulation-frame gets fixed height: 720px (or a viewport-relative
+     value if you prefer; pick one and document).
+   - Worksheet contributes to page height naturally.
+   - Sim sticks at the top of its column via position:sticky;top:<headerHeight>
+     so it's visible while the student scrolls through the worksheet.
+   - Verify with Snell's Law: scrollwheel anywhere should scroll the
+     page, not a captive region.
+
+2. Swap-sides toggle.
+   - New layout state: simSide: 'left' | 'right'. Default 'left'.
+   - URL search param: ?side=left / ?side=right.
+   - Toggle button adjacent to existing LayoutToggle.
+   - When simSide=right, swap grid column order via CSS variable or
+     class. Same iframe element, repositioned.
+   - data-mount-id MUST NOT change on swap.
+
+3. TableOfContents.
+   - New component src/ui/layout/TableOfContents.tsx.
+   - Renders section titles or "Section N: <kind>" from lab.sections.
+   - Each entry is an anchor href="#section-{index}" with smooth scroll.
+   - Sticky on left edge, outside sim/worksheet grid.
+   - IntersectionObserver highlights the currently visible section.
+   - Hidden (or collapsed) in tabs layout.
+   - Add id="section-{index}" to each section wrapper in the worksheet.
+
+4. ProgressBar.
+   - New component src/ui/ProgressBar.tsx.
+   - Mounted in lab-header-slot (Phase 1.7 reserved).
+   - filledCount = sections where at least one field has text.trim()
+     non-empty.
+   - totalCount = lab.sections.length minus instructions and plot
+     sections.
+   - Render "Progress: {filled}/{total}" + a thin <progress> bar.
+   - Updates via Zustand selector.
+
+5. Tests:
+   - tests/e2e/layoutEdgeScroll.spec.ts: scrollwheel at any pane,
+     assert window.scrollY changed.
+   - tests/e2e/swapSides.spec.ts: click swap, assert grid order
+     changed via computed style; iframe data-mount-id unchanged.
+   - tests/unit/tableOfContents.test.tsx: mount with snellsLaw, assert
+     section titles render; click first, assert scrollIntoView called.
+   - tests/unit/progressBar.test.tsx: one filled field → "1/{N}".
+   - Phase 1.5 iframe-stability E2E must still pass.
+
+6. npm run lint && npm run typecheck && npm test && npx playwright test.
+   All green.
+
+Constraints:
+- Iframe identity preserved across all layout toggles (swap, splitter,
+  tabs/side, anything).
+- TOC must not capture keyboard focus or interfere with section inputs.
+- Progress derived via selector, not polling.
+- No new deps; IntersectionObserver is native.
+- Bundle: target ≤ 30KB gzip added across the four components.
+- Don't break Phase 1.7's draggable splitter; sticky sim must compose
+  with it.
+
+Deliverable: side-by-side feels natural to scroll; sim swaps sides
+without re-mounting; TOC and progress bar give long worksheets
+navigability; iframe identity preserved through every toggle.
+```
+
+---
+
+### Phase 3.7.1 — TOC popover, major-only filter, Export PDF rename
+
+**Goal:** Three small follow-ons to Phase 3.7. (1) The TOC sidebar eats too much horizontal real estate — convert to a header popover. (2) The default "show every section" rule produces 40+ entries on snellsLaw — constrain to H2-instructions + objective, with per-section escape hatches. (3) Rename the "Generate PDF" button to "Export PDF".
+
+**Why this phase exists.** A 12-16rem permanent TOC column is ~20% of a 1024px laptop's width. A popover gives the same affordance at zero permanent cost. The 40+-entry snellsLaw TOC isn't navigation, it's noise — major-sections-only collapses it to the ~6-8 "Part X" structural markers students actually want to jump between. "Export" reads as "produce a deliverable" while "Generate" reads as "create from scratch"; Export is the more accurate verb for what the action does.
+
+**Deliverables:**
+
+1. **TOC → header popover.** Convert `src/ui/layout/TableOfContents.tsx` from a sticky sidebar `<nav>` to a `<details>`-based popover with `<summary>Sections</summary>`. Drop the TOC column from `.lab-shell` in `src/main.css` (`grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr)` → single column). Mount the popover button in the lab header row alongside the existing layout/progress controls. Preserve: IntersectionObserver active-section highlight (visible inside open popover), smooth-scroll-on-click + URL hash update, and `id="section-{N}"` anchors on every section regardless of TOC inclusion (deep links must still resolve to hidden sections).
+
+2. **Major-sections-only filter with schema escape hatches.** Add to every section variant in `src/domain/schema/lab.ts` (cleanest: define a shared `SectionMetadataSchema` and `.extend()` each variant; alternative: repeat the two fields):
+   - `tocHidden?: boolean` — explicit opt-out.
+   - `tocLabel?: string` — explicit opt-in with a custom label.
+
+   Inclusion rule, in priority order:
+   - `tocHidden: true` → skip.
+   - `tocLabel: '...'` → include with that label.
+   - `kind === 'instructions'` AND the first non-blank line of `html` matches `/^##\s+(.+)$/` → include with the H2 text.
+   - `kind === 'objective'` → include with label "Objective".
+   - Otherwise → skip.
+
+   Apply in snellsLaw: set `tocHidden: true` on the `## Integrity Agreement` instructions section. Verify the resulting TOC has roughly 6-8 entries.
+
+3. **Rename "Generate PDF" → "Export PDF".**
+   - `src/ui/LabPage.tsx`: button text `'Generate PDF'` → `'Export PDF'`, busy state `'Generating PDF...'` → `'Exporting PDF...'`.
+   - Mechanical identifier rename: `generatePdf` → `exportPdf`, `generatePdfButtonRef` → `exportPdfButtonRef`, `isGeneratingPdf` → `isExportingPdf`. Grep `src/` for stragglers.
+   - Doc sweep: `docs/DATA_HANDLING.md` and `docs/DATA_HANDLING_EXEC_SUMMARY.md`. Do NOT touch `REBUILD_SPEC.md` — it's a historical record.
+
+4. **Tests.**
+   - Rewrite `tests/unit/tableOfContents.test.tsx` with a fixture lab covering every branch (H2 instructions included, H1 instructions excluded, `tocHidden` excluded, `objective` included, `measurement` excluded, `dataTable` with `tocLabel` included). Assert popover starts closed (no `open` attr), opens on summary click, lists exactly the included entries in order, click triggers `scrollIntoView({ behavior: 'smooth' })` and updates `window.location.hash`.
+   - Add an Export PDF button test (extend an existing LabPage test or new file): assert button text `Export PDF` and busy state `Exporting PDF...`.
+   - Phase 3.7's `layoutEdgeScroll.spec.ts` and `swapSides.spec.ts`, plus Phase 1.5's iframe-stability E2E, must still pass.
+
+**Definition of done:** TOC is a header popover; sidebar grid column gone; snellsLaw shows ~6-8 TOC entries with no Integrity Agreement; section anchors and deep links intact; user-facing button label is "Export PDF" everywhere; full suite green.
+
+**Explicit non-goals (deferred):**
+- Surfacing the Integrity Agreement as an export-time modal — Phase 5.5+. This phase only hides it from the TOC.
+- Showing the current section name in the popover button label. Variable text length kills header layout; the progress bar already covers location passively.
+- Two-level / collapsible TOC hierarchy. Flat list at this scope.
+- Updating `REBUILD_SPEC.md`'s historical "Generate PDF" mentions.
+
+#### Phase 3.7.1 — Agent prompt
+
+```
+Three follow-on fixes after Phase 3.7 layout work: TOC → popover,
+major-sections-only filter, Export PDF rename. Read REBUILD_SPEC.md
+section 3.7.1 in full before starting.
+
+Read these files first:
+- src/ui/layout/TableOfContents.tsx (current sidebar)
+- src/main.css (.lab-shell ~line 186, .table-of-contents ~line 197)
+- src/ui/LabPage.tsx (header row + Generate PDF button at
+  lines 236-238)
+- src/domain/schema/lab.ts (Section discriminated union,
+  ~lines 40-160)
+- src/content/labs/snellsLaw.lab.ts (Integrity Agreement is the
+  first instructions section, ~line 28)
+- tests/unit/tableOfContents.test.tsx (will be rewritten)
+- tests/e2e/layoutEdgeScroll.spec.ts and swapSides.spec.ts (Phase
+  3.7 invariants — must still pass)
+
+Tasks:
+
+1. TOC → POPOVER.
+   Refactor src/ui/layout/TableOfContents.tsx into a <details>-based
+   popover:
+     <details class="table-of-contents-popover">
+       <summary>Sections</summary>
+       <ul>… included entries …</ul>
+     </details>
+   Mount in the lab header row in src/ui/LabPage.tsx alongside the
+   existing layout/progress controls. In src/main.css, change
+   .lab-shell grid-template-columns from
+   "minmax(12rem, 16rem) minmax(0, 1fr)" to a single column;
+   worksheet reclaims the width. Style the popover similarly to
+   Phase 3.5.9's symbol-palette popover: absolute-positioned, white
+   background, border + box-shadow, max-height with vertical scroll.
+   Preserve from current implementation:
+     - IntersectionObserver active-section highlight (visible inside
+       the open popover).
+     - Smooth-scroll-on-click + URL hash update.
+     - id="section-{N}" anchors on EVERY section regardless of TOC
+       inclusion (deep links must still resolve to hidden sections).
+   Do NOT add a click-outside-to-close handler — <details> handles
+   toggle natively, and "stays open across navigations" is a feature.
+
+2. MAJOR-SECTIONS-ONLY FILTER.
+   a. Schema additions in src/domain/schema/lab.ts. On every section
+      variant (cleanest: shared SectionMetadataSchema +
+      .extend() per variant; alternative: repeat the two fields):
+        tocHidden: z.boolean().optional(),
+        tocLabel: z.string().optional(),
+   b. Inclusion rule in TableOfContents.tsx (priority order):
+        if (s.tocHidden) skip;
+        else if (s.tocLabel) include({ label: s.tocLabel });
+        else if (s.kind === 'instructions') {
+          const firstLine = s.html.split('\n')
+                             .find(l => l.trim() !== '');
+          const m = firstLine?.match(/^##\s+(.+)$/);
+          if (m) include({ label: m[1].trim() });
+        }
+        else if (s.kind === 'objective') include({ label: 'Objective' });
+   c. Drop the existing sectionKindLabel / generic
+      "Section N: <kind>" fallback — major-only means no fallback.
+      Drop measurement-label / calculation-prompt / concept-prompt
+      title resolution paths too; those sections only appear if the
+      author opts in via tocLabel.
+   d. In src/content/labs/snellsLaw.lab.ts, set tocHidden: true on
+      the "## Integrity Agreement" section (the first instructions
+      block). Run dev, verify TOC shows ~6-8 entries.
+
+3. RENAME "GENERATE PDF" → "EXPORT PDF".
+   In src/ui/LabPage.tsx:
+     button text 'Generate PDF'  → 'Export PDF'
+     busy state  'Generating PDF...' → 'Exporting PDF...'
+     generatePdf          → exportPdf
+     generatePdfButtonRef → exportPdfButtonRef
+     isGeneratingPdf      → isExportingPdf
+   Grep src/ for any stragglers (should be self-contained to
+   LabPage.tsx, but verify).
+   In docs/DATA_HANDLING.md and docs/DATA_HANDLING_EXEC_SUMMARY.md,
+   replace user-facing "Generate PDF" with "Export PDF".
+   DO NOT touch REBUILD_SPEC.md occurrences — historical record.
+
+4. TESTS.
+   Rewrite tests/unit/tableOfContents.test.tsx with a fixture lab:
+     (0) instructions html='## Setup\nfoo'                 → INCLUDED "Setup"
+     (1) instructions html='# Big heading\nfoo'            → EXCLUDED (H1)
+     (2) instructions html='## Hidden\nfoo' tocHidden:true → EXCLUDED
+     (3) objective fieldId:'obj' rows:2                    → INCLUDED "Objective"
+     (4) measurement fieldId:'m1' label:'M1'               → EXCLUDED
+     (5) dataTable ... tocLabel:'Trial data'               → INCLUDED "Trial data"
+   Assertions:
+     - Popover starts closed (no `open` attr on details).
+     - Click summary → details has `open` attr; entries reachable
+       via getByRole.
+     - Exactly 3 list items, in order
+       ["Setup", "Objective", "Trial data"].
+     - Click first entry → scrollIntoView called with
+       { behavior: 'smooth' }; window.location.hash updated.
+
+   Export PDF button — extend an existing LabPage test or add
+   tests/unit/labPage.exportButton.test.tsx:
+     - Assert button text 'Export PDF' renders.
+     - Assert busy state text 'Exporting PDF...' appears while
+       pending.
+
+   Run tests/e2e/layoutEdgeScroll.spec.ts,
+   tests/e2e/swapSides.spec.ts, and the Phase 1.5 iframe-stability
+   E2E. All must pass.
+
+5. npm run lint && npm run typecheck && npm test && npx playwright
+   test. All green.
+
+Constraints:
+- Section anchors stay on every section, including TOC-hidden ones.
+- No click-outside-to-close handler.
+- Don't extract Integrity Agreement into an export-time modal in
+  this phase. That's Phase 5.5+. Hide from TOC only.
+- Don't update REBUILD_SPEC.md "Generate PDF" mentions.
+
+Deliverable: TOC is a popover with ~6-8 major entries on snellsLaw;
+sidebar column gone; Export PDF label everywhere user-facing;
+tests green.
+
+---
+
+### Phase 3.9 — Procedure integration pilot (Snell's Law) -- deferred
+
+**Goal:** Pilot integrating the lab manual procedure into the worksheet schema for one lab. Decision gate before Phase 4 commits to the broader approach.
+
+**Why this phase exists.** Today students read procedure in a separate manual PDF, then come to the worksheet to record answers. Integrating procedure into the worksheet trades context-switching for scroll length. Either approach is defensible. The honest way to decide is to ship one integrated lab to a real student cohort, collect feedback for ~1 week, then commit Phase 4 to the result. Don't theorize the answer.
+
+**Deliverables:**
+
+1. **Convert Snell's Law procedure to markdown.**
+   - Source: the existing Snell's Law lab manual PDF/text (Austin to provide; procedure is a separate document today).
+   - For each procedure section ("Part 1: Setup", "Part 2: Measurement", etc.), write a markdown block.
+   - Preserve original wording. This is a structural reformat, not a content rewrite.
+   - Use heading levels matching the worksheet structure: `##` for parts, `###` for subsections.
+   - Equations via `$...$` (inline) or `$$...$$` (block — renders as monospace fallback per Phase 3.5.3).
+
+2. **Interleave into `snellsLaw.lab.ts`.**
+   - Insert `{kind: 'instructions', html: '<markdown>'}` sections at the appropriate points in the existing `lab.sections` array.
+   - Rough order: setup procedure → existing data table → measurement procedure → plot section → analysis procedure → calculation section → etc.
+   - Confirm the integrated lab still parses with Zod.
+   - Existing measurement/dataTable/plot sections are not edited — only new instructions sections are inserted.
+
+3. **Optional schema flag.**
+   - Add `proceduresIntegrated?: boolean` to the Lab schema.
+   - Set to `true` on snellsLaw. Other labs leave unset.
+   - Used for analytics or to render a "procedure included" badge in the catalog. Not load-bearing.
+
+4. **Pilot rollout plan (informational, not code).**
+   - Push to a single section or subset of students.
+   - Collect feedback for ~1 week (TA observations + a quick student survey).
+   - Decision gate: integrate procedures for all Phase 4 labs, or revert this one and keep procedures external.
+
+5. **Tests.**
+   - Schema parse: snellsLaw still validates.
+   - Smoke E2E: open Snell's Law, scroll, assert characteristic procedure-style text (e.g., "Position the protractor", whatever the actual lab manual says) appears in the rendered page.
+   - Existing snellsLaw tests must still pass.
+
+**Definition of done:** Snell's Law worksheet renders procedure inline; the integrated version is shippable to a pilot cohort; Austin has a clear Yes/No on Phase 4 procedure integration after the feedback window closes.
+
+#### Phase 3.9 — Agent prompt
+
+```
+Pilot integrating the Snell's Law lab manual procedure into the
+worksheet schema. Content + minor schema work. The pilot informs
+whether Phase 4 migrates procedures for all labs.
+
+Read REBUILD_SPEC.md sections 3.9 and §5.4. ASK AUSTIN for the current
+Snell's Law lab manual PDF or text — that's the source content. Do not
+proceed without it.
+
+Tasks:
+
+1. Convert procedure to markdown.
+   - For each procedure section ("Part 1: Setup", "Part 2: Measurement",
+     etc.), write a markdown block. Preserve original wording.
+   - ## for parts, ### for subsections.
+   - Inline math via $...$ where the procedure has equations.
+   - Block math via $$...$$ (renders as monospace per Phase 3.5.3 — flag
+     to Austin if any procedure section relies heavily on display math).
+
+2. Interleave into snellsLaw.lab.ts.
+   - Add {kind: 'instructions', html: '<markdown>'} sections at the
+     appropriate points.
+   - Order: setup procedure → existing data table → measurement
+     procedure → plot section → analysis procedure → calculation
+     section → etc.
+   - Do not edit existing sections — only insert new ones.
+   - Confirm parses with Zod.
+
+3. Optional schema flag.
+   - Add proceduresIntegrated?: boolean to Lab schema.
+   - Set true on snellsLaw. Other labs leave unset.
+   - Informational; can drive a catalog badge later.
+
+4. Tests:
+   - Schema parse for snellsLaw still passes.
+   - Smoke E2E: open Snell's Law, scroll, assert distinctive procedure
+     text appears.
+   - Existing snellsLaw tests still pass.
+
+5. npm run lint && npm run typecheck && npm test && npx playwright test.
+
+Constraints:
+- Do not change Section schema beyond the optional flag.
+- Do not edit existing measurement/dataTable/plot sections.
+- Markdown must work through the Phase 3.5.3 markdown→PDF pipeline. No
+  exotic syntax.
+- Preserve point values from existing sections; instructions sections
+  typically have 0 points, or low if procedure execution is graded.
+- Section ordering is critical — instructions must appear immediately
+  before the section they describe.
+
+Deliverable: Snell's Law worksheet has integrated procedure; ready for
+pilot rollout; Austin has a clear Yes/No path for Phase 4 based on
+student feedback.
+```
+
+---
+
+### Phase 4 — Migrate course-specific labs (PHY 132 + PHY 114)
+
+**Goal:** Both real courses fully populated with their own lab schemas. PHY 132 (current `general` course, renamed) gets 6 labs; PHY 114 gets 6 labs. **The two trees are not duplicates of each other** — five lab IDs share names but the source files in `labs/` and `phy_114/` are independently authored, with different prose, different point values, different tables. Treat them as 12 distinct schemas across 2 course-scoped folders. After this phase the legacy `physics-labs.up.railway.app/` folder can be deleted.
+
+**Why this phase exists.** The earlier draft of Phase 4 assumed `labs/` and `phy_114/` were duplicate trees that drifted, requiring a reconciliation pass. They are not duplicates — verified against legacy `index.js` files in both folders, each course imports its own per-lab `labConfig.js` and `LabReportForm.js`. The rebuild needs to encode this fact into the directory structure so future authors don't accidentally re-merge them. We're also renaming `general` → `phy132` to remove the ambiguity that "general" caused (Austin confirmed the `general` course has always been PHY 132 specifically).
+
+**Lab inventory (12 total schemas, 11 new):**
+
+PHY 132 (source: `physics-labs.up.railway.app/labs/<id>/`):
+1. staticElectricity
+2. chargesFields
+3. capacitors
+4. dcCircuits
+5. magneticFieldFaraday
+6. snellsLaw — already migrated as `src/content/labs/snellsLaw.lab.ts`; **relocate** to `phy132/snellsLaw.lab.ts` and verify it actually came from `labs/snellsLaw/` (not `phy_114/snellsLaw/`) before declaring it canonical for PHY 132.
+
+PHY 114 (source: `physics-labs.up.railway.app/phy_114/<id>/`):
+1. staticElectricity
+2. chargesFields
+3. capacitors
+4. dcCircuits
+5. snellsLaw
+6. geometricOptics
+
+Shared names across courses (independently authored): staticElectricity, chargesFields, capacitors, dcCircuits, snellsLaw. **Do not diff them. Do not deduplicate. Do not factor "shared content" out into a common file.** They are different labs.
+
+Unique to one course: magneticFieldFaraday (PHY 132 only), geometricOptics (PHY 114 only).
+
+**Deliverables:**
+
+1. **Course-scoped lab folders.**
+   - `src/content/labs/phy132/<id>.lab.ts` (6 files)
+   - `src/content/labs/phy114/<id>.lab.ts` (6 files)
+   - Old flat-folder pattern (single `src/content/labs/snellsLaw.lab.ts`) ends here. Relocate the existing snellsLaw into `phy132/` as the first move.
+
+2. **Two-level lab registry in `src/app/Routes.tsx`.**
+   - Replace `const labs: Record<string, Lab>` with `const labsByCourse: Record<string, Record<string, Lab>>` keyed by `courseId` then `labId`.
+   - Lookup becomes `labsByCourse[course.id]?.[params.labId ?? '']`.
+   - `SlugLabRoutePage` (used for `/lab/:slug`) defaults to PHY 132 — update it to look up `labsByCourse.phy132[slug]`.
+
+3. **Rename `general` → `phy132` end-to-end.**
+   - Rename file: `src/content/courses/general.course.ts` → `phy132.course.ts`. Export `phy132Course` (drop `generalCourse` alias).
+   - Update `Course.id`, `storagePrefix`, and `title` to `'phy132'`, `'phy132'`, `'PHY 132'` respectively.
+   - Drop the `'phy_114' → 'phy114'` URL normalization in `Routes.tsx` (PHY 114's id is already `phy114`; the alias was for legacy URLs that won't exist post-launch — confirm with Austin before deleting).
+   - Update all test fixtures and refs across `tests/` (the catalog tests, persistence tests, etc. — Grep shows ~14 files reference `general`).
+   - Storage migration: existing localStorage keys with prefix `general` either get a one-time rename on hydration, or are dropped (pre-launch, no real student data — Austin confirms which).
+
+4. **Course manifests reflect the per-user inventory.**
+   - `phy132.course.ts` labs in this exact order, all `enabled: true`:
+     ```
+     1: staticElectricity
+     2: chargesFields
+     3: capacitors
+     4: dcCircuits
+     5: magneticFieldFaraday
+     6: snellsLaw
+     ```
+   - `phy114.course.ts` labs in this exact order, all `enabled: true`:
+     ```
+     1: staticElectricity
+     2: chargesFields
+     3: capacitors
+     4: dcCircuits
+     5: snellsLaw
+     6: geometricOptics
+     ```
+   - PHY 114 inherits the `parentOriginAllowList: ['https://canvas.asu.edu']` it already has.
+   - PHY 132's `parentOriginAllowList` stays `[]` for now (no Canvas LTI launch yet).
+   - The legacy `LAB_ACCESS_CONFIG` in `physics-labs.up.railway.app/phy_114/index.js` enables all 6 PHY 114 labs (its "labs 1-4 only" comment is stale code — verified by reading the actual config). Don't carry the stale comment forward.
+
+5. **Per-lab migrations.** For each of the 11 new lab files, plus the snellsLaw relocation:
+   - Source: the matching `physics-labs.up.railway.app/{labs|phy_114}/<id>/{labConfig.js, LabReportForm.js}`.
+   - Encode faithfully per the Phase 0 schema (sections, dataModel, simulations, studentInfo). Section prose, point values, and table column configs come straight from `LabReportForm.js`.
+   - Lab `id` field stays the bare name (e.g., `'staticElectricity'`); course context comes from the folder location and the registry. Storage uniqueness is provided by the existing `(courseId, labId, studentId)` key in `labStore`.
+   - Each lab ships with: a unit test asserting the schema parses + the lab loads via the registry; a unit test for any derived-column formula computing correctly on a fixture row; a Playwright E2E filling a deterministic fixture and snapshotting the PDF text.
+
+6. **Drop `MIGRATION_NOTES.md` drift-reconciliation work entirely.** It was solving a problem that doesn't exist. If a per-lab migration runs into a real ambiguity (e.g., a `LabReportForm.js` references a derived column the schema can't express), document that *one issue* in a comment in the lab file and flag it for Austin in the PR description — but no global drift-reconciliation document.
+
+7. **Cleanup.**
+   - Delete `scripts/migrate-from-legacy.ts` if it exists and no longer serves a purpose. Move to `scripts/legacy/` only if the agent finds it cited from elsewhere.
+   - After Austin signs off on visual parity per-lab, delete `physics-labs.up.railway.app/` from the repo.
+
+**Definition of done:** PHY 132 and PHY 114 catalogs each render 6 labs; every lab opens, accepts input, generates a PDF that matches the legacy version's content (Austin signs off lab-by-lab); rename to `phy132` is clean across code + tests + URLs; per-lab tests green; full suite green; legacy folder ready to delete.
+
+**Explicit non-goals (deferred):**
+- **Factoring "shared" content between courses.** Even if PHY 132's staticElectricity and PHY 114's staticElectricity end up looking similar, do not extract common prose. Two independent files. If they need to converge later, that's a future content decision Austin owns, not a refactor.
+- **Per-course branding overrides** (different colors, fonts). Phase 5.5+.
+- **Lab versioning across terms.** v1 ships one canonical lab per (course, lab) slot; term-over-term updates are an authoring-workflow problem for later.
+- **Migrating labs not in the inventory above.** If a 7th PHY 132 lab or 7th PHY 114 lab appears, it's additive — handle in a follow-on phase.
+- **Cross-course shared infrastructure** (a "common" StudentInfo block). Each lab self-contains; if duplication becomes painful, factor in Phase 5+.
 
 #### Phase 4 — Agent prompt
 
 ```
-Phase 3 finished the PDF service. Now migrate the rest of the labs.
+Phase 3 finished the PDF service. Phase 3.5/3.7/3.9 polished it. Now
+migrate the actual lab content for both courses. The PHY 132 and
+PHY 114 trees are NOT duplicates — read REBUILD_SPEC.md section
+"Phase 4" in full before assuming anything.
 
-Read REBUILD_SPEC.md section 4.1 (salvage-as-content) and section 5.5
-(course manifest). Source content is at
-physics-labs.up.railway.app/labs/<id>/{labConfig.js, LabReportForm.js} and
-physics-labs.up.railway.app/phy_114/<id>/{labConfig.js, LabReportForm.js}.
+Critical context: five lab IDs (staticElectricity, chargesFields,
+capacitors, dcCircuits, snellsLaw) appear in BOTH courses, but each
+course's source file in physics-labs.up.railway.app/{labs|phy_114}/
+is independently authored. They share names; they do not share
+content. Do not diff them. Do not factor common prose out. Each
+becomes its own .lab.ts file under a course-scoped folder.
+
+Read these files first:
+- REBUILD_SPEC.md Phase 4 (this section)
+- REBUILD_SPEC.md §4.1 (salvage-as-content), §5.4 (section schema),
+  §5.5 (course manifest)
+- src/domain/schema/* (Lab, Section, Course schemas)
+- src/content/courses/general.course.ts (will be renamed to phy132)
+- src/content/courses/phy114.course.ts
+- src/content/labs/snellsLaw.lab.ts (existing migration; will be
+  relocated to phy132/)
+- src/content/labs/index.ts (current flat re-export)
+- src/app/Routes.tsx (current flat lab registry; needs two-level
+  refactor)
+- physics-labs.up.railway.app/labs/index.js (PHY 132 source registry)
+- physics-labs.up.railway.app/phy_114/index.js (PHY 114 source
+  registry; ignore the stale "labs 1-4 only" comment — actual config
+  enables all 6)
 
 Tasks:
-1. For each lab id (staticElectricity, chargesFields, capacitors, dcCircuits,
-   magneticFieldFaraday, geometricOptics):
-   a. Diff the legacy `labs/<id>` against `phy_114/<id>` using `diff -u`.
-   b. Document every divergence in MIGRATION_NOTES.md under a section for
-      that lab. For each divergence, propose a canonical version and ask
-      Austin to confirm BEFORE migrating.
-   c. After confirmation, write a single src/content/labs/<id>.lab.ts that
-      faithfully encodes the canonical content per the Phase 0 schema.
-   d. Add unit tests asserting the schema parses and derived-column formulas
-      compute correctly for a fixture row.
-   e. Add a Playwright E2E that fills a deterministic fixture and snapshots
-      the PDF text.
-2. Update content/courses/general.course.ts and phy114.course.ts to reference
-   all migrated labs, with PHY 114's access config (lab numbers, enabled
-   flags from legacy `LAB_ACCESS_CONFIG`).
-3. If a lab needs PHY-114-specific tweaks, encode them as schema overrides in
-   the course manifest, NOT as a duplicate lab file.
-4. Delete `scripts/migrate-from-legacy.ts` if no longer needed (or keep as
-   reference under `scripts/legacy/`).
+
+1. RENAME GENERAL → PHY132. Do this first; everything else depends
+   on the new naming.
+   a. Rename src/content/courses/general.course.ts → phy132.course.ts.
+      Export phy132Course (drop generalCourse alias).
+   b. Set Course.id = 'phy132', storagePrefix = 'phy132',
+      title = 'PHY 132'.
+   c. Update src/content/courses/index.ts.
+   d. Update src/app/Routes.tsx: import phy132Course; drop the
+      'phy_114' → 'phy114' URL alias (confirm with Austin first); the
+      SlugLabRoutePage default course becomes phy132Course.
+   e. Update every test fixture / ref in tests/ that uses 'general'
+      (Grep finds ~14 files). Run npm test and fix breakages.
+   f. Storage migration: ask Austin whether existing 'general'
+      localStorage keys should rename or drop. Default to drop
+      (pre-launch).
+
+2. RESTRUCTURE LABS FOLDER.
+   a. Create src/content/labs/phy132/ and src/content/labs/phy114/.
+   b. Move src/content/labs/snellsLaw.lab.ts → phy132/snellsLaw.lab.ts.
+      VERIFY first that the existing schema was migrated from
+      physics-labs.up.railway.app/labs/snellsLaw/, not phy_114/. Spot-
+      check section prose against both legacy LabReportForm.js files
+      and pick the matching tree. If it actually matches phy_114's
+      version, move it to phy114/ instead and document the discovery.
+   c. Update src/content/labs/index.ts to re-export from
+      both folders (or split into phy132/index.ts and
+      phy114/index.ts).
+
+3. REGISTRY: TWO-LEVEL.
+   In src/app/Routes.tsx, replace:
+     const labs: Record<string, Lab> = { snellsLaw: snellsLawLab };
+   with:
+     const labsByCourse: Record<string, Record<string, Lab>> = {
+       phy132: { snellsLaw: phy132SnellsLawLab, ... },
+       phy114: { snellsLaw: phy114SnellsLawLab, ... },
+     };
+   Update LabRoutePage and SlugLabRoutePage to do
+   labsByCourse[course.id]?.[labId].
+
+4. UPDATE COURSE MANIFESTS to the canonical lab order, all enabled:
+   phy132.course.ts: staticElectricity (1), chargesFields (2),
+     capacitors (3), dcCircuits (4), magneticFieldFaraday (5),
+     snellsLaw (6).
+   phy114.course.ts: staticElectricity (1), chargesFields (2),
+     capacitors (3), dcCircuits (4), snellsLaw (5),
+     geometricOptics (6).
+   Both: enabled: true on every entry. PHY 114 keeps
+   parentOriginAllowList = ['https://canvas.asu.edu']. PHY 132
+   keeps parentOriginAllowList = [].
+
+5. MIGRATE 11 NEW LAB SCHEMAS. Recommended order (do snellsLaw for
+   PHY 114 early so PHY 114 catalog stops 404ing as soon as the
+   rename lands):
+     a. phy114/snellsLaw.lab.ts (from phy_114/snellsLaw/)
+     b. phy132/staticElectricity.lab.ts (from labs/staticElectricity/)
+     c. phy114/staticElectricity.lab.ts (from phy_114/staticElectricity/)
+     d. phy132/chargesFields.lab.ts (from labs/chargesFields/)
+     e. phy114/chargesFields.lab.ts (from phy_114/chargesFields/)
+     f. phy132/capacitors.lab.ts (from labs/capacitors/)
+     g. phy114/capacitors.lab.ts (from phy_114/capacitors/)
+     h. phy132/dcCircuits.lab.ts (from labs/dcCircuits/)
+     i. phy114/dcCircuits.lab.ts (from phy_114/dcCircuits/)
+     j. phy132/magneticFieldFaraday.lab.ts (from labs/magneticFieldFaraday/)
+     k. phy114/geometricOptics.lab.ts (from phy_114/geometricOptics/)
+
+   For each lab:
+     - Read its labConfig.js and LabReportForm.js. Encode sections
+       (instructions, measurement, calculation, dataTable, plot,
+       image, etc.) per the Phase 0 schema. Preserve section prose
+       verbatim, point values exactly, table column configs and
+       derived-formula keys exactly.
+     - Lab.id stays the bare name (e.g., 'staticElectricity'); course
+       context lives in the folder + registry.
+     - Add unit test: schema parses, registry resolves, derived
+       formulas compute on a fixture row.
+     - Add Playwright E2E: open lab in its course, fill deterministic
+       fixture, generate PDF, snapshot text.
+     - Show Austin a screenshot or PDF for visual parity sign-off
+       BEFORE marking the lab done. Pause the queue if a lab needs
+       his eyes — do not batch-merge.
+
+6. DO NOT CREATE MIGRATION_NOTES.md. The earlier draft of Phase 4
+   asked for a drift-reconciliation document; the labs aren't
+   duplicates and there's no drift to reconcile. If a single lab
+   has an ambiguity, leave a // TODO(austin) comment in the lab
+   file and flag it in the PR description.
+
+7. CLEANUP.
+   a. Delete scripts/migrate-from-legacy.ts if no callers (or move
+      to scripts/legacy/ only if cited).
+   b. After all 12 labs render and Austin signs off, delete
+      physics-labs.up.railway.app/ from the repo.
+
+8. npm run lint && npm run typecheck && npm test && npx playwright
+   test. All green.
 
 Constraints:
-- Do not assume the two duplicate trees agree. They drift. Always diff.
-- Block on Austin's confirmation for every divergence. Ambiguity here is the
-  difference between correct physics instruction and a wrong answer key.
-- Magnetic Field & Faraday's Law exists in `labs/` only; Geometric Optics
-  exists in `phy_114/` only. These are NOT cross-course duplicates — handle
-  them once each.
+- The two course trees are NOT duplicates. Treat each lab as
+  independently authored. Do not diff phy132 vs phy114 versions.
+  Do not factor common content out.
+- Block on Austin for visual parity sign-off lab-by-lab. Ambiguity
+  in physics content is the difference between correct instruction
+  and a wrong answer key.
+- magneticFieldFaraday is PHY 132 only. geometricOptics is PHY 114
+  only. Don't accidentally cross-list them.
+- Don't carry the stale "labs 1-4 only" comment from
+  phy_114/index.js — actual LAB_ACCESS_CONFIG enables all 6.
+- Lab.id stays the bare name. Storage uniqueness comes from
+  (courseId, labId, studentId), already enforced by labStore.
+- Don't introduce shared/common lab files. Each schema is self-
+  contained.
 
-Deliverable: all labs migrated; MIGRATION_NOTES.md committed; per-lab tests
-green; legacy folder ready to delete.
+Deliverable: PHY 132 and PHY 114 each have 6 working labs; rename
+clean; per-lab tests green; legacy folder ready to delete; Austin
+has signed off lab-by-lab.
 ```
 
 ---
@@ -2095,6 +3085,261 @@ Deliverable: production-ready 1.0.0; legacy code removed; docs in place.
 
 ---
 
+### Phase 5.5 — Brand, UX, integrity expansion
+
+**Goal:** Cross-cutting polish that doesn't fit the Phase 5 production checklist but matters for the 1.0 launch story: rebrand to LabFrame, three-step landing wizard, FERPA privacy disclosure, dark mode, callouts in instructions, localStorage warnings, unsigned-draft PDF export, AI-disclosure on the integrity agreement, About popover. Items group by surface they touch.
+
+**Why this phase exists.** Phase 5's scope (a11y, perf, telemetry, postMessage allow-list, docs) is "production-ready"; this phase is "production-presentable + integrity-policy-compliant." Splitting keeps each phase's character clean and lets Phase 5 ship strictly on engineering metrics while Phase 5.5 ships on UX/policy metrics. Items here can run mostly in parallel since they touch disjoint surfaces, with one exception (integrity-agreement work overlaps with the unsigned-draft work).
+
+**Deliverables grouped by surface:**
+
+1. **Branding pass: rebrand to LabFrame.**
+   - `<title>` → `LabFrame — {labTitle}` or `LabFrame` on the catalog.
+   - `package.json` `description`, README header, footer credit.
+   - Small wordmark in the header (text or simple SVG; no logo work in this phase).
+   - About popover button in the footer (or header), opens an accessible modal with: version, build date, "Built by Hunter Reaves", link to docs/repo, link to ASU Physics Instructional Resource Team.
+   - Course manifest still owns the LMS-facing course name (e.g., "PHY 114") — don't conflate brand with course title.
+
+2. **Landing page wizard.**
+   - Replace the current tile catalog with a three-step guided flow: (1) Enter name → (2) Select course → (3) Select lab.
+   - Each step is a distinct view; URL search params track step (`?step=name|course|lab`).
+   - "Enter name" step displays the FERPA privacy note (deliverable 3).
+   - "Select course" step lists courses from the course manifest as cards (currently `general` and `phy114`).
+   - "Select lab" step lists labs from the chosen course manifest with `enabled: true`.
+   - Returning students: if `studentName` is in localStorage, prefill and skip step 1; let them edit if they want.
+   - Catalog tile view stays accessible via a "Browse all labs" link for power users.
+
+3. **FERPA privacy disclosure on landing.**
+   - On the "Enter name" step, render a one-line note: "Your name and answers stay in this browser. We send a signed copy to ASU's signing service when you click Generate PDF; the service does not store your data." Linked to a popover with the longer story (data-flow diagram or short prose).
+   - Audit confirmation: `api/sign.ts` does not log payload contents (verified during Phase 3.5/3.7 prep). Don't ship this disclosure if a future change starts logging.
+
+4. **Dark mode (re-introduced from Phase 1.6 deferral).**
+   - Reintroduce `<meta name="color-scheme" content="light dark">`.
+   - Implement a proper two-theme system using CSS custom properties (design tokens). Token list: surface colors, text colors, accent colors, border colors, shadow alpha, focus ring color.
+   - User-facing toggle in the About popover or header: System / Light / Dark. Default System.
+   - Persisted preference in localStorage (separate key from lab data, e.g., `labframe:theme`).
+   - axe-core contrast pass green in both themes.
+
+5. **Markdown callouts in instructions.**
+   - Add `remark-github-alerts` (or equivalent) to both the UI markdown pipeline (Phase 1.5) and the PDF markdown pipeline (Phase 3.5.3).
+   - Renders `> [!NOTE]`, `> [!TIP]`, `> [!WARNING]`, `> [!IMPORTANT]`, `> [!CAUTION]` blocks with appropriate icons and accent colors.
+   - PDF rendering: use distinct background colors and a left-border accent stripe; don't try to load icon fonts in `@react-pdf`.
+
+6. **localStorage warnings.**
+   - Augment the existing "Saved 14:32" indicator (Phase 2) to read "Saved 14:32 in this browser" with a small info icon.
+   - Click opens a popover: "Your work is saved on this device only. To work from another device, generate a PDF and start fresh; you can resume from the values shown in the PDF."
+   - On first lab open after the rebrand lands, show a one-time inline banner with the same text and a "Got it" button.
+
+7. **Unsigned draft PDF export.**
+   - New button next to "Generate PDF": "Save draft (not for submission)".
+   - Skips the signing endpoint entirely; never fails for network reasons.
+   - Watermarks DRAFT diagonally across every page (use `@react-pdf` `<Text style={{position: 'absolute', transform: 'rotate(-45deg)', ...}}>` or an `<Svg>` overlay).
+   - Omits the signature footer and the embedded canonical JSON.
+   - Filename suffix: `_DRAFT.pdf` (e.g., `SnellsLaw_AustinReaves_2026-04-29_DRAFT.pdf`).
+   - PDF metadata `Subject` field includes "DRAFT — not for submission" so it's visible in file properties.
+
+8. **AI disclosure on integrity agreement.**
+   - Extend the integrity statement (rendered on StudentInfo per §5.13) to include the AI/LLM disclosure question: "Did you use AI/LLM tools (ChatGPT, Claude, Gemini, GitHub Copilot, etc.) for any part of this lab?"
+   - When checked, reveal a multi-line input: "Paste links to shared chats (one per line, optional but encouraged)."
+   - Both fields are part of `LabAnswers.integrity` (schema addition: `aiUsed: boolean; aiSharedLinks?: string`).
+   - Embedded in canonical JSON (signed) and rendered in the PDF cover sheet's integrity block.
+   - Updated integrity statement text disclosing this.
+   - **This is a schema change (envelope v3).** Add to §10 changelog. Migration: persisted v2 hydrates with `aiUsed: false, aiSharedLinks: undefined`.
+
+**Definition of done:** branding consistent across all surfaces; landing wizard works end-to-end with prefill for returning students; FERPA note visible on landing and accurate; dark mode togglable and axe-clean; callouts render in UI and PDF; localStorage warnings visible; unsigned drafts export and are clearly marked; AI disclosure captured and signed into PDF; envelope bumped to v3 with hydration migration.
+
+**Explicit non-goals (deferred):**
+- Logo design / brand identity work. v1 ships text wordmark only.
+- LTI launch integration (Canvas auth). Phase 6+.
+- Per-course branding overrides (different colors per PHY 114 vs general). Future.
+- Telemetry on AI usage (frequency, which tools). Aggregate stats stay manual for v1.
+
+#### Phase 5.5 — Agent prompt
+
+```
+Cross-cutting polish for 1.0 launch: rebrand, landing wizard, FERPA
+note, dark mode, callouts, localStorage warnings, unsigned drafts, AI
+disclosure agreement, About popover.
+
+Items can mostly run in parallel; sequence the AI-disclosure work after
+the unsigned-draft work since both touch the integrity surface.
+
+Read REBUILD_SPEC.md sections 5.5, 5.13 (integrity), §10 (envelope
+changelog — you'll bump to v3 in this phase).
+
+Tasks (each is largely independent — run any order, but keep AI
+disclosure last in case schema migration affects other tests):
+
+1. Rebrand to LabFrame.
+   - <title> on catalog: "LabFrame". On lab pages: "LabFrame — {labTitle}".
+   - package.json description, README header, footer credit.
+   - Header wordmark (text "LabFrame" or simple SVG).
+   - Footer About button → accessible modal with version, build date,
+     credit, links.
+
+2. Landing page wizard.
+   - Three steps: Enter name → Select course → Select lab.
+   - URL: ?step=name|course|lab.
+   - Returning student: prefill name from localStorage; offer edit;
+     allow skip-to-step-2.
+   - Keep the existing catalog tile view accessible at /labs (or via
+     "Browse all labs" link) for power users.
+
+3. FERPA privacy note.
+   - On the name-entry step, one-line note + popover with longer text
+     per Phase 5.5 deliverable 3.
+   - Don't ship this if api/sign.ts has been changed to log payloads —
+     re-audit before shipping.
+
+4. Dark mode.
+   - Reintroduce meta color-scheme="light dark".
+   - Add CSS custom properties for surface/text/accent/border/shadow.
+   - User toggle in About popover or header: System / Light / Dark.
+     Persist in localStorage key "labframe:theme".
+   - Run axe-core; both themes green.
+
+5. Markdown callouts.
+   - Install remark-github-alerts (or equivalent).
+   - Add to both UI pipeline (InstructionsSectionView) and PDF pipeline
+     (renderMarkdownToPdf).
+   - Render NOTE/TIP/WARNING/IMPORTANT/CAUTION with distinct background
+     colors and left-border accent. PDF: no icon fonts; just colors and
+     a small bold label.
+
+6. localStorage warnings.
+   - "Saved 14:32 in this browser" + info icon → popover.
+   - First-load banner with "Got it" button (persist dismissal in
+     localStorage).
+
+7. Unsigned draft export.
+   - New "Save draft" button next to Generate PDF.
+   - Skip signing entirely; never fails for network.
+   - Watermark "DRAFT" diagonally on every page.
+   - Omit signature footer and embedded JSON.
+   - Filename _DRAFT suffix.
+   - PDF metadata Subject: "DRAFT — not for submission".
+
+8. AI disclosure on integrity agreement.
+   - SCHEMA CHANGE (envelope v3):
+     - Add `aiUsed: boolean` and `aiSharedLinks?: string` to
+       LabAnswers.integrity.
+     - Bump schemaVersion to 3.
+     - Hydration migration: v2 → v3 sets aiUsed: false,
+       aiSharedLinks: undefined. Update §10 changelog.
+   - UI: extend StudentInfoSection integrity block with checkbox
+     "Used AI/LLM tools" and conditional multi-line input "Paste links".
+   - PDF cover sheet: render the AI usage status and links in the
+     integrity block.
+   - Updated integrity statement text disclosing the requirement.
+
+9. Tests:
+   - Snapshot/component tests per change.
+   - Hydration migration test for v2 → v3.
+   - E2E: landing wizard complete flow (name → course → lab → arrive
+     at lab page).
+   - E2E: dark mode toggle persists across reload.
+   - E2E: unsigned draft download fires without signing endpoint.
+   - axe-core: both themes pass.
+
+10. Update §10 changelog with v3 entry.
+
+11. npm run lint && npm run typecheck && npm test && npx playwright test.
+    All green.
+
+Constraints:
+- AI disclosure is the only schema-change task. Sequence it last so
+  other tests stabilize first.
+- Backward compat: v2 persisted blobs must hydrate cleanly to v3.
+- Dark mode tokens: don't introduce per-theme component variants beyond
+  what tokens require. Component code stays theme-agnostic.
+- Unsigned drafts must NOT carry the embedded canonical JSON. The whole
+  point is they can't be passed off as signed. Test this explicitly.
+- About popover and FERPA popover must be keyboard-accessible
+  (role/aria/focus-trap, like the Phase 3.5.2 preflight modal).
+- Bundle: target ≤ 60KB gzip added across all items combined.
+
+Deliverable: 1.0 launch-ready brand and UX; FERPA story documented in
+the app itself; AI disclosure captured and signed; unsigned drafts
+provide backup path when signing endpoint fails.
+```
+
+---
+
+### Phase 6 — Pedagogical features
+
+**Goal:** Post-1.0 pedagogical capabilities that emerged from instructor experience but aren't required to ship: KaTeX in PDF on demand, optional Student ID field, YouTube embeds as a section kind, hints/rubric per section, wizard mode for multi-step worksheet flow. None block 1.0; each can ship independently as instructional needs surface.
+
+**Why this phase exists.** These are features Austin has explicitly named as "wanted eventually" but which would balloon Phase 5 if pulled forward. Documenting them here so they don't get lost, with rough scoping for each.
+
+**Sub-phases (run in any order, on demand):**
+
+#### Phase 6.1 — KaTeX in PDF (on demand)
+
+Triggered when: a lab needs `\frac{d^2x}{dt^2}` or similar rendered properly in the PDF, where Phase 3.5.3's Unicode substitution falls short.
+
+Approach: pipe inline and block math through MathJax's `tex2svg` (cleaner SVG output than KaTeX's HTML+CSS), embed the resulting SVG strings in `@react-pdf`'s `<Svg>` primitive. Cache rendered SVGs by LaTeX source to keep determinism.
+
+Defer until first lab need.
+
+#### Phase 6.2 — Student ID field
+
+Add `studentId?: string` to StudentInfo. Optional (some students at ASU don't remember their 10-digit ID). Validate as 10 digits when provided. Include in canonical JSON, PDF cover sheet, and filename (after the date token: `SnellsLaw_AustinReaves_2026-04-29_1234567890_abc12345.pdf`).
+
+Don't hash. The ID is on the student's transcript and Canvas profile already; hashing for PDF doesn't meaningfully reduce exposure and complicates TA workflow.
+
+Schema: bump to envelope v4. Hydration migrates `studentId: undefined`.
+
+#### Phase 6.3 — YouTube embeds
+
+New section kind: `{kind: 'video', url: string, caption?: string, points?: number}`. Render via iframe with `sandbox` and `allow` attributes; use `youtube-nocookie.com` to keep tracking off student data.
+
+Inline rendering (not modal) to match the simulation iframe pattern. Caption renders below the video.
+
+PDF rendering: a placeholder card with the video title and URL — PDFs can't embed playable video.
+
+Defer until first lab needs it; ~half-day of work when triggered.
+
+#### Phase 6.4 — Hints / Rubric per section
+
+Schema additions on every Section variant:
+- `hint?: string` — markdown, rendered as a `<details>` disclosure widget the student opens when stuck.
+- `rubric?: string` — markdown, rendered as a small caption beneath the section (or in an info popover).
+
+PDF: hints in an appendix at the end; rubric inline beneath each section.
+
+The "Stuck?" signal interpretation (telemetry to instructor) is **not** part of this phase. If pursued separately, requires backend, presence model, instructor dashboard.
+
+#### Phase 6.5 — Wizard / multi-step worksheet flow
+
+Per-lab schema option: `lab.flow?: 'continuous' | 'wizard'`. Default `'continuous'` (current behavior).
+
+In `wizard` mode, render one Part at a time with Forward/Back navigation. "Part" = a contiguous group of sections, defined either by explicit dividers (`{kind: 'partBreak', title: string}`) or auto-derived from heading-level instructions sections.
+
+PDF stays a single document with all sections regardless of UI flow — TAs grade the same artifact.
+
+State: `currentPart: number` in URL search params for shareable links.
+
+Pair with Phase 6.4 design pass — both are pedagogical UX.
+
+#### Phase 6 — Agent prompt (template)
+
+```
+Phase 6 sub-phases run independently. For each, read the relevant
+section above, ask Austin which lab is driving the need (if any), and
+scope accordingly. Each sub-phase should:
+
+- Include schema changes if needed (bump envelope version per §10).
+- Add tests that pin the new behavior.
+- Update REBUILD_SPEC.md §10 if schema changes.
+- Run npm run lint && npm run typecheck && npm test && npx playwright
+  test before declaring done.
+
+Don't bundle multiple Phase 6 sub-phases into one agent run. Each is
+its own focused change.
+```
+
+---
+
 ## 7. Risks & Mitigations
 
 | Risk | Mitigation |
@@ -2125,6 +3370,7 @@ For every coding agent reading this: do not do any of the following, even if it 
 10. Do not use `postMessage(payload, '*')`.
 11. Do not write a 485-line god-hook. Split by concern.
 12. Do not put security or DRM logic on the frontend. It is theater. Spend that effort on a Canvas/Turnitin integration if academic integrity matters.
+13. Do not embed hidden "AI trap" text (zero-pixel fonts that copy on paste, white-on-white prompt-injection bait, etc.) in lab instructions. The integrity model is **disclosure not prevention** (§5.13). Hidden traps reverse that contract: they're a gotcha that defeats a tool rather than capturing what tools were used. They also break accessibility (some screen readers read display:none / 0px text, others don't, and the inconsistency hurts students who rely on those tools). They catch lazy paste workflows but not motivated cheating, and they create liability with disability services. Use the Process Record appendix and the AI disclosure agreement (Phase 5.5 #8) instead.
 
 ---
 

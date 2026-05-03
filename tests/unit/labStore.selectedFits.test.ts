@@ -10,7 +10,7 @@ describe('labStore selectedFits', () => {
   it('setSelectedFit updates state, persists, and emits process-record event', async () => {
     const adapter = createMemoryPersistenceAdapter();
     const store = createLabStore(adapter);
-    await store.getState().initLab('general', 'snellsLaw', snellsLawLab);
+    await store.getState().initLab('phy132', 'snellsLaw', snellsLawLab);
 
     const listener = vi.fn();
     const handleEvent = (event: Event) => listener((event as CustomEvent).detail);
@@ -23,7 +23,7 @@ describe('labStore selectedFits', () => {
     await new Promise((resolve) => setTimeout(resolve, 400));
 
     const persistedKey = makeLabKey({
-      courseId: 'general',
+      courseId: 'phy132',
       labId: 'snellsLaw',
       studentName: store.getState().studentName,
     });

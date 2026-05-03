@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { isValidElement } from 'react';
 
-import { snellsLawLab } from '@/content/labs/snellsLaw.lab';
+import { snellsLawLab } from '@/content/labs';
 import type { Course, Lab, LabAnswers, TableData } from '@/domain/schema';
 import { LabReportDocument } from '@/services/pdf/Document';
 import { computeClippedFitLineInPdfSvg } from '@/services/pdf/fitLine';
@@ -194,7 +194,11 @@ describe('renderPDF', () => {
     expect(tableExcerpt).toContain('sin(theta_i)');
     expect(tableExcerpt).toContain('sin(theta_r)');
     expect(tableExcerpt).toMatchInlineSnapshot(
-      `"Data Table: part2TableIncident angle (deg)Refracted angle (deg)sin(theta_1)sin(theta_i)sin(theta_A)sin(theta_r)1070.17360.1219"`,
+      `"Data Table: part2Table (2 pts)Incident angle (deg)Refracted angle (deg)sin(theta_1)sin(theta_i)sin(theta_A)sin(theta_r)1070.17360.1219"`,
     );
+
+    expect(textDump).toContain('Total: 29 points');
+    expect(textDump).toContain('objective (3 pts)');
+    expect(textDump).toContain('Plot: part2FitPlot (1 pts)');
   });
 });

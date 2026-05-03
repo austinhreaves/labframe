@@ -44,6 +44,7 @@ export type LabStoreState = {
   images: Record<string, RuntimeImage>;
   fits: Record<string, FitSelection>;
   splitFraction: number;
+  simSide: 'left' | 'right';
   status: LabStoreStatus;
   initLab: (courseId: string, labId: string, lab: Lab) => Promise<void>;
   setStudentName: (studentName: string) => Promise<void>;
@@ -53,6 +54,7 @@ export type LabStoreState = {
   setImage: (imageId: string, file: File | null) => void;
   setFitSelection: (plotId: string, fit: FitSelection | null) => void;
   setSplitFraction: (value: number) => void;
+  setSimSide: (value: 'left' | 'right') => void;
   setSubmitted: (value: boolean) => void;
   clearCurrentLab: () => Promise<void>;
   listRecoverableAttachments: () => Promise<RecoverableAttachment[]>;
@@ -61,6 +63,7 @@ export type LabStoreState = {
 
 const DEFAULT_STUDENT_NAME = 'Student';
 const DEFAULT_SPLIT_FRACTION = 0.6;
+const DEFAULT_SIM_SIDE = 'left' as const;
 export const PROCESS_RECORD_EVENT_NAME = 'lab:process-record';
 
 type FitSelectionProcessRecordEvent = {
@@ -299,6 +302,7 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
     images: {},
     fits: {},
     splitFraction: DEFAULT_SPLIT_FRACTION,
+    simSide: DEFAULT_SIM_SIDE,
     status: {
       submitted: false,
       lastSavedAt: 0,
@@ -315,6 +319,7 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
         images: {},
         fits: {},
         splitFraction: DEFAULT_SPLIT_FRACTION,
+        simSide: DEFAULT_SIM_SIDE,
       };
 
       set({
@@ -380,7 +385,7 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
           ...migrated.fits,
         },
         images: hydratedImages,
-        splitFraction: clampSplitFraction(migrated.splitFraction ?? DEFAULT_SPLIT_FRACTION),
+        splitFraction: DEFAULT_SPLIT_FRACTION,
         status: {
           ...state.status,
           submitted: migrated.status?.submitted ?? false,
@@ -566,6 +571,10 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
       set({
         splitFraction: clampSplitFraction(value),
       }),
+    setSimSide: (value) =>
+      set({
+        simSide: value,
+      }),
     setSubmitted: (value) =>
       set((state) => ({
         status: {
@@ -598,6 +607,7 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
         images: {},
         fits: {},
         splitFraction: DEFAULT_SPLIT_FRACTION,
+        simSide: DEFAULT_SIM_SIDE,
         status: {
           ...current.status,
           submitted: false,

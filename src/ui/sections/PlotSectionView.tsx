@@ -1,5 +1,6 @@
 import type { PlotSection, TableData } from '@/domain/schema';
 import { useLabStore } from '@/state/labStore';
+import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
 import { Chart } from '@/ui/primitives/Chart';
 
 const EMPTY_TABLE: TableData = [];
@@ -16,6 +17,7 @@ export function PlotSectionView({ section }: Props) {
 
   return (
     <section className="section">
+      <SectionPointsCaption points={section.points} />
       {fitOptions.length > 0 ? (
         <label>
           Fit model:

@@ -7,7 +7,7 @@ describe('migratePersistedLabState fit sanitization', () => {
     const migrated = migratePersistedLabState(
       {
         schemaVersion: 2,
-        courseId: 'general',
+        courseId: 'phy132',
         labId: 'snellsLaw',
         studentName: 'Student',
         fields: {},
@@ -26,7 +26,7 @@ describe('migratePersistedLabState fit sanitization', () => {
           lastSavedAt: 0,
         },
       },
-      'lab:general:snellsLaw:Student',
+      'lab:phy132:snellsLaw:Student',
     );
 
     expect(migrated).not.toBeNull();

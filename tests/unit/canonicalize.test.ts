@@ -36,7 +36,7 @@ describe('canonicalize', () => {
         part2FitPlot: 'proportional',
       },
       images: {
-        setupPhoto: { idbKey: 'img:general:snellsLaw:test:setupPhoto', mime: 'image/png', bytes: 4567 },
+        setupPhoto: { idbKey: 'img:phy132:snellsLaw:test:setupPhoto', mime: 'image/png', bytes: 4567 },
       },
       fits: {
         snellsLawFit: { model: 'linear', parameters: { slope: 1.5, intercept: 0 }, r2: 0.998 },
@@ -50,7 +50,7 @@ describe('canonicalize', () => {
         snellsLawFit: { r2: 0.998, parameters: { intercept: 0, slope: 1.5 }, model: 'linear' },
       },
       images: {
-        setupPhoto: { bytes: 4567, mime: 'image/png', idbKey: 'img:general:snellsLaw:test:setupPhoto' },
+        setupPhoto: { bytes: 4567, mime: 'image/png', idbKey: 'img:phy132:snellsLaw:test:setupPhoto' },
       },
       tables: {
         snellsMeasurements: [

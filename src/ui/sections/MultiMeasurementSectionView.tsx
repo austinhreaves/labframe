@@ -1,5 +1,6 @@
 import type { MultiMeasurementSection } from '@/domain/schema';
 import { useLabStore } from '@/state/labStore';
+import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
 import { Field } from '@/ui/primitives/Field';
 
 type Props = {
@@ -12,6 +13,7 @@ export function MultiMeasurementSectionView({ section }: Props) {
 
   return (
     <section className="section">
+      <SectionPointsCaption points={section.points} />
       {section.rows.map((row) => {
         const label = row.unit ? `${row.label} (${row.unit})` : row.label;
         return (

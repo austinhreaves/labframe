@@ -19,7 +19,7 @@ vi.mock('@/ui/sections/SectionRenderer', () => ({
   SectionRenderer: () => null,
 }));
 
-import { generalCourse } from '@/content/courses/general.course';
+import { phy132Course } from '@/content/courses/phy132.course';
 import { snellsLawLab } from '@/content/labs';
 import { useLabStore } from '@/state/labStore';
 import { LabPage } from '@/ui/LabPage';
@@ -54,7 +54,7 @@ describe('quota recovery banner', () => {
 
     render(
       <MemoryRouter>
-        <LabPage course={generalCourse} lab={snellsLawLab} />
+        <LabPage course={phy132Course} lab={snellsLawLab} />
       </MemoryRouter>,
     );
 

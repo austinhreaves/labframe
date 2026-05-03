@@ -4,7 +4,7 @@ const whiteishColors = new Set(['rgb(255, 255, 255)', 'rgb(254, 254, 254)', 'rgb
 
 async function assertUnpressedButtonLegible(page: Page) {
   await page.goto('/');
-  await page.getByRole('link', { name: /lab 1: snellslaw/i }).first().click();
+  await page.getByRole('link', { name: /lab 6: snellslaw/i }).first().click();
   await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();
 
   const unpressedButton = page.locator('button[aria-pressed="false"]').first();

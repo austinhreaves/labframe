@@ -89,7 +89,7 @@ export function StudentInfoPreflightDialog({ open, missing, onClose }: Props) {
         }}
       >
         <h2 id={titleId}>Missing required information</h2>
-        <p>Please fill in the following before generating a PDF:</p>
+        <p>Please fill in the following before exporting a PDF:</p>
         <ul>
           {missing.map((fieldId) => (
             <li key={fieldId}>{FIELD_LABELS[fieldId] ?? fieldId}</li>

@@ -9,6 +9,7 @@ import {
   Line,
 } from '@react-pdf/renderer';
 
+import { formatPointsLabel, sumSectionPoints } from '@/domain/pointsFormatting';
 import type { Course, FieldValue, Lab, LabAnswers, PlotSection, Section, TableData } from '@/domain/schema';
 import { attributePastes } from '@/services/pdf/attributePastes';
 import { computeClippedFitLineInPdfSvg } from '@/services/pdf/fitLine';
@@ -45,6 +46,13 @@ const styles = StyleSheet.create({
 
 function formatSignedAt(signedAt: number): string {
   return new Date(signedAt).toISOString();
+}
+
+function pdfPointsSuffix(points: number | undefined): string {
+  if (points === undefined) {
+    return '';
+  }
+  return ` (${formatPointsLabel(points)} pts)`;
 }
 
 function parseNumber(value: string): number | null {
@@ -164,7 +172,7 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
   if (section.kind === 'instructions') {
     return (
       <View key={`section-${index}`} style={styles.section}>
-        <Text style={styles.sectionTitle}>Instructions</Text>
+        <Text style={styles.sectionTitle}>Instructions{pdfPointsSuffix(section.points)}</Text>
         <View>{renderMarkdownToPdf(section.html)}</View>
       </View>
     );
@@ -173,7 +181,10 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
   if (section.kind === 'objective' || section.kind === 'measurement' || section.kind === 'calculation' || section.kind === 'concept') {
     return (
       <View key={`section-${index}`} style={styles.section}>
-        <Text style={styles.sectionTitle}>{section.kind}</Text>
+        <Text style={styles.sectionTitle}>
+          {section.kind}
+          {pdfPointsSuffix(section.points)}
+        </Text>
         {fieldView(answers.fields[section.fieldId])}
       </View>
     );
@@ -182,7 +193,7 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
   if (section.kind === 'multiMeasurement') {
     return (
       <View key={`section-${index}`} style={styles.section}>
-        <Text style={styles.sectionTitle}>Measurements</Text>
+        <Text style={styles.sectionTitle}>Measurements{pdfPointsSuffix(section.points)}</Text>
         {section.rows.map((row) => (
           <View key={row.id} style={styles.row}>
             <Text style={styles.label}>{row.label}: </Text>
@@ -197,7 +208,10 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
     const rows = answers.tables[section.tableId] ?? [];
     return (
       <View key={`section-${index}`} style={styles.section}>
-        <Text style={styles.sectionTitle}>Data Table: {section.tableId}</Text>
+        <Text style={styles.sectionTitle}>
+          Data Table: {section.tableId}
+          {pdfPointsSuffix(section.points)}
+        </Text>
         <View style={styles.table}>
           <View style={styles.tableRow}>
             {section.columns.map((column) => {
@@ -228,13 +242,13 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
 
   if (section.kind === 'plot') {
     const table = answers.tables[section.sourceTableId] ?? [];
-    const points = getPlotPoints(section, table);
+    const scatterPoints = getPlotPoints(section, table);
     const fit = answers.fits[section.plotId];
     const width = 360;
     const height = 220;
     const pad = 20;
-    const xs = points.map((point) => point.x);
-    const ys = points.map((point) => point.y);
+    const xs = scatterPoints.map((point) => point.x);
+    const ys = scatterPoints.map((point) => point.y);
     const minX = xs.length ? Math.min(...xs) : 0;
     const maxX = xs.length ? Math.max(...xs) : 1;
     const minY = ys.length ? Math.min(...ys) : 0;
@@ -266,11 +280,14 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
 
     return (
       <View key={`section-${index}`} style={styles.section}>
-        <Text style={styles.sectionTitle}>Plot: {section.plotId}</Text>
+        <Text style={styles.sectionTitle}>
+          Plot: {section.plotId}
+          {pdfPointsSuffix(section.points)}
+        </Text>
         <Svg width={width} height={height}>
           <Line x1={pad} y1={height - pad} x2={width - pad} y2={height - pad} stroke="#222" strokeWidth={1} />
           <Line x1={pad} y1={pad} x2={pad} y2={height - pad} stroke="#222" strokeWidth={1} />
-          {points.map((point, pointIndex) => (
+          {scatterPoints.map((point, pointIndex) => (
             <Circle key={`${section.plotId}-p-${pointIndex}`} cx={mapX(point.x)} cy={mapY(point.y)} r={2} fill="#1f5ad6" />
           ))}
           {fitLine ? (
@@ -291,7 +308,10 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
   if (section.kind === 'image') {
     return (
       <View key={`section-${index}`} style={styles.section}>
-        <Text style={styles.sectionTitle}>Image: {section.imageId}</Text>
+        <Text style={styles.sectionTitle}>
+          Image: {section.imageId}
+          {pdfPointsSuffix(section.points)}
+        </Text>
         <Text>Attachment metadata: {answers.images[section.imageId] ? 'included' : 'none'}</Text>
         <Text>Caption:</Text>
         {fieldView(answers.fields[section.captionFieldId])}
@@ -303,6 +323,7 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
 }
 
 export function LabReportDocument({ lab, answers, course, signature, signedAt }: PDFProps) {
+  const totalPoints = sumSectionPoints(lab.sections);
   return (
     <Document
       title={`${lab.title} Report`}
@@ -314,6 +335,11 @@ export function LabReportDocument({ lab, answers, course, signature, signedAt }:
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>{lab.title}</Text>
         <Text style={styles.subtitle}>{course.title}</Text>
+        {totalPoints > 0 ? (
+          <Text style={styles.subtitle}>
+            Total: {formatPointsLabel(totalPoints)} points
+          </Text>
+        ) : null}
         <Text>Student: {answers.meta.studentName}</Text>
         <Text>
           Signed: {formatSignedAt(signedAt)} - {signature.slice(0, 8)}

@@ -1,5 +1,6 @@
 import type { ObjectiveSection } from '@/domain/schema';
 import { useLabStore } from '@/state/labStore';
+import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
 import { Field } from '@/ui/primitives/Field';
 
 type Props = {
@@ -11,9 +12,10 @@ export function ObjectiveSectionView({ section }: Props) {
   const setField = useLabStore((state) => state.setField);
   return (
     <section className="section">
+      <SectionPointsCaption points={section.points} />
       <Field
         id={section.fieldId}
-        label="Objective"
+        label={section.prompt ?? 'Objective'}
         value={value}
         multiline
         rows={section.rows ?? 3}

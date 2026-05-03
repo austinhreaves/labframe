@@ -15,10 +15,10 @@ test('blocks PDF generation until student info preflight passes', async ({ page 
   });
 
   await page.goto('/');
-  await page.getByRole('link', { name: /lab 1: snellslaw/i }).first().click();
+  await page.getByRole('link', { name: /lab 6: snellslaw/i }).first().click();
   await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();
 
-  await page.getByRole('button', { name: /generate pdf/i }).click();
+  await page.getByRole('button', { name: /export pdf/i }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await expect(page.getByRole('dialog')).toContainText(/student name/i);
   await page.getByRole('button', { name: /^ok$/i }).click();
@@ -29,7 +29,7 @@ test('blocks PDF generation until student info preflight passes', async ({ page 
   await page.getByLabel(/student name/i).fill('Austin Reaves');
   const [download] = await Promise.all([
     page.waitForEvent('download'),
-    page.getByRole('button', { name: /generate pdf/i }).click(),
+    page.getByRole('button', { name: /export pdf/i }).click(),
   ]);
 
   expect(signCalls).toBe(1);

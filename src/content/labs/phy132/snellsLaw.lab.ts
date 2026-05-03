@@ -11,7 +11,10 @@ function sinFromDegrees(fieldName: string) {
   };
 }
 
-export const snellsLawLab: Lab = {
+// Migrated from physics-labs.up.railway.app/labs/snellsLaw/ (PHY 132). If lineage disagrees with
+// legacy, flag for Austin — SNELLS_PARITY_INVENTORY.md referenced phy_114 checkpoints during renderer work.
+
+export const phy132SnellsLawLab: Lab = {
   id: 'snellsLaw',
   title: "Snell's Law",
   description:
@@ -27,29 +30,22 @@ export const snellsLawLab: Lab = {
   sections: [
     {
       kind: 'instructions',
-      points: 0,
+      tocHidden: true,
       html: [
         '## Integrity Agreement',
         'Your report includes a process record. You may use any tools you wish, but pastes, autocomplete suggestions, and edit timing are logged with timestamps and rendered in the final PDF.',
       ].join('\n\n'),
     },
     {
-      kind: 'instructions',
-      points: 0,
-      html: [
-        '## OBJECTIVE',
-        'Explain the goal of the experiment in your own words. Two or three sentences are sufficient.',
-      ].join('\n\n'),
-    },
-    {
       kind: 'objective',
       fieldId: 'objective',
+      prompt:
+        'Objective — Explain the goal of the experiment in your own words. Two or three sentences are sufficient.',
       rows: 4,
       points: 3,
     },
     {
       kind: 'instructions',
-      points: 0,
       html: [
         '## Part 1: Reflection and Refraction for Known Media',
         '1. Launch the simulation and select the Intro view.',
@@ -63,7 +59,6 @@ export const snellsLawLab: Lab = {
       kind: 'measurement',
       fieldId: 'part1_n2',
       label: 'n2',
-      points: 0,
     },
     {
       kind: 'dataTable',
@@ -94,7 +89,6 @@ export const snellsLawLab: Lab = {
     },
     {
       kind: 'instructions',
-      points: 0,
       html: [
         '## Part 2 - Refraction for Unknown Media (Mystery Material A)',
         '1. Replace the lower medium with Mystery Material A and set the upper medium to refractive index n1 from your parameter set. Record n1 below.',
@@ -105,7 +99,6 @@ export const snellsLawLab: Lab = {
       kind: 'measurement',
       fieldId: 'part2_n1',
       label: 'n1',
-      points: 0,
     },
     {
       kind: 'dataTable',
@@ -151,7 +144,6 @@ export const snellsLawLab: Lab = {
     },
     {
       kind: 'instructions',
-      points: 0,
       html: '3. On the graph, fit the data with a proportional model. Record the slope and its corresponding uncertainty below.',
     },
     {
@@ -173,7 +165,6 @@ export const snellsLawLab: Lab = {
     },
     {
       kind: 'instructions',
-      points: 0,
       html: [
         '## Part 3 - Refraction for Unknown Media (Mystery Material B)',
         '1. Keep n1 unchanged and switch the lower medium to Mystery Material B.',
@@ -184,7 +175,6 @@ export const snellsLawLab: Lab = {
       kind: 'measurement',
       fieldId: 'part3_n1',
       label: 'n1',
-      points: 0,
     },
     {
       kind: 'dataTable',
@@ -230,7 +220,6 @@ export const snellsLawLab: Lab = {
     },
     {
       kind: 'instructions',
-      points: 0,
       html: '3. On the graph, fit the data with a proportional model. Record the slope and its corresponding uncertainty below.',
     },
     {
@@ -252,7 +241,6 @@ export const snellsLawLab: Lab = {
     },
     {
       kind: 'instructions',
-      points: 0,
       html: [
         '## Part 4 - Measurement of the Critical Angle and Consistency Check',
         '1. Change the upper medium to Mystery A and leave the lower medium as Mystery B.',
@@ -275,7 +263,6 @@ export const snellsLawLab: Lab = {
     },
     {
       kind: 'instructions',
-      points: 0,
       html: '3. Use n_B from Part 3 and your measured critical angle theta_c to compute n_A. Compare this result to n_A from Part 2.',
     },
     {
@@ -294,7 +281,6 @@ export const snellsLawLab: Lab = {
     },
     {
       kind: 'instructions',
-      points: 0,
       html: '## Concept Check Questions',
     },
     {
@@ -323,14 +309,13 @@ export const snellsLawLab: Lab = {
       kind: 'concept',
       fieldId: 'conceptCheck4',
       prompt:
-        "4. (2 points) Explain an application of Snell's Law (for example, medical imaging or ophthalmology). Summarize how Snell's Law enables that application and why it is interesting to you.",
+        "4. Explain an application of Snell's Law (for example, medical imaging or ophthalmology). Summarize how Snell's Law enables that application and why it is interesting to you.",
       rows: 6,
       points: 2,
     },
     {
       kind: 'instructions',
-      points: 0,
-      html: '## DISCUSSION AND CONCLUSION',
+      html: '## Discussion and Conclusion',
     },
     {
       kind: 'concept',
@@ -342,7 +327,7 @@ export const snellsLawLab: Lab = {
     },
     {
       kind: 'instructions',
-      points: 0,
+      tocHidden: true,
       html: [
         '## PDF Report Notes',
         'The generated PDF should include Student Info, worksheet responses, table and derived values, fit summaries, and a Process Record appendix.',
@@ -351,3 +336,6 @@ export const snellsLawLab: Lab = {
     },
   ],
 };
+
+/** @deprecated Prefer `phy132SnellsLawLab`; kept for incremental test refactors during Phase 4. */
+export const snellsLawLab = phy132SnellsLawLab;

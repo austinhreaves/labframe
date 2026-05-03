@@ -8,9 +8,9 @@ import { createLabStore } from '@/state/labStore';
 import { createMemoryPersistenceAdapter } from '@/state/persistence/memoryAdapter';
 
 const courseFixture: Course = {
-  id: 'general',
-  title: 'General Physics',
-  storagePrefix: 'general',
+  id: 'phy132',
+  title: 'PHY 132',
+  storagePrefix: 'phy132',
   parentOriginAllowList: [],
   labs: [{ ref: 'snellsLaw', enabled: true }],
 };
@@ -18,7 +18,7 @@ const courseFixture: Course = {
 describe('buildAnswersFromStore', () => {
   it('includes selectedFits and canonicalizes keys deterministically', async () => {
     const store = createLabStore(createMemoryPersistenceAdapter());
-    await store.getState().initLab('general', 'snellsLaw', snellsLawLab);
+    await store.getState().initLab('phy132', 'snellsLaw', snellsLawLab);
 
     store.getState().setSelectedFit('zzzPlot', 'linear');
     store.getState().setSelectedFit('aaaPlot', 'proportional');
@@ -45,7 +45,7 @@ describe('buildAnswersFromStore', () => {
 
   it('filters null fit entries and does not throw', async () => {
     const store = createLabStore(createMemoryPersistenceAdapter());
-    await store.getState().initLab('general', 'snellsLaw', snellsLawLab);
+    await store.getState().initLab('phy132', 'snellsLaw', snellsLawLab);
     store.getState().setFitSelection('goodPlot', { model: 'linear', parameters: { a: 2, b: 3 } });
 
     store.setState((state) => ({

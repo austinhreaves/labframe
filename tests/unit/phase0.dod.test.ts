@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { LabSchema } from '@/domain/schema';
-import { snellsLawLab } from '@/content/labs/snellsLaw.lab';
+import { snellsLawLab } from '@/content/labs';
 
 describe('Phase 0 definition of done', () => {
   it('prints and validates Snell schema structure', () => {

@@ -5,7 +5,7 @@ import { createEmptyFieldValue, useLabStore } from '@/state/labStore';
 
 describe('labStore', () => {
   beforeEach(() => {
-    useLabStore.getState().initLab('general', 'snellsLaw', snellsLawLab);
+    useLabStore.getState().initLab('phy132', 'snellsLaw', snellsLawLab);
   });
 
   it('initializes table rows from schema', () => {

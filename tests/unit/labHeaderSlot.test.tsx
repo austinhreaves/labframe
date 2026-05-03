@@ -7,9 +7,9 @@ import '@/main.css';
 import { LabPage } from '@/ui/LabPage';
 
 const course: Course = {
-  id: 'general',
-  title: 'Interactive Physics Labs',
-  storagePrefix: 'general',
+  id: 'phy132',
+  title: 'PHY 132',
+  storagePrefix: 'phy132',
   parentOriginAllowList: [],
   labs: [{ ref: 'headerTest', labNumber: 1, enabled: true }],
 };

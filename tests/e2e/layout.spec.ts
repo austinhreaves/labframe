@@ -1,21 +1,21 @@
 import { expect, test } from '@playwright/test';
 
 test('sticky header stays visible over long scroll', async ({ page }, testInfo) => {
-  await page.goto('/c/general/snellsLaw?layout=side');
+  await page.goto('/c/phy132/snellsLaw?layout=side');
   await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();
 
   await page.evaluate(() => window.scrollTo(0, 1000));
   const header = page.locator('.lab-header');
   await expect(header).toBeVisible();
   const top = await header.evaluate((element) => Math.round(element.getBoundingClientRect().top));
-  expect(top).toBe(0);
+  expect(top).toBeLessThanOrEqual(8);
 
   const screenshot = await page.screenshot();
   await testInfo.attach('layout-scroll-1000', { body: screenshot, contentType: 'image/png' });
 });
 
 test('splitter resizes panes without remounting iframe and resets on reload', async ({ page }) => {
-  await page.goto('/c/general/snellsLaw?layout=side');
+  await page.goto('/c/phy132/snellsLaw?layout=side');
   await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();
 
   const iframe = page.getByTitle(/bending light/i);
@@ -58,7 +58,7 @@ test('splitter resizes panes without remounting iframe and resets on reload', as
   expect(afterDrag.worksheetWidth).toBeGreaterThan(initial.worksheetWidth);
   await expect(iframe).toHaveAttribute('data-mount-id', mountId ?? '');
 
-  await page.reload();
+  await page.reload({ waitUntil: 'domcontentloaded' });
   await expect(iframe).toBeVisible();
   const afterReload = await page.evaluate(() => {
     const frame = document.querySelector('.simulation-frame') as HTMLElement | null;

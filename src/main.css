@@ -8,6 +8,7 @@
     Roboto,
     sans-serif;
   line-height: 1.5;
+  --lab-header-offset: 56px;
 }
 
 body {
@@ -15,6 +16,10 @@ body {
   min-height: 100vh;
   background: #fafafa;
   color: #111;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 a {
@@ -52,6 +57,12 @@ a:hover {
 .lab-header-left,
 .lab-header-right {
   flex: 0 0 auto;
+}
+
+.lab-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .lab-header-slot {
@@ -154,19 +165,125 @@ a:hover {
   gap: 0.5rem;
 }
 
+.layout-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lab-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 9rem;
+}
+
+.lab-progress span {
+  font-size: 0.85rem;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.lab-progress progress {
+  width: 7rem;
+  height: 0.45rem;
+}
+
+.lab-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.lab-shell-tabs {
+  display: block;
+}
+
+.table-of-contents-popover {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.table-of-contents-popover > summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #374151;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.table-of-contents-popover > summary::-webkit-details-marker {
+  display: none;
+}
+
+.table-of-contents-popover-panel {
+  z-index: 25;
+  max-height: min(70vh, 24rem);
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.table-of-contents-popover-panel ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.table-of-contents-popover-panel a {
+  color: #374151;
+  font-size: 0.88rem;
+  text-decoration: none;
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table-of-contents-popover-panel a[aria-current='location'] {
+  color: #1558d6;
+  font-weight: 600;
+}
+
 .lab-layout-side {
   display: grid;
   grid-template-columns: var(--split-sim, 60%) 8px 1fr;
+  grid-template-areas: 'sim splitter worksheet';
   gap: 0;
   align-items: start;
 }
 
 /* Keep simulation visible while scrolling the worksheet */
-.lab-layout-side .layout-pane:first-child {
+.lab-layout-side .layout-pane-simulation {
+  grid-area: sim;
   position: sticky;
-  top: 56px;
-  max-height: calc(100vh - 56px);
-  overflow: hidden;
+  top: calc(var(--lab-header-offset) + 0.5rem);
+  align-self: start;
+}
+
+.lab-layout-side .layout-pane-worksheet {
+  grid-area: worksheet;
+}
+
+.lab-layout-side .split-handle {
+  grid-area: splitter;
+}
+
+.lab-layout-side.lab-layout-sim-right {
+  grid-template-columns: 1fr 8px var(--split-sim, 60%);
+  grid-template-areas: 'worksheet splitter sim';
 }
 
 .lab-layout-tabs .layout-pane {
@@ -183,7 +300,7 @@ a:hover {
 
 .simulation-frame {
   width: 100%;
-  height: calc(100vh - 80px);
+  height: 720px;
   border: 1px solid #ccc;
   border-radius: 8px;
 }
@@ -226,6 +343,10 @@ a:hover {
   min-width: 0;
 }
 
+.worksheet-section-anchor {
+  scroll-margin-top: calc(var(--lab-header-offset) + 0.8rem);
+}
+
 .section {
   color: #111;
   background: #fff;
@@ -241,6 +362,12 @@ a:hover {
 
 .section :is(h2, h3) {
   color: #111;
+}
+
+.section-points-caption {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: #555;
 }
 
 .field {
@@ -273,7 +400,7 @@ math-field {
 }
 
 math-field {
-  min-height: 120px;
+  min-height: 140px;
 }
 
 textarea {
@@ -303,6 +430,112 @@ button[aria-pressed='true']:hover {
 button:focus-visible {
   outline: 2px solid #1558d6;
   outline-offset: 2px;
+}
+
+.equation-editor {
+  gap: 0.6rem;
+}
+
+.equation-editor-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.equation-editor-toggle {
+  white-space: nowrap;
+}
+
+.equation-symbol-palette {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.equation-symbol-quick-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.equation-symbol-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.equation-symbol-more {
+  position: relative;
+}
+
+.equation-symbol-more > div {
+  position: absolute;
+  z-index: 5;
+  background: #fff;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  padding: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  min-width: 18rem;
+}
+
+.equation-symbol-tab[aria-selected='true'] {
+  background: #1558d6;
+  border-color: #1558d6;
+  color: #fff;
+}
+
+.equation-symbol-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(2.4rem, 1fr));
+  gap: 0.35rem;
+}
+
+.equation-symbol-quick,
+.equation-symbol-button {
+  padding: 0.15rem 0.35rem;
+  min-height: 1.7rem;
+  font-size: 0.85rem;
+}
+
+.equation-editor-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.6rem;
+  align-items: start;
+}
+
+.equation-editor-preview {
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  padding: 0.5rem;
+  background: #fafafa;
+}
+
+.equation-editor-preview pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace;
+  font-size: 0.9rem;
+}
+
+.equation-editor-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.45rem;
+}
+
+.equation-editor-katex {
+  overflow-x: auto;
+}
+
+@media (min-width: 720px) {
+  .equation-editor-body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
 }
 
 table {

@@ -1,5 +1,6 @@
 import type { ConceptSection } from '@/domain/schema';
 import { useLabStore } from '@/state/labStore';
+import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
 import { Field } from '@/ui/primitives/Field';
 
 type Props = {
@@ -11,6 +12,7 @@ export function ConceptSectionView({ section }: Props) {
   const setField = useLabStore((state) => state.setField);
   return (
     <section className="section">
+      <SectionPointsCaption points={section.points} />
       <Field
         id={section.fieldId}
         label={section.prompt}

@@ -1,5 +1,6 @@
 import type { MeasurementSection } from '@/domain/schema';
 import { useLabStore } from '@/state/labStore';
+import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
 import { Field } from '@/ui/primitives/Field';
 
 type Props = {
@@ -13,6 +14,7 @@ export function MeasurementSectionView({ section }: Props) {
 
   return (
     <section className="section">
+      <SectionPointsCaption points={section.points} />
       <Field id={section.fieldId} label={label} value={value} onChange={(next) => setField(section.fieldId, next)} />
     </section>
   );

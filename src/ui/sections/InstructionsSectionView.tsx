@@ -1,4 +1,5 @@
 import type { InstructionsSection } from '@/domain/schema';
+import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
 import ReactMarkdown from 'react-markdown';
 import rehypeKatex from 'rehype-katex';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
@@ -21,6 +22,7 @@ const instructionSchema = {
 export function InstructionsSectionView({ section }: Props) {
   return (
     <section className="section section-instructions">
+      <SectionPointsCaption points={section.points} />
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[[rehypeSanitize, instructionSchema], rehypeKatex]}

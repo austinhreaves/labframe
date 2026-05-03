@@ -1,5 +1,6 @@
 import type { ImageSection } from '@/domain/schema';
 import { useLabStore } from '@/state/labStore';
+import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
 import { ImageUploader } from '@/ui/primitives/ImageUploader';
 
 type Props = {
@@ -14,6 +15,7 @@ export function ImageSectionView({ section }: Props) {
 
   return (
     <section className="section">
+      <SectionPointsCaption points={section.points} />
       <ImageUploader
         imageId={section.imageId}
         captionFieldId={section.captionFieldId}

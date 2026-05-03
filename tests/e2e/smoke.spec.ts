@@ -4,7 +4,7 @@ test('phase1 snell flow: fill table derived updates and tab switch', async ({ pa
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /interactive physics labs/i }).first()).toBeVisible();
 
-  await page.getByRole('link', { name: /lab 1: snellslaw/i }).first().click();
+  await page.getByRole('link', { name: /lab 6: snellslaw/i }).first().click();
   await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();
 
   await page.getByLabel(/Incident angle \(deg\) row 1/i).nth(1).fill('30');

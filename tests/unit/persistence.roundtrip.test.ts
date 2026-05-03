@@ -30,7 +30,7 @@ describe('persistence roundtrip', () => {
     const adapter = createMemoryPersistenceAdapter();
     const firstStore = createLabStore(adapter);
 
-    await firstStore.getState().initLab('general', 'snellsLaw', snellsLawLab);
+    await firstStore.getState().initLab('phy132', 'snellsLaw', snellsLawLab);
     firstStore.getState().setField('objective', createEmptyFieldValue('verify persistence'));
     firstStore.getState().setTableCell('part1Table', 0, 'incidentAngle', createEmptyFieldValue('30'));
     firstStore.getState().setSelectedFit('part2FitPlot', 'proportional');
@@ -40,7 +40,7 @@ describe('persistence roundtrip', () => {
     await new Promise((resolve) => setTimeout(resolve, 400));
 
     const secondStore = createLabStore(adapter);
-    await secondStore.getState().initLab('general', 'snellsLaw', snellsLawLab);
+    await secondStore.getState().initLab('phy132', 'snellsLaw', snellsLawLab);
 
     expect(secondStore.getState().fields.objective?.text).toBe('verify persistence');
     expect(secondStore.getState().tables.part1Table?.[0]?.incidentAngle?.text).toBe('30');
@@ -49,7 +49,7 @@ describe('persistence roundtrip', () => {
     expect(secondStore.getState().images.part4Image?.fileName).toBe('photo.png');
 
     const blob = await adapter.loadBlob(
-      makeImageKey({ courseId: 'general', labId: 'snellsLaw', studentName: secondStore.getState().studentName }, 'part4Image'),
+      makeImageKey({ courseId: 'phy132', labId: 'snellsLaw', studentName: secondStore.getState().studentName }, 'part4Image'),
     );
     expect(blob).not.toBeNull();
 
@@ -57,7 +57,7 @@ describe('persistence roundtrip', () => {
       schemaVersion: number;
       selectedFits?: Record<string, string | null>;
       fits?: Record<string, unknown>;
-    }>(makeLabKey({ courseId: 'general', labId: 'snellsLaw', studentName: secondStore.getState().studentName }));
+    }>(makeLabKey({ courseId: 'phy132', labId: 'snellsLaw', studentName: secondStore.getState().studentName }));
     expect(persisted?.schemaVersion).toBe(2);
     expect(persisted?.selectedFits?.part2FitPlot).toBe('proportional');
     expect(persisted?.fits?.part2FitPlot).toEqual({ model: 'proportional', parameters: { a: 1 } });
@@ -66,11 +66,11 @@ describe('persistence roundtrip', () => {
   it('hydrates v1 persisted state by defaulting selectedFits/fits and autosaves as v2', async () => {
     const adapter = createMemoryPersistenceAdapter();
     const studentName = 'Student';
-    const labKey = makeLabKey({ courseId: 'general', labId: 'snellsLaw', studentName });
+    const labKey = makeLabKey({ courseId: 'phy132', labId: 'snellsLaw', studentName });
 
     await adapter.saveJSON(labKey, {
       schemaVersion: 1,
-      courseId: 'general',
+      courseId: 'phy132',
       labId: 'snellsLaw',
       studentName,
       fields: {
@@ -86,7 +86,7 @@ describe('persistence roundtrip', () => {
     });
 
     const store = createLabStore(adapter);
-    await store.getState().initLab('general', 'snellsLaw', snellsLawLab);
+    await store.getState().initLab('phy132', 'snellsLaw', snellsLawLab);
 
     expect(store.getState().fields.objective?.text).toBe('legacy v1');
     expect(store.getState().selectedFits).toEqual({});

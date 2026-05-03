@@ -1,36 +1,60 @@
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 
-import { generalCourse, phy114Course } from '@/content/courses';
-import { snellsLawLab } from '@/content/labs';
+import { phy114Course, phy132Course } from '@/content/courses';
+import {
+  phy114CapacitorsLab,
+  phy114ChargesFieldsLab,
+  phy114DcCircuitsLab,
+  phy114GeometricOpticsLab,
+  phy114SnellsLawLab,
+  phy114StaticElectricityLab,
+  phy132CapacitorsLab,
+  phy132ChargesFieldsLab,
+  phy132DcCircuitsLab,
+  phy132MagneticFieldFaradayLab,
+  phy132SnellsLawLab,
+  phy132StaticElectricityLab,
+} from '@/content/labs';
 import type { Course, Lab } from '@/domain/schema';
 import { Catalog } from '@/ui/Catalog';
 import { LabPage } from '@/ui/LabPage';
 
-const courses: Course[] = [generalCourse, phy114Course];
-const labs: Record<string, Lab> = {
-  snellsLaw: snellsLawLab,
-};
+const courses: Course[] = [phy132Course, phy114Course];
 
-function normalizeCourseId(raw: string): string {
-  if (raw === 'phy_114') {
-    return 'phy114';
-  }
-  return raw;
-}
+const labsByCourse: Record<string, Record<string, Lab>> = {
+  phy132: {
+    staticElectricity: phy132StaticElectricityLab,
+    chargesFields: phy132ChargesFieldsLab,
+    capacitors: phy132CapacitorsLab,
+    dcCircuits: phy132DcCircuitsLab,
+    magneticFieldFaraday: phy132MagneticFieldFaradayLab,
+    snellsLaw: phy132SnellsLawLab,
+  },
+  phy114: {
+    staticElectricity: phy114StaticElectricityLab,
+    chargesFields: phy114ChargesFieldsLab,
+    capacitors: phy114CapacitorsLab,
+    dcCircuits: phy114DcCircuitsLab,
+    snellsLaw: phy114SnellsLawLab,
+    geometricOptics: phy114GeometricOpticsLab,
+  },
+};
 
 function CoursePage() {
   const params = useParams();
-  const course = courses.find((candidate) => candidate.id === normalizeCourseId(params.courseId ?? ''));
+  const course = courses.find((candidate) => candidate.id === (params.courseId ?? ''));
+
   if (!course) {
     return <Navigate to="/" replace />;
   }
+
   return <Catalog courses={[course]} />;
 }
 
 function LabRoutePage() {
   const params = useParams();
-  const course = courses.find((candidate) => candidate.id === normalizeCourseId(params.courseId ?? ''));
-  const lab = labs[params.labId ?? ''];
+  const course = courses.find((candidate) => candidate.id === (params.courseId ?? ''));
+  const lab = labsByCourse[course?.id ?? '']?.[params.labId ?? ''];
 
   if (!course || !lab) {
     return <Navigate to="/" replace />;
@@ -41,18 +65,20 @@ function LabRoutePage() {
 
 function SlugLabRoutePage() {
   const params = useParams();
-  const lab = labs[params.slug ?? ''];
+  const lab = labsByCourse[phy132Course.id]?.[params.slug ?? ''];
+
   if (!lab) {
     return <Navigate to="/" replace />;
   }
-  return <LabPage key={`general-${lab.id}`} course={generalCourse} lab={lab} />;
+
+  return <LabPage key={`${phy132Course.id}-${lab.id}`} course={phy132Course} lab={lab} />;
 }
 
 export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Catalog courses={courses} />} />
-      <Route path="/phy_114" element={<Catalog courses={[phy114Course]} />} />
+      <Route path="/phy_114" element={<Navigate to="/c/phy114" replace />} />
       <Route path="/c/:courseId" element={<CoursePage />} />
       <Route path="/c/:courseId/:labId" element={<LabRoutePage />} />
       <Route path="/lab/:slug" element={<SlugLabRoutePage />} />
