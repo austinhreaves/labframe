@@ -1,3 +1,4 @@
+import { Suspense, type ReactNode } from 'react';
 import type { Section } from '@/domain/schema';
 
 import { CalculationSectionView } from '@/ui/sections/CalculationSectionView';
@@ -9,32 +10,45 @@ import { MeasurementSectionView } from '@/ui/sections/MeasurementSectionView';
 import { MultiMeasurementSectionView } from '@/ui/sections/MultiMeasurementSectionView';
 import { ObjectiveSectionView } from '@/ui/sections/ObjectiveSectionView';
 import { PlotSectionView } from '@/ui/sections/PlotSectionView';
+import { SectionSkeleton } from '@/ui/sections/SectionSkeleton';
 
 type Props = {
   section: Section;
 };
 
 export function SectionRenderer({ section }: Props) {
+  let content: ReactNode = null;
   switch (section.kind) {
     case 'instructions':
-      return <InstructionsSectionView section={section} />;
+      content = <InstructionsSectionView section={section} />;
+      break;
     case 'objective':
-      return <ObjectiveSectionView section={section} />;
+      content = <ObjectiveSectionView section={section} />;
+      break;
     case 'measurement':
-      return <MeasurementSectionView section={section} />;
+      content = <MeasurementSectionView section={section} />;
+      break;
     case 'multiMeasurement':
-      return <MultiMeasurementSectionView section={section} />;
+      content = <MultiMeasurementSectionView section={section} />;
+      break;
     case 'dataTable':
-      return <DataTableSectionView section={section} />;
+      content = <DataTableSectionView section={section} />;
+      break;
     case 'plot':
-      return <PlotSectionView section={section} />;
+      content = <PlotSectionView section={section} />;
+      break;
     case 'image':
-      return <ImageSectionView section={section} />;
+      content = <ImageSectionView section={section} />;
+      break;
     case 'calculation':
-      return <CalculationSectionView section={section} />;
+      content = <CalculationSectionView section={section} />;
+      break;
     case 'concept':
-      return <ConceptSectionView section={section} />;
+      content = <ConceptSectionView section={section} />;
+      break;
     default:
-      return null;
+      content = null;
   }
+
+  return <Suspense fallback={<SectionSkeleton />}>{content}</Suspense>;
 }

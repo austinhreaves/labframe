@@ -180,7 +180,7 @@ LabFrame does not implement application-level encryption beyond HMAC-based integ
 
 **LTI 1.3 / OIDC integration is planned for a future phase but not in v1.0.** When implemented, LabFrame embedded in a Canvas iframe will read `lis_person_name_full` and `custom_canvas_user_id` from the LTI launch parameters (passed via `postMessage` from the parent Canvas window), prefilling the student name and binding identity to the Canvas account. This requires going through ASU IT to register a developer key with Canvas — a process not yet started.
 
-**`postMessage` security:** When LabFrame is embedded in an iframe (any parent), it currently does not exchange messages with the parent. A planned feature (Phase 5) introduces an allow-list of parent origins per course manifest (e.g., `https://canvas.asu.edu` for PHY 114) so that any postMessage exchange is scoped to known origins. Until that ships, LabFrame in iframe mode is read-only from the parent's perspective.
+**`postMessage` security:** LabFrame now emits parent-frame events only through an allow-listed origin flow. Each course manifest can opt in with `parentOriginAllowList`; LabFrame posts only when `window.parent !== window`, resolves an ancestor/referrer origin, and sends only to an exact allow-listed `targetOrigin` (never `'*'`). Current event types are `SAVE_PROGRESS` and `SUBMIT_ANSWERS`, each containing only `{ type, courseId, labId }`.
 
 ---
 
@@ -385,7 +385,7 @@ The following items are planned but not implemented as of LabFrame v1.0. Each is
 
 | Item | Affects | Status | Spec reference |
 |---|---|---|---|
-| `postMessage` parent-origin allow-list | Iframe embedding security | Planned for Phase 5 | REBUILD_SPEC.md §5.6, Phase 5 |
+| `postMessage` parent-origin allow-list | Iframe embedding security | Implemented | REBUILD_SPEC.md §5.6, Phase 5 |
 | LTI 1.3 / OIDC integration | Authenticated identity from Canvas | Future phase, not yet scheduled | Phase 6+ |
 | AI usage disclosure on integrity statement | Captures and signs student-reported AI tool usage | Phase 5.5 | REBUILD_SPEC.md Phase 5.5 |
 | Optional student ID field | Disambiguates students with shared names | Phase 6.2 | REBUILD_SPEC.md Phase 6.2 |

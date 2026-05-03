@@ -24,6 +24,7 @@ export const CourseSchema = z.object({
   title: z.string().min(1),
   storagePrefix: z.string().min(1),
   parentOriginAllowList: z.array(z.string().url()).default([]),
+  telemetryEndpoint: z.string().url().optional(),
   labs: z.array(CourseLabRefSchema).min(1),
 });
 

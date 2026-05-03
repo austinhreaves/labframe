@@ -137,13 +137,20 @@ export function Chart({ section, data }: ChartProps) {
 
   return (
     <section className="chart">
-      <h4>{section.plotId}</h4>
+      <h2>{section.plotId}</h2>
       <p>
         X-axis: {section.xLabel} | Y-axis: {section.yLabel}
       </p>
       <div style={{ height: 280 }}>
-        <Scatter data={chartData} options={options} />
+        <Scatter
+          data={chartData}
+          options={options}
+          role="img"
+          aria-label={`${section.plotId} scatter plot. X-axis ${section.xLabel}. Y-axis ${section.yLabel}.`}
+        />
       </div>
     </section>
   );
 }
+
+export default Chart;

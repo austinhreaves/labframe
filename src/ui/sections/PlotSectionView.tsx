@@ -1,7 +1,8 @@
+import { lazy } from 'react';
 import type { PlotSection, TableData } from '@/domain/schema';
 import { useLabStore } from '@/state/labStore';
 import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
-import { Chart } from '@/ui/primitives/Chart';
+const Chart = lazy(() => import('@/ui/primitives/Chart'));
 
 const EMPTY_TABLE: TableData = [];
 

@@ -2,11 +2,13 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Link, useSearchParams } from 'react-router-dom';
 
 import type { Course, Lab } from '@/domain/schema';
+import { clearParentMessagingContext, configureParentMessaging, postSubmitAnswersToParent } from '@/services/embed/parentPostMessage';
 import { buildAnswersFromStore } from '@/services/integrity/buildAnswers';
 import { canonicalize } from '@/services/integrity/canonicalize';
 import { validateStudentInfoForPdf, type StudentInfoFieldId } from '@/services/integrity/preflight';
 import { signAnswers } from '@/services/integrity/sign';
-import { buildPdfFilename, renderPDF, sealPDF } from '@/services/pdf';
+import { buildPdfFilename, sealPDF } from '@/services/pdf';
+import { clearTelemetryContext, configureTelemetry, reportError } from '@/services/telemetry/errorReporter';
 import { useLabStore, type RecoverableAttachment } from '@/state/labStore';
 import { ProgressBar } from '@/ui/ProgressBar';
 import { StudentInfoPreflightDialog } from '@/ui/StudentInfoPreflightDialog';
@@ -56,6 +58,22 @@ export function LabPage({ course, lab }: Props) {
   useEffect(() => {
     void initLab(course.id, lab.id, lab);
   }, [course.id, lab, initLab]);
+
+  useEffect(() => {
+    configureTelemetry({
+      ...(course.telemetryEndpoint ? { telemetryEndpoint: course.telemetryEndpoint } : {}),
+      labId: lab.id,
+    });
+    configureParentMessaging({
+      parentOriginAllowList: course.parentOriginAllowList,
+      courseId: course.id,
+      labId: lab.id,
+    });
+    return () => {
+      clearTelemetryContext();
+      clearParentMessagingContext();
+    };
+  }, [course.id, course.parentOriginAllowList, course.telemetryEndpoint, lab.id]);
 
   useEffect(() => {
     setStudentNameDraft(studentName);
@@ -118,6 +136,7 @@ export function LabPage({ course, lab }: Props) {
 
     setIsExportingPdf(true);
     try {
+      const { renderPDF } = await import('@/services/pdf/render');
       const answers = buildAnswersFromStore(course, { ...store, studentName: studentNameForPdf });
       const signing = await signAnswers(answers);
       const canonical = canonicalize(answers);
@@ -148,7 +167,9 @@ export function LabPage({ course, lab }: Props) {
         signature: signing.signature,
       });
       downloadBlob(sealed, filename);
+      postSubmitAnswersToParent();
     } catch (error) {
+      void reportError({ error, sectionId: 'pdf-export', labId: lab.id });
       const message = error instanceof Error ? error.message : 'Could not sign report (network issue). Try again.';
       window.alert(message);
     } finally {
@@ -188,7 +209,7 @@ export function LabPage({ course, lab }: Props) {
 
   const worksheet = (
     <div className="worksheet-pane">
-      <h2>{lab.title}</h2>
+      <h1>{lab.title}</h1>
       {lab.sections.map((section, index) => (
         <div key={`${section.kind}-${index}`} id={`section-${index}`} className="worksheet-section-anchor">
           <SectionRenderer section={section} />

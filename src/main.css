@@ -370,6 +370,27 @@ a:hover {
   color: #555;
 }
 
+.section-skeleton {
+  min-height: 8rem;
+  display: grid;
+  align-content: start;
+  gap: 0.65rem;
+}
+
+.section-skeleton-line {
+  height: 0.8rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #eceff3 0%, #f5f6f8 50%, #eceff3 100%);
+}
+
+.section-skeleton-line-short {
+  width: 32%;
+}
+
+.section-skeleton-line-long {
+  width: 84%;
+}
+
 .field {
   display: flex;
   flex-direction: column;

@@ -36,3 +36,24 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  e2e-a11y:
+    name: e2e axe (chromium)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run axe e2e checks
+        run: npx playwright test tests/e2e/a11y.spec.ts --project=chromium

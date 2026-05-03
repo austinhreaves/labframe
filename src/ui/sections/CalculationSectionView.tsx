@@ -1,8 +1,9 @@
+import { lazy } from 'react';
 import type { CalculationSection } from '@/domain/schema';
 import { useLabStore } from '@/state/labStore';
 import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
-import { EquationEditor } from '@/ui/primitives/EquationEditor';
 import { Field } from '@/ui/primitives/Field';
+const EquationEditor = lazy(() => import('@/ui/primitives/EquationEditor'));
 
 type Props = {
   section: CalculationSection;

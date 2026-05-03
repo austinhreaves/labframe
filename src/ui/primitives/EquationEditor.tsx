@@ -65,6 +65,17 @@ export function EquationEditor({ id, label, value, onChange }: EquationEditorPro
     }
   }, [effective.text, isReady]);
 
+  useEffect(() => {
+    if (!isReady || mode !== 'math') {
+      return;
+    }
+    const sink = mathFieldRef.current?.querySelector('.ML__keyboard-sink[role="textbox"]');
+    if (sink instanceof HTMLElement) {
+      sink.setAttribute('aria-label', label);
+      sink.setAttribute('title', label);
+    }
+  }, [isReady, label, mode, effective.text]);
+
   const getSelectionStart = (target: MathFieldElement): number => {
     if (typeof target.selectionStart === 'number') {
       return target.selectionStart;
@@ -245,6 +256,7 @@ export function EquationEditor({ id, label, value, onChange }: EquationEditorPro
         {mode === 'math'
           ? createElement('math-field', {
               id,
+              title: label,
               ref: (element: MathFieldElement | null): void => {
                 mathFieldRef.current = element;
               },
@@ -365,3 +377,5 @@ export function EquationEditor({ id, label, value, onChange }: EquationEditorPro
     </div>
   );
 }
+
+export default EquationEditor;

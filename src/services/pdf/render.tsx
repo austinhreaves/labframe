@@ -1,7 +1,4 @@
-import { pdf } from '@react-pdf/renderer';
-
 import type { Course, Lab, LabAnswers } from '@/domain/schema';
-import { LabReportDocument } from '@/services/pdf/Document';
 
 type RenderPDFArgs = {
   lab: Lab;
@@ -12,6 +9,10 @@ type RenderPDFArgs = {
 };
 
 export async function renderPDF(args: RenderPDFArgs): Promise<Uint8Array> {
+  const [{ pdf }, { LabReportDocument }] = await Promise.all([
+    import('@react-pdf/renderer'),
+    import('@/services/pdf/Document'),
+  ]);
   const instance = pdf(
     <LabReportDocument
       lab={args.lab}

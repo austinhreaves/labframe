@@ -2,6 +2,7 @@ import type { StoreApi } from 'zustand';
 
 import { FitResultSchema } from '@/domain/schema/answers';
 import type { FitResult } from '@/domain/schema/answers';
+import { postSaveProgressToParent } from '@/services/embed/parentPostMessage';
 import { makeLabKey } from '@/state/persistence/keys';
 import type { PersistedLabState, PersistenceAdapter } from '@/state/persistence/types';
 import type { LabStoreState } from '@/state/labStore';
@@ -124,6 +125,7 @@ export function attachLabPersistence(
 
     try {
       await adapter.saveJSON(key, serialize(state, savedAt));
+      postSaveProgressToParent();
       if (!disposed) {
         store.setState((current) => ({
           status: {
