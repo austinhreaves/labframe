@@ -25,7 +25,7 @@ const labFixture: Lab = {
 };
 
 const answersFixture: LabAnswers = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   meta: {
     studentName: 'Student',
     semester: 'Fall',
@@ -35,6 +35,7 @@ const answersFixture: LabAnswers = {
   },
   integrity: {
     signedAs: 'Student',
+    aiUsed: false,
   },
   fields: {},
   tables: {},
@@ -63,6 +64,7 @@ describe('renderPDF', () => {
 
   it('returns Uint8Array bytes in browser-compatible path', async () => {
     const bytes = await renderPDF({
+      mode: 'signed',
       lab: labFixture,
       answers: answersFixture,
       course: courseFixture,
@@ -146,6 +148,7 @@ describe('renderPDF', () => {
       lab: markdownLabFixture,
       answers: answersFixture,
       course: courseFixture,
+      mode: 'signed',
       signature: '0123456789abcdef0123456789abcdef',
       signedAt: 1714450000000,
     });
@@ -157,7 +160,7 @@ describe('renderPDF', () => {
     expect(textDump).toContain('• Item two');
     expect(textDump).toContain('sinθᵢ');
     expect(textDump).toMatchInlineSnapshot(
-      `"Test LabTest CourseStudent: StudentSigned: 2024-04-30T04:06:40.000Z - 01234567InstructionsPart 1Important:• Item one• Item two Inline math sinθᵢProcess RecordSection 1: instructionsActive time (ms): 0Keystrokes: 0Pastes clipboard: 0Pastes autocomplete: 0Pastes IME: 0"`,
+      `"Test LabTest CourseStudent: StudentSigned: 2024-04-30T04:06:40.000Z - 01234567Integrity statement: I affirm this submission reflects my own work. If I used AI/LLM tools, I have disclosed them and shared any links required by course policy.AI/LLM tools used: NoInstructionsPart 1Important:• Item one• Item two Inline math sinθᵢProcess RecordSection 1: instructionsActive time (ms): 0Keystrokes: 0Pastes clipboard: 0Pastes autocomplete: 0Pastes IME: 0"`,
     );
   });
 
@@ -180,6 +183,7 @@ describe('renderPDF', () => {
       lab: snellsLawLab,
       answers: snellAnswers,
       course: courseFixture,
+      mode: 'signed',
       signature: '0123456789abcdef0123456789abcdef',
       signedAt: 1714450000000,
     });

@@ -3403,6 +3403,12 @@ Still open and worth answering before or during Phase 0:
 - Migration: persisted v1 state hydrates with empty `selectedFits` and `fits`, then auto-upgrades to v2 on next autosave.
 - Implication: PDFs signed against the v1 envelope cannot be regenerated bit-identical with current code. Their embedded canonical and signature remain mutually consistent (self-validation still works), but their canonical shape differs from what current code now emits.
 
+## v3 (2026-05-02)
+
+- Added: `integrity.aiUsed` (`boolean`) to capture whether the student used AI/LLM tools while completing the lab.
+- Added: `integrity.aiSharedLinks` (`string | undefined`) for links the student is required to disclose when AI is used.
+- Migration: persisted v2 state hydrates with `aiUsed: false` and `aiSharedLinks: ''`, then auto-upgrades to v3 on next autosave.
+
 ---
 
 *End of spec.*

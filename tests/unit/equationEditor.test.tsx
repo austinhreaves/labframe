@@ -197,7 +197,7 @@ describe('EquationEditor', () => {
     const { container, getByText, getByRole } = render(<StatefulEditor />);
     await waitForMathField(container);
 
-    const summary = getByText('More ▾');
+    const summary = getByText('More');
     const details = summary.closest('details');
     expect(details?.hasAttribute('open')).toBe(false);
 

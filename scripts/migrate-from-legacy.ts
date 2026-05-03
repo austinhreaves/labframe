@@ -127,6 +127,14 @@ interface FunctionSentinel {
   node: t.ArrowFunctionExpression | t.FunctionExpression | t.FunctionDeclaration;
 }
 
+function writeStdout(message: string): void {
+  process.stdout.write(`${message}\n`);
+}
+
+function writeStderr(message: string): void {
+  process.stderr.write(`${message}\n`);
+}
+
 // ============================================================================
 // CLI
 // ============================================================================
@@ -139,13 +147,13 @@ function parseArgs(argv: string[]): CliArgs {
     else if (a === '--out') args.outputPath = argv[++i];
     else if (a === '--strip-uncertainty') args.stripUncertainty = true;
     else if (a === '-h' || a === '--help') {
-      console.log(USAGE);
+      writeStdout(USAGE);
       process.exit(0);
     }
   }
   if (!args.legacyPath || !args.outputPath) {
-    console.error('Missing required args.\n');
-    console.error(USAGE);
+    writeStderr('Missing required args.\n');
+    writeStderr(USAGE);
     process.exit(2);
   }
   return args;
@@ -1318,26 +1326,26 @@ async function main() {
     const config = (await prettier.resolveConfig(args.outputPath)) ?? {};
     out = await prettier.format(out, { ...config, parser: 'typescript' });
   } catch (err) {
-    console.warn(`Prettier formatting failed (${(err as Error).message}); writing unformatted output.`);
+    writeStderr(`Warning: Prettier formatting failed (${(err as Error).message}); writing unformatted output.`);
   }
 
   await mkdir(dirname(args.outputPath), { recursive: true });
   await writeFile(args.outputPath, out, 'utf-8');
 
-  console.log(`✓ Wrote ${args.outputPath}`);
-  console.log(`  ${sections.length} sections from ${basename(args.legacyPath)}`);
+  writeStdout(`✓ Wrote ${args.outputPath}`);
+  writeStdout(`  ${sections.length} sections from ${basename(args.legacyPath)}`);
   if (allWarnings.length > 0) {
-    console.log(`  ${allWarnings.length} warnings:`);
-    for (const w of allWarnings) console.log(`    - ${w}`);
+    writeStdout(`  ${allWarnings.length} warnings:`);
+    for (const w of allWarnings) writeStdout(`    - ${w}`);
   }
-  console.log('');
-  console.log('Next: open the output file, address every TODO(human) marker, then run');
-  console.log('  npm run typecheck && npm run lint');
-  console.log('to verify the result compiles.');
+  writeStdout('');
+  writeStdout('Next: open the output file, address every TODO(human) marker, then run');
+  writeStdout('  npm run typecheck && npm run lint');
+  writeStdout('to verify the result compiles.');
 }
 
 main().catch((err) => {
-  console.error('Migration failed:');
-  console.error(err);
+  writeStderr('Migration failed:');
+  writeStderr(String(err));
   process.exit(1);
 });

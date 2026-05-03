@@ -14,7 +14,7 @@ const courseFixture: Course = {
 };
 
 const answersFixture: LabAnswers = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   meta: {
     studentName: 'Student',
     semester: 'Fall',
@@ -24,6 +24,7 @@ const answersFixture: LabAnswers = {
   },
   integrity: {
     signedAs: 'Student',
+    aiUsed: false,
   },
   fields: {},
   tables: {},
@@ -69,6 +70,7 @@ describe('PDF cover total points', () => {
       lab,
       answers: answersFixture,
       course: courseFixture,
+      mode: 'signed',
       signature: '0123456789abcdef0123456789abcdef',
       signedAt: 1714450000000,
     });

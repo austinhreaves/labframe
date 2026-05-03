@@ -20,6 +20,6 @@ describe('SectionRenderer', () => {
     await waitFor(() => {
       expect(screen.getAllByRole('table').length).toBeGreaterThan(0);
     });
-    expect(await screen.findByText(/Concept Check Questions/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Concept Check Question/i)).toBeInTheDocument();
   });
 });

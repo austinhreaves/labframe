@@ -3,9 +3,7 @@ import type { Lab } from '@/domain/schema';
 type BuildPdfFilenameInput = {
   lab: Lab;
   studentName: string;
-  signedAt: number;
-  signature: string;
-};
+} & ({ mode: 'signed'; signedAt: number; signature: string } | { mode: 'draft' });
 
 const COMBINING_MARKS = /[\u0300-\u036f]/g;
 const NON_ALNUM_CHUNKS = /[^A-Za-z0-9]+/g;
@@ -45,9 +43,14 @@ function normalizeLabTitle(input: string): string {
     .join('');
 }
 
-export function buildPdfFilename({ lab, studentName, signedAt, signature }: BuildPdfFilenameInput): string {
+export function buildPdfFilename(input: BuildPdfFilenameInput): string {
+  const { lab, studentName } = input;
   const labToken = normalizeLabTitle(lab.title) || lab.id;
   const studentToken = normalizeAsciiTitleCase(studentName) || 'Student';
+  if (input.mode === 'draft') {
+    return `${labToken}_${studentToken}_DRAFT.pdf`;
+  }
+  const { signedAt, signature } = input;
   const dateToken = new Date(signedAt).toISOString().slice(0, 10);
   const signatureToken = signature.slice(0, 8);
   return `${labToken}_${studentToken}_${dateToken}_${signatureToken}.pdf`;

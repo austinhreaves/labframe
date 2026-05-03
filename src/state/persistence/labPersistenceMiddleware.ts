@@ -8,12 +8,13 @@ import type { PersistedLabState, PersistenceAdapter } from '@/state/persistence/
 import type { LabStoreState } from '@/state/labStore';
 
 const PERSIST_DEBOUNCE_MS = 250;
-export const CURRENT_PERSISTED_SCHEMA_VERSION = 2 as const;
+export const CURRENT_PERSISTED_SCHEMA_VERSION = 3 as const;
 const LEGACY_PERSISTED_SCHEMA_VERSION = 1 as const;
+const PREVIOUS_PERSISTED_SCHEMA_VERSION = 2 as const;
 
 type PersistedSlices = Pick<
   LabStoreState,
-  'courseId' | 'labId' | 'studentName' | 'fields' | 'tables' | 'selectedFits' | 'fits' | 'images' | 'splitFraction'
+  'courseId' | 'labId' | 'studentName' | 'aiUsed' | 'aiSharedLinks' | 'fields' | 'tables' | 'selectedFits' | 'fits' | 'images' | 'splitFraction'
 > & {
   submitted: boolean;
 };
@@ -23,6 +24,8 @@ function selectPersistedSlices(state: LabStoreState): PersistedSlices {
     courseId: state.courseId,
     labId: state.labId,
     studentName: state.studentName,
+    aiUsed: state.aiUsed,
+    aiSharedLinks: state.aiSharedLinks,
     fields: state.fields,
     tables: state.tables,
     selectedFits: state.selectedFits,
@@ -38,6 +41,8 @@ function hasPersistableChange(next: PersistedSlices, previous: PersistedSlices):
     next.courseId !== previous.courseId ||
     next.labId !== previous.labId ||
     next.studentName !== previous.studentName ||
+    next.aiUsed !== previous.aiUsed ||
+    next.aiSharedLinks !== previous.aiSharedLinks ||
     next.fields !== previous.fields ||
     next.tables !== previous.tables ||
     next.selectedFits !== previous.selectedFits ||
@@ -82,6 +87,19 @@ export function migratePersistedLabState(raw: unknown, keyForLogging: string): H
     return {
       ...persisted,
       schemaVersion: CURRENT_PERSISTED_SCHEMA_VERSION,
+      aiUsed: false,
+      aiSharedLinks: '',
+      selectedFits: persisted.selectedFits ?? {},
+      fits: sanitizeFits(persisted.fits),
+    };
+  }
+
+  if (persisted.schemaVersion === PREVIOUS_PERSISTED_SCHEMA_VERSION) {
+    return {
+      ...persisted,
+      schemaVersion: CURRENT_PERSISTED_SCHEMA_VERSION,
+      aiUsed: false,
+      aiSharedLinks: '',
       selectedFits: persisted.selectedFits ?? {},
       fits: sanitizeFits(persisted.fits),
     };
@@ -91,6 +109,8 @@ export function migratePersistedLabState(raw: unknown, keyForLogging: string): H
     return {
       ...persisted,
       schemaVersion: CURRENT_PERSISTED_SCHEMA_VERSION,
+      aiUsed: persisted.aiUsed ?? false,
+      aiSharedLinks: persisted.aiSharedLinks ?? '',
       selectedFits: persisted.selectedFits ?? {},
       fits: sanitizeFits(persisted.fits),
     };

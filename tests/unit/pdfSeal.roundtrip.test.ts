@@ -15,10 +15,11 @@ import { sealPDF } from '@/services/pdf/seal';
 describe('PDF seal roundtrip', () => {
   it('embeds lab.json and signature footer material', async () => {
     const canonical = canonicalize({
-      schemaVersion: 2,
+      schemaVersion: 3,
       fields: {
         objective: { text: 'hello', pastes: [], meta: { activeMs: 100, keystrokes: 2, deletes: 0 } },
       },
+      integrity: { signedAs: 'Student', aiUsed: false },
       selectedFits: {},
       fits: {},
     });

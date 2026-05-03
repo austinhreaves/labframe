@@ -6,10 +6,12 @@ export type PersistedImageMeta = {
 };
 
 export type PersistedLabState = {
-  schemaVersion: 1 | 2;
+  schemaVersion: 1 | 2 | 3;
   courseId: string;
   labId: string;
   studentName: string;
+  aiUsed?: boolean;
+  aiSharedLinks?: string;
   fields: Record<string, unknown>;
   tables: Record<string, unknown>;
   selectedFits?: Record<string, string | null>;

@@ -12,6 +12,7 @@
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx --report-unused-disable-directives --max-warnings 0",
+    "lint:styles": "stylelint \"src/**/*.css\"",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
@@ -25,10 +26,13 @@
     "analyze": "cross-env ANALYZE=true vite build"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@react-pdf/renderer": "^4.5.1",
     "chart.js": "^4.5.1",
     "idb-keyval": "^6.2.2",
     "katex": "^0.16.45",
+    "lucide-react": "^1.14.0",
     "mathlive": "^0.109.2",
     "pdf-lib": "^1.17.1",
     "react": "^18.3.1",
@@ -46,12 +50,11 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "@babel/parser": "^7.26.2",
     "@babel/traverse": "^7.26.4",
     "@babel/types": "^7.26.3",
-    "@axe-core/playwright": "^4.10.2",
     "@playwright/test": "^1.47.2",
-    "axe-core": "^4.10.3",
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/react": "^16.0.1",
     "@testing-library/user-event": "^14.5.2",
@@ -64,6 +67,8 @@
     "@vercel/node": "^5.7.13",
     "@vitejs/plugin-react": "^5.0.4",
     "@vitest/ui": "^4.1.5",
+    "axe-core": "^4.10.3",
+    "cross-env": "^7.0.3",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react": "^7.37.1",
@@ -71,12 +76,13 @@
     "eslint-plugin-react-refresh": "^0.4.12",
     "jsdom": "^25.0.1",
     "prettier": "^3.3.3",
+    "rollup-plugin-visualizer": "5.12.0",
+    "stylelint": "^17.9.1",
+    "stylelint-config-standard": "^40.0.0",
     "tsx": "^4.19.2",
     "typescript": "^5.6.2",
     "vite": "^5.4.21",
-    "vitest": "^4.1.5",
-    "rollup-plugin-visualizer": "5.12.0",
-    "cross-env": "^7.0.3"
+    "vitest": "^4.1.5"
   },
   "engines": {
     "node": "22.x"

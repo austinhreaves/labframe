@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 import { EQUATION_SYMBOL_CATEGORIES, QUICK_SYMBOLS } from '@/ui/primitives/equationSymbols';
+import { Icon } from '@/ui/primitives/Icon';
 
 type EquationSymbolPaletteProps = {
   onInsert: (latex: string) => void;
@@ -37,7 +39,10 @@ export function EquationSymbolPalette({ onInsert, onRestoreFocus }: EquationSymb
         ))}
       </div>
       <details className="equation-symbol-more">
-        <summary>More ▾</summary>
+        <summary>
+          More
+          <Icon icon={ChevronDown} size={14} className="icon-chevron" />
+        </summary>
         <div>
           <div className="equation-symbol-tabs" role="tablist" aria-label="Symbol categories">
             {EQUATION_SYMBOL_CATEGORIES.map((category) => (

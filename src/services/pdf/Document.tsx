@@ -19,9 +19,7 @@ type PDFProps = {
   lab: Lab;
   answers: LabAnswers;
   course: Course;
-  signature: string;
-  signedAt: number;
-};
+} & ({ mode: 'signed'; signature: string; signedAt: number } | { mode: 'draft' });
 
 type ProcessRecordSection = Section | { kind: 'equation'; fieldId: string };
 
@@ -322,13 +320,19 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
   return null;
 }
 
-export function LabReportDocument({ lab, answers, course, signature, signedAt }: PDFProps) {
+export function LabReportDocument(props: PDFProps) {
+  const { lab, answers, course } = props;
   const totalPoints = sumSectionPoints(lab.sections);
+  const integrityAgreementText =
+    lab.studentInfo?.integrityAgreementText ??
+    'I affirm this submission reflects my own work. If I used AI/LLM tools, I have disclosed them and shared any links required by course policy.';
+  const aiUsage = answers.integrity.aiUsed ? 'Yes' : 'No';
+  const aiLinks = answers.integrity.aiSharedLinks?.trim();
   return (
     <Document
       title={`${lab.title} Report`}
       author={answers.meta.studentName}
-      subject={course.title}
+      subject={props.mode === 'draft' ? 'DRAFT - not for submission' : course.title}
       producer="LabFrame"
       creator="LabFrame"
     >
@@ -341,9 +345,16 @@ export function LabReportDocument({ lab, answers, course, signature, signedAt }:
           </Text>
         ) : null}
         <Text>Student: {answers.meta.studentName}</Text>
-        <Text>
-          Signed: {formatSignedAt(signedAt)} - {signature.slice(0, 8)}
-        </Text>
+        {props.mode === 'signed' ? (
+          <Text>
+            Signed: {formatSignedAt(props.signedAt)} - {props.signature.slice(0, 8)}
+          </Text>
+        ) : (
+          <Text>DRAFT - unsigned export (not for submission)</Text>
+        )}
+        <Text style={styles.row}>Integrity statement: {integrityAgreementText}</Text>
+        <Text style={styles.row}>AI/LLM tools used: {aiUsage}</Text>
+        {aiLinks ? <Text style={styles.row}>AI shared links: {aiLinks}</Text> : null}
       </Page>
       <Page size="A4" style={styles.page}>
         {lab.sections.map((section, index) => sectionView(section, answers, index))}

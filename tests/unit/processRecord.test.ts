@@ -29,7 +29,7 @@ const courseFixture: Course = {
 
 function makeAnswers(overrides?: Partial<LabAnswers>): LabAnswers {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     meta: {
       studentName: 'Student',
       semester: 'Fall',
@@ -39,6 +39,7 @@ function makeAnswers(overrides?: Partial<LabAnswers>): LabAnswers {
     },
     integrity: {
       signedAs: 'Student',
+      aiUsed: false,
     },
     fields: {},
     tables: {},
@@ -86,6 +87,7 @@ describe('process record appendix', () => {
       lab: legacyEquationLab,
       answers,
       course: courseFixture,
+      mode: 'signed',
       signature: '0123456789abcdef0123456789abcdef',
       signedAt: 1714450000000,
     });
@@ -105,6 +107,7 @@ describe('process record appendix', () => {
       lab: snellsLawLab,
       answers,
       course: courseFixture,
+      mode: 'signed',
       signature: '0123456789abcdef0123456789abcdef',
       signedAt: 1714450000000,
     });

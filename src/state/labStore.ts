@@ -37,6 +37,8 @@ export type LabStoreState = {
   courseId: string;
   labId: string;
   studentName: string;
+  aiUsed: boolean;
+  aiSharedLinks: string;
   lab: Lab | null;
   fields: Record<string, FieldValue>;
   tables: Record<string, TableData>;
@@ -48,6 +50,8 @@ export type LabStoreState = {
   status: LabStoreStatus;
   initLab: (courseId: string, labId: string, lab: Lab) => Promise<void>;
   setStudentName: (studentName: string) => Promise<void>;
+  setAiUsed: (value: boolean) => void;
+  setAiSharedLinks: (value: string) => void;
   setField: (fieldId: string, value: FieldValue) => void;
   setTableCell: (tableId: string, rowIndex: number, columnId: string, value: FieldValue) => void;
   setSelectedFit: (plotId: string, fitId: string | null) => void;
@@ -226,6 +230,8 @@ function serializePersistedState(state: LabStoreState, savedAt: number): Persist
     courseId: state.courseId,
     labId: state.labId,
     studentName: state.studentName,
+    aiUsed: state.aiUsed,
+    aiSharedLinks: state.aiSharedLinks,
     fields: state.fields,
     tables: state.tables,
     selectedFits: state.selectedFits,
@@ -295,6 +301,8 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
     courseId: '',
     labId: '',
     studentName: DEFAULT_STUDENT_NAME,
+    aiUsed: false,
+    aiSharedLinks: '',
     lab: null,
     fields: {},
     tables: {},
@@ -315,6 +323,8 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
       const defaults = {
         fields: initFieldsFromSchema(lab.sections),
         tables: initTablesFromSchema(lab.sections),
+        aiUsed: false,
+        aiSharedLinks: '',
         selectedFits: {},
         images: {},
         fits: {},
@@ -368,6 +378,8 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
       }
 
       set((state) => ({
+        aiUsed: migrated.aiUsed ?? false,
+        aiSharedLinks: migrated.aiSharedLinks ?? '',
         fields: {
           ...state.fields,
           ...(migrated.fields as Record<string, FieldValue>),
@@ -423,6 +435,14 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
         await get().initLab(current.courseId, current.labId, current.lab);
       }
     },
+    setAiUsed: (value) =>
+      set({
+        aiUsed: value,
+      }),
+    setAiSharedLinks: (value) =>
+      set({
+        aiSharedLinks: value,
+      }),
     setField: (fieldId, value) =>
       set((state) => ({
         fields: {
@@ -601,6 +621,8 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
 
       revokeImageObjectUrls(state.images);
       set((current) => ({
+        aiUsed: false,
+        aiSharedLinks: '',
         fields: initFieldsFromSchema(current.lab?.sections ?? []),
         tables: initTablesFromSchema(current.lab?.sections ?? []),
         selectedFits: {},

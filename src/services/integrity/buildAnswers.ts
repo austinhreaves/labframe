@@ -3,7 +3,7 @@ import type { LabStoreState } from '@/state/labStore';
 
 export function buildAnswersFromStore(course: Course, store: LabStoreState): LabAnswers {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     meta: {
       studentName: store.studentName || 'Student',
       semester: 'Fall',
@@ -13,6 +13,8 @@ export function buildAnswersFromStore(course: Course, store: LabStoreState): Lab
     },
     integrity: {
       signedAs: store.studentName || 'Student',
+      aiUsed: store.aiUsed,
+      ...(store.aiUsed && store.aiSharedLinks.trim() ? { aiSharedLinks: store.aiSharedLinks.trim() } : {}),
     },
     fields: store.fields,
     tables: store.tables,

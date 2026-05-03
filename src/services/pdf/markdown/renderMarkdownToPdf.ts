@@ -44,6 +44,13 @@ const styles = {
   list: { marginBottom: 6 },
   listItem: { marginBottom: 2 },
   blockquote: { borderLeftWidth: 1.5, borderLeftColor: '#999', paddingLeft: 6, marginBottom: 6 },
+  calloutContainer: { borderLeftWidth: 2.5, paddingLeft: 6, marginBottom: 6, paddingTop: 3, paddingBottom: 3 },
+  calloutLabel: { fontSize: 8, fontWeight: 700 as const, marginBottom: 2 },
+  calloutNote: { borderLeftColor: '#2563eb', backgroundColor: '#eff6ff' },
+  calloutTip: { borderLeftColor: '#059669', backgroundColor: '#ecfdf5' },
+  calloutWarning: { borderLeftColor: '#d97706', backgroundColor: '#fff7ed' },
+  calloutImportant: { borderLeftColor: '#be185d', backgroundColor: '#fdf2f8' },
+  calloutCaution: { borderLeftColor: '#dc2626', backgroundColor: '#fef2f2' },
   thematicBreak: { borderBottomWidth: 0.5, borderBottomColor: '#999', marginTop: 6, marginBottom: 6 },
   table: { marginTop: 4, marginBottom: 6, borderWidth: 0.5, borderColor: '#777' },
   tableRow: { flexDirection: 'row' as const, borderBottomWidth: 0.5, borderBottomColor: '#ddd' },
@@ -54,6 +61,7 @@ const styles = {
 };
 
 let warnedBlockMathFallback = false;
+const CALLOUT_PATTERN = /^\[!(NOTE|TIP|WARNING|IMPORTANT|CAUTION)\]\s*/i;
 
 function isDev(): boolean {
   return Boolean((import.meta as ImportMetaWithOptionalEnv).env?.DEV);
@@ -195,10 +203,33 @@ function renderBlockNode(node: MdNode, keyPrefix: string): ReactNode | null {
     );
   }
   if (node.type === 'blockquote') {
+    const quoteChildren = nodeChildren(node);
+    const first = quoteChildren[0];
+    const firstText = first?.type === 'paragraph' ? flattenToText(nodeChildren(first)) : '';
+    const calloutMatch = firstText.match(CALLOUT_PATTERN);
+    if (calloutMatch) {
+      const label = (calloutMatch[1] ?? 'NOTE').toUpperCase();
+      const styleByLabel: Record<string, Record<string, unknown>> = {
+        NOTE: styles.calloutNote,
+        TIP: styles.calloutTip,
+        WARNING: styles.calloutWarning,
+        IMPORTANT: styles.calloutImportant,
+        CAUTION: styles.calloutCaution,
+      };
+      const stripped = firstText.replace(CALLOUT_PATTERN, '').trimStart();
+      const rest = quoteChildren.slice(1);
+      return createElement(
+        View,
+        { key: keyPrefix, style: { ...styles.calloutContainer, ...(styleByLabel[label] ?? styles.calloutNote) } },
+        createElement(Text, { style: styles.calloutLabel }, label),
+        stripped ? createElement(Text, { style: styles.paragraph }, stripped) : null,
+        ...rest.map((child, index) => renderBlockNode(child, `${keyPrefix}-quote-${index}`)),
+      );
+    }
     return createElement(
       View,
       { key: keyPrefix, style: styles.blockquote },
-      ...nodeChildren(node).map((child, index) => renderBlockNode(child, `${keyPrefix}-quote-${index}`)),
+      ...quoteChildren.map((child, index) => renderBlockNode(child, `${keyPrefix}-quote-${index}`)),
     );
   }
   if (node.type === 'thematicBreak') {

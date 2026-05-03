@@ -72,4 +72,11 @@ describe('renderMarkdownToPdf', () => {
     const textDump = collectText(nodes);
     expect(textDump).toContain('<script>alert(1)</script>');
   });
+
+  it('renders github-style callout labels in PDF markdown', () => {
+    const nodes = renderMarkdownToPdf('> [!WARNING]\n> Keep goggles on.');
+    const textDump = collectText(nodes);
+    expect(textDump).toContain('WARNING');
+    expect(textDump).toContain('Keep goggles on.');
+  });
 });

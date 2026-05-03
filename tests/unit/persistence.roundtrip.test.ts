@@ -58,12 +58,12 @@ describe('persistence roundtrip', () => {
       selectedFits?: Record<string, string | null>;
       fits?: Record<string, unknown>;
     }>(makeLabKey({ courseId: 'phy132', labId: 'snellsLaw', studentName: secondStore.getState().studentName }));
-    expect(persisted?.schemaVersion).toBe(2);
+    expect(persisted?.schemaVersion).toBe(3);
     expect(persisted?.selectedFits?.part2FitPlot).toBe('proportional');
     expect(persisted?.fits?.part2FitPlot).toEqual({ model: 'proportional', parameters: { a: 1 } });
   });
 
-  it('hydrates v1 persisted state by defaulting selectedFits/fits and autosaves as v2', async () => {
+  it('hydrates v1 persisted state by defaulting selectedFits/fits and autosaves as v3', async () => {
     const adapter = createMemoryPersistenceAdapter();
     const studentName = 'Student';
     const labKey = makeLabKey({ courseId: 'phy132', labId: 'snellsLaw', studentName });
@@ -102,9 +102,38 @@ describe('persistence roundtrip', () => {
       status?: { submitted?: boolean };
     }>(labKey);
 
-    expect(persisted?.schemaVersion).toBe(2);
+    expect(persisted?.schemaVersion).toBe(3);
     expect(persisted?.selectedFits).toEqual({});
     expect(persisted?.fits).toEqual({});
     expect(persisted?.status?.submitted).toBe(true);
+  });
+
+  it('hydrates v2 persisted state by defaulting AI disclosure fields', async () => {
+    const adapter = createMemoryPersistenceAdapter();
+    const studentName = 'Student';
+    const labKey = makeLabKey({ courseId: 'phy132', labId: 'snellsLaw', studentName });
+
+    await adapter.saveJSON(labKey, {
+      schemaVersion: 2,
+      courseId: 'phy132',
+      labId: 'snellsLaw',
+      studentName,
+      fields: {},
+      tables: {},
+      selectedFits: {},
+      fits: {},
+      images: {},
+      splitFraction: 0.6,
+      status: {
+        submitted: false,
+        lastSavedAt: 123,
+      },
+    });
+
+    const store = createLabStore(adapter);
+    await store.getState().initLab('phy132', 'snellsLaw', snellsLawLab);
+
+    expect(store.getState().aiUsed).toBe(false);
+    expect(store.getState().aiSharedLinks).toBe('');
   });
 });

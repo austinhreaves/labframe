@@ -11,7 +11,7 @@ const baseFieldValue = {
 describe('canonicalize', () => {
   it('produces identical output for equivalent LabAnswers permutations', () => {
     const answersA: LabAnswers = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       meta: {
         studentName: 'Test Student',
         semester: 'Spring',
@@ -19,7 +19,7 @@ describe('canonicalize', () => {
         year: '2026',
         taName: 'TA One',
       },
-      integrity: { signedAs: 'Test Student' },
+      integrity: { signedAs: 'Test Student', aiUsed: false },
       fields: {
         objective: baseFieldValue,
         conclusion: { ...baseFieldValue, text: 'Conclusion text' },
@@ -67,7 +67,7 @@ describe('canonicalize', () => {
         conclusion: { ...baseFieldValue, text: 'Conclusion text' },
         objective: baseFieldValue,
       },
-      integrity: { signedAs: 'Test Student' },
+      integrity: { signedAs: 'Test Student', aiUsed: false },
       meta: {
         taName: 'TA One',
         year: '2026',
@@ -75,7 +75,7 @@ describe('canonicalize', () => {
         semester: 'Spring',
         studentName: 'Test Student',
       },
-      schemaVersion: 2,
+      schemaVersion: 3,
     };
 
     expect(canonicalize(answersA)).toBe(canonicalize(answersB));

@@ -38,7 +38,7 @@ describe('LabPage header shell', () => {
   styleEl.textContent = '.lab-header { position: sticky; }';
   document.head.appendChild(styleEl);
 
-  it('renders sticky header with persistence controls in the center slot', () => {
+  it('renders sticky header with persistence controls in the lower band', () => {
     const { container } = render(
       <MemoryRouter>
         <LabPage course={course} lab={lab} />
@@ -46,14 +46,14 @@ describe('LabPage header shell', () => {
     );
 
     const header = container.querySelector('.lab-header');
-    const slot = container.querySelector('.lab-header-slot');
+    const headerBottom = container.querySelector('.lab-header-bottom');
 
     expect(header).toBeTruthy();
-    expect(slot).toBeTruthy();
+    expect(headerBottom).toBeTruthy();
     expect(window.getComputedStyle(header as HTMLElement).position).toBe('sticky');
-    const slotEl = slot as HTMLElement;
-    expect(within(slotEl).getByLabelText(/student name/i)).toBeInTheDocument();
-    expect(within(slotEl).getByRole('button', { name: /start fresh/i })).toBeInTheDocument();
-    expect(within(slotEl).getByText(/not saved yet/i)).toBeInTheDocument();
+    const lowerBandEl = headerBottom as HTMLElement;
+    expect(within(lowerBandEl).getByLabelText(/student name/i)).toBeInTheDocument();
+    expect(within(lowerBandEl).getByRole('button', { name: /start fresh/i })).toBeInTheDocument();
+    expect(within(lowerBandEl).getByText(/not saved yet/i)).toBeInTheDocument();
   });
 });

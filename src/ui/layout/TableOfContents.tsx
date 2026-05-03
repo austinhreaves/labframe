@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 import type { Section } from '@/domain/schema';
 import { buildTocEntries } from '@/domain/tocEntries';
+import { Icon } from '@/ui/primitives/Icon';
 
 type Props = {
   sections: Section[];
@@ -143,7 +145,10 @@ export function TableOfContents({ sections }: Props) {
 
   return (
     <details ref={detailsRef} className="table-of-contents-popover">
-      <summary ref={summaryRef}>Sections</summary>
+      <summary ref={summaryRef}>
+        Sections
+        <Icon icon={ChevronDown} size={14} className="icon-chevron" />
+      </summary>
       <nav
         className="table-of-contents-popover-panel"
         aria-label="Table of contents"

@@ -24,9 +24,11 @@ describe('buildAnswersFromStore', () => {
     store.getState().setSelectedFit('aaaPlot', 'proportional');
     store.getState().setFitSelection('zzzPlot', { model: 'linear', parameters: { a: 2, b: 3 } });
     store.getState().setFitSelection('aaaPlot', { model: 'proportional', parameters: { a: 2 } });
+    store.getState().setAiUsed(true);
+    store.getState().setAiSharedLinks('https://chat.example/thread');
 
     const answers = buildAnswersFromStore(courseFixture, store.getState());
-    expect(answers.schemaVersion).toBe(2);
+    expect(answers.schemaVersion).toBe(3);
     expect(answers.selectedFits).toEqual({
       zzzPlot: 'linear',
       aaaPlot: 'proportional',
@@ -35,6 +37,8 @@ describe('buildAnswersFromStore', () => {
       zzzPlot: { model: 'linear', parameters: { a: 2, b: 3 } },
       aaaPlot: { model: 'proportional', parameters: { a: 2 } },
     });
+    expect(answers.integrity.aiUsed).toBe(true);
+    expect(answers.integrity.aiSharedLinks).toBe('https://chat.example/thread');
 
     const canonical = canonicalize(answers);
     expect(canonical).toContain('"selectedFits":{"aaaPlot":"proportional","zzzPlot":"linear"}');

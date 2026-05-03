@@ -30,5 +30,16 @@ export default defineConfig({
   build: {
     sourcemap: true,
     target: 'es2022',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'chart-vendor': ['chart.js', 'react-chartjs-2'],
+          'math-vendor': ['mathlive'],
+          'markdown-vendor': ['react-markdown', 'remark-gfm', 'remark-math', 'remark-parse', 'rehype-katex', 'rehype-sanitize', 'unified'],
+          'katex-vendor': ['katex'],
+        },
+      },
+    },
   },
 });
