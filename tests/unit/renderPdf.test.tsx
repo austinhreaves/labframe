@@ -160,7 +160,7 @@ describe('renderPDF', () => {
     expect(textDump).toContain('• Item two');
     expect(textDump).toContain('sinθᵢ');
     expect(textDump).toMatchInlineSnapshot(
-      `"Test LabTest CourseStudent: StudentSigned: 2024-04-30T04:06:40.000Z - 01234567Integrity statement: I affirm this submission reflects my own work. If I used AI/LLM tools, I have disclosed them and shared any links required by course policy.AI/LLM tools used: NoInstructionsPart 1Important:• Item one• Item two Inline math sinθᵢProcess RecordSection 1: instructionsActive time (ms): 0Keystrokes: 0Pastes clipboard: 0Pastes autocomplete: 0Pastes IME: 0"`,
+      `"Test LabTest CourseStudent: StudentSigned: 2024-04-30T04:06:40.000Z - 01234567Integrity statement: I affirm this submission reflects my own work. If I used any AI or LLM tools (chatbots, large language models, or generative AI assistants such as ChatGPT, Claude, Gemini, Copilot, or similar), I have disclosed each conversation and provided share links below, as required by course policy.AI/LLM tools used: NoInstructionsPart 1Important:• Item one• Item two Inline math sinθᵢProcess RecordSection 1: instructionsActive time (ms): 0Keystrokes: 0Pastes clipboard: 0Pastes autocomplete: 0Pastes IME: 0"`,
     );
   });
 
@@ -188,12 +188,18 @@ describe('renderPDF', () => {
       signedAt: 1714450000000,
     });
     const textDump = collectText(tree).replace(/\s+/g, ' ').trim();
+    // Fence the excerpt with anchors intrinsic to the data table itself: the
+    // section header at the start and the last row's terminal cell at the end.
+    // This keeps the assertion stable against changes to the *next* section's
+    // rendered title (e.g. plot label format).
     const start = textDump.indexOf('Data Table: part2Table');
-    const end = textDump.indexOf('Plot: part2FitPlot');
+    const lastCell = '0.1219';
+    const lastCellIdx = textDump.indexOf(lastCell, start);
 
     expect(start).toBeGreaterThanOrEqual(0);
-    expect(end).toBeGreaterThan(start);
+    expect(lastCellIdx).toBeGreaterThan(start);
 
+    const end = lastCellIdx + lastCell.length;
     const tableExcerpt = textDump.slice(start, end).trim();
     expect(tableExcerpt).toContain('sin(theta_i)');
     expect(tableExcerpt).toContain('sin(theta_r)');
@@ -203,6 +209,6 @@ describe('renderPDF', () => {
 
     expect(textDump).toContain('Total: 29 points');
     expect(textDump).toContain('objective (3 pts)');
-    expect(textDump).toContain('Plot: part2FitPlot (1 pts)');
+    expect(textDump).toContain('sin(theta_A) vs. sin(theta_1) (1 pts)');
   });
 });

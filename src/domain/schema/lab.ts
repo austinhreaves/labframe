@@ -100,6 +100,7 @@ export const PlotSectionSchema = SectionMetadataSchema.extend({
   yCol: idSchema,
   xLabel: nonEmptyText,
   yLabel: nonEmptyText,
+  title: z.string().optional(),
   fits: z.array(FitOptionSchema).optional(),
   points: z.number().nonnegative().optional(),
 });

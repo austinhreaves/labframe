@@ -11,6 +11,7 @@ import {
 
 import { formatPointsLabel, sumSectionPoints } from '@/domain/pointsFormatting';
 import type { Course, FieldValue, Lab, LabAnswers, PlotSection, Section, TableData } from '@/domain/schema';
+import { resolveIntegrityAgreementText } from '@/services/integrity/agreementText';
 import { attributePastes } from '@/services/pdf/attributePastes';
 import { computeClippedFitLineInPdfSvg } from '@/services/pdf/fitLine';
 import { renderMarkdownToPdf } from '@/services/pdf/markdown/renderMarkdownToPdf';
@@ -276,10 +277,12 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
             },
           });
 
+    const plotTitle = section.title ?? `${section.yLabel} vs. ${section.xLabel}`;
+
     return (
       <View key={`section-${index}`} style={styles.section}>
         <Text style={styles.sectionTitle}>
-          Plot: {section.plotId}
+          {plotTitle}
           {pdfPointsSuffix(section.points)}
         </Text>
         <Svg width={width} height={height}>
@@ -323,9 +326,7 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
 export function LabReportDocument(props: PDFProps) {
   const { lab, answers, course } = props;
   const totalPoints = sumSectionPoints(lab.sections);
-  const integrityAgreementText =
-    lab.studentInfo?.integrityAgreementText ??
-    'I affirm this submission reflects my own work. If I used AI/LLM tools, I have disclosed them and shared any links required by course policy.';
+  const integrityAgreementText = resolveIntegrityAgreementText(lab);
   const aiUsage = answers.integrity.aiUsed ? 'Yes' : 'No';
   const aiLinks = answers.integrity.aiSharedLinks?.trim();
   return (
