@@ -8,7 +8,11 @@ import {
 } from '@/state/persistence/labPersistenceMiddleware';
 import { browserPersistenceAdapter } from '@/state/persistence/browserAdapter';
 import { makeImageKey, makeLabKey, parseImageKey, parseLabKey } from '@/state/persistence/keys';
-import type { PersistedImageMeta, PersistedLabState, PersistenceAdapter } from '@/state/persistence/types';
+import type {
+  PersistedImageMeta,
+  PersistedLabState,
+  PersistenceAdapter,
+} from '@/state/persistence/types';
 
 type FitSelection = {
   model: string;
@@ -39,6 +43,8 @@ export type LabStoreState = {
   studentName: string;
   aiUsed: boolean;
   aiSharedLinks: string;
+  integrityAgreementAccepted: boolean;
+  integrityAgreementAcceptedAt: number;
   lab: Lab | null;
   fields: Record<string, FieldValue>;
   tables: Record<string, TableData>;
@@ -52,6 +58,7 @@ export type LabStoreState = {
   setStudentName: (studentName: string) => Promise<void>;
   setAiUsed: (value: boolean) => void;
   setAiSharedLinks: (value: string) => void;
+  setIntegrityAgreementAccepted: (value: boolean) => void;
   setField: (fieldId: string, value: FieldValue) => void;
   setTableCell: (tableId: string, rowIndex: number, columnId: string, value: FieldValue) => void;
   setSelectedFit: (plotId: string, fitId: string | null) => void;
@@ -166,7 +173,9 @@ function initFieldsFromSchema(sections: Section[]): Record<string, FieldValue> {
 }
 
 function recomputeDerivedColumns(lab: Lab, tableId: string, row: TableRow): TableRow {
-  const section = lab.sections.find((candidate) => candidate.kind === 'dataTable' && candidate.tableId === tableId);
+  const section = lab.sections.find(
+    (candidate) => candidate.kind === 'dataTable' && candidate.tableId === tableId,
+  );
   if (!section || section.kind !== 'dataTable') {
     return row;
   }
@@ -180,7 +189,8 @@ function recomputeDerivedColumns(lab: Lab, tableId: string, row: TableRow): Tabl
     }
 
     const value = column.formula(numeric);
-    const rounded = column.precision === undefined ? value : Number(value.toFixed(column.precision));
+    const rounded =
+      column.precision === undefined ? value : Number(value.toFixed(column.precision));
     numeric[column.id] = rounded;
     nextRow[column.id] = createEmptyFieldValue(String(rounded));
   }
@@ -251,7 +261,10 @@ async function migrateStudentKeys(
   previousName: string,
   nextName: string,
 ): Promise<void> {
-  const [labKeys, imageKeys] = await Promise.all([adapter.listKeys(`lab:${courseId}:`), adapter.listKeys(`img:${courseId}:`)]);
+  const [labKeys, imageKeys] = await Promise.all([
+    adapter.listKeys(`lab:${courseId}:`),
+    adapter.listKeys(`img:${courseId}:`),
+  ]);
 
   for (const key of labKeys) {
     const parsed = parseLabKey(key);
@@ -303,6 +316,8 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
     studentName: DEFAULT_STUDENT_NAME,
     aiUsed: false,
     aiSharedLinks: '',
+    integrityAgreementAccepted: false,
+    integrityAgreementAcceptedAt: 0,
     lab: null,
     fields: {},
     tables: {},
@@ -336,6 +351,8 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
         courseId,
         labId,
         lab,
+        integrityAgreementAccepted: false,
+        integrityAgreementAcceptedAt: 0,
         ...defaults,
       });
 
@@ -442,6 +459,11 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
     setAiSharedLinks: (value) =>
       set({
         aiSharedLinks: value,
+      }),
+    setIntegrityAgreementAccepted: (value) =>
+      set({
+        integrityAgreementAccepted: value,
+        integrityAgreementAcceptedAt: value ? now() : 0,
       }),
     setField: (fieldId, value) =>
       set((state) => ({
@@ -560,7 +582,8 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
           set((current) => ({
             status: {
               ...current.status,
-              lastError: error instanceof Error ? error.message : 'Unable to save image attachment.',
+              lastError:
+                error instanceof Error ? error.message : 'Unable to save image attachment.',
             },
           }));
         });
@@ -597,6 +620,7 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
       }),
     setSubmitted: (value) =>
       set((state) => ({
+        ...(value ? { integrityAgreementAccepted: false, integrityAgreementAcceptedAt: 0 } : {}),
         status: {
           ...state.status,
           submitted: value,
@@ -623,6 +647,8 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
       set((current) => ({
         aiUsed: false,
         aiSharedLinks: '',
+        integrityAgreementAccepted: false,
+        integrityAgreementAcceptedAt: 0,
         fields: initFieldsFromSchema(current.lab?.sections ?? []),
         tables: initTablesFromSchema(current.lab?.sections ?? []),
         selectedFits: {},
@@ -701,7 +727,11 @@ function extractInsertedSubstring(
   }
 
   let start = 0;
-  while (start < previousText.length && start < nextText.length && previousText[start] === nextText[start]) {
+  while (
+    start < previousText.length &&
+    start < nextText.length &&
+    previousText[start] === nextText[start]
+  ) {
     start += 1;
   }
 
@@ -762,7 +792,11 @@ export function appendPasteEvent(
   return next;
 }
 
-export function markFieldActivity(previous: FieldValue, target: EditableTarget, event: EditableInputEvent): FieldValue {
+export function markFieldActivity(
+  previous: FieldValue,
+  target: EditableTarget,
+  event: EditableInputEvent,
+): FieldValue {
   const inputType = event.inputType;
   const next = withEditTimestamp(previous, target.value);
 
@@ -777,7 +811,12 @@ export function markFieldActivity(previous: FieldValue, target: EditableTarget, 
     return next;
   }
 
-  const inserted = extractInsertedSubstring(previous.text, target.value, target.selectionStart, event.data);
+  const inserted = extractInsertedSubstring(
+    previous.text,
+    target.value,
+    target.selectionStart,
+    event.data,
+  );
   if (!inserted.text) {
     return next;
   }

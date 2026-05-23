@@ -11,7 +11,7 @@ const baseFieldValue = {
 describe('canonicalize', () => {
   it('produces identical output for equivalent LabAnswers permutations', () => {
     const answersA: LabAnswers = {
-      schemaVersion: 3,
+      schemaVersion: 4,
       meta: {
         studentName: 'Test Student',
         semester: 'Spring',
@@ -19,7 +19,13 @@ describe('canonicalize', () => {
         year: '2026',
         taName: 'TA One',
       },
-      integrity: { signedAs: 'Test Student', aiUsed: false },
+      integrity: {
+        signedAs: 'Test Student',
+        aiUsed: false,
+        agreementAccepted: true,
+        agreementAcceptedAt: 1714450000000,
+        agreementText: 'I affirm.',
+      },
       fields: {
         objective: baseFieldValue,
         conclusion: { ...baseFieldValue, text: 'Conclusion text' },
@@ -36,7 +42,11 @@ describe('canonicalize', () => {
         part2FitPlot: 'proportional',
       },
       images: {
-        setupPhoto: { idbKey: 'img:phy132:snellsLaw:test:setupPhoto', mime: 'image/png', bytes: 4567 },
+        setupPhoto: {
+          idbKey: 'img:phy132:snellsLaw:test:setupPhoto',
+          mime: 'image/png',
+          bytes: 4567,
+        },
       },
       fits: {
         snellsLawFit: { model: 'linear', parameters: { slope: 1.5, intercept: 0 }, r2: 0.998 },
@@ -50,7 +60,11 @@ describe('canonicalize', () => {
         snellsLawFit: { r2: 0.998, parameters: { intercept: 0, slope: 1.5 }, model: 'linear' },
       },
       images: {
-        setupPhoto: { bytes: 4567, mime: 'image/png', idbKey: 'img:phy132:snellsLaw:test:setupPhoto' },
+        setupPhoto: {
+          bytes: 4567,
+          mime: 'image/png',
+          idbKey: 'img:phy132:snellsLaw:test:setupPhoto',
+        },
       },
       tables: {
         snellsMeasurements: [
@@ -67,7 +81,13 @@ describe('canonicalize', () => {
         conclusion: { ...baseFieldValue, text: 'Conclusion text' },
         objective: baseFieldValue,
       },
-      integrity: { signedAs: 'Test Student', aiUsed: false },
+      integrity: {
+        signedAs: 'Test Student',
+        aiUsed: false,
+        agreementAccepted: true,
+        agreementAcceptedAt: 1714450000000,
+        agreementText: 'I affirm.',
+      },
       meta: {
         taName: 'TA One',
         year: '2026',
@@ -75,7 +95,7 @@ describe('canonicalize', () => {
         semester: 'Spring',
         studentName: 'Test Student',
       },
-      schemaVersion: 3,
+      schemaVersion: 4,
     };
 
     expect(canonicalize(answersA)).toBe(canonicalize(answersB));

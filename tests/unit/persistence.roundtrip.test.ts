@@ -32,10 +32,16 @@ describe('persistence roundtrip', () => {
 
     await firstStore.getState().initLab('phy132', 'snellsLaw', snellsLawLab);
     firstStore.getState().setField('objective', createEmptyFieldValue('verify persistence'));
-    firstStore.getState().setTableCell('part1Table', 0, 'incidentAngle', createEmptyFieldValue('30'));
+    firstStore
+      .getState()
+      .setTableCell('part1Table', 0, 'incidentAngle', createEmptyFieldValue('30'));
     firstStore.getState().setSelectedFit('part2FitPlot', 'proportional');
-    firstStore.getState().setFitSelection('part2FitPlot', { model: 'proportional', parameters: { a: 1 } });
-    firstStore.getState().setImage('part4Image', new File(['hello'], 'photo.png', { type: 'image/png' }));
+    firstStore
+      .getState()
+      .setFitSelection('part2FitPlot', { model: 'proportional', parameters: { a: 1 } });
+    firstStore
+      .getState()
+      .setImage('part4Image', new File(['hello'], 'photo.png', { type: 'image/png' }));
 
     await new Promise((resolve) => setTimeout(resolve, 400));
 
@@ -45,11 +51,17 @@ describe('persistence roundtrip', () => {
     expect(secondStore.getState().fields.objective?.text).toBe('verify persistence');
     expect(secondStore.getState().tables.part1Table?.[0]?.incidentAngle?.text).toBe('30');
     expect(secondStore.getState().selectedFits.part2FitPlot).toBe('proportional');
-    expect(secondStore.getState().fits.part2FitPlot).toEqual({ model: 'proportional', parameters: { a: 1 } });
+    expect(secondStore.getState().fits.part2FitPlot).toEqual({
+      model: 'proportional',
+      parameters: { a: 1 },
+    });
     expect(secondStore.getState().images.part4Image?.fileName).toBe('photo.png');
 
     const blob = await adapter.loadBlob(
-      makeImageKey({ courseId: 'phy132', labId: 'snellsLaw', studentName: secondStore.getState().studentName }, 'part4Image'),
+      makeImageKey(
+        { courseId: 'phy132', labId: 'snellsLaw', studentName: secondStore.getState().studentName },
+        'part4Image',
+      ),
     );
     expect(blob).not.toBeNull();
 
@@ -57,13 +69,19 @@ describe('persistence roundtrip', () => {
       schemaVersion: number;
       selectedFits?: Record<string, string | null>;
       fits?: Record<string, unknown>;
-    }>(makeLabKey({ courseId: 'phy132', labId: 'snellsLaw', studentName: secondStore.getState().studentName }));
-    expect(persisted?.schemaVersion).toBe(3);
+    }>(
+      makeLabKey({
+        courseId: 'phy132',
+        labId: 'snellsLaw',
+        studentName: secondStore.getState().studentName,
+      }),
+    );
+    expect(persisted?.schemaVersion).toBe(4);
     expect(persisted?.selectedFits?.part2FitPlot).toBe('proportional');
     expect(persisted?.fits?.part2FitPlot).toEqual({ model: 'proportional', parameters: { a: 1 } });
   });
 
-  it('hydrates v1 persisted state by defaulting selectedFits/fits and autosaves as v3', async () => {
+  it('hydrates v1 persisted state by defaulting selectedFits/fits and autosaves as v4', async () => {
     const adapter = createMemoryPersistenceAdapter();
     const studentName = 'Student';
     const labKey = makeLabKey({ courseId: 'phy132', labId: 'snellsLaw', studentName });
@@ -102,7 +120,7 @@ describe('persistence roundtrip', () => {
       status?: { submitted?: boolean };
     }>(labKey);
 
-    expect(persisted?.schemaVersion).toBe(3);
+    expect(persisted?.schemaVersion).toBe(4);
     expect(persisted?.selectedFits).toEqual({});
     expect(persisted?.fits).toEqual({});
     expect(persisted?.status?.submitted).toBe(true);
@@ -135,5 +153,46 @@ describe('persistence roundtrip', () => {
 
     expect(store.getState().aiUsed).toBe(false);
     expect(store.getState().aiSharedLinks).toBe('');
+  });
+
+  it('hydrates v3 persisted state and autosaves as v4 without dropping fields', async () => {
+    const adapter = createMemoryPersistenceAdapter();
+    const studentName = 'Student';
+    const labKey = makeLabKey({ courseId: 'phy132', labId: 'snellsLaw', studentName });
+
+    await adapter.saveJSON(labKey, {
+      schemaVersion: 3,
+      courseId: 'phy132',
+      labId: 'snellsLaw',
+      studentName,
+      aiUsed: true,
+      aiSharedLinks: 'https://chat.example/abc',
+      fields: { objective: createEmptyFieldValue('legacy v3') },
+      tables: {},
+      selectedFits: {},
+      fits: {},
+      images: {},
+      splitFraction: 0.6,
+      status: {
+        submitted: false,
+        lastSavedAt: 123,
+      },
+    });
+
+    const store = createLabStore(adapter);
+    await store.getState().initLab('phy132', 'snellsLaw', snellsLawLab);
+
+    expect(store.getState().aiUsed).toBe(true);
+    expect(store.getState().aiSharedLinks).toBe('https://chat.example/abc');
+    expect(store.getState().fields.objective?.text).toBe('legacy v3');
+    // Acceptance is transient — never hydrated from disk.
+    expect(store.getState().integrityAgreementAccepted).toBe(false);
+
+    store.getState().setSubmitted(true);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+
+    const persisted = await adapter.loadJSON<{ schemaVersion: number; aiUsed?: boolean }>(labKey);
+    expect(persisted?.schemaVersion).toBe(4);
+    expect(persisted?.aiUsed).toBe(true);
   });
 });

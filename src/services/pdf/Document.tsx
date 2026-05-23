@@ -1,16 +1,15 @@
-import {
-  Document,
-  Page,
-  StyleSheet,
-  Svg,
-  Text,
-  View,
-  Circle,
-  Line,
-} from '@react-pdf/renderer';
+import { Document, Page, StyleSheet, Svg, Text, View, Circle, Line } from '@react-pdf/renderer';
 
 import { formatPointsLabel, sumSectionPoints } from '@/domain/pointsFormatting';
-import type { Course, FieldValue, Lab, LabAnswers, PlotSection, Section, TableData } from '@/domain/schema';
+import type {
+  Course,
+  FieldValue,
+  Lab,
+  LabAnswers,
+  PlotSection,
+  Section,
+  TableData,
+} from '@/domain/schema';
 import { resolveIntegrityAgreementText } from '@/services/integrity/agreementText';
 import { attributePastes } from '@/services/pdf/attributePastes';
 import { computeClippedFitLineInPdfSvg } from '@/services/pdf/fitLine';
@@ -28,7 +27,12 @@ const styles = StyleSheet.create({
   page: { padding: 24, fontSize: 10, lineHeight: 1.35 },
   title: { fontSize: 18, marginBottom: 8 },
   subtitle: { fontSize: 12, marginBottom: 12 },
-  section: { marginBottom: 12, borderBottomWidth: 0.5, borderBottomColor: '#ddd', paddingBottom: 8 },
+  section: {
+    marginBottom: 12,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#ddd',
+    paddingBottom: 8,
+  },
   sectionTitle: { fontSize: 12, marginBottom: 6 },
   row: { marginBottom: 4 },
   label: { fontWeight: 700 },
@@ -106,7 +110,11 @@ function fieldView(value: FieldValue | undefined): JSX.Element {
   );
 }
 
-function emptyProcessRecord(): { activeMs: number; keystrokes: number; pastes: Record<string, number> } {
+function emptyProcessRecord(): {
+  activeMs: number;
+  keystrokes: number;
+  pastes: Record<string, number>;
+} {
   return { activeMs: 0, keystrokes: 0, pastes: { clipboard: 0, autocomplete: 0, ime: 0 } };
 }
 
@@ -177,7 +185,12 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
     );
   }
 
-  if (section.kind === 'objective' || section.kind === 'measurement' || section.kind === 'calculation' || section.kind === 'concept') {
+  if (
+    section.kind === 'objective' ||
+    section.kind === 'measurement' ||
+    section.kind === 'calculation' ||
+    section.kind === 'concept'
+  ) {
     return (
       <View key={`section-${index}`} style={styles.section}>
         <Text style={styles.sectionTitle}>
@@ -219,7 +232,9 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
                 <View key={column.id} style={styles.tableCell}>
                   <View style={styles.tableHeaderStack}>
                     <Text>{column.label}</Text>
-                    {formulaLabel ? <Text style={styles.tableFormulaLabel}>{formulaLabel}</Text> : null}
+                    {formulaLabel ? (
+                      <Text style={styles.tableFormulaLabel}>{formulaLabel}</Text>
+                    ) : null}
                   </View>
                 </View>
               );
@@ -286,10 +301,23 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
           {pdfPointsSuffix(section.points)}
         </Text>
         <Svg width={width} height={height}>
-          <Line x1={pad} y1={height - pad} x2={width - pad} y2={height - pad} stroke="#222" strokeWidth={1} />
+          <Line
+            x1={pad}
+            y1={height - pad}
+            x2={width - pad}
+            y2={height - pad}
+            stroke="#222"
+            strokeWidth={1}
+          />
           <Line x1={pad} y1={pad} x2={pad} y2={height - pad} stroke="#222" strokeWidth={1} />
           {scatterPoints.map((point, pointIndex) => (
-            <Circle key={`${section.plotId}-p-${pointIndex}`} cx={mapX(point.x)} cy={mapY(point.y)} r={2} fill="#1f5ad6" />
+            <Circle
+              key={`${section.plotId}-p-${pointIndex}`}
+              cx={mapX(point.x)}
+              cy={mapY(point.y)}
+              r={2}
+              fill="#1f5ad6"
+            />
           ))}
           {fitLine ? (
             <Line
@@ -326,9 +354,15 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
 export function LabReportDocument(props: PDFProps) {
   const { lab, answers, course } = props;
   const totalPoints = sumSectionPoints(lab.sections);
-  const integrityAgreementText = resolveIntegrityAgreementText(lab);
+  const integrityAgreementText =
+    answers.integrity.agreementText || resolveIntegrityAgreementText(lab);
   const aiUsage = answers.integrity.aiUsed ? 'Yes' : 'No';
   const aiLinks = answers.integrity.aiSharedLinks?.trim();
+  const agreementAcceptedAt = answers.integrity.agreementAcceptedAt;
+  const agreementAcceptedLine =
+    answers.integrity.agreementAccepted && agreementAcceptedAt > 0
+      ? `Agreement accepted: ${new Date(agreementAcceptedAt).toISOString()}`
+      : 'Agreement accepted: not recorded';
   return (
     <Document
       title={`${lab.title} Report`}
@@ -341,9 +375,7 @@ export function LabReportDocument(props: PDFProps) {
         <Text style={styles.title}>{lab.title}</Text>
         <Text style={styles.subtitle}>{course.title}</Text>
         {totalPoints > 0 ? (
-          <Text style={styles.subtitle}>
-            Total: {formatPointsLabel(totalPoints)} points
-          </Text>
+          <Text style={styles.subtitle}>Total: {formatPointsLabel(totalPoints)} points</Text>
         ) : null}
         <Text>Student: {answers.meta.studentName}</Text>
         {props.mode === 'signed' ? (
@@ -354,6 +386,7 @@ export function LabReportDocument(props: PDFProps) {
           <Text>DRAFT - unsigned export (not for submission)</Text>
         )}
         <Text style={styles.row}>Integrity statement: {integrityAgreementText}</Text>
+        <Text style={styles.row}>{agreementAcceptedLine}</Text>
         <Text style={styles.row}>AI/LLM tools used: {aiUsage}</Text>
         {aiLinks ? <Text style={styles.row}>AI shared links: {aiLinks}</Text> : null}
       </Page>

@@ -58,7 +58,9 @@ export function Chart({ section, data }: ChartProps) {
   const minX = points.reduce((acc, point) => Math.min(acc, point.x), Number.POSITIVE_INFINITY);
   const maxX = points.reduce((acc, point) => Math.max(acc, point.x), Number.NEGATIVE_INFINITY);
 
-  const selectedFit = selectedFitId ? (section.fits ?? []).find((fit) => fit.id === selectedFitId) : null;
+  const selectedFit = selectedFitId
+    ? (section.fits ?? []).find((fit) => fit.id === selectedFitId)
+    : null;
   if (selectedFitId && !selectedFit && isDev) {
     console.warn(`[Chart] Selected fit "${selectedFitId}" not found for plot "${section.plotId}".`);
   }
@@ -92,7 +94,9 @@ export function Chart({ section, data }: ChartProps) {
     }
 
     const parameters =
-      fitResult.intercept === undefined ? { a: fitResult.slope } : { a: fitResult.slope, b: fitResult.intercept };
+      fitResult.intercept === undefined
+        ? { a: fitResult.slope }
+        : { a: fitResult.slope, b: fitResult.intercept };
 
     setFitSelection(section.plotId, {
       model: selectedFit.id,
@@ -101,7 +105,10 @@ export function Chart({ section, data }: ChartProps) {
   }, [fitResult, pointSignature, section.plotId, selectedFit, setFitSelection]);
 
   if (selectedFit && fitResult && Number.isFinite(minX) && Number.isFinite(maxX)) {
-    const yAt = (x: number) => (fitResult.intercept === undefined ? fitResult.slope * x : fitResult.slope * x + fitResult.intercept);
+    const yAt = (x: number) =>
+      fitResult.intercept === undefined
+        ? fitResult.slope * x
+        : fitResult.slope * x + fitResult.intercept;
     const linePoints: ScatterDataPoint[] = [
       { x: minX, y: yAt(minX) },
       { x: maxX, y: yAt(maxX) },
@@ -135,9 +142,11 @@ export function Chart({ section, data }: ChartProps) {
     },
   };
 
+  const displayTitle = section.title ?? `${section.yLabel} vs. ${section.xLabel}`;
+
   return (
     <section className="chart">
-      <h2>{section.plotId}</h2>
+      <h2>{displayTitle}</h2>
       <p>
         X-axis: {section.xLabel} | Y-axis: {section.yLabel}
       </p>
@@ -146,7 +155,7 @@ export function Chart({ section, data }: ChartProps) {
           data={chartData}
           options={options}
           role="img"
-          aria-label={`${section.plotId} scatter plot. X-axis ${section.xLabel}. Y-axis ${section.yLabel}.`}
+          aria-label={`${displayTitle} scatter plot. X-axis ${section.xLabel}. Y-axis ${section.yLabel}.`}
         />
       </div>
     </section>

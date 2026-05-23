@@ -14,7 +14,12 @@ import {
   phy132CoulombsLawLab,
   phy132DcCircuitsLab,
   phy132MagneticFieldFaradayLab,
+  phy132RcCircuitsLab,
+  phy132RcLowPassFilterLab,
+  phy132RlcBandpassFilterLab,
+  phy132RlHighPassFilterLab,
   phy132SnellsLawLab,
+  phy132TheveninsTheoremLab,
 } from '@/content/labs';
 import type { Course, Lab } from '@/domain/schema';
 import { Catalog } from '@/ui/Catalog';
@@ -31,6 +36,11 @@ const labsByCourse: Record<string, Record<string, Lab>> = {
     dcCircuits: phy132DcCircuitsLab,
     magneticFieldFaraday: phy132MagneticFieldFaradayLab,
     snellsLaw: phy132SnellsLawLab,
+    rcCircuits: phy132RcCircuitsLab,
+    rcLowPassFilter: phy132RcLowPassFilterLab,
+    rlHighPassFilter: phy132RlHighPassFilterLab,
+    rlcBandpassFilter: phy132RlcBandpassFilterLab,
+    theveninsTheorem: phy132TheveninsTheoremLab,
   },
   phy114: {
     staticElectricity: phy114StaticElectricityLab,
@@ -79,8 +89,14 @@ function SlugLabRoutePage() {
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Catalog courses={courses} labsByCourse={labsByCourse} showWizard />} />
-      <Route path="/labs" element={<Catalog courses={courses} labsByCourse={labsByCourse} showWizard={false} />} />
+      <Route
+        path="/"
+        element={<Catalog courses={courses} labsByCourse={labsByCourse} showWizard />}
+      />
+      <Route
+        path="/labs"
+        element={<Catalog courses={courses} labsByCourse={labsByCourse} showWizard={false} />}
+      />
       <Route path="/phy_114" element={<Navigate to="/c/phy114" replace />} />
       <Route path="/c/:courseId" element={<CoursePage />} />
       <Route path="/c/:courseId/:labId" element={<LabRoutePage />} />

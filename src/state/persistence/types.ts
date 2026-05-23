@@ -6,7 +6,7 @@ export type PersistedImageMeta = {
 };
 
 export type PersistedLabState = {
-  schemaVersion: 1 | 2 | 3;
+  schemaVersion: 1 | 2 | 3 | 4;
   courseId: string;
   labId: string;
   studentName: string;

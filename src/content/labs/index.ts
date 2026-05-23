@@ -11,6 +11,13 @@ export { phy132CoulombsLawLab } from './phy132/coulombsLaw.draft.lab';
 export { phy132DcCircuitsLab } from './phy132/dcCircuits.draft.lab';
 export { phy132MagneticFieldFaradayLab } from './phy132/magneticFieldFaraday.draft.lab';
 
+// PHY 132 enrichment labs (separate group from the core 1-7 sequence).
+export { phy132RcCircuitsLab } from './phy132/rcCircuits.lab';
+export { phy132RcLowPassFilterLab } from './phy132/rcLowPassFilter.lab';
+export { phy132RlHighPassFilterLab } from './phy132/rlHighPassFilter.lab';
+export { phy132RlcBandpassFilterLab } from './phy132/rlcBandpassFilter.lab';
+export { phy132TheveninsTheoremLab } from './phy132/theveninsTheorem.lab';
+
 export { phy114CapacitorsLab } from './phy114/capacitors.draft.lab';
 export { phy114ChargesFieldsLab } from './phy114/chargesFields.draft.lab';
 export { phy114DcCircuitsLab } from './phy114/dcCircuits.draft.lab';

@@ -47,12 +47,15 @@ export const LabAnswersMetaSchema = z.object({
 });
 
 export const LabAnswersSchema = z.object({
-  schemaVersion: z.literal(3),
+  schemaVersion: z.literal(4),
   meta: LabAnswersMetaSchema,
   integrity: z.object({
     signedAs: z.string(),
     aiUsed: z.boolean(),
     aiSharedLinks: z.string().optional(),
+    agreementAccepted: z.boolean(),
+    agreementAcceptedAt: z.number().int().nonnegative(),
+    agreementText: z.string(),
   }),
   fields: z.record(idSchema, FieldValueSchema),
   tables: z.record(idSchema, TableDataSchema),

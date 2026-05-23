@@ -8,13 +8,24 @@ import type { PersistedLabState, PersistenceAdapter } from '@/state/persistence/
 import type { LabStoreState } from '@/state/labStore';
 
 const PERSIST_DEBOUNCE_MS = 250;
-export const CURRENT_PERSISTED_SCHEMA_VERSION = 3 as const;
-const LEGACY_PERSISTED_SCHEMA_VERSION = 1 as const;
-const PREVIOUS_PERSISTED_SCHEMA_VERSION = 2 as const;
+export const CURRENT_PERSISTED_SCHEMA_VERSION = 4 as const;
+const V1_PERSISTED_SCHEMA_VERSION = 1 as const;
+const V2_PERSISTED_SCHEMA_VERSION = 2 as const;
+const V3_PERSISTED_SCHEMA_VERSION = 3 as const;
 
 type PersistedSlices = Pick<
   LabStoreState,
-  'courseId' | 'labId' | 'studentName' | 'aiUsed' | 'aiSharedLinks' | 'fields' | 'tables' | 'selectedFits' | 'fits' | 'images' | 'splitFraction'
+  | 'courseId'
+  | 'labId'
+  | 'studentName'
+  | 'aiUsed'
+  | 'aiSharedLinks'
+  | 'fields'
+  | 'tables'
+  | 'selectedFits'
+  | 'fits'
+  | 'images'
+  | 'splitFraction'
 > & {
   submitted: boolean;
 };
@@ -53,7 +64,10 @@ function hasPersistableChange(next: PersistedSlices, previous: PersistedSlices):
   );
 }
 
-type HydratedPersistedLabState = Omit<PersistedLabState, 'schemaVersion' | 'selectedFits' | 'fits'> & {
+type HydratedPersistedLabState = Omit<
+  PersistedLabState,
+  'schemaVersion' | 'selectedFits' | 'fits'
+> & {
   schemaVersion: typeof CURRENT_PERSISTED_SCHEMA_VERSION;
   selectedFits: Record<string, string | null>;
   fits: Record<string, FitResult>;
@@ -70,20 +84,26 @@ function sanitizeFits(raw: unknown): Record<string, FitResult> {
     if (parsed.success) {
       out[plotId] = parsed.data;
     } else {
-      console.warn(`[persistence] Dropping invalid fit "${plotId}" during hydrate`, parsed.error.issues);
+      console.warn(
+        `[persistence] Dropping invalid fit "${plotId}" during hydrate`,
+        parsed.error.issues,
+      );
     }
   }
 
   return out;
 }
 
-export function migratePersistedLabState(raw: unknown, keyForLogging: string): HydratedPersistedLabState | null {
+export function migratePersistedLabState(
+  raw: unknown,
+  keyForLogging: string,
+): HydratedPersistedLabState | null {
   if (!raw || typeof raw !== 'object') {
     return null;
   }
 
   const persisted = raw as PersistedLabState;
-  if (persisted.schemaVersion === LEGACY_PERSISTED_SCHEMA_VERSION) {
+  if (persisted.schemaVersion === V1_PERSISTED_SCHEMA_VERSION) {
     return {
       ...persisted,
       schemaVersion: CURRENT_PERSISTED_SCHEMA_VERSION,
@@ -94,12 +114,25 @@ export function migratePersistedLabState(raw: unknown, keyForLogging: string): H
     };
   }
 
-  if (persisted.schemaVersion === PREVIOUS_PERSISTED_SCHEMA_VERSION) {
+  if (persisted.schemaVersion === V2_PERSISTED_SCHEMA_VERSION) {
     return {
       ...persisted,
       schemaVersion: CURRENT_PERSISTED_SCHEMA_VERSION,
       aiUsed: false,
       aiSharedLinks: '',
+      selectedFits: persisted.selectedFits ?? {},
+      fits: sanitizeFits(persisted.fits),
+    };
+  }
+
+  if (persisted.schemaVersion === V3_PERSISTED_SCHEMA_VERSION) {
+    // v3 → v4: no on-disk shape change. The v4 envelope adds transient
+    // integrity-agreement fields that are computed at PDF time, not persisted.
+    return {
+      ...persisted,
+      schemaVersion: CURRENT_PERSISTED_SCHEMA_VERSION,
+      aiUsed: persisted.aiUsed ?? false,
+      aiSharedLinks: persisted.aiSharedLinks ?? '',
       selectedFits: persisted.selectedFits ?? {},
       fits: sanitizeFits(persisted.fits),
     };

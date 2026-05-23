@@ -25,7 +25,7 @@ const labFixture: Lab = {
 };
 
 const answersFixture: LabAnswers = {
-  schemaVersion: 3,
+  schemaVersion: 4,
   meta: {
     studentName: 'Student',
     semester: 'Fall',
@@ -36,6 +36,10 @@ const answersFixture: LabAnswers = {
   integrity: {
     signedAs: 'Student',
     aiUsed: false,
+    agreementAccepted: true,
+    agreementAcceptedAt: 1714450000000,
+    agreementText:
+      'I affirm this submission reflects my own work. If AI or LLM tools — chatbots, large language models, or generative AI assistants such as ChatGPT, Claude, Gemini, Copilot, or any similar tool — were used in any part of this lab, the chats are disclosed and share links are provided below (required by course policy).',
   },
   fields: {},
   tables: {},
@@ -139,7 +143,13 @@ describe('renderPDF', () => {
       sections: [
         {
           kind: 'instructions',
-          html: ['## Part 1', '**Important:**', '- Item one', '- Item two', 'Inline math $\\sin\\theta_i$'].join('\n'),
+          html: [
+            '## Part 1',
+            '**Important:**',
+            '- Item one',
+            '- Item two',
+            'Inline math $\\sin\\theta_i$',
+          ].join('\n'),
         },
       ],
     };
@@ -160,7 +170,7 @@ describe('renderPDF', () => {
     expect(textDump).toContain('• Item two');
     expect(textDump).toContain('sinθᵢ');
     expect(textDump).toMatchInlineSnapshot(
-      `"Test LabTest CourseStudent: StudentSigned: 2024-04-30T04:06:40.000Z - 01234567Integrity statement: I affirm this submission reflects my own work. If I used any AI or LLM tools (chatbots, large language models, or generative AI assistants such as ChatGPT, Claude, Gemini, Copilot, or similar), I have disclosed each conversation and provided share links below, as required by course policy.AI/LLM tools used: NoInstructionsPart 1Important:• Item one• Item two Inline math sinθᵢProcess RecordSection 1: instructionsActive time (ms): 0Keystrokes: 0Pastes clipboard: 0Pastes autocomplete: 0Pastes IME: 0"`,
+      `"Test LabTest CourseStudent: StudentSigned: 2024-04-30T04:06:40.000Z - 01234567Integrity statement: I affirm this submission reflects my own work. If AI or LLM tools — chatbots, large language models, or generative AI assistants such as ChatGPT, Claude, Gemini, Copilot, or any similar tool — were used in any part of this lab, the chats are disclosed and share links are provided below (required by course policy).Agreement accepted: 2024-04-30T04:06:40.000ZAI/LLM tools used: NoInstructionsPart 1Important:• Item one• Item two Inline math sinθᵢProcess RecordSection 1: instructionsActive time (ms): 0Keystrokes: 0Pastes clipboard: 0Pastes autocomplete: 0Pastes IME: 0"`,
     );
   });
 
@@ -170,10 +180,26 @@ describe('renderPDF', () => {
       tables: {
         part2Table: [
           {
-            incidentAngle: { text: '10', pastes: [], meta: { activeMs: 0, keystrokes: 0, deletes: 0 } },
-            refractedAngle: { text: '7', pastes: [], meta: { activeMs: 0, keystrokes: 0, deletes: 0 } },
-            sinIncidentAngle: { text: '0.1736', pastes: [], meta: { activeMs: 0, keystrokes: 0, deletes: 0 } },
-            sinRefractedAngle: { text: '0.1219', pastes: [], meta: { activeMs: 0, keystrokes: 0, deletes: 0 } },
+            incidentAngle: {
+              text: '10',
+              pastes: [],
+              meta: { activeMs: 0, keystrokes: 0, deletes: 0 },
+            },
+            refractedAngle: {
+              text: '7',
+              pastes: [],
+              meta: { activeMs: 0, keystrokes: 0, deletes: 0 },
+            },
+            sinIncidentAngle: {
+              text: '0.1736',
+              pastes: [],
+              meta: { activeMs: 0, keystrokes: 0, deletes: 0 },
+            },
+            sinRefractedAngle: {
+              text: '0.1219',
+              pastes: [],
+              meta: { activeMs: 0, keystrokes: 0, deletes: 0 },
+            },
           },
         ],
       },

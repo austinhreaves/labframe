@@ -29,7 +29,7 @@ const courseFixture: Course = {
 
 function makeAnswers(overrides?: Partial<LabAnswers>): LabAnswers {
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     meta: {
       studentName: 'Student',
       semester: 'Fall',
@@ -40,6 +40,9 @@ function makeAnswers(overrides?: Partial<LabAnswers>): LabAnswers {
     integrity: {
       signedAs: 'Student',
       aiUsed: false,
+      agreementAccepted: true,
+      agreementAcceptedAt: 1714450000000,
+      agreementText: 'I affirm.',
     },
     fields: {},
     tables: {},
@@ -113,10 +116,14 @@ describe('process record appendix', () => {
     });
     const textDump = collectText(tree).replace(/\s+/g, ' ').trim();
 
-    expect((textDump.match(/Active time \(ms\):/g) ?? []).length).toBe(snellsLawLab.sections.length);
+    expect((textDump.match(/Active time \(ms\):/g) ?? []).length).toBe(
+      snellsLawLab.sections.length,
+    );
     expect((textDump.match(/Keystrokes:/g) ?? []).length).toBe(snellsLawLab.sections.length);
     expect((textDump.match(/Pastes clipboard:/g) ?? []).length).toBe(snellsLawLab.sections.length);
-    expect((textDump.match(/Pastes autocomplete:/g) ?? []).length).toBe(snellsLawLab.sections.length);
+    expect((textDump.match(/Pastes autocomplete:/g) ?? []).length).toBe(
+      snellsLawLab.sections.length,
+    );
     expect((textDump.match(/Pastes IME:/g) ?? []).length).toBe(snellsLawLab.sections.length);
   });
 });

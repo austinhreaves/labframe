@@ -1,9 +1,11 @@
 import type { Course, LabAnswers } from '@/domain/schema';
+import { resolveIntegrityAgreementText } from '@/services/integrity/agreementText';
 import type { LabStoreState } from '@/state/labStore';
 
 export function buildAnswersFromStore(course: Course, store: LabStoreState): LabAnswers {
+  const agreementText = store.lab ? resolveIntegrityAgreementText(store.lab) : '';
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     meta: {
       studentName: store.studentName || 'Student',
       semester: 'Fall',
@@ -14,7 +16,12 @@ export function buildAnswersFromStore(course: Course, store: LabStoreState): Lab
     integrity: {
       signedAs: store.studentName || 'Student',
       aiUsed: store.aiUsed,
-      ...(store.aiUsed && store.aiSharedLinks.trim() ? { aiSharedLinks: store.aiSharedLinks.trim() } : {}),
+      ...(store.aiUsed && store.aiSharedLinks.trim()
+        ? { aiSharedLinks: store.aiSharedLinks.trim() }
+        : {}),
+      agreementAccepted: store.integrityAgreementAccepted,
+      agreementAcceptedAt: store.integrityAgreementAcceptedAt,
+      agreementText,
     },
     fields: store.fields,
     tables: store.tables,

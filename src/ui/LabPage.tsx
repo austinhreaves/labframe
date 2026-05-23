@@ -3,15 +3,24 @@ import { Info } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import type { Course, Lab } from '@/domain/schema';
-import { clearParentMessagingContext, configureParentMessaging, postSubmitAnswersToParent } from '@/services/embed/parentPostMessage';
+import {
+  clearParentMessagingContext,
+  configureParentMessaging,
+  postSubmitAnswersToParent,
+} from '@/services/embed/parentPostMessage';
 import { buildAnswersFromStore } from '@/services/integrity/buildAnswers';
 import { canonicalize } from '@/services/integrity/canonicalize';
 import { validateStudentInfoForPdf, type StudentInfoFieldId } from '@/services/integrity/preflight';
 import { signAnswers } from '@/services/integrity/sign';
 import { buildPdfFilename, prepareDraftPdf, sealPDF } from '@/services/pdf';
-import { clearTelemetryContext, configureTelemetry, reportError } from '@/services/telemetry/errorReporter';
+import {
+  clearTelemetryContext,
+  configureTelemetry,
+  reportError,
+} from '@/services/telemetry/errorReporter';
 import { useLabStore, type RecoverableAttachment } from '@/state/labStore';
 import { AccessibleDialog } from '@/ui/AccessibleDialog';
+import { IntegrityAgreement } from '@/ui/IntegrityAgreement';
 import { ProgressBar } from '@/ui/ProgressBar';
 import { StudentInfoPreflightDialog } from '@/ui/StudentInfoPreflightDialog';
 import { LayoutToggle } from '@/ui/layout/LayoutToggle';
@@ -58,7 +67,16 @@ type SimulationFrameProps = {
 
 function StableSimulationFrame({ simulationId, title, url, allow }: SimulationFrameProps) {
   const mountId = useRef(`${simulationId}-${Math.random().toString(36).slice(2, 10)}`);
-  return <iframe title={title} src={url} allow={allow} loading="lazy" className="simulation-frame" data-mount-id={mountId.current} />;
+  return (
+    <iframe
+      title={title}
+      src={url}
+      allow={allow}
+      loading="lazy"
+      className="simulation-frame"
+      data-mount-id={mountId.current}
+    />
+  );
 }
 
 function applyThemePreference(theme: ThemePreference): void {
@@ -66,7 +84,10 @@ function applyThemePreference(theme: ThemePreference): void {
     return;
   }
   const root = document.documentElement;
-  const prefersDark = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-color-scheme: dark)').matches : false;
+  const prefersDark =
+    typeof window.matchMedia === 'function'
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+      : false;
   const resolved = theme === 'system' ? (prefersDark ? 'dark' : 'light') : theme;
   root.dataset.theme = resolved;
 }
@@ -81,6 +102,9 @@ export function LabPage({ course, lab }: Props) {
   const studentName = useLabStore((state) => state.studentName);
   const setStudentName = useLabStore((state) => state.setStudentName);
   const setSubmitted = useLabStore((state) => state.setSubmitted);
+  const integrityAgreementAccepted = useLabStore((state) => state.integrityAgreementAccepted);
+  const aiUsed = useLabStore((state) => state.aiUsed);
+  const aiSharedLinks = useLabStore((state) => state.aiSharedLinks);
   const clearCurrentLab = useLabStore((state) => state.clearCurrentLab);
   const listRecoverableAttachments = useLabStore((state) => state.listRecoverableAttachments);
   const deleteRecoverableAttachment = useLabStore((state) => state.deleteRecoverableAttachment);
@@ -95,7 +119,9 @@ export function LabPage({ course, lab }: Props) {
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
   const [isStorageInfoDialogOpen, setIsStorageInfoDialogOpen] = useState(false);
   const [themePreference, setThemePreference] = useState<ThemePreference>('system');
-  const [isStorageBannerDismissed, setIsStorageBannerDismissed] = useState<boolean>(() => safeStorageGet(STORAGE_NOTE_DISMISSED_KEY) === '1');
+  const [isStorageBannerDismissed, setIsStorageBannerDismissed] = useState<boolean>(
+    () => safeStorageGet(STORAGE_NOTE_DISMISSED_KEY) === '1',
+  );
   const exportPdfButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
@@ -124,7 +150,8 @@ export function LabPage({ course, lab }: Props) {
 
   useEffect(() => {
     const storedTheme = safeStorageGet(THEME_STORAGE_KEY);
-    const nextTheme: ThemePreference = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'system';
+    const nextTheme: ThemePreference =
+      storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'system';
     setThemePreference(nextTheme);
     applyThemePreference(nextTheme);
   }, []);
@@ -207,6 +234,16 @@ export function LabPage({ course, lab }: Props) {
       return;
     }
 
+    if (!integrityAgreementAccepted) {
+      // The IntegrityAgreement UI disables the button before this fires, but
+      // guard the export path so the gate can't be bypassed programmatically.
+      return;
+    }
+
+    if (aiUsed && aiSharedLinks.trim().length === 0) {
+      return;
+    }
+
     const trimmedStudentName = studentNameDraft.trim();
     const studentNameForPdf = trimmedStudentName || studentName;
 
@@ -249,7 +286,10 @@ export function LabPage({ course, lab }: Props) {
       postSubmitAnswersToParent();
     } catch (error) {
       void reportError({ error, sectionId: 'pdf-export', labId: lab.id });
-      const message = error instanceof Error ? error.message : 'Could not sign report (network issue). Try again.';
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Could not sign report (network issue). Try again.';
       window.alert(message);
     } finally {
       setIsExportingPdf(false);
@@ -282,7 +322,8 @@ export function LabPage({ course, lab }: Props) {
       downloadBlob(draftBlob, filename);
     } catch (error) {
       void reportError({ error, sectionId: 'pdf-draft-export', labId: lab.id });
-      const message = error instanceof Error ? error.message : 'Could not generate draft PDF. Try again.';
+      const message =
+        error instanceof Error ? error.message : 'Could not generate draft PDF. Try again.';
       window.alert(message);
     } finally {
       setIsExportingDraft(false);
@@ -304,18 +345,45 @@ export function LabPage({ course, lab }: Props) {
     }
   }, [setSimSide, side, simSide]);
 
-  // Keep simulation mounted in one stable cell and change layout with CSS/tabs only.
+  const simulationEntries = useMemo(() => Object.entries(lab.simulations), [lab.simulations]);
+  const [activeSimulationId, setActiveSimulationId] = useState<string>(
+    () => simulationEntries[0]?.[0] ?? '',
+  );
+
+  useEffect(() => {
+    if (!simulationEntries.some(([id]) => id === activeSimulationId)) {
+      setActiveSimulationId(simulationEntries[0]?.[0] ?? '');
+    }
+  }, [simulationEntries, activeSimulationId]);
+
+  const activeSimulation = activeSimulationId ? lab.simulations[activeSimulationId] : undefined;
+
   const simulationPane = (
     <div className="simulation-pane">
-      {Object.entries(lab.simulations).map(([id, simulationDef]) => (
+      {simulationEntries.length > 1 ? (
+        <label className="simulation-picker">
+          Simulation
+          <select
+            value={activeSimulationId}
+            onChange={(event) => setActiveSimulationId(event.currentTarget.value)}
+          >
+            {simulationEntries.map(([id, def]) => (
+              <option key={id} value={id}>
+                {def.title}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+      {activeSimulation ? (
         <StableSimulationFrame
-          key={id}
-          simulationId={id}
-          title={simulationDef.title}
-          url={simulationDef.url}
-          {...(simulationDef.allow ? { allow: simulationDef.allow } : {})}
+          key={activeSimulationId}
+          simulationId={activeSimulationId}
+          title={activeSimulation.title}
+          url={activeSimulation.url}
+          {...(activeSimulation.allow ? { allow: activeSimulation.allow } : {})}
         />
-      ))}
+      ) : null}
     </div>
   );
 
@@ -323,10 +391,20 @@ export function LabPage({ course, lab }: Props) {
     <div className="worksheet-pane">
       <h1>{lab.title}</h1>
       {lab.sections.map((section, index) => (
-        <div key={`${section.kind}-${index}`} id={`section-${index}`} className="worksheet-section-anchor">
+        <div
+          key={`${section.kind}-${index}`}
+          id={`section-${index}`}
+          className="worksheet-section-anchor"
+        >
           <SectionRenderer section={section} />
         </div>
       ))}
+      <IntegrityAgreement
+        ref={exportPdfButtonRef}
+        lab={lab}
+        isExporting={isExportingPdf}
+        onExport={() => void exportPdf()}
+      />
     </div>
   );
 
@@ -346,7 +424,12 @@ export function LabPage({ course, lab }: Props) {
             <div className="layout-controls">
               <label className="lab-theme-select">
                 Theme
-                <select value={themePreference} onChange={(event) => setThemePreference(event.currentTarget.value as ThemePreference)}>
+                <select
+                  value={themePreference}
+                  onChange={(event) =>
+                    setThemePreference(event.currentTarget.value as ThemePreference)
+                  }
+                >
                   <option value="system">System</option>
                   <option value="light">Light</option>
                   <option value="dark">Dark</option>
@@ -400,7 +483,12 @@ export function LabPage({ course, lab }: Props) {
             </label>
             <p className="lab-save-status" aria-live="polite">
               {savedLabel}
-              <button type="button" className="lab-save-status-info" onClick={() => setIsStorageInfoDialogOpen(true)} aria-label="Storage details">
+              <button
+                type="button"
+                className="lab-save-status-info"
+                onClick={() => setIsStorageInfoDialogOpen(true)}
+                aria-label="Storage details"
+              >
                 <Icon icon={Info} size={14} />
               </button>
             </p>
@@ -415,9 +503,6 @@ export function LabPage({ course, lab }: Props) {
               }}
             >
               Start fresh
-            </button>
-            <button ref={exportPdfButtonRef} type="button" onClick={() => void exportPdf()} disabled={isExportingPdf}>
-              {isExportingPdf ? 'Exporting PDF...' : 'Export PDF'}
             </button>
             <button type="button" onClick={() => void exportDraftPdf()} disabled={isExportingDraft}>
               {isExportingDraft ? 'Saving draft...' : 'Save draft'}
@@ -475,20 +560,36 @@ export function LabPage({ course, lab }: Props) {
           )}
         </section>
       ) : null}
-      <StudentInfoPreflightDialog open={isPreflightDialogOpen} missing={missingPreflightFields} onClose={closePreflightDialog} />
-      <AccessibleDialog open={isStorageInfoDialogOpen} title="Browser storage notice" onClose={() => setIsStorageInfoDialogOpen(false)}>
+      <StudentInfoPreflightDialog
+        open={isPreflightDialogOpen}
+        missing={missingPreflightFields}
+        onClose={closePreflightDialog}
+      />
+      <AccessibleDialog
+        open={isStorageInfoDialogOpen}
+        title="Browser storage notice"
+        onClose={() => setIsStorageInfoDialogOpen(false)}
+      >
         <p>
-          Your progress is saved in this browser using local storage and IndexedDB. It can be lost if browser data is cleared, if storage
-          quotas are exceeded, or if you switch devices.
+          Your progress is saved in this browser using local storage and IndexedDB. It can be lost
+          if browser data is cleared, if storage quotas are exceeded, or if you switch devices.
         </p>
       </AccessibleDialog>
-      <AccessibleDialog open={isAboutDialogOpen} title="About LabFrame" onClose={() => setIsAboutDialogOpen(false)}>
+      <AccessibleDialog
+        open={isAboutDialogOpen}
+        title="About LabFrame"
+        onClose={() => setIsAboutDialogOpen(false)}
+      >
         <p>Version: 1.0.0</p>
         <p>Build date: {new Date().toISOString().slice(0, 10)}</p>
         <p>Credit: ASU Online Physics Labs rebuild team.</p>
         <p>LabFrame - Built for ASU online physics labs.</p>
         <p>
-          Links: <a href="https://github.com" target="_blank" rel="noreferrer">GitHub</a> |{' '}
+          Links:{' '}
+          <a href="https://github.com" target="_blank" rel="noreferrer">
+            GitHub
+          </a>{' '}
+          |{' '}
           <a href="https://www.asu.edu" target="_blank" rel="noreferrer">
             ASU
           </a>
@@ -501,7 +602,11 @@ export function LabPage({ course, lab }: Props) {
               ? 'lab-layout lab-layout-tabs'
               : `lab-layout lab-layout-side ${simSide === 'right' ? 'lab-layout-sim-right' : 'lab-layout-sim-left'}`
           }
-          style={layout === 'side' ? ({ '--split-sim': `${splitFraction * 100}%` } as CSSProperties) : undefined}
+          style={
+            layout === 'side'
+              ? ({ '--split-sim': `${splitFraction * 100}%` } as CSSProperties)
+              : undefined
+          }
         >
           {layout === 'tabs' ? (
             <div className="tabs">
@@ -531,11 +636,25 @@ export function LabPage({ course, lab }: Props) {
               </button>
             </div>
           ) : null}
-          <section className={layout === 'tabs' && tab !== 'simulation' ? 'layout-pane layout-pane-simulation is-hidden' : 'layout-pane layout-pane-simulation'}>
+          <section
+            className={
+              layout === 'tabs' && tab !== 'simulation'
+                ? 'layout-pane layout-pane-simulation is-hidden'
+                : 'layout-pane layout-pane-simulation'
+            }
+          >
             {simulationPane}
           </section>
-          {layout === 'side' ? <SplitHandle splitFraction={splitFraction} onChange={setSplitFraction} /> : null}
-          <section className={layout === 'tabs' && tab !== 'worksheet' ? 'layout-pane layout-pane-worksheet is-hidden' : 'layout-pane layout-pane-worksheet'}>
+          {layout === 'side' ? (
+            <SplitHandle splitFraction={splitFraction} onChange={setSplitFraction} />
+          ) : null}
+          <section
+            className={
+              layout === 'tabs' && tab !== 'worksheet'
+                ? 'layout-pane layout-pane-worksheet is-hidden'
+                : 'layout-pane layout-pane-worksheet'
+            }
+          >
             {worksheet}
           </section>
         </div>

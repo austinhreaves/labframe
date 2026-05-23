@@ -14,7 +14,7 @@ const courseFixture: Course = {
 };
 
 const answersFixture: LabAnswers = {
-  schemaVersion: 3,
+  schemaVersion: 4,
   meta: {
     studentName: 'Student',
     semester: 'Fall',
@@ -25,6 +25,9 @@ const answersFixture: LabAnswers = {
   integrity: {
     signedAs: 'Student',
     aiUsed: false,
+    agreementAccepted: true,
+    agreementAcceptedAt: 1714450000000,
+    agreementText: 'I affirm.',
   },
   fields: {},
   tables: {},
