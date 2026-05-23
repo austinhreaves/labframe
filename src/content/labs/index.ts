@@ -11,6 +11,18 @@ export { phy132CoulombsLawLab } from './phy132/coulombsLaw.draft.lab';
 export { phy132DcCircuitsLab } from './phy132/dcCircuits.draft.lab';
 export { phy132MagneticFieldFaradayLab } from './phy132/magneticFieldFaraday.draft.lab';
 
+// PHY 132 Tier-A split-pair drafts (created 2026-05-23 by splitting the four
+// labs above into eight narrower drafts per docs/handoffs/split-labs-3-7-handoff.md).
+// The source drafts are kept enabled:false in the manifest for graders.
+export { phy132PointChargeLab } from './phy132/pointCharge.draft.lab';
+export { phy132ChargeConfigurationsLab } from './phy132/chargeConfigurations.draft.lab';
+export { phy132CapacitorFundamentalsLab } from './phy132/capacitorFundamentals.draft.lab';
+export { phy132CapacitorNetworksLab } from './phy132/capacitorNetworks.draft.lab';
+export { phy132OhmsLawLab } from './phy132/ohmsLaw.draft.lab';
+export { phy132KirchhoffsLawsLab } from './phy132/kirchhoffsLaws.draft.lab';
+export { phy132FaradayInductionLab } from './phy132/faradayInduction.draft.lab';
+export { phy132GeneratorLab } from './phy132/generator.draft.lab';
+
 // PHY 132 enrichment labs (separate group from the core 1-7 sequence).
 export { phy132RcCircuitsLab } from './phy132/rcCircuits.lab';
 export { phy132RcLowPassFilterLab } from './phy132/rcLowPassFilter.lab';
