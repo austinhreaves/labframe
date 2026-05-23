@@ -1,7 +1,10 @@
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 
-import { phy114Course, phy132Course } from '@/content/courses';
+import { phy112Course, phy114Course, phy132Course } from '@/content/courses';
 import {
+  phy112CapacitorsSeriesParallelLab,
+  phy112KirchhoffsRulesLab,
+  phy112ResistorsSeriesParallelLab,
   phy114CapacitorsLab,
   phy114ChargesFieldsLab,
   phy114DcCircuitsLab,
@@ -25,7 +28,7 @@ import type { Course, Lab } from '@/domain/schema';
 import { Catalog } from '@/ui/Catalog';
 import { LabPage } from '@/ui/LabPage';
 
-const courses: Course[] = [phy132Course, phy114Course];
+const courses: Course[] = [phy132Course, phy114Course, phy112Course];
 
 const labsByCourse: Record<string, Record<string, Lab>> = {
   phy132: {
@@ -49,6 +52,11 @@ const labsByCourse: Record<string, Record<string, Lab>> = {
     dcCircuits: phy114DcCircuitsLab,
     snellsLaw: phy114SnellsLawLab,
     geometricOptics: phy114GeometricOpticsLab,
+  },
+  phy112: {
+    capacitorsSeriesParallel: phy112CapacitorsSeriesParallelLab,
+    resistorsSeriesParallel: phy112ResistorsSeriesParallelLab,
+    kirchhoffsRules: phy112KirchhoffsRulesLab,
   },
 };
 
