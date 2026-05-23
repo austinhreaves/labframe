@@ -1,7 +1,9 @@
+import { lazy } from 'react';
 import type { ConceptSection } from '@/domain/schema';
 import { useLabStore } from '@/state/labStore';
 import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
 import { Field } from '@/ui/primitives/Field';
+const MarkdownBlock = lazy(() => import('@/ui/primitives/MarkdownBlock'));
 
 type Props = {
   section: ConceptSection;
@@ -13,6 +15,7 @@ export function ConceptSectionView({ section }: Props) {
   return (
     <section className="section">
       <SectionPointsCaption points={section.points} />
+      {section.preamble ? <MarkdownBlock markdown={section.preamble} /> : null}
       <Field
         id={section.fieldId}
         label={section.prompt}

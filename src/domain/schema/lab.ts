@@ -124,6 +124,10 @@ export const CalculationSectionSchema = SectionMetadataSchema.extend({
 export const ConceptSectionSchema = SectionMetadataSchema.extend({
   kind: z.literal('concept'),
   fieldId: idSchema,
+  /** Optional markdown preamble rendered above the response field. Used to inline
+   *  procedural steps so they sit visually with the prompt that follows them,
+   *  cutting down on standalone `instructions` blocks. */
+  preamble: z.string().optional(),
   prompt: nonEmptyText,
   rows: z.number().int().positive().optional(),
   points: z.number().nonnegative().optional(),

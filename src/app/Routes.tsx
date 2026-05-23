@@ -9,11 +9,12 @@ import {
   phy114SnellsLawLab,
   phy114StaticElectricityLab,
   phy132CapacitorsLab,
+  phy132ChargeBuildupLab,
   phy132ChargesFieldsLab,
+  phy132CoulombsLawLab,
   phy132DcCircuitsLab,
   phy132MagneticFieldFaradayLab,
   phy132SnellsLawLab,
-  phy132StaticElectricityLab,
 } from '@/content/labs';
 import type { Course, Lab } from '@/domain/schema';
 import { Catalog } from '@/ui/Catalog';
@@ -23,7 +24,8 @@ const courses: Course[] = [phy132Course, phy114Course];
 
 const labsByCourse: Record<string, Record<string, Lab>> = {
   phy132: {
-    staticElectricity: phy132StaticElectricityLab,
+    chargeBuildup: phy132ChargeBuildupLab,
+    coulombsLaw: phy132CoulombsLawLab,
     chargesFields: phy132ChargesFieldsLab,
     capacitors: phy132CapacitorsLab,
     dcCircuits: phy132DcCircuitsLab,

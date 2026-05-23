@@ -30,7 +30,7 @@ describe('A11y axe smoke checks', () => {
 
   it('has no axe violations on a lab route', async () => {
     const { container } = render(
-      <MemoryRouter initialEntries={['/c/phy132/staticElectricity']}>
+      <MemoryRouter initialEntries={['/c/phy132/chargeBuildup']}>
         <App />
       </MemoryRouter>,
     );
