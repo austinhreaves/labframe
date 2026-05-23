@@ -16,3 +16,7 @@ export { phy114ChargesFieldsLab } from './phy114/chargesFields.draft.lab';
 export { phy114DcCircuitsLab } from './phy114/dcCircuits.draft.lab';
 export { phy114GeometricOpticsLab } from './phy114/geometricOptics.draft.lab';
 export { phy114StaticElectricityLab } from './phy114/staticElectricity.draft.lab';
+
+export { phy112CapacitorsSeriesParallelLab } from './phy112/capacitorsSeriesParallel.lab';
+export { phy112ResistorsSeriesParallelLab } from './phy112/resistorsSeriesParallel.lab';
+export { phy112KirchhoffsRulesLab } from './phy112/kirchhoffsRules.lab';
