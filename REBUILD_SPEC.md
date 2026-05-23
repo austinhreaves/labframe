@@ -3409,6 +3409,14 @@ Still open and worth answering before or during Phase 0:
 - Added: `integrity.aiSharedLinks` (`string | undefined`) for links the student is required to disclose when AI is used.
 - Migration: persisted v2 state hydrates with `aiUsed: false` and `aiSharedLinks: ''`, then auto-upgrades to v3 on next autosave.
 
+## v4 (2026-05-22)
+
+- Added: `integrity.agreementAccepted` (`boolean`) — student's explicit affirmation of the academic-integrity statement at sign time. Export is gated on this in the UI.
+- Added: `integrity.agreementAcceptedAt` (`number`, epoch-ms) — moment of affirmation. `0` if not recorded.
+- Added: `integrity.agreementText` (`string`) — verbatim agreement text shown to the student, frozen into the envelope so the record reflects what was actually displayed.
+- Migration: persisted v3 state hydrates unchanged and auto-upgrades to v4 on next autosave. Acceptance fields are **transient** and never persisted to disk — students must re-affirm each session, so a hydrated v3 record starts with `agreementAccepted: false` until the checkbox is checked again. Existing PDFs signed at v3 lack these fields; verification flows must treat them as "agreement not explicitly captured" rather than "agreement rejected".
+- Implication: PDFs signed at v3 and earlier remain self-consistent (embedded canonical and signature still match), but their integrity block omits the explicit-affirmation record now required at v4.
+
 ---
 
 *End of spec.*
