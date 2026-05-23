@@ -6,6 +6,10 @@ node_modules/
 dist/
 build/
 .vite/
+*.tsbuildinfo
+
+# Claude Code local state (per-checkout settings, worktrees)
+.claude/
 
 # Vercel
 .vercel/
