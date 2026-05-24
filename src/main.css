@@ -662,9 +662,10 @@ html {
 }
 
 .primitives-showcase-themes button[aria-pressed='true'] {
-  background: var(--accent-bg);
-  color: var(--accent-text-on);
-  border-color: var(--accent-bg);
+  background: var(--surface-sunken);
+  color: var(--accent-text);
+  border-color: var(--accent-600);
+  font-weight: var(--weight-semibold);
 }
 
 .primitives-showcase section {

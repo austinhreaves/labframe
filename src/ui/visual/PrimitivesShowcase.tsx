@@ -113,16 +113,41 @@ export function PrimitivesShowcase() {
         <h2>Select</h2>
         <div className="primitives-showcase-row">
           <div data-testid="select-default">
-            <Select value={select1} onChange={setSelect1} options={FIT_OPTIONS} size="md" />
+            <Select
+              value={select1}
+              onChange={setSelect1}
+              options={FIT_OPTIONS}
+              size="md"
+              aria-label="Fit model"
+            />
           </div>
           <div data-testid="select-sm">
-            <Select value="light" onChange={() => {}} options={THEME_OPTIONS} size="sm" />
+            <Select
+              value="light"
+              onChange={() => {}}
+              options={THEME_OPTIONS}
+              size="sm"
+              aria-label="Theme"
+            />
           </div>
           <div data-testid="select-invalid">
-            <Select value="" onChange={() => {}} options={FIT_OPTIONS} invalid placeholder="Pick one" />
+            <Select
+              value=""
+              onChange={() => {}}
+              options={FIT_OPTIONS}
+              invalid
+              placeholder="Pick one"
+              aria-label="Required fit model"
+            />
           </div>
           <div data-testid="select-disabled">
-            <Select value="linear" onChange={() => {}} options={FIT_OPTIONS} disabled />
+            <Select
+              value="linear"
+              onChange={() => {}}
+              options={FIT_OPTIONS}
+              disabled
+              aria-label="Disabled fit model"
+            />
           </div>
         </div>
       </section>
