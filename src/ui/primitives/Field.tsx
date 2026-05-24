@@ -1,11 +1,19 @@
-import { useRef, type CompositionEvent, type FormEvent } from 'react';
+import { useRef, type CompositionEvent, type FormEvent, type ReactNode } from 'react';
 
 import type { FieldValue } from '@/domain/schema';
 import { appendPasteEvent, createEmptyFieldValue, markFieldActivity } from '@/state/labStore';
 
 type FieldProps = {
   id: string;
+  /** Plain-text accessible name. Always present in the DOM so screen readers can read it,
+   *  even when `labelDisplay` provides a richer visible rendering. */
   label: string;
+  /** Optional rich rendering for the visible label (e.g. markdown/KaTeX). Replaces the
+   *  default `<span>{label}</span>` content when provided. */
+  labelDisplay?: ReactNode;
+  /** Visually hide the label (still in the DOM for assistive tech). Use when the visible
+   *  prompt is rendered separately above the field. */
+  hideLabel?: boolean;
   value: FieldValue | undefined;
   multiline?: boolean;
   rows?: number;
@@ -13,7 +21,17 @@ type FieldProps = {
   onChange: (next: FieldValue) => void;
 };
 
-export function Field({ id, label, value, multiline = false, rows = 4, readOnly = false, onChange }: FieldProps) {
+export function Field({
+  id,
+  label,
+  labelDisplay,
+  hideLabel = false,
+  value,
+  multiline = false,
+  rows = 4,
+  readOnly = false,
+  onChange,
+}: FieldProps) {
   const effective = value ?? createEmptyFieldValue();
   const focusStartedAt = useRef<number | null>(null);
   const composition = useRef<{ startOffset: number; startText: string } | null>(null);
@@ -73,14 +91,18 @@ export function Field({ id, label, value, multiline = false, rows = 4, readOnly 
     onChange(next);
   };
 
-  const handleCompositionStart = (event: CompositionEvent<HTMLInputElement> | CompositionEvent<HTMLTextAreaElement>) => {
+  const handleCompositionStart = (
+    event: CompositionEvent<HTMLInputElement> | CompositionEvent<HTMLTextAreaElement>,
+  ) => {
     composition.current = {
       startOffset: event.currentTarget.selectionStart ?? effective.text.length,
       startText: effective.text,
     };
   };
 
-  const handleCompositionEnd = (event: CompositionEvent<HTMLInputElement> | CompositionEvent<HTMLTextAreaElement>) => {
+  const handleCompositionEnd = (
+    event: CompositionEvent<HTMLInputElement> | CompositionEvent<HTMLTextAreaElement>,
+  ) => {
     const snapshot = composition.current;
     composition.current = null;
     if (!snapshot) {
@@ -88,15 +110,25 @@ export function Field({ id, label, value, multiline = false, rows = 4, readOnly 
     }
 
     const target = event.currentTarget;
-    const base = markFieldActivity(effective, { value: target.value, selectionStart: target.selectionStart }, {});
-    const composedText = getComposedSubstring(snapshot.startText, target.value, snapshot.startOffset);
+    const base = markFieldActivity(
+      effective,
+      { value: target.value, selectionStart: target.selectionStart },
+      {},
+    );
+    const composedText = getComposedSubstring(
+      snapshot.startText,
+      target.value,
+      snapshot.startOffset,
+    );
     const next = appendPasteEvent(base, 'ime', composedText, snapshot.startOffset);
     onChange(next);
   };
 
   return (
     <label htmlFor={id} className="field">
-      <span className="field-label">{label}</span>
+      <span className={hideLabel ? 'field-label visually-hidden' : 'field-label'}>
+        {labelDisplay ?? label}
+      </span>
       {multiline ? (
         <textarea
           id={id}

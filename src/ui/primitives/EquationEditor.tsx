@@ -1,5 +1,5 @@
 import katex from 'katex';
-import { createElement, useEffect, useMemo, useRef, useState, type ClipboardEvent, type CompositionEvent, type FormEvent, type KeyboardEvent } from 'react';
+import { createElement, useEffect, useMemo, useRef, useState, type ClipboardEvent, type CompositionEvent, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
 import type { FieldValue } from '@/domain/schema';
 
 import { appendPasteEvent, createEmptyFieldValue, markFieldActivity } from '@/state/labStore';
@@ -8,7 +8,12 @@ import { Field } from '@/ui/primitives/Field';
 
 type EquationEditorProps = {
   id: string;
+  /** Plain-text accessible name (used for aria-label and title on the math-field). */
   label: string;
+  /** Optional rich rendering for the visible label. */
+  labelDisplay?: ReactNode;
+  /** Visually hide the toolbar's label (still readable to AT). */
+  hideLabel?: boolean;
   value: FieldValue | undefined;
   onChange: (value: FieldValue) => void;
 };
@@ -21,7 +26,7 @@ type MathFieldElement = HTMLElement & {
   executeCommand?: (command: unknown) => void;
 };
 
-export function EquationEditor({ id, label, value, onChange }: EquationEditorProps) {
+export function EquationEditor({ id, label, labelDisplay, hideLabel = false, value, onChange }: EquationEditorProps) {
   const effective = value ?? createEmptyFieldValue();
   const [isReady, setIsReady] = useState(false);
   const [mode, setMode] = useState<'math' | 'latex'>('math');
@@ -240,13 +245,24 @@ export function EquationEditor({ id, label, value, onChange }: EquationEditorPro
   };
 
   if (!isReady) {
-    return <Field id={id} label={label} value={value} multiline rows={4} onChange={onChange} />;
+    return (
+      <Field
+        id={id}
+        label={label}
+        labelDisplay={labelDisplay}
+        hideLabel={hideLabel}
+        value={value}
+        multiline
+        rows={4}
+        onChange={onChange}
+      />
+    );
   }
 
   return (
     <div className="field equation-editor">
       <div className="equation-editor-toolbar">
-        <span className="field-label">{label}</span>
+        <span className={hideLabel ? 'field-label visually-hidden' : 'field-label'}>{labelDisplay ?? label}</span>
         <button type="button" className="equation-editor-toggle" onClick={() => setMode((previous) => (previous === 'math' ? 'latex' : 'math'))}>
           {mode === 'math' ? 'View as LaTeX' : 'View as math'}
         </button>

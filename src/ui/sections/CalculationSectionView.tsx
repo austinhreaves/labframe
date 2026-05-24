@@ -4,6 +4,7 @@ import { useLabStore } from '@/state/labStore';
 import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
 import { Field } from '@/ui/primitives/Field';
 const EquationEditor = lazy(() => import('@/ui/primitives/EquationEditor'));
+const MarkdownBlock = lazy(() => import('@/ui/primitives/MarkdownBlock'));
 
 type Props = {
   section: CalculationSection;
@@ -16,10 +17,12 @@ export function CalculationSectionView({ section }: Props) {
   return (
     <section className="section">
       <SectionPointsCaption points={section.points} />
+      <MarkdownBlock markdown={section.prompt} />
       {section.equationEditor ? (
         <EquationEditor
           id={section.fieldId}
           label={section.prompt}
+          hideLabel
           value={value}
           onChange={(next) => setField(section.fieldId, next)}
         />
@@ -27,6 +30,7 @@ export function CalculationSectionView({ section }: Props) {
         <Field
           id={section.fieldId}
           label={section.prompt}
+          hideLabel
           value={value}
           multiline
           rows={4}
