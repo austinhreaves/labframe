@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 
 import type { Section, TableRow } from '@/domain/schema';
 import { buildTocEntries } from '@/domain/tocEntries';
+import { Progress } from '@/ui/primitives/Progress';
 import { useLabStore, type LabStoreState } from '@/state/labStore';
 
 type Props = {
@@ -75,10 +76,12 @@ export function ProgressBar({ sections }: Props) {
   const safeTotal = Math.max(totalCount, 1);
   return (
     <div className="lab-progress" aria-live="polite">
-      <span>
-        Progress: {filledCount}/{totalCount}
-      </span>
-      <progress max={safeTotal} value={filledCount} />
+      <Progress
+        value={filledCount}
+        max={safeTotal}
+        label={`Progress: ${filledCount}/${totalCount}`}
+        size="sm"
+      />
     </div>
   );
 }
