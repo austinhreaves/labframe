@@ -19,7 +19,7 @@ This document defines the visual token vocabulary for LabFrame. Use tokens from 
 - **Elevation:** `--shadow-1` through `--shadow-4`.
 - **Radius:** `--radius-sm`, `--radius-md`, `--radius-lg`, `--radius-full`.
 - **Motion:** `--duration-*`, `--ease-*`.
-- **Focus:** `--focus-ring`.
+- **Focus:** `--focus-ring`, `--focus-ring-soft` (3px accent halo for form primitives).
 - **Icons:** `--icon-sm`, `--icon-md`, `--icon-lg`.
 
 ## Component rules
@@ -42,6 +42,17 @@ This document defines the visual token vocabulary for LabFrame. Use tokens from 
    - `npm run lint`
    - `npm run typecheck`
 7. Verify both themes (`data-theme="light"` and `data-theme="dark"`).
+
+## Form primitives
+
+Four token-driven React components in `src/ui/primitives/` replace every native form control on a lab page. They wrap (not replace) the native element so keyboard, AT, and form semantics stay intact; only the visible chrome is restyled.
+
+- [`Progress`](src/ui/primitives/Progress.tsx) — `<div role="progressbar">` with an accent fill and `width` transition. Replaces native `<progress>` (impossible to style consistently across browsers). Used in `ProgressBar.tsx`.
+- [`Checkbox`](src/ui/primitives/Checkbox.tsx) — visually-hidden native `<input type="checkbox">` plus a visible square with a Lucide `Check` icon that fades in on `:checked`. Used in `IntegrityAgreement.tsx`.
+- [`Select`](src/ui/primitives/Select.tsx) — native `<select>` with `appearance: none` + custom Lucide `ChevronDown`, token border, hover, and focus halo. Used by the simulation picker (`LabPage.tsx`), the theme picker (`LabPage.tsx`), and the fit picker (`PlotSectionView.tsx`). Sizes: `sm` (inline header chrome) and `md` (default).
+- [`FileDropzone`](src/ui/primitives/FileDropzone.tsx) — dashed drag-and-drop target with image preview, filename + optional size metadata, and a Remove button. Native `<input type="file">` is visually hidden but keyboard-reachable. Used inside `ImageUploader.tsx`; the caption `Field` is unchanged.
+
+All four primitives consume only tokens, work in both themes, and share `--focus-ring-soft` for the focus state. A live showcase is available in dev mode at `/__visual/primitives`; Playwright visual + axe-core specs live under `tests/visual/primitives/`.
 
 ## Guardrails
 

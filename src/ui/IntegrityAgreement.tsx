@@ -2,6 +2,7 @@ import { forwardRef, useId } from 'react';
 
 import type { Lab } from '@/domain/schema';
 import { resolveIntegrityAgreementText } from '@/services/integrity/agreementText';
+import { Checkbox } from '@/ui/primitives/Checkbox';
 import { useLabStore } from '@/state/labStore';
 
 type Props = {
@@ -34,26 +35,18 @@ export const IntegrityAgreement = forwardRef<HTMLButtonElement, Props>(function 
     <section className="integrity-agreement" aria-labelledby={`${agreementId}-heading`}>
       <h2 id={`${agreementId}-heading`}>Academic integrity</h2>
 
-      <label className="integrity-agreement-affirm" htmlFor={agreementId}>
-        <input
-          id={agreementId}
-          type="checkbox"
-          checked={accepted}
-          onChange={(event) => setAccepted(event.currentTarget.checked)}
-        />
-        <span>{agreementText}</span>
-      </label>
+      <div className="integrity-agreement-affirm">
+        <Checkbox id={agreementId} checked={accepted} onChange={setAccepted}>
+          {agreementText}
+        </Checkbox>
+      </div>
 
       <div className="integrity-agreement-ai">
-        <label className="integrity-agreement-ai-toggle" htmlFor={aiUsedId}>
-          <input
-            id={aiUsedId}
-            type="checkbox"
-            checked={aiUsed}
-            onChange={(event) => setAiUsed(event.currentTarget.checked)}
-          />
-          <span>I used AI or LLM tools on this lab.</span>
-        </label>
+        <div className="integrity-agreement-ai-toggle">
+          <Checkbox id={aiUsedId} checked={aiUsed} onChange={setAiUsed}>
+            I used AI or LLM tools on this lab.
+          </Checkbox>
+        </div>
 
         {aiUsed ? (
           <div className="integrity-agreement-links">

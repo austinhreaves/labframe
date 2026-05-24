@@ -27,6 +27,7 @@ import { LayoutToggle } from '@/ui/layout/LayoutToggle';
 import { SplitHandle } from '@/ui/layout/SplitHandle';
 import { TableOfContents } from '@/ui/layout/TableOfContents';
 import { Icon } from '@/ui/primitives/Icon';
+import { Select } from '@/ui/primitives/Select';
 import { SectionRenderer } from '@/ui/sections/SectionRenderer';
 
 type Props = {
@@ -363,16 +364,12 @@ export function LabPage({ course, lab }: Props) {
       {simulationEntries.length > 1 ? (
         <label className="simulation-picker">
           Simulation
-          <select
+          <Select
             value={activeSimulationId}
-            onChange={(event) => setActiveSimulationId(event.currentTarget.value)}
-          >
-            {simulationEntries.map(([id, def]) => (
-              <option key={id} value={id}>
-                {def.title}
-              </option>
-            ))}
-          </select>
+            onChange={setActiveSimulationId}
+            options={simulationEntries.map(([id, def]) => ({ value: id, label: def.title }))}
+            size="md"
+          />
         </label>
       ) : null}
       {activeSimulation ? (
@@ -424,16 +421,16 @@ export function LabPage({ course, lab }: Props) {
             <div className="layout-controls">
               <label className="lab-theme-select">
                 Theme
-                <select
+                <Select
                   value={themePreference}
-                  onChange={(event) =>
-                    setThemePreference(event.currentTarget.value as ThemePreference)
-                  }
-                >
-                  <option value="system">System</option>
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
-                </select>
+                  onChange={(next) => setThemePreference(next as ThemePreference)}
+                  options={[
+                    { value: 'system', label: 'System' },
+                    { value: 'light', label: 'Light' },
+                    { value: 'dark', label: 'Dark' },
+                  ]}
+                  size="sm"
+                />
               </label>
               <button type="button" onClick={() => setIsAboutDialogOpen(true)}>
                 About

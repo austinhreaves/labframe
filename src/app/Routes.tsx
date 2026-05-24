@@ -35,6 +35,7 @@ import {
 import type { Course, Lab } from '@/domain/schema';
 import { Catalog } from '@/ui/Catalog';
 import { LabPage } from '@/ui/LabPage';
+import { PrimitivesShowcase } from '@/ui/visual/PrimitivesShowcase';
 
 const courses: Course[] = [phy132Course, phy114Course, phy112Course];
 
@@ -125,6 +126,9 @@ export function AppRoutes() {
       <Route path="/c/:courseId" element={<CoursePage />} />
       <Route path="/c/:courseId/:labId" element={<LabRoutePage />} />
       <Route path="/lab/:slug" element={<SlugLabRoutePage />} />
+      {import.meta.env.DEV ? (
+        <Route path="/__visual/primitives" element={<PrimitivesShowcase />} />
+      ) : null}
     </Routes>
   );
 }

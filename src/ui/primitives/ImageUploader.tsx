@@ -1,6 +1,7 @@
 import type { FieldValue } from '@/domain/schema';
 
 import { Field } from '@/ui/primitives/Field';
+import { FileDropzone } from '@/ui/primitives/FileDropzone';
 
 type ImageUploaderProps = {
   imageId: string;
@@ -21,21 +22,12 @@ export function ImageUploader({
 }: ImageUploaderProps) {
   return (
     <section className="image-uploader">
-      <label htmlFor={imageId}>
-        Upload image
-        <input
-          id={imageId}
-          type="file"
-          accept="image/*"
-          onChange={(event) => onImageChange(event.currentTarget.files?.[0] ?? null)}
-        />
-      </label>
-      {image ? (
-        <figure>
-          <img src={image.objectUrl} alt={image.fileName} />
-          <figcaption>{image.fileName}</figcaption>
-        </figure>
-      ) : null}
+      <FileDropzone
+        id={imageId}
+        value={image}
+        accept="image/*"
+        onFileChange={onImageChange}
+      />
       <Field
         id={captionFieldId}
         label="Caption"
