@@ -202,14 +202,6 @@ html {
   gap: var(--space-2);
 }
 
-.lab-theme-select select {
-  border: 1px solid var(--border-default);
-  background: var(--surface-raised);
-  color: var(--text-primary);
-  border-radius: var(--radius-sm);
-  padding: var(--space-1) var(--space-2);
-}
-
 .storage-note-banner {
   margin: var(--space-3) 0;
   border: 1px solid var(--border-default);
@@ -429,6 +421,72 @@ html {
   border-color: var(--danger-border);
 }
 
+.select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.select > select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font: inherit;
+  padding: var(--space-2) calc(var(--space-7) - var(--space-2)) var(--space-2) var(--space-3);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.select > select:hover {
+  border-color: var(--border-strong);
+}
+
+.select > select:focus-visible {
+  outline: none;
+  border-color: var(--accent-600);
+  box-shadow: var(--focus-ring-soft);
+}
+
+.select > select:disabled {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+  background: var(--surface-sunken);
+}
+
+.select[data-size='sm'] > select {
+  padding: var(--space-1) calc(var(--space-6) - var(--space-1)) var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.select[data-invalid='true'] > select {
+  border-color: var(--danger-border);
+}
+
+.select-chevron {
+  position: absolute;
+  right: var(--space-2);
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  pointer-events: none;
+  color: var(--text-tertiary);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.select > select:hover ~ .select-chevron,
+.select > select:focus-visible ~ .select-chevron {
+  color: var(--text-primary);
+}
+
+.select > select:disabled ~ .select-chevron {
+  color: var(--text-disabled);
+}
+
 .lab-shell {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -569,14 +627,6 @@ html {
   align-items: center;
   flex-wrap: nowrap;
   gap: var(--space-2);
-}
-
-.simulation-picker select {
-  border: 1px solid var(--border-default);
-  background: var(--surface-raised);
-  color: var(--text-primary);
-  border-radius: var(--radius-sm);
-  padding: var(--space-1) var(--space-2);
 }
 
 .simulation-frame {

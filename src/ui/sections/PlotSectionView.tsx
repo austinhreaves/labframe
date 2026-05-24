@@ -1,6 +1,7 @@
 import { lazy } from 'react';
 import type { PlotSection, TableData } from '@/domain/schema';
 import { useLabStore } from '@/state/labStore';
+import { Select } from '@/ui/primitives/Select';
 import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
 const Chart = lazy(() => import('@/ui/primitives/Chart'));
 
@@ -20,19 +21,17 @@ export function PlotSectionView({ section }: Props) {
     <section className="section">
       <SectionPointsCaption points={section.points} />
       {fitOptions.length > 0 ? (
-        <label>
+        <label className="plot-fit-picker">
           Fit model:
-          <select
+          <Select
             value={selectedFitId ?? ''}
-            onChange={(event) => setSelectedFit(section.plotId, event.currentTarget.value || null)}
-          >
-            <option value="">No fit</option>
-            {fitOptions.map((fit) => (
-              <option key={fit.id} value={fit.id}>
-                {fit.label}
-              </option>
-            ))}
-          </select>
+            onChange={(next) => setSelectedFit(section.plotId, next || null)}
+            options={[
+              { value: '', label: 'No fit' },
+              ...fitOptions.map((fit) => ({ value: fit.id, label: fit.label })),
+            ]}
+            size="md"
+          />
         </label>
       ) : null}
       <Chart section={section} data={data} />
