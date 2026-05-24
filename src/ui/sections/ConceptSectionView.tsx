@@ -16,9 +16,11 @@ export function ConceptSectionView({ section }: Props) {
     <section className="section">
       <SectionPointsCaption points={section.points} />
       {section.preamble ? <MarkdownBlock markdown={section.preamble} /> : null}
+      <MarkdownBlock markdown={section.prompt} />
       <Field
         id={section.fieldId}
         label={section.prompt}
+        hideLabel
         value={value}
         multiline
         rows={section.rows ?? 3}

@@ -97,14 +97,19 @@
 
   --callout-note-bg: var(--info-bg);
   --callout-note-border: var(--info-border);
+  --callout-note-title: var(--info-text);
   --callout-tip-bg: var(--success-bg);
   --callout-tip-border: var(--success-border);
+  --callout-tip-title: var(--success-text);
   --callout-warning-bg: var(--warning-bg);
   --callout-warning-border: var(--warning-border);
+  --callout-warning-title: var(--warning-text);
   --callout-important-bg: var(--accent-soft);
   --callout-important-border: var(--accent-300);
+  --callout-important-title: var(--accent-700);
   --callout-caution-bg: var(--danger-bg);
   --callout-caution-border: var(--danger-border);
+  --callout-caution-title: var(--danger-text);
 
   --shadow-1: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 3px rgb(15 23 42 / 0.08);
   --shadow-2: 0 2px 4px rgb(15 23 42 / 0.06), 0 4px 8px rgb(15 23 42 / 0.08);
@@ -189,14 +194,19 @@
 
   --callout-note-bg: var(--info-bg);
   --callout-note-border: var(--info-border);
+  --callout-note-title: var(--info-text);
   --callout-tip-bg: var(--success-bg);
   --callout-tip-border: var(--success-border);
+  --callout-tip-title: var(--success-text);
   --callout-warning-bg: var(--warning-bg);
   --callout-warning-border: var(--warning-border);
+  --callout-warning-title: var(--warning-text);
   --callout-important-bg: var(--accent-soft);
   --callout-important-border: var(--accent-500);
+  --callout-important-title: var(--accent-300);
   --callout-caution-bg: var(--danger-bg);
   --callout-caution-border: var(--danger-border);
+  --callout-caution-title: var(--danger-text);
 
   --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4), 0 1px 3px rgb(0 0 0 / 0.5);
   --shadow-2: 0 2px 4px rgb(0 0 0 / 0.4), 0 4px 8px rgb(0 0 0 / 0.5);

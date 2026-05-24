@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 
@@ -10,7 +11,7 @@ describe('DataTableSectionView', () => {
     useLabStore.setState({ tables: {} });
   });
 
-  it('renders derived formula labels with aria-label in header', () => {
+  it('renders derived formula labels with aria-label in header', async () => {
     const section: DataTableSection = {
       kind: 'dataTable',
       tableId: 'tableA',
@@ -29,9 +30,15 @@ describe('DataTableSectionView', () => {
       ],
     };
 
-    const { container } = render(<DataTableSectionView section={section} />);
-    expect(screen.getByText('sin(theta_i)')).toBeInTheDocument();
-    const formulaLabel = container.querySelector('small[aria-label="sin(theta_i), derived column"]');
+    const { container } = render(
+      <Suspense fallback={null}>
+        <DataTableSectionView section={section} />
+      </Suspense>,
+    );
+    expect(await screen.findByText('sin(theta_i)')).toBeInTheDocument();
+    const formulaLabel = container.querySelector(
+      'small[aria-label="sin(theta_i), derived column"]',
+    );
     expect(formulaLabel).not.toBeNull();
   });
 });

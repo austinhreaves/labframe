@@ -12,12 +12,12 @@
 //   See conversation 2026-05-11 for design notes.
 //
 // Updated 2026-05-12: inlined Givens (replaces the Canvas "Set of Parameters"
-// sheet — extraneous load fix per Mayer's spatial-contiguity principle).
+// sheet; extraneous load fix per Mayer's spatial-contiguity principle).
 // - Switched from PhET Macro Scale to Atomic Scale. Charges now in units of
 //   elementary charge (e); distances in picometers (pm). Distance values
 //   scaled by 1e-10 from the original cm values (2-6 pm semantic intent;
-//   actual pm values verified against the sim's slider range — see Givens
-//   blocks for the final numbers).
+//   actual pm values verified against the sim's slider range. See Givens
+//   blocks for the final numbers.
 // - Givens currently rendered as plain `instructions` blocks with KaTeX.
 //   See docs/givens-tooling.md for the structured replacement (Phase 1).
 // - Calculation prompts now include an explicit SI-conversion hint, since
@@ -63,21 +63,42 @@ The electrostatic force between two point charges is a non-contact force. Its ma
 
 $$F = k\\,\\frac{|Q_1 Q_2|}{d^{2}}$$
 
-where **k ≈ 8.988 × 10⁹ N·m²/C²** is Coulomb's constant.
+where $k$ is **Coulomb's constant**:
 
-**A note on units.** You'll be working on the **Atomic Scale** screen of the PhET sim, which uses two units you may not have seen before:
+$$k \\approx 8.988 \\times 10^{9}\\,\\mathrm{N}\\cdot\\mathrm{m}^{2}/\\mathrm{C}^{2}.$$
 
-- **e** — the *elementary charge*, i.e., the magnitude of charge on a single proton (positive) or electron (negative). $1\\,\\mathrm{e} \\approx 1.602 \\times 10^{-19}\\,\\mathrm{C}$. So a charge of $-3\\,\\mathrm{e}$ has the same magnitude as 3 protons' worth of charge, but negative — equivalent to 3 electrons.
-- **pm** — *picometer*, $1\\,\\mathrm{pm} = 10^{-12}\\,\\mathrm{m}$. This is the natural length scale of atomic systems; a hydrogen atom's Bohr radius is about 53 pm.
+---
 
-Coulomb's constant *k* itself is a universal SI-unit quantity ($\\mathrm{N\\cdot m^2 / C^2}$), so when you extract *k* from your data later, you'll need to convert your charges from e to C and your distances from pm to m. The Givens panels below give you the values; the Calculation prompts later will walk you through the conversion.
+### A note on units
 
-In this lab you will collect data from the PhET *Coulomb's Law* simulation in two parts:
+You'll be working on the **Atomic Scale** screen of the PhET sim, which uses two units you may not have seen before.
 
-- **Part 2A** — Hold $Q_1$ and $d$ constant (given), vary $Q_2$, plot $F$ vs $Q_2$, and use the slope to back out a value for $k$.
-- **Part 2B** — Hold $Q_1$ and $Q_2$ constant (given), vary $d$, plot $F$ vs $d$, $F$ vs $1/d$, and $F$ vs $1/d^2$, and use the linear plot to back out a value for $k$.
+**Elementary charge ($\\mathrm{e}$).** The magnitude of charge on a single proton (positive) or electron (negative):
 
-Compare both experimental values of $k$ against the accepted value.`,
+$$1\\,\\mathrm{e} \\approx 1.602 \\times 10^{-19}\\,\\mathrm{C}.$$
+
+So a charge of $-3\\,\\mathrm{e}$ has the same magnitude as three protons' worth of charge, but negative. That is equivalent to three electrons.
+
+**Picometer ($\\mathrm{pm}$).** A length unit:
+
+$$1\\,\\mathrm{pm} = 10^{-12}\\,\\mathrm{m}.$$
+
+This is the natural length scale of atomic systems; a hydrogen atom's Bohr radius is about $53\\,\\mathrm{pm}$.
+
+> [!IMPORTANT]
+> Coulomb's constant $k$ is in SI units ($\\mathrm{N \\cdot m^{2} / C^{2}}$). When you extract $k$ from your data later, you'll need to convert your charges from $\\mathrm{e}$ to $\\mathrm{C}$ and your distances from $\\mathrm{pm}$ to $\\mathrm{m}$. The Givens panels give you the values; the Calculation prompts will walk you through the conversion.
+
+---
+
+### What you'll do
+
+You'll collect data from the PhET *Coulomb's Law* simulation in two parts.
+
+**Part 2A.** Hold $Q_1$ and $d$ constant (given), vary $Q_2$, plot $F$ vs $Q_2$, and use the slope to back out a value for $k$.
+
+**Part 2B.** Hold $Q_1$ and $Q_2$ constant (given), vary $d$, plot $F$ vs $d$, $F$ vs $1/d$, and $F$ vs $1/d^2$, and use the linear plot to back out a second value for $k$.
+
+Then compare both experimental values of $k$ against the accepted value.`,
     },
     {
       kind: 'instructions',
@@ -85,39 +106,41 @@ Compare both experimental values of $k$ against the accepted value.`,
     },
     {
       kind: 'instructions',
-      tocLabel: 'Givens — Part 2A',
-      // TEMP (2026-05-12): plain-markdown Givens block. Replace with the
+      tocLabel: 'Givens: Part 2A',
+      // TEMP (2026-05-12): plain-markdown Givens block, rendered as a [!NOTE]
+      // callout per the lab-content style conventions. Replace with the
       // structured `givens` section kind described in docs/givens-tooling.md
       // once the schema work lands.
-      html: `## Givens — Part 2A
-
-Use these values throughout Part 2A:
-
-| Symbol | Value | Role |
-|---|---|---|
-| $Q_1$ | $-3\\,\\mathrm{e}$ | constant (fixed across all measurements) |
-| $d$ | $600\\,\\mathrm{pm}$ | constant separation between charges |
-| $Q_2$ | $+1\\,\\mathrm{e},\\ +2\\,\\mathrm{e},\\ +3\\,\\mathrm{e},\\ +4\\,\\mathrm{e},\\ +5\\,\\mathrm{e}$ | **vary** across your five measurements |
-
-Reminder: $\\mathrm{e}$ is the elementary charge ($\\approx 1.602 \\times 10^{-19}\\,\\mathrm{C}$); $\\mathrm{pm}$ is a picometer ($10^{-12}\\,\\mathrm{m}$).`,
+      html: `> [!NOTE]
+> **Givens: Part 2A.** Use these values throughout Part 2A.
+>
+> | Symbol | Value | Role |
+> |---|---|---|
+> | $Q_1$ | $-3\\,\\mathrm{e}$ | constant (fixed across all measurements) |
+> | $d$ | $600\\,\\mathrm{pm}$ | constant separation between charges |
+> | $Q_2$ | $+1\\,\\mathrm{e},\\ +2\\,\\mathrm{e},\\ +3\\,\\mathrm{e},\\ +4\\,\\mathrm{e},\\ +5\\,\\mathrm{e}$ | **vary** across your five measurements |
+>
+> Reminder: $\\mathrm{e}$ is the elementary charge ($\\approx 1.602 \\times 10^{-19}\\,\\mathrm{C}$); $\\mathrm{pm}$ is a picometer ($10^{-12}\\,\\mathrm{m}$).`,
     },
     {
       kind: 'instructions',
       tocHidden: true,
-      html: `**Procedure step 1.** Open the *Coulomb's Law* sim and switch to the **Atomic Scale** screen (toggle at the bottom of the sim — *not* the Macro Scale screen). Set $Q_1$ and the separation $d$ to the values given above, then transcribe them into the fields below.`,
+      html: `**Step 1.** Open the *Coulomb's Law* sim and switch to the **Atomic Scale** screen (toggle at the bottom of the sim; *not* the Macro Scale screen).
+
+Set $Q_1$ and the separation $d$ to the values given above, then transcribe them into the fields below.`,
     },
     {
       kind: 'multiMeasurement',
       rows: [
-        { id: 'constantChargeQ1', label: 'Constant charge Q₁', unit: 'e' },
-        { id: 'constantDistanceD', label: 'Constant distance d', unit: 'pm' },
+        { id: 'constantChargeQ1', label: 'Constant charge $Q_1$', unit: 'e' },
+        { id: 'constantDistanceD', label: 'Constant distance $d$', unit: 'pm' },
       ],
       points: 0.5,
     },
     {
       kind: 'instructions',
       tocHidden: true,
-      html: `**Procedure step 2.** Take a screenshot of your initial sim setup (both charges visible, with the force reading shown) and attach it below.`,
+      html: `**Step 2.** Take a screenshot of your initial sim setup (both charges visible, with the force reading shown) and attach it below.`,
     },
     {
       kind: 'image',
@@ -129,22 +152,26 @@ Reminder: $\\mathrm{e}$ is the elementary charge ($\\approx 1.602 \\times 10^{-1
     {
       kind: 'instructions',
       tocHidden: true,
-      html: `**Procedure step 3.** Step $Q_2$ through the five values given above (+1 e through +5 e), keeping $Q_1$ and $d$ fixed. Record the force $F$ shown by the sim at each value of $Q_2$ (the sim will display this in whatever SI submultiple is convenient — note the unit it gives you and stay consistent across rows).`,
+      html: `**Step 3.** Step $Q_2$ through the five values given above ($+1\\,\\mathrm{e}$ through $+5\\,\\mathrm{e}$), keeping $Q_1$ and $d$ fixed.
+
+Record the force $F$ shown by the sim at each value of $Q_2$. The sim will display the force in whatever SI submultiple is convenient; note the unit it gives you and stay consistent across rows.`,
     },
     {
       kind: 'dataTable',
       tableId: 'forceChargeTable',
       rowCount: 5,
       columns: [
-        { id: 'charge', label: 'Charge Q₂ (e)', kind: 'input', unit: 'Symbol(unevaluable)' },
-        { id: 'force', label: 'Force F', kind: 'input', unit: 'Symbol(unevaluable)' },
+        { id: 'charge', label: 'Charge $Q_2$ (e)', kind: 'input', unit: 'Symbol(unevaluable)' },
+        { id: 'force', label: 'Force $F$', kind: 'input', unit: 'Symbol(unevaluable)' },
       ],
       points: 2,
     },
     {
       kind: 'instructions',
       tocHidden: true,
-      html: `**Procedure step 4.** Plot **Force F (y) vs. Charge Q₂ (x)**. Add a proportional fit (y = Ax) — since Coulomb's Law predicts the line passes through the origin.`,
+      html: `**Step 4.** Plot Force $F$ (y) vs. Charge $Q_2$ (x).
+
+Add a proportional fit ($y = Ax$), since Coulomb's Law predicts the line passes through the origin.`,
     },
     {
       kind: 'plot',
@@ -164,13 +191,13 @@ Reminder: $\\mathrm{e}$ is the elementary charge ($\\approx 1.602 \\times 10^{-1
     {
       kind: 'instructions',
       tocHidden: true,
-      html: `**Procedure step 5.** Read off the slope A and its uncertainty ΔA (σₐ) from the proportional fit.`,
+      html: `**Step 5.** Read off the slope $A$ and its uncertainty $\\Delta A$ ($\\sigma_A$) from the proportional fit.`,
     },
     {
       kind: 'multiMeasurement',
       rows: [
-        { id: 'forceChargeSlopeA', label: 'A =' },
-        { id: 'forceChargeSlopeUncertainty', label: 'ΔA =' },
+        { id: 'forceChargeSlopeA', label: '$A =$' },
+        { id: 'forceChargeSlopeUncertainty', label: '$\\Delta A =$' },
       ],
       points: 0.5,
     },
@@ -178,7 +205,7 @@ Reminder: $\\mathrm{e}$ is the elementary charge ($\\approx 1.602 \\times 10^{-1
       kind: 'calculation',
       fieldId: 'coulombsConstantCalculation',
       prompt:
-        "**Procedure step 6.** Use A to calculate your own value of Coulomb's constant k. (Hint: set Coulomb's law and your graph's equation equal to each other — F = k|Q₁Q₂|/d² = AQ₂. You have known values for Q₁, d, and A, so solve for k.) **Important — unit conversion:** before plugging numbers in, convert your charges from e to coulombs (1 e ≈ 1.602 × 10⁻¹⁹ C), your distance from pm to meters (1 pm = 10⁻¹² m), and your force into N. The accepted k is in SI units. Show all of your work, then compute the percent error against k ≈ 8.988 × 10⁹ N·m²/C².",
+        "**Step 6.** Use $A$ to calculate your own value of Coulomb's constant $k$.\n\n> [!TIP]\n> **Setting up the equation.** Set Coulomb's law and your graph's equation equal to each other:\n>\n> $F = k\\,|Q_1 Q_2|/d^2 = A\\,Q_2.$\n>\n> You have known values for $Q_1$, $d$, and $A$, so solve for $k$.\n\n---\n\n> [!IMPORTANT]\n> **Unit conversion.** The accepted $k$ is in SI units, so convert before plugging in:\n>\n> - charges from $\\mathrm{e}$ to coulombs: $1\\,\\mathrm{e} \\approx 1.602 \\times 10^{-19}\\,\\mathrm{C}$\n> - distance from $\\mathrm{pm}$ to meters: $1\\,\\mathrm{pm} = 10^{-12}\\,\\mathrm{m}$\n> - force into $\\mathrm{N}$\n\n---\n\nShow all of your work, then compute the percent error against the accepted value:\n\n$$k \\approx 8.988 \\times 10^{9}\\,\\mathrm{N}\\cdot\\mathrm{m}^{2}/\\mathrm{C}^{2}.$$",
       equationEditor: true,
       points: 2,
     },
@@ -186,12 +213,13 @@ Reminder: $\\mathrm{e}$ is the elementary charge ($\\approx 1.602 \\times 10^{-1
       kind: 'instructions',
       html: `## Concept Check Question
 
-If you are not confident with your answer, stop and reach out for help before moving on!`,
+> [!WARNING]
+> If you are not confident with your answer, stop and reach out for help before moving on.`,
     },
     {
       kind: 'concept',
       fieldId: 'forceChargeVariationQuestion',
-      prompt: 'How would the force have changed if you kept Q₂ constant and varied Q₁ instead?',
+      prompt: 'How would the force have changed if you kept $Q_2$ constant and varied $Q_1$ instead?',
       points: 0.5,
     },
     {
@@ -199,9 +227,20 @@ If you are not confident with your answer, stop and reach out for help before mo
       tocLabel: 'Background: Inverse-Square Law',
       html: `## Background: The Inverse-Square Framing
 
-Coulomb's Law predicts that force scales as **1/d²** when the charges are held constant. A direct F-vs-d plot will be a curve — useful for visual comparison but not linear. To verify the inverse-square law, the standard trick is to plot F against **1/d** and against **1/d²** and look for which one is linear. The plot that lands on a straight line through the origin is the relationship that holds. (Comparing F-vs-1/d to F-vs-1/d² helps rule out a simple 1/d dependence — the two curves diverge.)
+Coulomb's Law predicts that force scales as $1/d^2$ when the charges are held constant. A direct $F$-vs-$d$ plot will be a curve: useful for visual comparison, but not linear.
 
-You'll generate all three plots in Part 2B and use the linear one to extract a second experimental value of k.`,
+---
+
+### The trick
+
+To verify the inverse-square law, plot $F$ against $1/d$ and against $1/d^2$, then look for which one is linear. The plot that lands on a straight line through the origin is the relationship that holds.
+
+> [!NOTE]
+> Comparing $F$-vs-$1/d$ to $F$-vs-$1/d^2$ helps rule out a simple $1/d$ dependence: the two curves diverge.
+
+---
+
+You'll generate all three plots in Part 2B and use the linear one to extract a second experimental value of $k$.`,
     },
     {
       kind: 'instructions',
@@ -209,48 +248,49 @@ You'll generate all three plots in Part 2B and use the linear one to extract a s
     },
     {
       kind: 'instructions',
-      tocLabel: 'Givens — Part 2B',
+      tocLabel: 'Givens: Part 2B',
       // TEMP (2026-05-12): plain-markdown Givens block. See Part 2A note.
-      html: `## Givens — Part 2B
-
-Use these values throughout Part 2B:
-
-| Symbol | Value | Role |
-|---|---|---|
-| $Q_1$ | $+2\\,\\mathrm{e}$ | constant (fixed across all measurements) |
-| $Q_2$ | $+5\\,\\mathrm{e}$ | constant (fixed across all measurements) |
-| $d$ | $200\\,\\mathrm{pm},\\ 300\\,\\mathrm{pm},\\ 400\\,\\mathrm{pm},\\ 500\\,\\mathrm{pm},\\ 600\\,\\mathrm{pm}$ | **vary** across your five measurements |
-
-Stay on the **Atomic Scale** screen of the sim. Same unit reminders as Part 2A.`,
+      html: `> [!NOTE]
+> **Givens: Part 2B.** Use these values throughout Part 2B.
+>
+> | Symbol | Value | Role |
+> |---|---|---|
+> | $Q_1$ | $+2\\,\\mathrm{e}$ | constant (fixed across all measurements) |
+> | $Q_2$ | $+5\\,\\mathrm{e}$ | constant (fixed across all measurements) |
+> | $d$ | $200\\,\\mathrm{pm},\\ 300\\,\\mathrm{pm},\\ 400\\,\\mathrm{pm},\\ 500\\,\\mathrm{pm},\\ 600\\,\\mathrm{pm}$ | **vary** across your five measurements |
+>
+> Stay on the **Atomic Scale** screen of the sim. Same unit reminders as Part 2A.`,
     },
     {
       kind: 'instructions',
       tocHidden: true,
-      html: `**Procedure step 1.** Confirm you're still on the **Atomic Scale** screen of the sim. Set $Q_1$ and $Q_2$ to the values given above, then transcribe them into the fields below. (You'll vary $d$ in the data table — no need to commit to a single $d$ here.)`,
+      html: `**Step 1.** Confirm you're still on the **Atomic Scale** screen of the sim.
+
+Set $Q_1$ and $Q_2$ to the values given above, then transcribe them into the fields below. (You'll vary $d$ in the data table; no need to commit to a single $d$ here.)`,
     },
     {
       kind: 'multiMeasurement',
       rows: [
-        { id: 'constantChargeQ1Second', label: 'Constant charge Q₁', unit: 'e' },
-        { id: 'constantChargeQ2', label: 'Constant charge Q₂', unit: 'e' },
+        { id: 'constantChargeQ1Second', label: 'Constant charge $Q_1$', unit: 'e' },
+        { id: 'constantChargeQ2', label: 'Constant charge $Q_2$', unit: 'e' },
       ],
       points: 0.5,
     },
     {
       kind: 'instructions',
       tocHidden: true,
-      html: `**Procedure step 2.** Step the distance $d$ through the five values given above (200 pm through 600 pm). Record the force $F$ shown by the sim at each value of $d$ (note its unit and stay consistent across rows). The $1/d$ and $1/d^2$ columns are computed automatically.`,
+      html: `**Step 2.** Step the distance $d$ through the five values given above ($200\\,\\mathrm{pm}$ through $600\\,\\mathrm{pm}$). Record the force $F$ shown by the sim at each value of $d$ (note its unit and stay consistent across rows). The $1/d$ and $1/d^2$ columns are computed automatically.`,
     },
     {
       kind: 'dataTable',
       tableId: 'forceDistanceTable',
       rowCount: 5,
       columns: [
-        { id: 'distance', label: 'Distance d (pm)', kind: 'input', unit: 'Symbol(unevaluable)' },
+        { id: 'distance', label: 'Distance $d$ (pm)', kind: 'input', unit: 'Symbol(unevaluable)' },
         {
           id: 'inverseDistance',
-          label: 'Inverse Distance (1/d)',
-          formulaLabel: 'Inverse Distance (1/d)',
+          label: 'Inverse Distance $(1/d)$',
+          formulaLabel: '$1/d$',
           kind: 'derived',
           deps: ['distance'],
           precision: 4,
@@ -261,8 +301,8 @@ Stay on the **Atomic Scale** screen of the sim. Same unit reminders as Part 2A.`
         },
         {
           id: 'inverseDistanceSquared',
-          label: 'Inverse Distance Squared (1/d²)',
-          formulaLabel: 'Inverse Distance Squared (1/d²)',
+          label: 'Inverse Distance Squared $(1/d^2)$',
+          formulaLabel: '$1/d^2$',
           kind: 'derived',
           deps: ['distance'],
           precision: 4,
@@ -271,14 +311,20 @@ Stay on the **Atomic Scale** screen of the sim. Same unit reminders as Part 2A.`
             return 1 / (d * d);
           },
         },
-        { id: 'force', label: 'Force (F)', kind: 'input', unit: 'Symbol(unevaluable)' },
+        { id: 'force', label: 'Force $(F)$', kind: 'input', unit: 'Symbol(unevaluable)' },
       ],
       points: 2,
     },
     {
       kind: 'instructions',
       tocHidden: true,
-      html: `**Procedure step 3.** Plot F vs d (for visual comparison only — expect a curve), F vs 1/d, and F vs 1/d². Add a proportional fit (y = Ax) to the **F vs 1/d²** plot.`,
+      html: `**Step 3.** Make three plots:
+
+- $F$ vs $d$ (for visual comparison only; expect a curve)
+- $F$ vs $1/d$
+- $F$ vs $1/d^2$
+
+Then add a proportional fit ($y = Ax$) to the $F$ vs $1/d^2$ plot.`,
     },
     {
       kind: 'plot',
@@ -320,13 +366,13 @@ Stay on the **Atomic Scale** screen of the sim. Same unit reminders as Part 2A.`
     {
       kind: 'instructions',
       tocHidden: true,
-      html: `**Procedure step 4.** Read off the slope A and its uncertainty ΔA (σₐ) from the F vs 1/d² proportional fit.`,
+      html: `**Step 4.** Read off the slope $A$ and its uncertainty $\\Delta A$ ($\\sigma_A$) from the $F$ vs $1/d^2$ proportional fit.`,
     },
     {
       kind: 'multiMeasurement',
       rows: [
-        { id: 'forceDistanceSlopeA', label: 'A =' },
-        { id: 'forceDistanceSlopeUncertainty', label: 'ΔA =' },
+        { id: 'forceDistanceSlopeA', label: '$A =$' },
+        { id: 'forceDistanceSlopeUncertainty', label: '$\\Delta A =$' },
       ],
       points: 0.5,
     },
@@ -334,7 +380,7 @@ Stay on the **Atomic Scale** screen of the sim. Same unit reminders as Part 2A.`
       kind: 'calculation',
       fieldId: 'coulombsConstantCalculationSecond',
       prompt:
-        "**Procedure step 5.** Use A to calculate your second experimental value of Coulomb's constant k. (Hint: with x = 1/d², the line equation is F = A·(1/d²) and Coulomb's law gives F = k|Q₁Q₂|/d². Setting them equal yields k|Q₁Q₂| = A.) **Important — unit conversion:** the slope A you read off the plot is in whatever units you used on each axis. Convert charges from e to coulombs (1 e ≈ 1.602 × 10⁻¹⁹ C), distances from pm to meters (1 pm = 10⁻¹² m), and force into N before extracting k. Show your work, then compute the percent error against the accepted k ≈ 8.988 × 10⁹ N·m²/C².",
+        "**Step 5.** Use $A$ to calculate your second experimental value of Coulomb's constant $k$.\n\n> [!TIP]\n> **Setting up the equation.** With $x = 1/d^2$, your graph's line equation is\n>\n> $F = A \\cdot (1/d^2),$\n>\n> and Coulomb's law gives\n>\n> $F = k\\,|Q_1 Q_2|/d^2.$\n>\n> Setting them equal yields $k\\,|Q_1 Q_2| = A$. Solve for $k$.\n\n---\n\n> [!IMPORTANT]\n> **Unit conversion.** The slope $A$ you read off the plot is in whatever units you used on each axis. Before extracting $k$, convert:\n>\n> - charges from $\\mathrm{e}$ to coulombs: $1\\,\\mathrm{e} \\approx 1.602 \\times 10^{-19}\\,\\mathrm{C}$\n> - distances from $\\mathrm{pm}$ to meters: $1\\,\\mathrm{pm} = 10^{-12}\\,\\mathrm{m}$\n> - force into $\\mathrm{N}$\n\n---\n\nShow your work, then compute the percent error against the accepted value:\n\n$$k \\approx 8.988 \\times 10^{9}\\,\\mathrm{N}\\cdot\\mathrm{m}^{2}/\\mathrm{C}^{2}.$$",
       equationEditor: true,
       points: 2,
     },
@@ -342,7 +388,8 @@ Stay on the **Atomic Scale** screen of the sim. Same unit reminders as Part 2A.`
       kind: 'instructions',
       html: `## Concept Check Questions
 
-If you are not confident with your answer, stop and reach out for help before moving on!`,
+> [!WARNING]
+> If you are not confident with your answer, stop and reach out for help before moving on.`,
     },
     {
       kind: 'concept',

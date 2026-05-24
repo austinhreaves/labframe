@@ -1,6 +1,9 @@
+import { lazy } from 'react';
+
 import type { DataTableSection, FieldValue, TableData } from '@/domain/schema';
 
 import { Field } from '@/ui/primitives/Field';
+const MarkdownInline = lazy(() => import('@/ui/primitives/MarkdownInline'));
 
 type TableProps = {
   section: DataTableSection;
@@ -20,10 +23,15 @@ export function Table({ section, data, onCellChange }: TableProps) {
               return (
                 <th key={column.id}>
                   <div className="table-column-header">
-                    <span>{column.label}</span>
+                    <span>
+                      <MarkdownInline markdown={column.label} />
+                    </span>
                     {formulaLabel ? (
-                      <small className="table-column-formula" aria-label={`${formulaLabel}, derived column`}>
-                        {formulaLabel}
+                      <small
+                        className="table-column-formula"
+                        aria-label={`${formulaLabel}, derived column`}
+                      >
+                        <MarkdownInline markdown={formulaLabel} />
                       </small>
                     ) : null}
                   </div>
@@ -41,6 +49,11 @@ export function Table({ section, data, onCellChange }: TableProps) {
                   <Field
                     id={`${section.tableId}-${column.id}-${rowIndex}`}
                     label={`${column.label} row ${rowIndex + 1}`}
+                    labelDisplay={
+                      <>
+                        <MarkdownInline markdown={column.label} /> row {rowIndex + 1}
+                      </>
+                    }
                     value={row[column.id]}
                     onChange={(value) => onCellChange(rowIndex, column.id, value)}
                     readOnly={column.kind === 'derived'}
