@@ -33,7 +33,7 @@ Your report includes a process record. You may use any tools you wish, but paste
       prompt:
         'Explain the goal of the experiment in your own words. Two or three sentences are sufficient.',
       rows: 4,
-      points: 2,
+      points: 1,
     },
     {
       kind: 'instructions',
