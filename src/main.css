@@ -633,6 +633,63 @@ html {
   cursor: not-allowed;
 }
 
+.primitives-showcase {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-5);
+  color: var(--text-primary);
+  background: var(--surface-base);
+  min-height: 100vh;
+}
+
+.primitives-showcase-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.primitives-showcase-themes button {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: var(--space-1) var(--space-3);
+  cursor: pointer;
+  font: inherit;
+  margin-left: var(--space-1);
+}
+
+.primitives-showcase-themes button[aria-pressed='true'] {
+  background: var(--accent-bg);
+  color: var(--accent-text-on);
+  border-color: var(--accent-bg);
+}
+
+.primitives-showcase section {
+  margin-bottom: var(--space-6);
+}
+
+.primitives-showcase h2 {
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-3);
+  color: var(--text-secondary);
+}
+
+.primitives-showcase-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.primitives-showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
 .lab-shell {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
