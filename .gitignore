@@ -51,3 +51,6 @@ physics-labs.up.railway.app/
 
 # Working drafts — not yet ready for the spec
 INTEGRITY_DRAFT.md
+
+.vercel
+.env*.local
