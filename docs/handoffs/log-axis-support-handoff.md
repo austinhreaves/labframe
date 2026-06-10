@@ -11,7 +11,7 @@ This handoff is to add optional logarithmic-axis support to plot sections.
 - `src/domain/schema/lab.ts` — current `PlotSectionSchema` definition.
 - `src/content/labs/phy132/rcLowPassFilter.lab.ts` — primary use case. Comment in the `gainVsFrequencyPlot` section flags this need.
 - `src/content/labs/phy132/rlHighPassFilter.lab.ts` and `src/content/labs/phy132/rlcBandpassFilter.lab.ts` — secondary use cases.
-- `REORG_PROPOSAL.md` (repo root) — section "Schema gaps the new labs surfaced" item 3.
+- `docs/archive/REORG_PROPOSAL.md` — "Schema extensions deferred to agent handoffs".
 
 ## Goal
 

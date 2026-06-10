@@ -5,7 +5,7 @@ export type TocEntry = {
   label: string;
 };
 
-/** Major-sections-only inclusion (see REBUILD_SPEC 3.7.1). No generic fallback. */
+/** Major-sections-only inclusion (see docs/archive/REBUILD_SPEC.md 3.7.1). No generic fallback. */
 export function buildTocEntries(sections: Section[]): TocEntry[] {
   const out: TocEntry[] = [];
 

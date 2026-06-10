@@ -1,7 +1,7 @@
 import type { Lab, NumericRow } from '@/domain/schema';
 
 // FIRST DRAFT — new lab content for PHY 132 (Phase 4 reorg, 2026-05-02).
-// Companion: REORG_PROPOSAL.md and LEGACY_PARITY_INVENTORY.md at the repo root.
+// Companion: REORG_PROPOSAL.md and LEGACY_PARITY_INVENTORY.md in docs/archive/.
 // Third of three filter-themed AC labs (RC low-pass → RL high-pass → RLC bandpass).
 // Capstone of the AC sequence. Students should be comfortable with phasors and
 // frequency response from the previous two labs.
@@ -235,7 +235,7 @@ export const phy132RlcBandpassFilterLab: Lab = {
         '## 2.1 Re-Probe the Circuit',
         '1. Leave R, L, C, and the AC source completely unchanged from Part 1.',
         '2. Move the second voltmeter so its probes span **both** the inductor and capacitor (one probe on the far side of L, one on the far side of C — skipping over R). This new V_out is V_LC.',
-        '3. Take a screenshot of the modified probe configuration. Make sure the voltmeter\'s leads are clearly visible spanning the L+C combination.',
+        "3. Take a screenshot of the modified probe configuration. Make sure the voltmeter's leads are clearly visible spanning the L+C combination.",
       ].join('\n\n'),
     },
     {

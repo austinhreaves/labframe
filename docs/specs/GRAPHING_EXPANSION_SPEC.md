@@ -2,7 +2,7 @@
 
 **Status:** Future work. v1 ships with linear + proportional fits only. Execute the phases below only when a specific lab needs the new fit type — not preemptively.
 
-**Companion to:** `REBUILD_SPEC.md` (canonical design). This document is scoped to the fit/regression subsystem inside the chart rendering pipeline (`src/ui/primitives/Chart.tsx`, plus a future `src/services/math/` module).
+**Companion to:** `docs/SPEC.md` (living spec; rebuild history in `docs/archive/REBUILD_SPEC.md`). This document is scoped to the fit/regression subsystem inside the chart rendering pipeline (`src/ui/primitives/Chart.tsx`, plus a future `src/services/math/` module).
 
 ---
 
@@ -64,7 +64,7 @@ Each phase is independent and can be implemented in isolation. Implement only th
 **Uncertainty propagation under log transform:**
 
 - σ_b (the exponent or rate) is just the slope std err in log space. Same number, same units.
-- σ_a is *not* directly the intercept std err in log space, because a = exp(intercept). By first-order error propagation, σ_a ≈ a · σ_intercept. The fit function must do this conversion before returning — callers should never see log-space uncertainties leak through.
+- σ_a is _not_ directly the intercept std err in log space, because a = exp(intercept). By first-order error propagation, σ_a ≈ a · σ_intercept. The fit function must do this conversion before returning — callers should never see log-space uncertainties leak through.
 
 **Edge cases the fit function must handle:**
 
@@ -92,15 +92,15 @@ type Fit =
 
 Validate via Zod; reject unknown fit IDs at schema-load time, not at render time.
 
-**Display:** the fit line on the chart is rendered in the *original* (untransformed) coordinates. Sample the fitted curve at ~50 points across the visible x range and connect them with a line. Do not render the fit as a 2-point segment — that only works for true linear fits.
+**Display:** the fit line on the chart is rendered in the _original_ (untransformed) coordinates. Sample the fitted curve at ~50 points across the visible x range and connect them with a line. Do not render the fit as a 2-point segment — that only works for true linear fits.
 
 ### Phase C — Quadratic
 
 **Trigger:** A lab genuinely needs y = a·x² + b·x + c and the linearization tricks don't apply (e.g., projectile motion height vs. time with both initial velocity and gravity unknown).
 
-**Approach:** Closed form via the normal equations for a 3-parameter linear-in-parameters fit. Solve a 3×3 system with Cramer's rule or a hand-rolled LU decomposition — do *not* import a matrix library for a single 3×3 solve. Return all three coefficients with 1σ standard errors derived from the covariance matrix.
+**Approach:** Closed form via the normal equations for a 3-parameter linear-in-parameters fit. Solve a 3×3 system with Cramer's rule or a hand-rolled LU decomposition — do _not_ import a matrix library for a single 3×3 solve. Return all three coefficients with 1σ standard errors derived from the covariance matrix.
 
-**Reference:** Bevington & Robinson, *Data Reduction and Error Analysis for the Physical Sciences*, ch. 7. The closed-form expressions are standard and short.
+**Reference:** Bevington & Robinson, _Data Reduction and Error Analysis for the Physical Sciences_, ch. 7. The closed-form expressions are standard and short.
 
 **Caution:** quadratic fits are easy to abuse — students will fit a parabola to anything and get a spurious R² ≈ 1. The chart UI should show the raw data prominently and the fit as a thin overlay; do not let the fit visually dominate the data.
 
@@ -112,12 +112,12 @@ Validate via Zod; reject unknown fit IDs at schema-load time, not at render time
 
 1. Write down the model algebraically and convince yourself it's not log-linearizable, not power-law-linearizable, and not reducible to a 2-parameter linear-in-parameters fit by any variable substitution.
 2. Check whether the lab pedagogy actually requires the nonlinear fit, or whether a different lab design (different measured quantity, different parameter sweep) would let students use a closed-form fit.
-3. Read the legacy `fitCalculations.js` Levenberg-Marquardt implementation as a *cautionary* reference — note the multi-start strategy, R² thresholds, parameter sanity checks. These are real concerns that any LM implementation has to handle, and the legacy's complexity reflects that.
+3. Read the legacy `fitCalculations.js` Levenberg-Marquardt implementation as a _cautionary_ reference — note the multi-start strategy, R² thresholds, parameter sanity checks. These are real concerns that any LM implementation has to handle, and the legacy's complexity reflects that.
 
 **If after all that you still need LM:**
 
 - Use a small, well-tested library — `ml-levenberg-marquardt` (~50KB) is a reasonable choice. Bundle cost is acceptable for one or two labs that need it.
-- Restrict to a *named, validated* set of model functions in the schema (`expDecaySingle`, `expDecayDouble`, `sigmoid`, etc.). No user-typed equations.
+- Restrict to a _named, validated_ set of model functions in the schema (`expDecaySingle`, `expDecayDouble`, `sigmoid`, etc.). No user-typed equations.
 - Always require an initial guess from the lab content. Do not run multi-start optimization; that's the legacy's anti-pattern. If the initial guess is wrong, the fit fails visibly and the student should re-examine their data, not have the optimizer flail.
 - Compute parameter uncertainties from the covariance matrix at convergence (Jacobian → JᵀJ → invert → diagonal sqrt = 1σ standard errors). Do not rely on the library's reported errors without verifying the formula.
 - If R² < 0.9 or any parameter's relative uncertainty exceeds 50%, surface a warning in the UI: "Fit may not be reliable — check data and model choice." The legacy silently shipped bad fits; this regression must not.
@@ -134,9 +134,9 @@ type FitResult = {
   // For powerLaw: slope = exponent b, intercept = coefficient a in y = a·x^b.
   // For exponential: slope = rate b, intercept = amplitude a in y = a·e^(b·x).
   slope: number;
-  slopeStdErr: number;       // 1σ
+  slopeStdErr: number; // 1σ
   intercept?: number;
-  interceptStdErr?: number;  // 1σ
+  interceptStdErr?: number; // 1σ
   rSquared: number;
   // For nonlinear fits (Phase D), additional named parameters go here:
   extraParams?: Record<string, { value: number; stdErr: number }>;
@@ -188,7 +188,7 @@ For every fit implemented:
 
 The `verify:phase0` style of running a single self-contained DoD test per phase is a good pattern; consider adding `verify:graphing-phase-A`, etc., as you go.
 
-## 10. What this spec deliberately does *not* prescribe
+## 10. What this spec deliberately does _not_ prescribe
 
 - **When to ship a phase.** Each phase is gated on a specific lab needing the fit. If after migrating all the legacy labs only Phase A is needed, Phases B/C/D never get implemented. That is the correct outcome.
 - **The exact API of `linearizable` transforms.** Phase B has flexibility on how the transform descriptor is shaped. Pick the design that reads cleanly when the third lab needs it, not the one that's most general today.
@@ -198,9 +198,9 @@ The `verify:phase0` style of running a single self-contained DoD test per phase 
 
 ## Appendix: Reference texts
 
-- Bevington & Robinson, *Data Reduction and Error Analysis for the Physical Sciences*, 3rd ed. — closed-form OLS expressions, error propagation, χ² conventions.
-- Taylor, *An Introduction to Error Analysis*, 2nd ed. — undergraduate-level error propagation; matches what students are being taught.
-- Press et al., *Numerical Recipes*, ch. 15 — if Phase D is ever triggered, this is the textbook reference for nonlinear least squares done correctly.
+- Bevington & Robinson, _Data Reduction and Error Analysis for the Physical Sciences_, 3rd ed. — closed-form OLS expressions, error propagation, χ² conventions.
+- Taylor, _An Introduction to Error Analysis_, 2nd ed. — undergraduate-level error propagation; matches what students are being taught.
+- Press et al., _Numerical Recipes_, ch. 15 — if Phase D is ever triggered, this is the textbook reference for nonlinear least squares done correctly.
 
 ## Appendix: Anti-patterns observed in legacy
 

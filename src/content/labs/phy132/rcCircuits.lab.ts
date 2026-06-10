@@ -1,7 +1,7 @@
 import type { Lab, NumericRow } from '@/domain/schema';
 
 // FIRST DRAFT — new lab content for PHY 132 (Phase 4 reorg, 2026-05-02).
-// Companion: REORG_PROPOSAL.md and LEGACY_PARITY_INVENTORY.md at the repo root.
+// Companion: REORG_PROPOSAL.md and LEGACY_PARITY_INVENTORY.md in docs/archive/.
 // TODO(austin): review prose, point values, the choice of (R, C) parameter combinations,
 // and whether PhET CCK-DC supports time-resolved voltage measurement (or if students should
 // use the simulation's built-in chart / digital multimeter readout at fixed time stamps).
@@ -139,8 +139,7 @@ export const phy132RcCircuitsLab: Lab = {
     },
     {
       kind: 'instructions',
-      html:
-        'On the ln(V) vs t plot, apply a linear fit. Record the slope m_A and its uncertainty. The time constant is τ_A = -1 / m_A.',
+      html: 'On the ln(V) vs t plot, apply a linear fit. Record the slope m_A and its uncertainty. The time constant is τ_A = -1 / m_A.',
     },
     {
       kind: 'multiMeasurement',
@@ -292,7 +291,7 @@ export const phy132RcCircuitsLab: Lab = {
       kind: 'concept',
       fieldId: 'conceptCheck3',
       prompt:
-        "3. The half-life t₁/₂ of an exponential decay (the time for V to fall to V₀/2) is related to τ by t₁/₂ = τ · ln(2) ≈ 0.693 τ. From any one of your data sets, estimate t₁/₂ directly from the V vs t plot and compare to 0.693 · τ_extracted.",
+        '3. The half-life t₁/₂ of an exponential decay (the time for V to fall to V₀/2) is related to τ by t₁/₂ = τ · ln(2) ≈ 0.693 τ. From any one of your data sets, estimate t₁/₂ directly from the V vs t plot and compare to 0.693 · τ_extracted.',
       rows: 5,
       points: 1.5,
     },
@@ -300,7 +299,7 @@ export const phy132RcCircuitsLab: Lab = {
       kind: 'concept',
       fieldId: 'conceptCheck4',
       prompt:
-        '4. Exponential decay shows up everywhere in physics: radioactive decay, Newton\'s law of cooling, RL circuit current, atmospheric pressure with altitude. Pick one and briefly explain how its decay constant is analogous to τ = RC.',
+        "4. Exponential decay shows up everywhere in physics: radioactive decay, Newton's law of cooling, RL circuit current, atmospheric pressure with altitude. Pick one and briefly explain how its decay constant is analogous to τ = RC.",
       rows: 5,
       points: 1,
     },

@@ -1,7 +1,7 @@
 import type { Lab, NumericRow } from '@/domain/schema';
 
 // FIRST DRAFT — new lab content for PHY 132 (Phase 4 reorg, 2026-05-02).
-// Companion: REORG_PROPOSAL.md and LEGACY_PARITY_INVENTORY.md at the repo root.
+// Companion: REORG_PROPOSAL.md and LEGACY_PARITY_INVENTORY.md in docs/archive/.
 // First of three filter-themed AC labs (RC low-pass → RL high-pass → RLC bandpass).
 // TODO(austin): review prose, point values, and the choice of (R, C) parameter combinations.
 // TODO(austin): confirm PhET CCK-AC supplies a frequency control over at least three decades

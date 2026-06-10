@@ -17,7 +17,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
  * Threat model honesty: this catches casual tampering (a student editing the
  * PDF in Acrobat) but does NOT catch a student who modifies the canonical
  * JSON and re-POSTs to /api/sign for a fresh signature. Closing that gap
- * requires nonce binding (v1.1). See REBUILD_SPEC.md §5.14.
+ * requires nonce binding (v1.1). See docs/SPEC.md section 4.3.
  */
 const MAX_PAYLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
 

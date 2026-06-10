@@ -2,7 +2,7 @@
 
 LabFrame is a schema-driven React app. Course manifests and lab schemas define what the UI renders; runtime state, persistence, and PDF export are centralized services.
 
-For full product requirements and phase history, see [`REBUILD_SPEC.md`](../REBUILD_SPEC.md).
+The living spec is [`SPEC.md`](./SPEC.md). The original rebuild design and phase history is archived at [`archive/REBUILD_SPEC.md`](./archive/REBUILD_SPEC.md).
 
 ## Runtime flow
 

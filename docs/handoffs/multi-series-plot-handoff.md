@@ -10,7 +10,7 @@ This handoff is to extend the schema and renderer to support multi-series plots 
 
 - `src/domain/schema/lab.ts` — current `PlotSectionSchema` definition (look for `plot` discriminator in `SectionSchema`).
 - `src/content/labs/phy132/theveninsTheorem.lab.ts` — workaround example. Two adjacent `plot` sections (`vLoadVsRLoadPlot` and `vLoadVsRLoadThPlot`) overlay V_L from the original network and Thevenin equivalent. Should become one plot with two series.
-- `REORG_PROPOSAL.md` (repo root) — section "Schema gaps the new labs surfaced" item 1.
+- `docs/archive/REORG_PROPOSAL.md` — "Schema extensions deferred to agent handoffs".
 
 ## Goal
 

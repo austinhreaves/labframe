@@ -38,6 +38,7 @@ A student's first impression of LabFrame is set entirely by this page. Today tha
 The lab itself is much more polished than the catalog, which means students get a worse first impression than the actual product deserves. Catalog polish is the lowest-effort, highest-impression-shift work on the roadmap.
 
 Cited evidence in [src/ui/Catalog.tsx](src/ui/Catalog.tsx):
+
 - `CatalogList` (lines 46–93): bullet lists of `<Link>`s, "coming soon" as italic spans.
 - The wizard (lines 215–315): a small bordered box with raw `<button>` lists for course/lab pick.
 - `AboutAndPrivacy` (lines 95–159): two giant prose `<section>`s, ~1200 words combined, no progressive disclosure.
@@ -63,9 +64,9 @@ A handful of structural changes makes this page feel like a designed front door 
 - **No search or filter.** The catalog has ≤30 labs total; search is overkill. If we later need it, add it as a separate spec.
 - **No re-IA of the catalog.** Course → lab is the right hierarchy. We're polishing the rendering, not redesigning the navigation.
 - **No copy rewrite.** The About and Privacy text in `Catalog.tsx` stays as-is; we change the framing (disclosure cards instead of raw sections), not the words.
-- **No course-level theming** (e.g., PHY 132 in one accent, PHY 114 in another). Mentioned in [POLISH_PASS_SPEC.md §9](POLISH_PASS_SPEC.md); not in this spec.
+- **No course-level theming** (e.g., PHY 132 in one accent, PHY 114 in another). Mentioned in [POLISH_PASS_SPEC.md §9](../archive/POLISH_PASS_SPEC.md); not in this spec.
 
-### 2.3 What this *won't* fix
+### 2.3 What this _won't_ fix
 
 The catalog is the front door but it's still ultimately a directory. It won't suddenly feel like Linear's marketing site. The goal is "this looks like a designed product index" — not "this looks like a magazine spread."
 
@@ -112,6 +113,7 @@ The full page top-to-bottom, after this spec:
 ### 3.1 Header
 
 The catalog page does not currently render a `lab-header`. Today the page jumps straight into `<h1>LabFrame</h1>`. Add a slim header (analogous to the lab header but with fewer controls):
+
 - Left: wordmark
 - Right: nothing for v1 (no per-page theme selector here — the lab page handles theme; the catalog inherits stored preference)
 
@@ -120,6 +122,7 @@ This is a couple of divs. The shared layout pattern stays simple.
 ### 3.2 Hero band
 
 A single block at the top, max-width ~720px, generous vertical padding. Contents:
+
 - Wordmark "LabFrame" at `--text-2xl`, `--weight-display`, `--tracking-tight`. Optionally with a small accent-colored dot mark before or after (e.g., a 10×10 rounded square in `--accent-bg`).
 - Tagline "Interactive Physics Labs" at `--text-lg`, `--weight-medium`, `--text-secondary`.
 - One-line description: "Browser-based labs for ASU physics — no install, no account, no textbook." at `--text-base`, `--text-secondary`.
@@ -206,7 +209,9 @@ Today the wizard is a small bordered box with raw `<button>` lists. Restyle:
   text-align: center;
   background: var(--surface-sunken);
   color: var(--text-tertiary);
-  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
 }
 .wizard-steps li[data-active='true'] {
   background: var(--accent-soft);
@@ -257,6 +262,7 @@ type LabCardProps = {
 ```
 
 Render:
+
 - Top row: lab-number pill (e.g., "Lab 4") OR group pill ("Enrichment") if no number
 - Title
 - Bottom: subtle hover affordance — chevron icon on the right side that nudges in on hover
@@ -265,7 +271,9 @@ Render:
 **CSS skeleton:**
 
 ```css
-.catalog-course { margin-top: var(--space-6); }
+.catalog-course {
+  margin-top: var(--space-6);
+}
 .catalog-course-header {
   display: flex;
   align-items: baseline;
@@ -274,8 +282,14 @@ Render:
   padding-bottom: var(--space-2);
   margin-bottom: var(--space-3);
 }
-.catalog-course-title { font-size: var(--text-lg); font-weight: var(--weight-semibold); }
-.catalog-course-meta { font-size: var(--text-sm); color: var(--text-tertiary); }
+.catalog-course-title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+.catalog-course-meta {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
 .catalog-course-subhead {
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
@@ -314,7 +328,10 @@ Render:
   transform: translateY(-1px);
   text-decoration: none;
 }
-.lab-card:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.lab-card:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
 .lab-card-pill {
   display: inline-flex;
   align-self: flex-start;
@@ -338,7 +355,9 @@ Render:
   right: var(--space-3);
   bottom: var(--space-3);
   color: var(--text-tertiary);
-  transition: transform var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
 }
 .lab-card:hover .lab-card-chevron {
   color: var(--accent-text);
@@ -349,7 +368,9 @@ Render:
   cursor: not-allowed;
   pointer-events: none;
 }
-.lab-card[data-disabled='true'] .lab-card-title { color: var(--text-tertiary); }
+.lab-card[data-disabled='true'] .lab-card-title {
+  color: var(--text-tertiary);
+}
 .lab-card-coming-soon {
   position: absolute;
   right: var(--space-3);
@@ -372,9 +393,7 @@ Today both are giant `<section>`s with multiple `<p>` tags. Wrap each in a `<det
     <span>About LabFrame</span>
     <ChevronDown className="catalog-disclosure-chevron" />
   </summary>
-  <div className="catalog-disclosure-body">
-    {/* existing paragraphs unchanged */}
-  </div>
+  <div className="catalog-disclosure-body">{/* existing paragraphs unchanged */}</div>
 </details>
 ```
 
@@ -398,18 +417,26 @@ Today both are giant `<section>`s with multiple `<p>` tags. Wrap each in a `<det
   font-size: var(--text-md);
   color: var(--text-primary);
 }
-.catalog-disclosure > summary::-webkit-details-marker { display: none; }
-.catalog-disclosure-chevron { transition: transform var(--duration-fast) var(--ease-out); }
-.catalog-disclosure[open] .catalog-disclosure-chevron { transform: rotate(180deg); }
+.catalog-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.catalog-disclosure-chevron {
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+.catalog-disclosure[open] .catalog-disclosure-chevron {
+  transform: rotate(180deg);
+}
 .catalog-disclosure-body {
   padding: 0 var(--space-4) var(--space-4);
   line-height: var(--leading-prose);
   max-width: 72ch;
 }
-.catalog-disclosure-body p { margin: var(--space-3) 0; }
+.catalog-disclosure-body p {
+  margin: var(--space-3) 0;
+}
 ```
 
-About is collapsed by default. Privacy is collapsed by default. This is a deliberate IA shift: students see "About LabFrame" and "Your data and FERPA" as offered information they can expand, not walls of text they have to scroll past to find the lab list. The catalog list now comes *before* About/Privacy in the visual order (it was already first, this just makes the gap clearer).
+About is collapsed by default. Privacy is collapsed by default. This is a deliberate IA shift: students see "About LabFrame" and "Your data and FERPA" as offered information they can expand, not walls of text they have to scroll past to find the lab list. The catalog list now comes _before_ About/Privacy in the visual order (it was already first, this just makes the gap clearer).
 
 ---
 
@@ -450,7 +477,10 @@ Drop the "Skip to course selection" button. If `hasStoredName && nameDraft.trim(
         <button
           type="button"
           className="catalog-wizard-card"
-          onClick={() => { setSelectedCourseId(course.id); goToStep('lab'); }}
+          onClick={() => {
+            setSelectedCourseId(course.id);
+            goToStep('lab');
+          }}
         >
           <span className="catalog-wizard-card-title">{course.title}</span>
           <span className="catalog-wizard-card-meta">
@@ -581,7 +611,7 @@ Read POLISH_SPEC_D_CATALOG.md end-to-end before starting. Especially
 §3 (visual structure), §4 (wizard step details), §6 (order of
 operations).
 
-Prereq: POLISH_PASS_SPEC.md Path 1 tokens AND
+Prereq: Path 1 tokens (shipped; see docs/archive/POLISH_PASS_SPEC.md) AND
 POLISH_SPEC_B_BUTTONS_SEGMENTED.md primitives are landed. Wizard
 buttons use <Button> from Spec B.
 

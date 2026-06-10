@@ -35,13 +35,13 @@ No specific FERPA consent is required because student-typed name is FERPA direct
 
 The data-handling design accepts the following risks, each with mitigations documented in the full reference:
 
-| Risk | Severity | Mitigation status |
-|---|---|---|
-| Browser-local data on shared devices | Low | Disclosed to students; "start fresh" function provided |
-| Signing-secret compromise (Vercel breach or insider) | Low | Standard secret rotation; small blast radius |
-| PDF tampering after signing | Low | Cryptographic signature catches casual tampering |
-| Motivated signature forgery (re-submitting modified content) | Moderate, by design | Mitigation (nonce binding) deferred to v1.1 |
-| No independent penetration test | Unknown | **Recommended before broad rollout beyond pilot** |
+| Risk                                                         | Severity            | Mitigation status                                      |
+| ------------------------------------------------------------ | ------------------- | ------------------------------------------------------ |
+| Browser-local data on shared devices                         | Low                 | Disclosed to students; "start fresh" function provided |
+| Signing-secret compromise (Vercel breach or insider)         | Low                 | Standard secret rotation; small blast radius           |
+| PDF tampering after signing                                  | Low                 | Cryptographic signature catches casual tampering       |
+| Motivated signature forgery (re-submitting modified content) | Moderate, by design | Mitigation (nonce binding) deferred to v1.1            |
+| No independent penetration test                              | Unknown             | **Recommended before broad rollout beyond pilot**      |
 
 Two items leadership should be aware of: (a) LabFrame has not had a third-party penetration test, and (b) authentication via Canvas LTI is planned but not in v1.0 — students currently identify themselves by typing their name.
 
@@ -61,8 +61,8 @@ Endorsement to proceed with v1.0 deployment for ASU PHY 114 and the general phys
 - **Hosting:** Vercel (US East), with an HMAC signing secret stored in Vercel's encrypted environment variables
 - **Open-source dependencies:** standard React/TypeScript stack; full audit trail in `package.json` and `package-lock.json`
 - **Compliance review document:** [docs/DATA_HANDLING.md](./DATA_HANDLING.md)
-- **System design document:** [REBUILD_SPEC.md](../REBUILD_SPEC.md)
+- **System design document:** [docs/SPEC.md](./SPEC.md), with the rebuild design history archived at [docs/archive/REBUILD_SPEC.md](./archive/REBUILD_SPEC.md)
 
 ---
 
-*One-page summary. For technical, legal, and operational detail, see the full data handling reference.*
+_One-page summary. For technical, legal, and operational detail, see the full data handling reference._

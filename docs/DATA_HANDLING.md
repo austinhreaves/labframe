@@ -39,20 +39,20 @@ The simulation iframe (PhET) is an external resource served by phet.colorado.edu
 
 The following table enumerates every category of data LabFrame handles, classifies it under FERPA and ASU policy, and identifies where it resides.
 
-| Data category | Examples | Classification | Where it lives | Notes |
-|---|---|---|---|---|
-| Student name | "Austin Reaves" | FERPA directory information; PII | Browser localStorage; transmitted to `/api/sign`; in PDF | Typed by student; not authenticated |
-| Student ID (optional, Phase 6.2) | 10-digit ASU ID | FERPA directory information; PII | Same as student name | Optional field; never required |
-| Course identifier | "phy114" | Not personal | Browser localStorage; URL; in PDF | Public information |
-| Lab identifier | "snellsLaw" | Not personal | Browser localStorage; URL; in PDF | Public information |
-| Lab answers (free text) | Conclusions, calculations | FERPA education record once submitted | Browser localStorage; transmitted to `/api/sign`; in PDF | Student's intellectual work |
-| Measurement data (numeric) | "30.0", "1.33" | FERPA education record once submitted | Same | |
-| Image uploads | Photos of lab setup | FERPA education record once submitted | Browser IndexedDB; in PDF | Stored as Blob in IndexedDB to avoid localStorage size limits |
-| Process telemetry | Paste events, keystroke counts, focus time per field | Behavioral data; PII when associated with name | Browser localStorage; transmitted to `/api/sign`; in PDF appendix | Disclosed to student in the integrity statement |
-| Pasted text content | Verbatim text the student pasted into a field | Educational record + behavioral data | Same as process telemetry | May contain third-party content (e.g., from a chat tool) — captured for integrity disclosure |
-| AI tool disclosure (Phase 5.5) | "Used Claude / ChatGPT", links to shared chats | Educational record once submitted | Same | Self-reported; included in canonical JSON and PDF |
-| HMAC signature | 64-character hex string | Not personal | Computed server-side; in PDF | Cryptographic artifact; reveals nothing about the underlying data |
-| Browser fingerprint, IP address | Implicit in any HTTP request | PII (IP); behavioral (UA) | NOT logged by LabFrame; standard Vercel edge metrics may capture | Vercel's standard request logging applies; LabFrame does not access it |
+| Data category                    | Examples                                             | Classification                                 | Where it lives                                                    | Notes                                                                                        |
+| -------------------------------- | ---------------------------------------------------- | ---------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Student name                     | "Austin Reaves"                                      | FERPA directory information; PII               | Browser localStorage; transmitted to `/api/sign`; in PDF          | Typed by student; not authenticated                                                          |
+| Student ID (optional, Phase 6.2) | 10-digit ASU ID                                      | FERPA directory information; PII               | Same as student name                                              | Optional field; never required                                                               |
+| Course identifier                | "phy114"                                             | Not personal                                   | Browser localStorage; URL; in PDF                                 | Public information                                                                           |
+| Lab identifier                   | "snellsLaw"                                          | Not personal                                   | Browser localStorage; URL; in PDF                                 | Public information                                                                           |
+| Lab answers (free text)          | Conclusions, calculations                            | FERPA education record once submitted          | Browser localStorage; transmitted to `/api/sign`; in PDF          | Student's intellectual work                                                                  |
+| Measurement data (numeric)       | "30.0", "1.33"                                       | FERPA education record once submitted          | Same                                                              |                                                                                              |
+| Image uploads                    | Photos of lab setup                                  | FERPA education record once submitted          | Browser IndexedDB; in PDF                                         | Stored as Blob in IndexedDB to avoid localStorage size limits                                |
+| Process telemetry                | Paste events, keystroke counts, focus time per field | Behavioral data; PII when associated with name | Browser localStorage; transmitted to `/api/sign`; in PDF appendix | Disclosed to student in the integrity statement                                              |
+| Pasted text content              | Verbatim text the student pasted into a field        | Educational record + behavioral data           | Same as process telemetry                                         | May contain third-party content (e.g., from a chat tool) — captured for integrity disclosure |
+| AI tool disclosure (Phase 5.5)   | "Used Claude / ChatGPT", links to shared chats       | Educational record once submitted              | Same                                                              | Self-reported; included in canonical JSON and PDF                                            |
+| HMAC signature                   | 64-character hex string                              | Not personal                                   | Computed server-side; in PDF                                      | Cryptographic artifact; reveals nothing about the underlying data                            |
+| Browser fingerprint, IP address  | Implicit in any HTTP request                         | PII (IP); behavioral (UA)                      | NOT logged by LabFrame; standard Vercel edge metrics may capture  | Vercel's standard request logging applies; LabFrame does not access it                       |
 
 **What LabFrame does NOT collect:**
 
@@ -138,15 +138,15 @@ LabFrame does not transmit data to any third party, does not embed third-party t
 
 ## 5. Storage and retention
 
-| Storage location | Data | Retention | Controlled by |
-|---|---|---|---|
-| Browser localStorage | Lab metadata JSON | Indefinite, until student clears browser data or "Start fresh" | Student |
-| Browser IndexedDB | Image blobs | Indefinite, until student clears browser data or "Start fresh" | Student |
-| Vercel function memory | Canonical JSON during request | Duration of the HTTP request only (typically <100ms); discarded on response | Vercel/LabFrame |
-| Vercel function logs | Metadata only (length, sig prefix, timestamp, error code) | 7 days (per Vercel plan) | Vercel |
-| Vercel infrastructure logs | HTTP method/path/status/IP | 7 days (per Vercel plan) | Vercel |
-| Student-downloaded PDF | Full submission record | Indefinite, until student deletes the file | Student |
-| Canvas | Submitted PDF | Per ASU/Canvas data retention policy | Canvas/ASU |
+| Storage location           | Data                                                      | Retention                                                                   | Controlled by   |
+| -------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------- | --------------- |
+| Browser localStorage       | Lab metadata JSON                                         | Indefinite, until student clears browser data or "Start fresh"              | Student         |
+| Browser IndexedDB          | Image blobs                                               | Indefinite, until student clears browser data or "Start fresh"              | Student         |
+| Vercel function memory     | Canonical JSON during request                             | Duration of the HTTP request only (typically <100ms); discarded on response | Vercel/LabFrame |
+| Vercel function logs       | Metadata only (length, sig prefix, timestamp, error code) | 7 days (per Vercel plan)                                                    | Vercel          |
+| Vercel infrastructure logs | HTTP method/path/status/IP                                | 7 days (per Vercel plan)                                                    | Vercel          |
+| Student-downloaded PDF     | Full submission record                                    | Indefinite, until student deletes the file                                  | Student         |
+| Canvas                     | Submitted PDF                                             | Per ASU/Canvas data retention policy                                        | Canvas/ASU      |
 
 **LabFrame does not maintain any backups of student data.** Any "backup" is the student's own copy: their localStorage, their downloaded PDF, or their Canvas submission. If the Vercel deployment is destroyed tomorrow, no student data is lost from a LabFrame-controlled location because LabFrame doesn't have a controlled location to hold it.
 
@@ -156,15 +156,15 @@ LabFrame does not transmit data to any third party, does not embed third-party t
 
 ## 6. Encryption
 
-| Surface | Encryption status |
-|---|---|
-| Data in transit (browser ↔ Vercel) | TLS 1.2+ (HTTPS-only; HTTP requests redirect to HTTPS) |
-| Data at rest in browser localStorage | Not encrypted by the application; relies on OS disk encryption (BitLocker/FileVault) |
-| Data at rest in browser IndexedDB | Same as localStorage |
-| Data at rest in Vercel function memory | Not at rest — held in RAM only during the request lifecycle |
-| `LAB_SIGNING_SECRET` at rest | Encrypted in Vercel's environment variable storage (Vercel uses AES-256 for secrets) |
-| Signed PDF | Not encrypted; the signature provides integrity, not confidentiality |
-| Canvas-stored PDF | Per Canvas's encryption policy (TLS in transit; encrypted at rest per Instructure documentation) |
+| Surface                                | Encryption status                                                                                |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Data in transit (browser ↔ Vercel)     | TLS 1.2+ (HTTPS-only; HTTP requests redirect to HTTPS)                                           |
+| Data at rest in browser localStorage   | Not encrypted by the application; relies on OS disk encryption (BitLocker/FileVault)             |
+| Data at rest in browser IndexedDB      | Same as localStorage                                                                             |
+| Data at rest in Vercel function memory | Not at rest — held in RAM only during the request lifecycle                                      |
+| `LAB_SIGNING_SECRET` at rest           | Encrypted in Vercel's environment variable storage (Vercel uses AES-256 for secrets)             |
+| Signed PDF                             | Not encrypted; the signature provides integrity, not confidentiality                             |
+| Canvas-stored PDF                      | Per Canvas's encryption policy (TLS in transit; encrypted at rest per Instructure documentation) |
 
 LabFrame does not implement application-level encryption beyond HMAC-based integrity. Confidentiality of student work in the browser depends on the security of the student's device. This is a deliberate scope choice: encrypting browser-local data with a key the student doesn't manage adds no real protection (the key has to live in the same device anyway), and adds significant UX cost.
 
@@ -285,7 +285,7 @@ This section enumerates the security and privacy risks LabFrame's design accepts
 
 **Risk:** A motivated attacker could intercept a legitimate POST to `/api/sign`, modify the canonical JSON, re-POST, and get a fresh signature. The result is a "validly signed" PDF with attacker-chosen contents.
 
-**Mitigation:** Acknowledged in design (REBUILD_SPEC.md §5.14). The mitigation is nonce binding (server issues a one-time token bound to studentName/labId/sessionId; signatures only valid against the issued nonce) — deferred to v1.1. v1.0 ships without this; the threat model assumes that students with the technical ability to intercept and re-POST their own request also have the ability to study harder, and that this attack vector is not the cheating modality LabFrame primarily defends against.
+**Mitigation:** Acknowledged in design (docs/archive/REBUILD_SPEC.md §5.14). The mitigation is nonce binding (server issues a one-time token bound to studentName/labId/sessionId; signatures only valid against the issued nonce) — deferred to v1.1. v1.0 ships without this; the threat model assumes that students with the technical ability to intercept and re-POST their own request also have the ability to study harder, and that this attack vector is not the cheating modality LabFrame primarily defends against.
 
 **Residual risk:** Moderate, by design choice. If detected as a real cheating problem, nonce binding is the defined remediation.
 
@@ -355,20 +355,23 @@ GitHub repository access follows ASU IPL standard practice: read access for coll
 In the event of a suspected data breach, signing-secret compromise, or other security incident:
 
 **Immediate (within 1 hour):**
+
 - Rotate `LAB_SIGNING_SECRET` per §11.1.
 - Notify Austin Reaves and ASU IT Security.
 - If signing endpoint compromise: take the endpoint offline (set `LAB_SIGNING_SECRET` to empty so the function returns 500). Students will see "Could not sign report" errors but no further compromised PDFs can be produced.
 
 **Within 24 hours:**
+
 - Determine the affected window (logs from Vercel can establish request volumes, source IPs).
 - Notify ASU Privacy Office if FERPA-protected data may have been exposed.
 - Identify affected students via Canvas submission logs cross-referenced with the affected window.
 - Communicate with affected students per ASU policy.
 
 **Post-incident:**
+
 - Root cause analysis.
 - Update this document with lessons learned.
-- Update `REBUILD_SPEC.md` if architectural changes are warranted.
+- Update `docs/SPEC.md` if architectural changes are warranted.
 
 ### 11.5 Contact
 
@@ -383,18 +386,18 @@ In the event of a suspected data breach, signing-secret compromise, or other sec
 
 The following items are planned but not implemented as of LabFrame v1.0. Each is called out because it materially affects the data handling story.
 
-| Item | Affects | Status | Spec reference |
-|---|---|---|---|
-| `postMessage` parent-origin allow-list | Iframe embedding security | Implemented | REBUILD_SPEC.md §5.6, Phase 5 |
-| LTI 1.3 / OIDC integration | Authenticated identity from Canvas | Future phase, not yet scheduled | Phase 6+ |
-| AI usage disclosure on integrity statement | Captures and signs student-reported AI tool usage | Phase 5.5 | REBUILD_SPEC.md Phase 5.5 |
-| Optional student ID field | Disambiguates students with shared names | Phase 6.2 | REBUILD_SPEC.md Phase 6.2 |
-| Verification endpoint (`/api/verify`) | TA-facing tamper detection | Future phase | REBUILD_SPEC.md §9 |
-| Signing nonce binding | Closes signature replay attack | v1.1 | REBUILD_SPEC.md §5.14 |
-| Penetration test | Independent security validation | Recommended pre-broad-rollout | This document §10.8 |
-| WCAG 2.1 AA verification (axe-core, Lighthouse in CI) | Accessibility compliance | Phase 5 | REBUILD_SPEC.md Phase 5 |
-| Tagged PDFs for screen reader accessibility | PDF a11y | Future phase | This document §9 |
-| Telemetry endpoint (opt-in error reporting) | Operational observability | Phase 5; off by default | REBUILD_SPEC.md Phase 5 |
+| Item                                                  | Affects                                           | Status                          | Spec reference                             |
+| ----------------------------------------------------- | ------------------------------------------------- | ------------------------------- | ------------------------------------------ |
+| `postMessage` parent-origin allow-list                | Iframe embedding security                         | Implemented                     | docs/archive/REBUILD_SPEC.md §5.6, Phase 5 |
+| LTI 1.3 / OIDC integration                            | Authenticated identity from Canvas                | Future phase, not yet scheduled | Phase 6+                                   |
+| AI usage disclosure on integrity statement            | Captures and signs student-reported AI tool usage | Phase 5.5                       | docs/archive/REBUILD_SPEC.md Phase 5.5     |
+| Optional student ID field                             | Disambiguates students with shared names          | Phase 6.2                       | docs/archive/REBUILD_SPEC.md Phase 6.2     |
+| Verification endpoint (`/api/verify`)                 | TA-facing tamper detection                        | Future phase                    | docs/archive/REBUILD_SPEC.md §9            |
+| Signing nonce binding                                 | Closes signature replay attack                    | v1.1                            | docs/archive/REBUILD_SPEC.md §5.14         |
+| Penetration test                                      | Independent security validation                   | Recommended pre-broad-rollout   | This document §10.8                        |
+| WCAG 2.1 AA verification (axe-core, Lighthouse in CI) | Accessibility compliance                          | Phase 5                         | docs/archive/REBUILD_SPEC.md Phase 5       |
+| Tagged PDFs for screen reader accessibility           | PDF a11y                                          | Future phase                    | This document §9                           |
+| Telemetry endpoint (opt-in error reporting)           | Operational observability                         | Phase 5; off by default         | docs/archive/REBUILD_SPEC.md Phase 5       |
 
 ---
 
@@ -410,17 +413,17 @@ No other endpoints exist. There is no `/api/log`, `/api/track`, `/api/save`, or 
 
 ### A.2 Source files of interest for review
 
-| File | Purpose |
-|---|---|
-| `api/sign.ts` | Signing endpoint implementation; verify the "no-payload-logging" claim here |
-| `src/services/integrity/sign.ts` | Client-side signing call wrapper |
-| `src/services/integrity/canonicalize.ts` | Deterministic canonical JSON serialization |
-| `src/state/persistence/labPersistenceMiddleware.ts` | Browser storage layer (localStorage + IndexedDB) |
-| `src/state/persistence/idb.ts` | IndexedDB blob adapter |
-| `src/state/labStore.ts` | Application state store |
-| `src/services/pdf/Document.tsx` | PDF rendering |
-| `src/services/pdf/seal.ts` | Signature stamping into the PDF |
-| `REBUILD_SPEC.md` §5.13, §5.14 | Process telemetry and signing service design rationale |
+| File                                                | Purpose                                                                     |
+| --------------------------------------------------- | --------------------------------------------------------------------------- |
+| `api/sign.ts`                                       | Signing endpoint implementation; verify the "no-payload-logging" claim here |
+| `src/services/integrity/sign.ts`                    | Client-side signing call wrapper                                            |
+| `src/services/integrity/canonicalize.ts`            | Deterministic canonical JSON serialization                                  |
+| `src/state/persistence/labPersistenceMiddleware.ts` | Browser storage layer (localStorage + IndexedDB)                            |
+| `src/state/persistence/idb.ts`                      | IndexedDB blob adapter                                                      |
+| `src/state/labStore.ts`                             | Application state store                                                     |
+| `src/services/pdf/Document.tsx`                     | PDF rendering                                                               |
+| `src/services/pdf/seal.ts`                          | Signature stamping into the PDF                                             |
+| `docs/archive/REBUILD_SPEC.md` §5.13, §5.14         | Process telemetry and signing service design rationale                      |
 
 ### A.3 Specific verification: payload-logging claim
 
@@ -456,4 +459,4 @@ This audit should be re-run before any future production deployment to ensure no
 
 ---
 
-*End of document.*
+_End of document._

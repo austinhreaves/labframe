@@ -2,7 +2,7 @@
 
 LabFrame is an online worksheet app for ASU physics labs. Students run a simulation and complete a structured worksheet in the same screen, then export a signed PDF report.
 
-This repository is the rebuild of the legacy `physics-labs.up.railway.app` app. The canonical product and engineering spec is [`REBUILD_SPEC.md`](./REBUILD_SPEC.md).
+This repository is the rebuild of the legacy `physics-labs.up.railway.app` app. The living product and engineering spec is [`docs/SPEC.md`](./docs/SPEC.md); the original rebuild design and phase history is archived at [`docs/archive/REBUILD_SPEC.md`](./docs/archive/REBUILD_SPEC.md).
 
 ## Tech stack
 
@@ -71,8 +71,11 @@ Parent-frame messaging is allow-list gated. Courses set `parentOriginAllowList`;
 
 ## Additional docs
 
+- Spec (source of truth): [`docs/SPEC.md`](./docs/SPEC.md)
 - Architecture: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 - Authoring guide: [`docs/AUTHORING_A_LAB.md`](./docs/AUTHORING_A_LAB.md)
+- Design system: [`docs/DESIGN_SYSTEM.md`](./docs/DESIGN_SYSTEM.md)
+- Decision records: [`docs/decisions/`](./docs/decisions/)
 - Contribution workflow: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
 
 ## License

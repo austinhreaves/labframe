@@ -1,7 +1,7 @@
 import type { Lab } from '@/domain/schema';
 
 // FIRST DRAFT — new lab content for PHY 132 (Phase 4 reorg, 2026-05-02).
-// Companion: REORG_PROPOSAL.md and LEGACY_PARITY_INVENTORY.md at the repo root.
+// Companion: REORG_PROPOSAL.md and LEGACY_PARITY_INVENTORY.md in docs/archive/.
 // TODO(austin): review prose, point values, and the example circuit choice in Part 1.
 // TODO(austin): confirm PhET CCK-DC supplies a multimeter that reads both V and I,
 // and that "open circuit" / "short circuit" measurements are practical inside the sim.
@@ -32,7 +32,7 @@ export const phy132TheveninsTheoremLab: Lab = {
       kind: 'objective',
       fieldId: 'objective',
       prompt:
-        'Objective — Explain in your own words what Thevenin\'s Theorem claims and what you intend to verify experimentally. Two or three sentences.',
+        "Objective — Explain in your own words what Thevenin's Theorem claims and what you intend to verify experimentally. Two or three sentences.",
       rows: 4,
       points: 3,
     },
@@ -120,7 +120,7 @@ export const phy132TheveninsTheoremLab: Lab = {
       kind: 'instructions',
       html: [
         '## Part 4: Build the Thevenin Equivalent',
-        '1. In a fresh circuit area, build the Thevenin equivalent: a single battery set to V_th in series with a single resistor set to R_th, terminating at two new terminals A\' and B\'.',
+        "1. In a fresh circuit area, build the Thevenin equivalent: a single battery set to V_th in series with a single resistor set to R_th, terminating at two new terminals A' and B'.",
         '2. Take a screenshot of the equivalent circuit with values visible.',
       ].join('\n\n'),
     },
@@ -135,8 +135,8 @@ export const phy132TheveninsTheoremLab: Lab = {
       kind: 'instructions',
       html: [
         '## Part 5: Verify Equivalence Under Load',
-        'For each load resistance R_L in your Set of Parameters, connect R_L across both circuits in turn (original network: terminals A-B; Thevenin equivalent: terminals A\'-B\'). Record V_L and I_L for each.',
-        'If Thevenin\'s Theorem holds, the (V_L, I_L) pairs should match within measurement precision for every R_L.',
+        "For each load resistance R_L in your Set of Parameters, connect R_L across both circuits in turn (original network: terminals A-B; Thevenin equivalent: terminals A'-B'). Record V_L and I_L for each.",
+        "If Thevenin's Theorem holds, the (V_L, I_L) pairs should match within measurement precision for every R_L.",
       ].join('\n\n'),
     },
     {
@@ -209,7 +209,7 @@ export const phy132TheveninsTheoremLab: Lab = {
       kind: 'concept',
       fieldId: 'conceptCheck3',
       prompt:
-        "3. In Part 3 you computed R_th by short-circuiting the terminals and dividing V_th by I_sc. There is an alternative method: deactivate every independent source (replace each battery with a wire) and compute the equivalent resistance seen looking back into the terminals. Try this method on your network and compare the result to your measured R_th. Show your work.",
+        '3. In Part 3 you computed R_th by short-circuiting the terminals and dividing V_th by I_sc. There is an alternative method: deactivate every independent source (replace each battery with a wire) and compute the equivalent resistance seen looking back into the terminals. Try this method on your network and compare the result to your measured R_th. Show your work.',
       rows: 6,
       points: 2,
     },

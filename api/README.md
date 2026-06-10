@@ -5,12 +5,12 @@ Single-purpose Vercel functions. No DB, no persistence, no auth state.
 ## `POST /api/sign`
 
 Returns an HMAC-SHA256 signature over the canonical `LabAnswers` JSON. See
-the function source and `REBUILD_SPEC.md` §5.14 for contract and threat model.
+the function source and `docs/SPEC.md` section 4.3 for contract and threat model.
 
 ### Required environment variables
 
-| Name | Where to set | Notes |
-|------|--------------|-------|
+| Name                 | Where to set                                      | Notes                                                                                                                                                                                                |
+| -------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `LAB_SIGNING_SECRET` | Vercel project → Settings → Environment Variables | Must be ≥ 32 chars. Generate with `openssl rand -hex 32`. Set for `Production`, `Preview`, and `Development` (use a **different value** for each so a leaked dev secret can't sign production PDFs). |
 
 ### Local development
