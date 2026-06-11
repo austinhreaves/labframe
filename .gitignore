@@ -53,3 +53,4 @@ physics-labs.up.railway.app/
 
 .vercel
 .env*.local
+.screenshots/

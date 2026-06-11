@@ -29,15 +29,18 @@ import { TableOfContents } from '@/ui/layout/TableOfContents';
 import { Icon } from '@/ui/primitives/Icon';
 import { Select } from '@/ui/primitives/Select';
 import { SectionRenderer } from '@/ui/sections/SectionRenderer';
+import {
+  applyThemePreference,
+  getStoredThemePreference,
+  storeThemePreference,
+  type ThemePreference,
+} from '@/ui/theme';
 
 type Props = {
   course: Course;
   lab: Lab;
 };
 
-type ThemePreference = 'system' | 'light' | 'dark';
-
-const THEME_STORAGE_KEY = 'labframe:theme';
 const STUDENT_NAME_STORAGE_KEY = 'labframe:student-name';
 const STORAGE_NOTE_DISMISSED_KEY = 'labframe:storage-note-dismissed';
 
@@ -78,19 +81,6 @@ function StableSimulationFrame({ simulationId, title, url, allow }: SimulationFr
       data-mount-id={mountId.current}
     />
   );
-}
-
-function applyThemePreference(theme: ThemePreference): void {
-  if (typeof document === 'undefined' || typeof window === 'undefined') {
-    return;
-  }
-  const root = document.documentElement;
-  const prefersDark =
-    typeof window.matchMedia === 'function'
-      ? window.matchMedia('(prefers-color-scheme: dark)').matches
-      : false;
-  const resolved = theme === 'system' ? (prefersDark ? 'dark' : 'light') : theme;
-  root.dataset.theme = resolved;
 }
 
 export function LabPage({ course, lab }: Props) {
@@ -150,16 +140,14 @@ export function LabPage({ course, lab }: Props) {
   }, [searchParams, setStudentName, studentName]);
 
   useEffect(() => {
-    const storedTheme = safeStorageGet(THEME_STORAGE_KEY);
-    const nextTheme: ThemePreference =
-      storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'system';
+    const nextTheme = getStoredThemePreference();
     setThemePreference(nextTheme);
     applyThemePreference(nextTheme);
   }, []);
 
   useEffect(() => {
     applyThemePreference(themePreference);
-    safeStorageSet(THEME_STORAGE_KEY, themePreference);
+    storeThemePreference(themePreference);
   }, [themePreference]);
 
   useEffect(() => {
