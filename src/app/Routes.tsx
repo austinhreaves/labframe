@@ -7,8 +7,13 @@ import {
   phy112ResistorsSeriesParallelLab,
   phy114CapacitorsLab,
   phy114ChargesFieldsLab,
+  phy114ConvergingLensLab,
+  phy114CoulombsLawLab,
   phy114DcCircuitsLab,
+  phy114DivergingLensLab,
   phy114GeometricOpticsLab,
+  phy114OhmsLawLab,
+  phy114PointChargeLab,
   phy114SnellsLawLab,
   phy114StaticElectricityLab,
   phy132CapacitorFundamentalsLab,
@@ -63,11 +68,26 @@ const labsByCourse: Record<string, Record<string, Lab>> = {
     theveninsTheorem: phy132TheveninsTheoremLab,
   },
   phy114: {
+    // Core E&M reused from PHY 132 (no uncertainty content to strip).
+    chargeBuildup: phy132ChargeBuildupLab,
+    chargeConfigurations: phy132ChargeConfigurationsLab,
+    capacitorFundamentals: phy132CapacitorFundamentalsLab,
+    capacitorNetworks: phy132CapacitorNetworksLab,
+    kirchhoffsLaws: phy132KirchhoffsLawsLab,
+    // Core E&M: PHY-114-owned copies of 132 labs with uncertainty removed.
+    coulombsLaw: phy114CoulombsLawLab,
+    pointCharge: phy114PointChargeLab,
+    ohmsLaw: phy114OhmsLawLab,
+    // Optics: snellsLaw unchanged; geometricOptics split into the lens labs.
+    snellsLaw: phy114SnellsLawLab,
+    convergingLens: phy114ConvergingLensLab,
+    divergingLens: phy114DivergingLensLab,
+    // Retired source drafts (enabled:false in the manifest) kept resolvable so
+    // graders can still reach in-flight records by direct URL.
     staticElectricity: phy114StaticElectricityLab,
     chargesFields: phy114ChargesFieldsLab,
     capacitors: phy114CapacitorsLab,
     dcCircuits: phy114DcCircuitsLab,
-    snellsLaw: phy114SnellsLawLab,
     geometricOptics: phy114GeometricOpticsLab,
   },
   phy112: {
