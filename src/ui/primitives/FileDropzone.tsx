@@ -67,7 +67,11 @@ export function FileDropzone({
   const maxLabel = maxBytes ? formatBytes(maxBytes) : '5 MB';
 
   return (
-    <div className="file-dropzone" data-dragging={dragging || undefined} data-disabled={disabled || undefined}>
+    <div
+      className="file-dropzone"
+      data-dragging={dragging || undefined}
+      data-disabled={disabled || undefined}
+    >
       <label
         htmlFor={id}
         className="file-dropzone-target"
@@ -81,6 +85,7 @@ export function FileDropzone({
           type="file"
           accept={accept}
           disabled={disabled}
+          aria-label="Upload image"
           onChange={(event) => onFileChange(event.currentTarget.files?.[0] ?? null)}
         />
         {value ? (
@@ -96,7 +101,9 @@ export function FileDropzone({
         ) : (
           <div className="file-dropzone-empty">
             <ImagePlus aria-hidden="true" className="file-dropzone-icon" />
-            <p className="file-dropzone-primary">{label ?? 'Drop an image here or click to choose'}</p>
+            <p className="file-dropzone-primary">
+              {label ?? 'Drop an image here or click to choose'}
+            </p>
             <p className="file-dropzone-secondary">PNG, JPG, or HEIC up to {maxLabel}</p>
           </div>
         )}
