@@ -145,15 +145,13 @@ export const phy114SnellsLawLab: Lab = {
     },
     {
       kind: 'instructions',
-      html: '3. On the graph, fit the data with a proportional model. Record the slope and its corresponding uncertainty below.',
+      html: '3. On the graph, fit the data with a proportional model. Record the slope below.',
     },
     {
       kind: 'multiMeasurement',
       rows: [
         { id: 'part2SlopeA', label: 'A (slope)' },
-        { id: 'part2SlopeUncertainty', label: 'Slope uncertainty' },
         { id: 'part2SlopeUnit', label: 'Slope unit' },
-        { id: 'part2SlopeUncertaintyUnit', label: 'Uncertainty unit' },
       ],
       points: 0.5,
     },
@@ -221,15 +219,13 @@ export const phy114SnellsLawLab: Lab = {
     },
     {
       kind: 'instructions',
-      html: '3. On the graph, fit the data with a proportional model. Record the slope and its corresponding uncertainty below.',
+      html: '3. On the graph, fit the data with a proportional model. Record the slope below.',
     },
     {
       kind: 'multiMeasurement',
       rows: [
         { id: 'part3SlopeA', label: 'A (slope)' },
-        { id: 'part3SlopeUncertainty', label: 'Slope uncertainty' },
         { id: 'part3SlopeUnit', label: 'Slope unit' },
-        { id: 'part3SlopeUncertaintyUnit', label: 'Uncertainty unit' },
       ],
       points: 0.5,
     },
