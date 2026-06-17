@@ -32,6 +32,7 @@ The deliverable is a **PDF carrying a signed canonical JSON record**. The PDF is
 8. **Images are first-class submission content.** Image sections are part of the graded artifact: the exported PDF embeds the image visually, and the canonical envelope carries a SHA-256 of the bytes so the signature covers them. See [ADR-0003](./decisions/0003-images-first-class-hashed.md). **[Decided 2026-06-10, not implemented]** (today the PDF prints only attachment metadata and the envelope has no hash).
 9. **Canonical JSON is byte-deterministic everywhere.** Object keys sort by UTF-16 code unit, no whitespace, finite numbers only. **[Decided 2026-06-10, not implemented]**: the current implementation sorts with `localeCompare`, which is locale-dependent and must change with envelope v5.
 10. **A signature without a verifier is theater.** Verification tooling (a stateless `/api/verify` plus the client-only integrity inspector) is committed roadmap, prioritized ahead of nonce binding. **[Decided 2026-06-10, not implemented]**. See [`docs/specs/INTEGRITY_INSPECTOR_SPEC.md`](./specs/INTEGRITY_INSPECTOR_SPEC.md).
+11. **Client-authored labs are data, distributed as files.** The assignment constructor lets a client build new labs as `LabDoc` JSON in a client-only `/author` route; students import the file, and the signed envelope binds the LabDoc content hash. No backend, no editing of the 29 built-in labs through this UI. See [ADR-0005](./decisions/0005-authored-labs-are-data.md) through [ADR-0009](./decisions/0009-labhash-binding-and-embedded-labdoc.md) and [`docs/specs/ASSIGNMENT_CONSTRUCTOR_SPEC.md`](./specs/ASSIGNMENT_CONSTRUCTOR_SPEC.md). **[Decided 2026-06-16, not implemented]**.
 
 ---
 
@@ -170,6 +171,7 @@ One batched break, taken now because no signatures exist in the wild:
 - **`meta.semester`** derived from `signedAt` (Jan-Apr Spring, May-Jul Summer, Aug-Dec Fall); **`meta.session`** becomes optional and is omitted until a source of truth exists; **`meta.taName`** renamed **`meta.courseTitle`** (it always held the course title).
 - **`images`** entries gain `sha256` (hex of blob bytes), binding the signature to image content; the PDF embeds each image visually ([ADR-0003](./decisions/0003-images-first-class-hashed.md)).
 - **`status.submitted`** dropped from the envelope (it was always `false` at sign time and carried no information). `status.lastSavedAt` stays.
+- **`labHash`** (optional) added to bind authored-lab content into the signature: present for imported labs, omitted for built-ins. The exported PDF also embeds the canonical `LabDoc` as a `lab.labframe.json` attachment. See [ADR-0009](./decisions/0009-labhash-binding-and-embedded-labdoc.md) and [`docs/specs/ASSIGNMENT_CONSTRUCTOR_SPEC.md`](./specs/ASSIGNMENT_CONSTRUCTOR_SPEC.md). The code-unit canonicalization fix above is a prerequisite (a locale-dependent hash would yield false tampering accusations).
 - Migration: persisted v4 hydrates unchanged; the envelope changes apply at build/sign time. PDFs signed at v4 and earlier remain self-consistent against their own embedded canonical.
 
 ---
@@ -201,7 +203,7 @@ Agreed in the 2026-06-10 review, in priority order. Each item should land with a
 | 19  | Chart memoization (`points` keyed on table identity)                                                                                                                                                                                               | Performance |
 | 20  | Correct the two factual claims in DATA_HANDLING (images in PDF, hosting URL) once #1 lands                                                                                                                                                         | Docs        |
 
-Active feature specs (separate documents): [`POLISH_SPEC_B`](./specs/POLISH_SPEC_B_BUTTONS_SEGMENTED.md) (buttons + header restructure), [`POLISH_SPEC_D`](./specs/POLISH_SPEC_D_CATALOG.md) (catalog redesign; prioritized ahead of B for the review cohort), [`GRAPHING_EXPANSION_SPEC`](./specs/GRAPHING_EXPANSION_SPEC.md) (gated on lab need), [`PHY112_TIER_AB_SPEC`](./PHY112_TIER_AB_SPEC.md) (Tier B: 5 labs remaining), and the two graphing handoffs in [`docs/handoffs/`](./handoffs/) (log axes block the filter labs' quality).
+Active feature specs (separate documents): [`POLISH_SPEC_B`](./specs/POLISH_SPEC_B_BUTTONS_SEGMENTED.md) (buttons + header restructure), [`POLISH_SPEC_D`](./specs/POLISH_SPEC_D_CATALOG.md) (catalog redesign; prioritized ahead of B for the review cohort), [`GRAPHING_EXPANSION_SPEC`](./specs/GRAPHING_EXPANSION_SPEC.md) (gated on lab need), [`PHY112_TIER_AB_SPEC`](./PHY112_TIER_AB_SPEC.md) (Tier B: 5 labs remaining), and the two graphing handoffs in [`docs/handoffs/`](./handoffs/) (log axes block the filter labs' quality). The client lab-authoring feature is specced separately in [`ASSIGNMENT_CONSTRUCTOR_SPEC`](./specs/ASSIGNMENT_CONSTRUCTOR_SPEC.md) (ADRs 0005-0009; phased agent handoffs in [`docs/handoffs/`](./handoffs/)).
 
 ---
 
@@ -248,7 +250,7 @@ Carried forward from the rebuild spec; these remain hard constraints for every c
 | `docs/DESIGN_SYSTEM.md`                  | Design tokens and component rules                                                    |
 | `docs/DATA_HANDLING.md` (+ exec summary) | FERPA / privacy compliance reference                                                 |
 | `docs/PHY112_TIER_AB_SPEC.md`            | Active course buildout spec (path kept stable; code comments reference it)           |
-| `docs/specs/`                            | Active feature specs (polish B/D, graphing expansion, integrity inspector)           |
+| `docs/specs/`                            | Active feature specs (polish B/D, graphing expansion, integrity inspector, assignment constructor) |
 | `docs/handoffs/`                         | Self-contained agent handoffs still pending (log axes, multi-series)                 |
 | `docs/decisions/`                        | ADRs: one page per load-bearing decision                                             |
 | `docs/archive/`                          | Historical record: rebuild spec, proposals, parity inventories, completed phase docs |
