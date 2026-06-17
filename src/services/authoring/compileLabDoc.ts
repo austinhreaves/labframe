@@ -27,10 +27,29 @@ export function composeIntegrityAgreement(doc: LabDoc): string {
   return custom ? `${custom}\n\n${CAPTURE_DISCLOSURE_CORE}` : CAPTURE_DISCLOSURE_CORE;
 }
 
-function toRuntimeSection(section: LabDocSection): Section {
+/**
+ * Replace `asset:<id>` markdown image references with inline `data:` URLs from
+ * the LabDoc's asset map, so author figures render through the normal markdown
+ * pipeline (MarkdownBlock allows the `data` protocol for img). Unknown refs are
+ * left as-is; the loader already rejects dangling references.
+ */
+function inlineAssets(markdown: string, assets: LabDoc['assets']): string {
+  return markdown.replace(/asset:([A-Za-z0-9_-]+)/g, (match, id: string) => {
+    const asset = assets[id];
+    return asset ? `data:${asset.mime};base64,${asset.dataBase64}` : match;
+  });
+}
+
+function toRuntimeSection(section: LabDocSection, assets: LabDoc['assets']): Section {
   if (section.kind === 'dataTable') {
     // Input-only columns widen to the runtime Column union unchanged.
     return { ...section, columns: section.columns.map((column) => ({ ...column })) };
+  }
+  if (section.kind === 'instructions') {
+    return { ...section, html: inlineAssets(section.html, assets) };
+  }
+  if (section.kind === 'concept' && section.preamble) {
+    return { ...section, preamble: inlineAssets(section.preamble, assets) };
   }
   return section;
 }
@@ -48,7 +67,7 @@ export function compileLabDoc(doc: LabDoc): CompiledLab {
     category: 'Custom',
     simulations: doc.simulations,
     studentInfo: { integrityAgreementText: composeIntegrityAgreement(doc) },
-    sections: doc.sections.map(toRuntimeSection),
+    sections: doc.sections.map((section) => toRuntimeSection(section, doc.assets)),
   };
 
   const assets: Record<string, Blob> = {};

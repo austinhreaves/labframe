@@ -39,6 +39,16 @@ describe('compileLabDoc', () => {
     expect(assets.fig1).toBeInstanceOf(Blob);
     expect(assets.fig1?.type).toBe('image/png');
   });
+
+  it('inlines asset references in markdown as data URLs', () => {
+    const { lab } = compileLabDoc(validLabDoc());
+    const instructions = lab.sections.find((section) => section.kind === 'instructions');
+    expect(instructions?.kind).toBe('instructions');
+    if (instructions?.kind === 'instructions') {
+      expect(instructions.html).toContain('data:image/png;base64,');
+      expect(instructions.html).not.toContain('asset:fig1');
+    }
+  });
 });
 
 describe('composeIntegrityAgreement', () => {

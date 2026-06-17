@@ -550,6 +550,215 @@ html {
   color: var(--text-secondary);
 }
 
+/* --- Lab constructor (/author) -------------------------------- */
+
+.author-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.author-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.author-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.author-header-title {
+  font-weight: var(--weight-semibold);
+  color: var(--text-secondary);
+}
+
+.author-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.author-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-5);
+  padding: var(--space-5);
+  align-items: start;
+}
+
+.author-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.author-preview-pane {
+  position: sticky;
+  top: var(--space-5);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  background: var(--surface-raised);
+  max-height: calc(100vh - var(--space-7));
+  overflow: auto;
+}
+
+.author-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.author-block > h2 {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: var(--space-2);
+}
+
+.author-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.author-field-label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+}
+
+.author-input,
+.author-textarea {
+  width: 100%;
+  font: inherit;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  color: var(--text-primary);
+}
+
+.author-input-narrow {
+  max-width: 12ch;
+}
+
+.author-input[data-invalid='true'] {
+  border-color: var(--border-strong);
+}
+
+.author-row,
+.author-sim,
+.author-sim-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.author-row > .author-input {
+  flex: 1;
+}
+
+.author-remove {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.author-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.author-warning {
+  width: 100%;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+.author-section-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--surface-sunken);
+}
+
+.author-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.author-section-kind {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-tertiary);
+}
+
+.author-section-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.author-add-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.author-points {
+  max-width: 16ch;
+}
+
+.author-locked-core {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  border-left: 3px solid var(--border-accent);
+  padding-left: var(--space-3);
+}
+
+.author-preview-doc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.author-preview-title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+.author-preview-empty {
+  color: var(--text-tertiary);
+}
+
+@media (max-width: 900px) {
+  .author-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .author-preview-pane {
+    position: static;
+    max-height: none;
+  }
+}
+
 /* --- Course sections + lab cards ------------------------------- */
 
 .catalog-courses {

@@ -314,6 +314,9 @@ function ImportedLabsSection() {
         <p className="catalog-course-meta">
           Labs you imported from a file. Stored in this browser only.
         </p>
+        <Link className="catalog-course-link" to="/author">
+          New lab
+        </Link>
       </header>
       <div
         className="imported-dropzone"

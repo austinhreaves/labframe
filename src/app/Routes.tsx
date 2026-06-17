@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 
 import { phy112Course, phy114Course, phy132Course } from '@/content/courses';
@@ -44,6 +44,9 @@ import { IMPORTED_COURSE_ID, loadImportedLabText } from '@/state/importedLabs';
 import { Catalog } from '@/ui/Catalog';
 import { LabPage } from '@/ui/LabPage';
 import { PrimitivesShowcase } from '@/ui/visual/PrimitivesShowcase';
+
+// Code-split: students never download the authoring bundle.
+const AuthorPage = lazy(() => import('@/ui/author/AuthorPage'));
 
 const courses: Course[] = [phy132Course, phy114Course, phy112Course];
 
@@ -216,6 +219,22 @@ export function AppRoutes() {
       <Route path="/c/:courseId/:labId" element={<LabRoutePage />} />
       <Route path="/lab/:slug" element={<SlugLabRoutePage />} />
       <Route path="/i/:hash" element={<ImportedLabRoutePage />} />
+      <Route
+        path="/author"
+        element={
+          <Suspense fallback={<div className="catalog-page" aria-busy="true" />}>
+            <AuthorPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/author/:hash"
+        element={
+          <Suspense fallback={<div className="catalog-page" aria-busy="true" />}>
+            <AuthorPage />
+          </Suspense>
+        }
+      />
       {import.meta.env.DEV ? (
         <Route path="/__visual/primitives" element={<PrimitivesShowcase />} />
       ) : null}

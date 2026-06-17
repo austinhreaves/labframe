@@ -175,6 +175,8 @@ The envelope already stores `integrity.agreementText` verbatim (v4). Add an atte
 
 This is Phase D (depends on Phase A). Client-only, code-split, no backend.
 
+**Status: landed 2026-06-16.** `/author` and `/author/:hash` are lazy routes (`src/ui/author/`); the editor covers every MVP section kind, owns ids, has the metadata form, the PhET sim picker with allow-list validation, figure upload, the locked-core integrity editor, points, export with self-check, "Save to My Labs", and round-trip editing. The live preview reuses the real `SectionRenderer` by `initLab`-ing the compiled draft under a reserved `author-preview` store identity (debounced). Figures render by inlining `asset:` references as `data:` URLs in `compileLabDoc` (MarkdownBlock allows the `data` img protocol). Small deferrals: per-plot fit-option editing (authored plots ship without selectable fits for now) and drag-and-drop section reordering (up/down buttons instead).
+
 ### 6.1 Shape
 
 - Routes `/author` (new) and `/author/:hash` (edit an existing stored LabDoc). Lazy-loaded so students never download the authoring bundle.
