@@ -5,10 +5,8 @@ import { canonicalize } from '@/services/integrity/canonicalize';
  * Content hash that is an authored lab's identity (ADR-0005) and the value the
  * signed envelope binds (ADR-0009). Hex SHA-256 over the canonical LabDoc.
  *
- * Note: `canonicalize` currently sorts keys with `localeCompare`. The envelope
- * v5 code-unit fix (docs/SPEC.md section 6) is a prerequisite for this hash to
- * be authoritative across environments; until then it is stable within one
- * environment, which is sufficient for Phase A local use.
+ * `canonicalize` sorts object keys by UTF-16 code unit (envelope v5,
+ * docs/SPEC.md section 6), so this hash is reproducible across environments.
  */
 export async function hashLabDoc(doc: LabDoc): Promise<string> {
   const subtle = globalThis.crypto?.subtle;

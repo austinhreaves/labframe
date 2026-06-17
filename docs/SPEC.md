@@ -30,7 +30,7 @@ The deliverable is a **PDF carrying a signed canonical JSON record**. The PDF is
 6. **Persistence is browser-local.** JSON in localStorage, image blobs in IndexedDB, keyed by `(courseId, labId, studentName)`. Quota errors surface to the student with a recovery action; no silent data loss.
 7. **Every text value carries its history.** `FieldValue = {text, pastes, meta}` propagates through the store, the persisted state, the canonical envelope, and the PDF renderer.
 8. **Images are first-class submission content.** Image sections are part of the graded artifact: the exported PDF embeds the image visually, and the canonical envelope carries a SHA-256 of the bytes so the signature covers them. See [ADR-0003](./decisions/0003-images-first-class-hashed.md). **[Decided 2026-06-10, not implemented]** (today the PDF prints only attachment metadata and the envelope has no hash).
-9. **Canonical JSON is byte-deterministic everywhere.** Object keys sort by UTF-16 code unit, no whitespace, finite numbers only. **[Decided 2026-06-10, not implemented]**: the current implementation sorts with `localeCompare`, which is locale-dependent and must change with envelope v5.
+9. **Canonical JSON is byte-deterministic everywhere.** Object keys sort by UTF-16 code unit, no whitespace, finite numbers only. **[Implemented 2026-06-16]**: `canonicalize` sorts by code unit (replacing the locale-dependent `localeCompare`), so a canonical string and any hash or signature over it is reproducible across environments.
 10. **A signature without a verifier is theater.** Verification tooling (a stateless `/api/verify` plus the client-only integrity inspector) is committed roadmap, prioritized ahead of nonce binding. **[Decided 2026-06-10, not implemented]**. See [`docs/specs/INTEGRITY_INSPECTOR_SPEC.md`](./specs/INTEGRITY_INSPECTOR_SPEC.md).
 11. **Client-authored labs are data, distributed as files.** The assignment constructor lets a client build new labs as `LabDoc` JSON in a client-only `/author` route; students import the file, and the signed envelope binds the LabDoc content hash. No backend, no editing of the 29 built-in labs through this UI. See [ADR-0005](./decisions/0005-authored-labs-are-data.md) through [ADR-0009](./decisions/0009-labhash-binding-and-embedded-labdoc.md) and [`docs/specs/ASSIGNMENT_CONSTRUCTOR_SPEC.md`](./specs/ASSIGNMENT_CONSTRUCTOR_SPEC.md). **[Decided 2026-06-16, not implemented]**.
 
@@ -163,11 +163,11 @@ Canonicalization contract: keys sorted at every level, no whitespace, `undefined
 
 - Added `integrity.agreementAccepted`, `agreementAcceptedAt`, `agreementText` (transient; never persisted; re-affirmed each session). v3 hydrates unchanged; PDFs signed at v3 lack the affirmation record and must be read as "not explicitly captured", not "rejected".
 
-### v5 (pre-registered 2026-06-10, not yet implemented)
+### v5 (pre-registered 2026-06-10; canonicalization landed 2026-06-16, rest pending)
 
 One batched break, taken now because no signatures exist in the wild:
 
-- **Canonicalization** sorts object keys by UTF-16 code unit (replaces `localeCompare`; required for cross-environment verification).
+- **Canonicalization** sorts object keys by UTF-16 code unit (replaces `localeCompare`; required for cross-environment verification). **[Implemented 2026-06-16]**, landed ahead of the rest of v5 because it is a pure serialization fix and the prerequisite for the assignment-constructor `labHash`.
 - **`meta.semester`** derived from `signedAt` (Jan-Apr Spring, May-Jul Summer, Aug-Dec Fall); **`meta.session`** becomes optional and is omitted until a source of truth exists; **`meta.taName`** renamed **`meta.courseTitle`** (it always held the course title).
 - **`images`** entries gain `sha256` (hex of blob bytes), binding the signature to image content; the PDF embeds each image visually ([ADR-0003](./decisions/0003-images-first-class-hashed.md)).
 - **`status.submitted`** dropped from the envelope (it was always `false` at sign time and carried no information). `status.lastSavedAt` stays.
@@ -183,7 +183,7 @@ Agreed in the 2026-06-10 review, in priority order. Each item should land with a
 | #   | Item                                                                                                                                                                                                                                               | Area        |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
 | 1   | Embed uploaded images in the PDF; add `sha256` to envelope (ADR-0003, envelope v5)                                                                                                                                                                 | Product     |
-| 2   | Code-unit canonicalization + the rest of envelope v5 (Section 6)                                                                                                                                                                                   | Integrity   |
+| 2   | Code-unit canonicalization done 2026-06-16; the rest of envelope v5 (Section 6) pending                                                                                                                                                            | Integrity   |
 | 3   | `initLab` staleness guards after every await (cross-lab data-bleed race)                                                                                                                                                                           | State       |
 | 4   | Persistence: flush previous lab's state on key change, suppress saves during hydration, `pagehide` flush                                                                                                                                           | State       |
 | 5   | Remove the whole-store subscription in `LabPage` (use `getState()` in export handlers)                                                                                                                                                             | Performance |
@@ -241,16 +241,16 @@ Carried forward from the rebuild spec; these remain hard constraints for every c
 
 ## 10. Document map
 
-| Location                                 | Contents                                                                             |
-| ---------------------------------------- | ------------------------------------------------------------------------------------ |
-| `README.md`, `CONTRIBUTING.md`           | Overview, setup, workflow (repo root)                                                |
-| `docs/SPEC.md`                           | This document: living source of truth                                                |
-| `docs/ARCHITECTURE.md`                   | Short architecture orientation                                                       |
-| `docs/AUTHORING_A_LAB.md`                | TA-facing lab authoring guide                                                        |
-| `docs/DESIGN_SYSTEM.md`                  | Design tokens and component rules                                                    |
-| `docs/DATA_HANDLING.md` (+ exec summary) | FERPA / privacy compliance reference                                                 |
-| `docs/PHY112_TIER_AB_SPEC.md`            | Active course buildout spec (path kept stable; code comments reference it)           |
+| Location                                 | Contents                                                                                           |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `README.md`, `CONTRIBUTING.md`           | Overview, setup, workflow (repo root)                                                              |
+| `docs/SPEC.md`                           | This document: living source of truth                                                              |
+| `docs/ARCHITECTURE.md`                   | Short architecture orientation                                                                     |
+| `docs/AUTHORING_A_LAB.md`                | TA-facing lab authoring guide                                                                      |
+| `docs/DESIGN_SYSTEM.md`                  | Design tokens and component rules                                                                  |
+| `docs/DATA_HANDLING.md` (+ exec summary) | FERPA / privacy compliance reference                                                               |
+| `docs/PHY112_TIER_AB_SPEC.md`            | Active course buildout spec (path kept stable; code comments reference it)                         |
 | `docs/specs/`                            | Active feature specs (polish B/D, graphing expansion, integrity inspector, assignment constructor) |
-| `docs/handoffs/`                         | Self-contained agent handoffs still pending (log axes, multi-series)                 |
-| `docs/decisions/`                        | ADRs: one page per load-bearing decision                                             |
-| `docs/archive/`                          | Historical record: rebuild spec, proposals, parity inventories, completed phase docs |
+| `docs/handoffs/`                         | Self-contained agent handoffs still pending (log axes, multi-series)                               |
+| `docs/decisions/`                        | ADRs: one page per load-bearing decision                                                           |
+| `docs/archive/`                          | Historical record: rebuild spec, proposals, parity inventories, completed phase docs               |

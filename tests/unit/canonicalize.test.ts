@@ -101,3 +101,26 @@ describe('canonicalize', () => {
     expect(canonicalize(answersA)).toBe(canonicalize(answersB));
   });
 });
+
+describe('canonicalize key ordering', () => {
+  it('sorts object keys by UTF-16 code unit, not locale (uppercase before lowercase)', () => {
+    // 'Z' (0x5A) precedes 'a' (0x61) by code unit; a locale comparator would
+    // typically order 'a' before 'Z'. This pins the locale-independent contract.
+    expect(canonicalize({ a: 1, Z: 2 })).toBe('{"Z":2,"a":1}');
+  });
+
+  it('orders digits and symbols ahead of letters by code unit', () => {
+    expect(canonicalize({ b: 1, A: 2, _x: 3, '1': 4 })).toBe('{"1":4,"A":2,"_x":3,"b":1}');
+  });
+
+  it('produces identical output regardless of insertion order', () => {
+    const left = canonicalize({ gamma: 3, Beta: 2, alpha: 1 });
+    const right = canonicalize({ alpha: 1, gamma: 3, Beta: 2 });
+    expect(left).toBe(right);
+    expect(left).toBe('{"Beta":2,"alpha":1,"gamma":3}');
+  });
+
+  it('sorts nested object keys by code unit too', () => {
+    expect(canonicalize({ outer: { b: 1, A: 2 } })).toBe('{"outer":{"A":2,"b":1}}');
+  });
+});
