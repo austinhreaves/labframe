@@ -509,6 +509,47 @@ html {
   padding: var(--space-4);
 }
 
+/* --- Imported labs (assignment constructor) -------------------- */
+
+.catalog-imported {
+  margin-top: var(--space-7);
+}
+
+.imported-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin-bottom: var(--space-4);
+  color: var(--text-secondary);
+  background: var(--surface-sunken);
+}
+
+.imported-dropzone[data-dragging] {
+  border-color: var(--border-accent);
+  background: var(--accent-soft);
+}
+
+.imported-lab-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.imported-lab-meta {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+.imported-delete {
+  align-self: flex-start;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
 /* --- Course sections + lab cards ------------------------------- */
 
 .catalog-courses {

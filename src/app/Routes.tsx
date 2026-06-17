@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 
 import { phy112Course, phy114Course, phy132Course } from '@/content/courses';
@@ -37,7 +38,9 @@ import {
   phy132SnellsLawLab,
   phy132TheveninsTheoremLab,
 } from '@/content/labs';
-import type { Course, Lab } from '@/domain/schema';
+import type { Course, Lab, LabDoc } from '@/domain/schema';
+import { compileLabDoc, loadUntrustedLabDoc } from '@/services/authoring';
+import { IMPORTED_COURSE_ID, loadImportedLabText } from '@/state/importedLabs';
 import { Catalog } from '@/ui/Catalog';
 import { LabPage } from '@/ui/LabPage';
 import { PrimitivesShowcase } from '@/ui/visual/PrimitivesShowcase';
@@ -131,6 +134,72 @@ function SlugLabRoutePage() {
   return <LabPage key={`${phy132Course.id}-${lab.id}`} course={phy132Course} lab={lab} />;
 }
 
+type ImportedLabView = {
+  course: Course;
+  lab: Lab;
+  source: { labHash: string; labDoc: LabDoc };
+};
+
+function ImportedLabRoutePage() {
+  const params = useParams();
+  const hash = params.hash ?? '';
+  const [view, setView] = useState<ImportedLabView | 'loading' | 'notfound'>('loading');
+
+  useEffect(() => {
+    let cancelled = false;
+    setView('loading');
+    void (async () => {
+      const text = await loadImportedLabText(hash);
+      if (cancelled) return;
+      if (!text) {
+        setView('notfound');
+        return;
+      }
+      const result = await loadUntrustedLabDoc(text);
+      if (cancelled) return;
+      // Storage is user-controlled, so re-validate and confirm the bytes still
+      // hash to the requested identity before rendering.
+      if (!result.ok || result.labHash !== hash) {
+        setView('notfound');
+        return;
+      }
+      const compiled = compileLabDoc(result.doc);
+      const course: Course = {
+        id: IMPORTED_COURSE_ID,
+        title: result.doc.meta.title,
+        storagePrefix: IMPORTED_COURSE_ID,
+        parentOriginAllowList: [],
+        labs: [{ ref: hash, enabled: true }],
+      };
+      // Identity is the content hash: key persistence by it, not the slug.
+      setView({
+        course,
+        lab: { ...compiled.lab, id: hash },
+        source: { labHash: hash, labDoc: result.doc },
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [hash]);
+
+  if (view === 'loading') {
+    return <div className="catalog-page" aria-busy="true" />;
+  }
+  if (view === 'notfound') {
+    return <Navigate to="/" replace />;
+  }
+
+  return (
+    <LabPage
+      key={`imported-${hash}`}
+      course={view.course}
+      lab={view.lab}
+      importedSource={view.source}
+    />
+  );
+}
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -146,6 +215,7 @@ export function AppRoutes() {
       <Route path="/c/:courseId" element={<CoursePage />} />
       <Route path="/c/:courseId/:labId" element={<LabRoutePage />} />
       <Route path="/lab/:slug" element={<SlugLabRoutePage />} />
+      <Route path="/i/:hash" element={<ImportedLabRoutePage />} />
       {import.meta.env.DEV ? (
         <Route path="/__visual/primitives" element={<PrimitivesShowcase />} />
       ) : null}

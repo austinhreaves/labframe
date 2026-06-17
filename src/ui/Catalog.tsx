@@ -1,8 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import type { Course, CourseLabRef, Lab } from '@/domain/schema';
+import { loadUntrustedLabDoc } from '@/services/authoring';
+import {
+  deleteImportedLab,
+  listImportedLabs,
+  saveImportedLab,
+  type ImportedLabEntry,
+} from '@/state/importedLabs';
+import { AccessibleDialog } from '@/ui/AccessibleDialog';
 import { HeroIllustration, LogoMark } from '@/ui/catalog/HeroIllustration';
 import { Button } from '@/ui/primitives/Button';
 import { Icon } from '@/ui/primitives/Icon';
@@ -264,6 +272,122 @@ function WizardSteps({ step }: { step: WizardStep }) {
   );
 }
 
+function ImportedLabsSection() {
+  const navigate = useNavigate();
+  const [entries, setEntries] = useState<ImportedLabEntry[]>([]);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const refresh = useCallback(() => {
+    void listImportedLabs().then(setEntries);
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const importFile = useCallback(
+    async (file: File) => {
+      const result = await loadUntrustedLabDoc(await file.text());
+      if (!result.ok) {
+        setImportError(result.error);
+        return;
+      }
+      await saveImportedLab(result.doc, result.labHash);
+      navigate(`/i/${result.labHash}`);
+    },
+    [navigate],
+  );
+
+  const removeEntry = (labHash: string, title: string) => {
+    if (!window.confirm(`Remove "${title}" and its saved answers from this browser?`)) {
+      return;
+    }
+    void deleteImportedLab(labHash, { clearAnswers: true }).then(refresh);
+  };
+
+  return (
+    <section className="catalog-imported" aria-label="My labs">
+      <header className="catalog-course-header">
+        <h2 className="catalog-course-title">My Labs</h2>
+        <p className="catalog-course-meta">
+          Labs you imported from a file. Stored in this browser only.
+        </p>
+      </header>
+      <div
+        className="imported-dropzone"
+        data-dragging={isDragging || undefined}
+        onDragOver={(event) => {
+          event.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={(event) => {
+          event.preventDefault();
+          setIsDragging(false);
+          const file = event.dataTransfer.files[0];
+          if (file) {
+            void importFile(file);
+          }
+        }}
+      >
+        <p>Drag a lab file (.labframe.json) here</p>
+        <Button variant="secondary" size="md" onClick={() => fileInputRef.current?.click()}>
+          Open lab file
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json,.json"
+          hidden
+          onChange={(event) => {
+            const file = event.currentTarget.files?.[0];
+            if (file) {
+              void importFile(file);
+            }
+            event.currentTarget.value = '';
+          }}
+        />
+      </div>
+      {entries.length > 0 ? (
+        <ul className="catalog-lab-grid">
+          {entries.map((entry) => (
+            <li key={entry.labHash} className="imported-lab-item">
+              <Link className="lab-card" to={`/i/${entry.labHash}`} aria-label={entry.title}>
+                <span className="lab-card-top">
+                  <span className="lab-card-pill">Imported</span>
+                </span>
+                <span className="lab-card-title">{entry.title}</span>
+                <span className="imported-lab-meta">
+                  {entry.author}
+                  {entry.humanVersion ? ` · ${entry.humanVersion}` : ''}
+                </span>
+              </Link>
+              <button
+                type="button"
+                className="imported-delete"
+                onClick={() => removeEntry(entry.labHash, entry.title)}
+              >
+                Delete
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="catalog-empty">No imported labs yet.</p>
+      )}
+      <AccessibleDialog
+        open={importError !== null}
+        title="Could not import lab"
+        onClose={() => setImportError(null)}
+      >
+        <p>{importError}</p>
+      </AccessibleDialog>
+    </section>
+  );
+}
+
 export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [nameDraft, setNameDraft] = useState('');
@@ -485,6 +609,8 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
             ) : null}
           </section>
         ) : null}
+
+        <ImportedLabsSection />
 
         <div className="catalog-courses">
           {courses.map((course) => (
