@@ -11,13 +11,13 @@ const baseFieldValue = {
 describe('canonicalize', () => {
   it('produces identical output for equivalent LabAnswers permutations', () => {
     const answersA: LabAnswers = {
-      schemaVersion: 4,
+      schemaVersion: 5,
       meta: {
         studentName: 'Test Student',
         semester: 'Spring',
         session: 'A',
         year: '2026',
-        taName: 'TA One',
+        courseTitle: 'TA One',
       },
       integrity: {
         signedAs: 'Test Student',
@@ -51,11 +51,11 @@ describe('canonicalize', () => {
       fits: {
         snellsLawFit: { model: 'linear', parameters: { slope: 1.5, intercept: 0 }, r2: 0.998 },
       },
-      status: { submitted: false, lastSavedAt: 1714450100000 },
+      status: { lastSavedAt: 1714450100000 },
     };
 
     const answersB: LabAnswers = {
-      status: { lastSavedAt: 1714450100000, submitted: false },
+      status: { lastSavedAt: 1714450100000 },
       fits: {
         snellsLawFit: { r2: 0.998, parameters: { intercept: 0, slope: 1.5 }, model: 'linear' },
       },
@@ -89,13 +89,13 @@ describe('canonicalize', () => {
         agreementText: 'I affirm.',
       },
       meta: {
-        taName: 'TA One',
+        courseTitle: 'TA One',
         year: '2026',
         session: 'A',
         semester: 'Spring',
         studentName: 'Test Student',
       },
-      schemaVersion: 4,
+      schemaVersion: 5,
     };
 
     expect(canonicalize(answersA)).toBe(canonicalize(answersB));

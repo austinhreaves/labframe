@@ -16,23 +16,23 @@ The constructor solves this by making an authored lab **data, not code**, distri
 
 ### Decision ledger (binding)
 
-| # | Decision | ADR |
-| - | -------- | --- |
-| 1 | The constructor authors a single **lab worksheet** (not course assembly). | this spec |
-| 2 | An authored lab is a serializable **`LabDoc` (JSON)**; the 29 existing labs stay as compiled code. One render path via `compileLabDoc(doc) -> Lab`. | [0005](../decisions/0005-authored-labs-are-data.md) |
-| 3 | Derived-column formulas use a **non-Turing-complete arithmetic DSL**, parsed to an AST and interpreted, never `eval`. Deferred to Phase E. | [0007](../decisions/0007-formula-dsl-safety.md) |
-| 4 | **MVP at delivery** = full safe section palette with input-only tables and plots; derived columns ship later, within the window. | this spec |
-| 5 | Distribution is **file import, no backend**. The no-backend lock ([ADR-0002](../decisions/0002-no-backend-lock.md)) is **PII-scoped**, so moving lab content is allowed. | [0006](../decisions/0006-no-backend-lock-is-pii-scoped.md) |
-| 6 | Lab identity is the **LabDoc content hash** (SHA-256). | [0005](../decisions/0005-authored-labs-are-data.md) |
-| 7 | A redistributed (changed) file is a new hash, which is a **fresh start**; old work is recoverable only via the old file or a prior PDF. | this spec |
-| 8 | The signed envelope binds **`labHash` for imported labs now** (optional field, envelope v5); built-ins get hashes only if migrated. | [0009](../decisions/0009-labhash-binding-and-embedded-labdoc.md) |
-| 9 | The exported PDF **embeds the full LabDoc** (self-describing, powers restore-from-PDF). | [0009](../decisions/0009-labhash-binding-and-embedded-labdoc.md) |
-| 10 | The constructor is a **client-only `/author` route** in the same SPA, code-split. | this spec |
-| 11 | Author figures are **embedded in the LabDoc** (base64, capped) as `assets`. | this spec |
-| 12 | Simulation URLs are limited to an **allow-list of vetted domains**. | this spec |
-| 13 | Authoring sets **points only**; grading stays human (no answer keys, no auto-grade). | this spec |
-| 14 | Imported labs **persist in IndexedDB** by hash and appear in a **"My Labs"** catalog; route `/i/:hash`. | this spec |
-| 15 | The integrity agreement has a **non-removable capture-disclosure core**; authors edit everything else; the envelope records the verbatim text plus an attestation the core was present. | [0008](../decisions/0008-integrity-agreement-core-disclosure.md) |
+| #   | Decision                                                                                                                                                                                | ADR                                                              |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 1   | The constructor authors a single **lab worksheet** (not course assembly).                                                                                                               | this spec                                                        |
+| 2   | An authored lab is a serializable **`LabDoc` (JSON)**; the 29 existing labs stay as compiled code. One render path via `compileLabDoc(doc) -> Lab`.                                     | [0005](../decisions/0005-authored-labs-are-data.md)              |
+| 3   | Derived-column formulas use a **non-Turing-complete arithmetic DSL**, parsed to an AST and interpreted, never `eval`. Deferred to Phase E.                                              | [0007](../decisions/0007-formula-dsl-safety.md)                  |
+| 4   | **MVP at delivery** = full safe section palette with input-only tables and plots; derived columns ship later, within the window.                                                        | this spec                                                        |
+| 5   | Distribution is **file import, no backend**. The no-backend lock ([ADR-0002](../decisions/0002-no-backend-lock.md)) is **PII-scoped**, so moving lab content is allowed.                | [0006](../decisions/0006-no-backend-lock-is-pii-scoped.md)       |
+| 6   | Lab identity is the **LabDoc content hash** (SHA-256).                                                                                                                                  | [0005](../decisions/0005-authored-labs-are-data.md)              |
+| 7   | A redistributed (changed) file is a new hash, which is a **fresh start**; old work is recoverable only via the old file or a prior PDF.                                                 | this spec                                                        |
+| 8   | The signed envelope binds **`labHash` for imported labs now** (optional field, envelope v5); built-ins get hashes only if migrated.                                                     | [0009](../decisions/0009-labhash-binding-and-embedded-labdoc.md) |
+| 9   | The exported PDF **embeds the full LabDoc** (self-describing, powers restore-from-PDF).                                                                                                 | [0009](../decisions/0009-labhash-binding-and-embedded-labdoc.md) |
+| 10  | The constructor is a **client-only `/author` route** in the same SPA, code-split.                                                                                                       | this spec                                                        |
+| 11  | Author figures are **embedded in the LabDoc** (base64, capped) as `assets`.                                                                                                             | this spec                                                        |
+| 12  | Simulation URLs are limited to an **allow-list of vetted domains**.                                                                                                                     | this spec                                                        |
+| 13  | Authoring sets **points only**; grading stays human (no answer keys, no auto-grade).                                                                                                    | this spec                                                        |
+| 14  | Imported labs **persist in IndexedDB** by hash and appear in a **"My Labs"** catalog; route `/i/:hash`.                                                                                 | this spec                                                        |
+| 15  | The integrity agreement has a **non-removable capture-disclosure core**; authors edit everything else; the envelope records the verbatim text plus an attestation the core was present. | [0008](../decisions/0008-integrity-agreement-core-disclosure.md) |
 
 ---
 
@@ -43,7 +43,7 @@ The constructor solves this by making an authored lab **data, not code**, distri
 Two independent version lines:
 
 - **`LabDoc.schemaVersion`** versions the authoring format. Starts at `1`. Old imported files migrate forward on load.
-- **`LabAnswers.schemaVersion`** versions the answer envelope (currently 4, v5 pre-registered in `docs/SPEC.md` section 6). These are not coupled.
+- **`LabAnswers.schemaVersion`** versions the answer envelope (now 5; see `docs/SPEC.md` section 6). These are not coupled.
 
 Shape (Zod, new file `src/domain/schema/labDoc.ts`):
 
@@ -139,15 +139,19 @@ The Catalog ([`src/ui/Catalog.tsx`](../../src/ui/Catalog.tsx)) gains a **"My Lab
 
 New route `/i/:hash` resolves a stored LabDoc, runs `compileLabDoc`, and mounts `LabPage`. **Do not reuse `/lab/:slug`** (it already maps phy132 slugs in `src/app/Routes.tsx`). Import entry points: drag-drop a `.labframe.json` onto the catalog, or an "Open lab file" action.
 
-### 4.4 Restore from PDF (authored)
+### 4.4 Restore from PDF (authored) **[Deferred]**
 
-Because the PDF embeds the LabDoc (section 5.2), dragging a signed or draft PDF onto the catalog extracts both attachments, runs `loadUntrustedLabDoc` and `loadUntrustedLabJson`, verifies the embedded LabDoc re-hashes to `answers.labHash`, then loads the lab and rehydrates the answers. This is the union of work-queue item 17 (resume-from-PDF) and the import path, and it is the primary mitigation for the "edit is a fresh start" data loss in decision 7.
+Because the PDF embeds the LabDoc (section 5.2), dragging a signed or draft PDF onto the catalog would extract both attachments, run `loadUntrustedLabDoc` and `loadUntrustedLabJson`, verify the embedded LabDoc re-hashes to `answers.labHash`, then load the lab and rehydrate the answers. This is the union of work-queue item 17 (resume-from-PDF) and the import path, and it is the primary mitigation for the "edit is a fresh start" data loss in decision 7.
+
+**Deferred out of Phase C** (decided 2026-06-16): it depends on an untrusted _answers_ loader (`loadUntrustedLabJson`, not yet built) and an envelope-to-store rehydration path that do not exist, and is broader than the constructor. The embedded LabDoc (section 5.2) ships now so the artifact is ready when restore is built.
 
 ---
 
 ## 5. Integrity binding
 
 This is Phase C (depends on Phase A and the envelope-v5 canonicalization fix).
+
+**Status: landed 2026-06-16.** Envelope is now v5 with optional `labHash` and `integrity.captureDisclosureCorePresent`, `status.submitted` dropped, and `meta` cleaned up (`courseTitle`, derived `semester`, optional `session`); signed and draft PDFs embed the canonical `LabDoc` for imported labs. Deferred to their own efforts: the ADR-0003 image `sha256`/visual embed (now envelope v6) and restore-from-PDF (section 4.4). 5.2 below describes draft embedding, which ships; the "restore-from-PDF works from drafts" payoff waits on 4.4.
 
 ### 5.1 `labHash` in the envelope
 

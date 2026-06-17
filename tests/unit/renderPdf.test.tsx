@@ -25,13 +25,13 @@ const labFixture: Lab = {
 };
 
 const answersFixture: LabAnswers = {
-  schemaVersion: 4,
+  schemaVersion: 5,
   meta: {
     studentName: 'Student',
     semester: 'Fall',
     session: 'C',
     year: '2026',
-    taName: 'TA',
+    courseTitle: 'TA',
   },
   integrity: {
     signedAs: 'Student',
@@ -47,7 +47,6 @@ const answersFixture: LabAnswers = {
   images: {},
   fits: {},
   status: {
-    submitted: false,
     lastSavedAt: 0,
   },
 };

@@ -5,6 +5,9 @@ type SealArgs = {
   signature: string;
   signedAt: number;
   title: string;
+  /** Canonical LabDoc JSON for imported (authored) labs; embedded as a
+   *  convenience attachment. Tamper-evident against the signed `labHash`. */
+  labDoc?: string;
 };
 
 function drawFooter(page: PDFPage, text: string): void {
@@ -48,6 +51,16 @@ export async function sealPDF(inputBytes: Uint8Array, args: SealArgs): Promise<U
     creationDate: new Date(args.signedAt),
     modificationDate: new Date(args.signedAt),
   });
+
+  if (args.labDoc) {
+    const labDocBytes = new Uint8Array(await new Response(args.labDoc).arrayBuffer());
+    await pdfDoc.attach(labDocBytes, 'lab.labframe.json', {
+      mimeType: 'application/json',
+      description: 'Authored lab definition (LabDoc), tamper-evident against labHash',
+      creationDate: new Date(args.signedAt),
+      modificationDate: new Date(args.signedAt),
+    });
+  }
 
   const outputBytes = await pdfDoc.save({
     useObjectStreams: false,

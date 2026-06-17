@@ -2,9 +2,15 @@ import { degrees, PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 type PrepareDraftPdfArgs = {
   title: string;
+  /** Canonical LabDoc JSON for imported (authored) labs; embedded so a draft
+   *  PDF is self-describing (and future restore-from-PDF can read it). */
+  labDoc?: string;
 };
 
-export async function prepareDraftPdf(inputBytes: Uint8Array, args: PrepareDraftPdfArgs): Promise<Uint8Array> {
+export async function prepareDraftPdf(
+  inputBytes: Uint8Array,
+  args: PrepareDraftPdfArgs,
+): Promise<Uint8Array> {
   if (!(inputBytes instanceof Uint8Array)) {
     throw new Error('Could not generate draft PDF (invalid render output). Try again.');
   }
@@ -30,6 +36,14 @@ export async function prepareDraftPdf(inputBytes: Uint8Array, args: PrepareDraft
       color: rgb(0.82, 0.1, 0.1),
       opacity: 0.14,
       rotate: degrees(35),
+    });
+  }
+
+  if (args.labDoc) {
+    const labDocBytes = new Uint8Array(await new Response(args.labDoc).arrayBuffer());
+    await pdfDoc.attach(labDocBytes, 'lab.labframe.json', {
+      mimeType: 'application/json',
+      description: 'Authored lab definition (LabDoc)',
     });
   }
 

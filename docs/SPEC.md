@@ -163,16 +163,20 @@ Canonicalization contract: keys sorted at every level, no whitespace, `undefined
 
 - Added `integrity.agreementAccepted`, `agreementAcceptedAt`, `agreementText` (transient; never persisted; re-affirmed each session). v3 hydrates unchanged; PDFs signed at v3 lack the affirmation record and must be read as "not explicitly captured", not "rejected".
 
-### v5 (pre-registered 2026-06-10; canonicalization landed 2026-06-16, rest pending)
+### v5 (landed 2026-06-16)
 
-One batched break, taken now because no signatures exist in the wild:
+Taken now because no signatures exist in the wild. The canonicalization fix landed first (2026-06-16) as a pure serialization change; the rest landed with Phase C of the assignment constructor.
 
-- **Canonicalization** sorts object keys by UTF-16 code unit (replaces `localeCompare`; required for cross-environment verification). **[Implemented 2026-06-16]**, landed ahead of the rest of v5 because it is a pure serialization fix and the prerequisite for the assignment-constructor `labHash`.
-- **`meta.semester`** derived from `signedAt` (Jan-Apr Spring, May-Jul Summer, Aug-Dec Fall); **`meta.session`** becomes optional and is omitted until a source of truth exists; **`meta.taName`** renamed **`meta.courseTitle`** (it always held the course title).
-- **`images`** entries gain `sha256` (hex of blob bytes), binding the signature to image content; the PDF embeds each image visually ([ADR-0003](./decisions/0003-images-first-class-hashed.md)).
+- **Canonicalization** sorts object keys by UTF-16 code unit (replaces `localeCompare`; required for cross-environment verification).
+- **`meta.semester`** derived from the build/sign date (Jan-Apr Spring, May-Jul Summer, Aug-Dec Fall); **`meta.session`** is optional and omitted until a source of truth exists; **`meta.taName`** renamed **`meta.courseTitle`** (it always held the course title).
 - **`status.submitted`** dropped from the envelope (it was always `false` at sign time and carried no information). `status.lastSavedAt` stays.
-- **`labHash`** (optional) added to bind authored-lab content into the signature: present for imported labs, omitted for built-ins. The exported PDF also embeds the canonical `LabDoc` as a `lab.labframe.json` attachment. See [ADR-0009](./decisions/0009-labhash-binding-and-embedded-labdoc.md) and [`docs/specs/ASSIGNMENT_CONSTRUCTOR_SPEC.md`](./specs/ASSIGNMENT_CONSTRUCTOR_SPEC.md). The code-unit canonicalization fix above is a prerequisite (a locale-dependent hash would yield false tampering accusations).
-- Migration: persisted v4 hydrates unchanged; the envelope changes apply at build/sign time. PDFs signed at v4 and earlier remain self-consistent against their own embedded canonical.
+- **`labHash`** (optional, hex SHA-256 of the canonical `LabDoc`) binds authored-lab content into the signature: present for imported labs, omitted for built-ins. The exported PDF (signed and draft) also embeds the canonical `LabDoc` as a `lab.labframe.json` attachment, tamper-evident against `labHash`. See [ADR-0009](./decisions/0009-labhash-binding-and-embedded-labdoc.md) and [`docs/specs/ASSIGNMENT_CONSTRUCTOR_SPEC.md`](./specs/ASSIGNMENT_CONSTRUCTOR_SPEC.md).
+- **`integrity.captureDisclosureCorePresent`** (optional) asserts the non-removable capture-disclosure core was present in an imported lab's signed agreement text ([ADR-0008](./decisions/0008-integrity-agreement-core-disclosure.md)); omitted for built-ins.
+- Migration: the **persisted** state shape (`PersistedLabState`) is unchanged and stays at v4; this is an envelope-only change derived fresh at build/sign time, so no persisted migration is required. PDFs signed at v4 and earlier remain self-consistent against their own embedded canonical; verification flows branch on `schemaVersion`.
+
+### v6 (pre-registered 2026-06-10, not yet implemented)
+
+- **`images`** entries gain `sha256` (hex of blob bytes), binding the signature to image content; the PDF embeds each image visually ([ADR-0003](./decisions/0003-images-first-class-hashed.md)). Deferred out of v5 because it is a larger, independent change to the student-image pipeline (work-queue item 1), not part of the assignment constructor.
 
 ---
 
@@ -182,8 +186,8 @@ Agreed in the 2026-06-10 review, in priority order. Each item should land with a
 
 | #   | Item                                                                                                                                                                                                                                               | Area        |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| 1   | Embed uploaded images in the PDF; add `sha256` to envelope (ADR-0003, envelope v5)                                                                                                                                                                 | Product     |
-| 2   | Code-unit canonicalization done 2026-06-16; the rest of envelope v5 (Section 6) pending                                                                                                                                                            | Integrity   |
+| 1   | Embed uploaded images in the PDF; add `sha256` to envelope (ADR-0003, envelope v6)                                                                                                                                                                 | Product     |
+| 2   | Envelope v5 done 2026-06-16 (code-unit canonicalization, meta, status.submitted drop, labHash); images sha256/embed moved to v6 (item 1)                                                                                                           | Integrity   |
 | 3   | `initLab` staleness guards after every await (cross-lab data-bleed race)                                                                                                                                                                           | State       |
 | 4   | Persistence: flush previous lab's state on key change, suppress saves during hydration, `pagehide` flush                                                                                                                                           | State       |
 | 5   | Remove the whole-store subscription in `LabPage` (use `getState()` in export handlers)                                                                                                                                                             | Performance |

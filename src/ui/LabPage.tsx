@@ -253,11 +253,13 @@ export function LabPage({ course, lab, importedSource }: Props) {
         signature: signing.signature,
         signedAt: signing.signedAt,
       });
+      const labDocCanonical = store.labDoc ? canonicalize(store.labDoc) : undefined;
       const sealedBytes = await sealPDF(rendered, {
         canonical,
         signature: signing.signature,
         signedAt: signing.signedAt,
         title: `${lab.title} Report`,
+        ...(labDocCanonical ? { labDoc: labDocCanonical } : {}),
       });
       const normalizedBytes = Uint8Array.from(sealedBytes);
       const sealed = new Blob([normalizedBytes], { type: 'application/pdf' });
@@ -302,8 +304,10 @@ export function LabPage({ course, lab, importedSource }: Props) {
         answers,
         course,
       });
+      const labDocCanonical = store.labDoc ? canonicalize(store.labDoc) : undefined;
       const draftBytes = await prepareDraftPdf(rendered, {
         title: `${lab.title} Draft`,
+        ...(labDocCanonical ? { labDoc: labDocCanonical } : {}),
       });
       const draftBlob = new Blob([Uint8Array.from(draftBytes)], { type: 'application/pdf' });
       const filename = buildPdfFilename({
