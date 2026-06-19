@@ -1,8 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import type { Course, CourseLabRef, Lab } from '@/domain/schema';
+import { loadUntrustedLabDoc } from '@/services/authoring';
+import {
+  deleteImportedLab,
+  listImportedLabs,
+  saveImportedLab,
+  type ImportedLabEntry,
+} from '@/state/importedLabs';
+import { AccessibleDialog } from '@/ui/AccessibleDialog';
 import { HeroIllustration, LogoMark } from '@/ui/catalog/HeroIllustration';
 import { Button } from '@/ui/primitives/Button';
 import { Icon } from '@/ui/primitives/Icon';
@@ -12,6 +20,9 @@ type CatalogProps = {
   courses: Course[];
   labsByCourse: Record<string, Record<string, Lab>>;
   showWizard: boolean;
+  /** Single-course landing (e.g. /c/phy114): renders the full hero figure and a
+   *  course-scoped wizard that skips the course-selection step. */
+  standalone?: boolean;
 };
 
 type WizardStep = 'name' | 'course' | 'lab';
@@ -36,8 +47,12 @@ function safeStorageSet(key: string, value: string): void {
   }
 }
 
-function normalizeStep(value: string | null): WizardStep {
-  if (value === 'course' || value === 'lab') {
+function normalizeStep(value: string | null, standalone: boolean): WizardStep {
+  if (value === 'lab') {
+    return value;
+  }
+  // Single-course pages have no course-selection step.
+  if (value === 'course' && !standalone) {
     return value;
   }
   return 'name';
@@ -240,12 +255,18 @@ function AboutAndPrivacy() {
   );
 }
 
-function WizardSteps({ step }: { step: WizardStep }) {
-  const steps: { id: WizardStep; label: string }[] = [
-    { id: 'name', label: 'Name' },
-    { id: 'course', label: 'Course' },
-    { id: 'lab', label: 'Lab' },
-  ];
+function WizardSteps({ step, standalone }: { step: WizardStep; standalone: boolean }) {
+  // Single-course pages skip course selection: Name then Lab.
+  const steps: { id: WizardStep; label: string }[] = standalone
+    ? [
+        { id: 'name', label: 'Name' },
+        { id: 'lab', label: 'Lab' },
+      ]
+    : [
+        { id: 'name', label: 'Name' },
+        { id: 'course', label: 'Course' },
+        { id: 'lab', label: 'Lab' },
+      ];
   const activeIndex = steps.findIndex((entry) => entry.id === step);
   return (
     <ol className="wizard-steps" aria-label="Setup progress">
@@ -264,12 +285,136 @@ function WizardSteps({ step }: { step: WizardStep }) {
   );
 }
 
-export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
+function ImportedLabsSection() {
+  const navigate = useNavigate();
+  const [entries, setEntries] = useState<ImportedLabEntry[]>([]);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const refresh = useCallback(() => {
+    void listImportedLabs().then(setEntries);
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const importFile = useCallback(
+    async (file: File) => {
+      const result = await loadUntrustedLabDoc(await file.text());
+      if (!result.ok) {
+        setImportError(result.error);
+        return;
+      }
+      await saveImportedLab(result.doc, result.labHash);
+      navigate(`/i/${result.labHash}`);
+    },
+    [navigate],
+  );
+
+  const removeEntry = (labHash: string, title: string) => {
+    if (!window.confirm(`Remove "${title}" and its saved answers from this browser?`)) {
+      return;
+    }
+    void deleteImportedLab(labHash, { clearAnswers: true }).then(refresh);
+  };
+
+  return (
+    <section className="catalog-imported" aria-label="My labs">
+      <header className="catalog-course-header">
+        <h2 className="catalog-course-title">My Labs</h2>
+        <p className="catalog-course-meta">
+          Labs you imported from a file. Stored in this browser only.
+        </p>
+        <Link className="catalog-course-link" to="/author">
+          New lab
+        </Link>
+      </header>
+      <div
+        className="imported-dropzone"
+        data-dragging={isDragging || undefined}
+        onDragOver={(event) => {
+          event.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={(event) => {
+          event.preventDefault();
+          setIsDragging(false);
+          const file = event.dataTransfer.files[0];
+          if (file) {
+            void importFile(file);
+          }
+        }}
+      >
+        <p>Drag a lab file (.labframe.json) here</p>
+        <Button variant="secondary" size="md" onClick={() => fileInputRef.current?.click()}>
+          Open lab file
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json,.json"
+          hidden
+          onChange={(event) => {
+            const file = event.currentTarget.files?.[0];
+            if (file) {
+              void importFile(file);
+            }
+            event.currentTarget.value = '';
+          }}
+        />
+      </div>
+      {entries.length > 0 ? (
+        <ul className="catalog-lab-grid">
+          {entries.map((entry) => (
+            <li key={entry.labHash} className="imported-lab-item">
+              <Link className="lab-card" to={`/i/${entry.labHash}`} aria-label={entry.title}>
+                <span className="lab-card-top">
+                  <span className="lab-card-pill">Imported</span>
+                </span>
+                <span className="lab-card-title">{entry.title}</span>
+                <span className="imported-lab-meta">
+                  {entry.author}
+                  {entry.humanVersion ? ` · ${entry.humanVersion}` : ''}
+                </span>
+              </Link>
+              <button
+                type="button"
+                className="imported-delete"
+                onClick={() => removeEntry(entry.labHash, entry.title)}
+              >
+                Delete
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="catalog-empty">No imported labs yet.</p>
+      )}
+      <AccessibleDialog
+        open={importError !== null}
+        title="Could not import lab"
+        onClose={() => setImportError(null)}
+      >
+        <p>{importError}</p>
+      </AccessibleDialog>
+    </section>
+  );
+}
+
+export function Catalog({ courses, labsByCourse, showWizard, standalone = false }: CatalogProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [nameDraft, setNameDraft] = useState('');
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
 
-  const step = showWizard ? normalizeStep(searchParams.get('step')) : 'name';
+  const standaloneCourse = standalone && courses.length === 1 ? courses[0] : null;
+  const wizardEnabled = showWizard || standaloneCourse !== null;
+
+  const step = wizardEnabled
+    ? normalizeStep(searchParams.get('step'), standaloneCourse !== null)
+    : 'name';
   const selectedCourse = useMemo(
     () => courses.find((course) => course.id === selectedCourseId) ?? null,
     [courses, selectedCourseId],
@@ -279,7 +424,13 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
     [selectedCourse],
   );
 
-  const standaloneCourse = !showWizard && courses.length === 1 ? courses[0] : null;
+  // On a single-course page there is no course-selection step; pre-select it so
+  // the Lab step has its course.
+  useEffect(() => {
+    if (standaloneCourse && selectedCourseId !== standaloneCourse.id) {
+      setSelectedCourseId(standaloneCourse.id);
+    }
+  }, [standaloneCourse, selectedCourseId]);
 
   useEffect(() => {
     document.title = standaloneCourse ? `LabFrame - ${standaloneCourse.title}` : 'LabFrame';
@@ -289,7 +440,7 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
     const storedName = safeStorageGet(STUDENT_NAME_STORAGE_KEY)?.trim() ?? '';
     if (storedName) {
       setNameDraft(storedName);
-      if (showWizard) {
+      if (wizardEnabled) {
         const next = new URLSearchParams(searchParams);
         if (!next.get('step')) {
           next.set('step', 'name');
@@ -297,7 +448,7 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
         }
       }
     }
-  }, [searchParams, setSearchParams, showWizard]);
+  }, [searchParams, setSearchParams, wizardEnabled]);
 
   const saveName = () => {
     const value = nameDraft.trim();
@@ -325,13 +476,16 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
       </header>
       <main className="catalog">
         {standaloneCourse ? (
-          <section className="catalog-hero catalog-hero-compact">
+          <section className="catalog-hero">
             <div className="catalog-hero-copy">
               <p className="catalog-hero-eyebrow">
                 <Link to="/labs">All courses</Link>
               </p>
               <h1 className="catalog-hero-title">{standaloneCourse.title}</h1>
               <p className="catalog-hero-description">{courseMetaLabel(standaloneCourse)}</p>
+            </div>
+            <div className="catalog-hero-figure">
+              <HeroIllustration />
             </div>
           </section>
         ) : (
@@ -358,11 +512,11 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
           </section>
         )}
 
-        {showWizard ? (
+        {wizardEnabled ? (
           <section className="catalog-wizard" aria-labelledby="catalog-wizard-heading">
             <div className="catalog-wizard-head">
               <h2 id="catalog-wizard-heading">Start a lab</h2>
-              <WizardSteps step={step} />
+              <WizardSteps step={step} standalone={standaloneCourse !== null} />
             </div>
             {step === 'name' ? (
               <div className="catalog-wizard-step">
@@ -387,7 +541,7 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
                     disabled={!nameDraft.trim()}
                     onClick={() => {
                       if (saveName()) {
-                        goToStep('course');
+                        goToStep(standaloneCourse ? 'lab' : 'course');
                       }
                     }}
                     trailingIcon={<Icon icon={ChevronRight} size={16} />}
@@ -477,7 +631,11 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
                   <p className="catalog-empty">Select a course first.</p>
                 )}
                 <div className="catalog-wizard-actions">
-                  <Button variant="ghost" size="md" onClick={() => goToStep('course')}>
+                  <Button
+                    variant="ghost"
+                    size="md"
+                    onClick={() => goToStep(standaloneCourse ? 'name' : 'course')}
+                  >
                     Back
                   </Button>
                 </div>
@@ -485,6 +643,8 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
             ) : null}
           </section>
         ) : null}
+
+        <ImportedLabsSection />
 
         <div className="catalog-courses">
           {courses.map((course) => (

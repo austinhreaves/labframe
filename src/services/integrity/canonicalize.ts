@@ -14,6 +14,23 @@ function normalizeNumber(value: number): number {
   return Object.is(value, -0) ? 0 : value;
 }
 
+/**
+ * Order strings by UTF-16 code unit, which is the default behavior of the JS
+ * relational operators on strings. Unlike `localeCompare`, this is deterministic
+ * across environments and locales, so a canonical string (and any hash or
+ * signature over it) is reproducible everywhere. See docs/SPEC.md section 6
+ * (envelope v5).
+ */
+function compareCodeUnits(a: string, b: string): number {
+  if (a < b) {
+    return -1;
+  }
+  if (a > b) {
+    return 1;
+  }
+  return 0;
+}
+
 function toCanonicalValue(input: unknown): CanonicalValue {
   if (input === null) {
     return null;
@@ -35,16 +52,13 @@ function toCanonicalValue(input: unknown): CanonicalValue {
     return input.map((item) => toCanonicalValue(item));
   }
 
-  if (
-    'toJSON' in input &&
-    typeof (input as { toJSON?: () => unknown }).toJSON === 'function'
-  ) {
+  if ('toJSON' in input && typeof (input as { toJSON?: () => unknown }).toJSON === 'function') {
     return toCanonicalValue((input as { toJSON: () => unknown }).toJSON());
   }
 
   const entries = Object.entries(input as Record<string, unknown>)
     .filter(([, value]) => value !== undefined)
-    .sort(([a], [b]) => a.localeCompare(b));
+    .sort(([a], [b]) => compareCodeUnits(a, b));
 
   const sortedObject: { [key: string]: CanonicalValue } = {};
   for (const [key, value] of entries) {

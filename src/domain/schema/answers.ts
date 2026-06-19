@@ -41,14 +41,18 @@ export const FitResultSchema = z.object({
 export const LabAnswersMetaSchema = z.object({
   studentName: z.string(),
   semester: z.enum(['Spring', 'Summer', 'Fall']),
-  session: z.enum(['A', 'B', 'C']),
+  session: z.enum(['A', 'B', 'C']).optional(),
   year: z.string(),
-  taName: z.string(),
+  courseTitle: z.string(),
 });
 
 export const LabAnswersSchema = z.object({
-  schemaVersion: z.literal(4),
+  schemaVersion: z.literal(5),
   meta: LabAnswersMetaSchema,
+  // SHA-256 (hex) of the canonical LabDoc for imported (authored) labs; absent
+  // for built-in labs. Binds the signature to the exact authored lab version.
+  // See ADR-0009 and docs/specs/ASSIGNMENT_CONSTRUCTOR_SPEC.md.
+  labHash: z.string().optional(),
   integrity: z.object({
     signedAs: z.string(),
     aiUsed: z.boolean(),
@@ -56,6 +60,9 @@ export const LabAnswersSchema = z.object({
     agreementAccepted: z.boolean(),
     agreementAcceptedAt: z.number().int().nonnegative(),
     agreementText: z.string(),
+    // For imported labs: asserts the locked capture-disclosure core (ADR-0008)
+    // was present in the signed agreement text. Absent for built-in labs.
+    captureDisclosureCorePresent: z.boolean().optional(),
   }),
   fields: z.record(idSchema, FieldValueSchema),
   tables: z.record(idSchema, TableDataSchema),
@@ -63,7 +70,6 @@ export const LabAnswersSchema = z.object({
   images: z.record(idSchema, BlobRefSchema),
   fits: z.record(idSchema, FitResultSchema),
   status: z.object({
-    submitted: z.boolean(),
     lastSavedAt: z.number().int().nonnegative(),
   }),
 });

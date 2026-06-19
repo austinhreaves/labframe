@@ -1,6 +1,14 @@
 import { create } from 'zustand';
 
-import type { FieldValue, Lab, NumericRow, Section, TableData, TableRow } from '@/domain/schema';
+import type {
+  FieldValue,
+  Lab,
+  LabDoc,
+  NumericRow,
+  Section,
+  TableData,
+  TableRow,
+} from '@/domain/schema';
 import {
   CURRENT_PERSISTED_SCHEMA_VERSION,
   attachLabPersistence,
@@ -37,6 +45,9 @@ type LabStoreStatus = {
   lastError: string | null;
 };
 
+/** Provenance for an imported (authored) lab. Built-in labs leave these unset. */
+export type ImportedLabSource = { labHash: string; labDoc: LabDoc };
+
 export type LabStoreState = {
   courseId: string;
   labId: string;
@@ -46,6 +57,10 @@ export type LabStoreState = {
   integrityAgreementAccepted: boolean;
   integrityAgreementAcceptedAt: number;
   lab: Lab | null;
+  /** Set for imported (authored) labs; null for built-in labs. Phase C binds
+   *  labHash into the signed envelope. */
+  labHash: string | null;
+  labDoc: LabDoc | null;
   fields: Record<string, FieldValue>;
   tables: Record<string, TableData>;
   selectedFits: Record<string, string | null>;
@@ -54,7 +69,7 @@ export type LabStoreState = {
   splitFraction: number;
   simSide: 'left' | 'right';
   status: LabStoreStatus;
-  initLab: (courseId: string, labId: string, lab: Lab) => Promise<void>;
+  initLab: (courseId: string, labId: string, lab: Lab, source?: ImportedLabSource) => Promise<void>;
   setStudentName: (studentName: string) => Promise<void>;
   setAiUsed: (value: boolean) => void;
   setAiSharedLinks: (value: string) => void;
@@ -319,6 +334,8 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
     integrityAgreementAccepted: false,
     integrityAgreementAcceptedAt: 0,
     lab: null,
+    labHash: null,
+    labDoc: null,
     fields: {},
     tables: {},
     selectedFits: {},
@@ -331,7 +348,7 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
       lastSavedAt: 0,
       lastError: null,
     },
-    initLab: async (courseId, labId, lab) => {
+    initLab: async (courseId, labId, lab, source) => {
       const previousImages = get().images;
       revokeImageObjectUrls(previousImages);
 
@@ -351,6 +368,8 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
         courseId,
         labId,
         lab,
+        labHash: source?.labHash ?? null,
+        labDoc: source?.labDoc ?? null,
         integrityAgreementAccepted: false,
         integrityAgreementAcceptedAt: 0,
         ...defaults,
@@ -449,7 +468,11 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
       set({ studentName: nextName });
 
       if (current.courseId && current.labId && current.lab) {
-        await get().initLab(current.courseId, current.labId, current.lab);
+        const source =
+          current.labHash && current.labDoc
+            ? { labHash: current.labHash, labDoc: current.labDoc }
+            : undefined;
+        await get().initLab(current.courseId, current.labId, current.lab, source);
       }
     },
     setAiUsed: (value) =>

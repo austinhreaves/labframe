@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import { snellsLawLab } from '@/content/labs';
 import type { Course } from '@/domain/schema';
+import { compileLabDoc, hashLabDoc } from '@/services/authoring';
 import { DEFAULT_INTEGRITY_AGREEMENT_TEXT } from '@/services/integrity/agreementText';
 import { buildAnswersFromStore } from '@/services/integrity/buildAnswers';
 import { canonicalize } from '@/services/integrity/canonicalize';
 import { createLabStore } from '@/state/labStore';
 import { createMemoryPersistenceAdapter } from '@/state/persistence/memoryAdapter';
+
+import { validLabDoc } from './fixtures/labDoc.fixtures';
 
 const courseFixture: Course = {
   id: 'phy132',
@@ -29,7 +32,9 @@ describe('buildAnswersFromStore', () => {
     store.getState().setAiSharedLinks('https://chat.example/thread');
 
     const answers = buildAnswersFromStore(courseFixture, store.getState());
-    expect(answers.schemaVersion).toBe(4);
+    expect(answers.schemaVersion).toBe(5);
+    expect(answers.labHash).toBeUndefined();
+    expect(answers.integrity.captureDisclosureCorePresent).toBeUndefined();
     expect(answers.selectedFits).toEqual({
       zzzPlot: 'linear',
       aaaPlot: 'proportional',
@@ -95,5 +100,29 @@ describe('buildAnswersFromStore', () => {
     expect(answers.fits).toEqual({
       goodPlot: { model: 'linear', parameters: { a: 2, b: 3 } },
     });
+  });
+
+  it('binds labHash and the disclosure attestation for an imported lab', async () => {
+    const store = createLabStore(createMemoryPersistenceAdapter());
+    const doc = validLabDoc();
+    const { lab } = compileLabDoc(doc);
+    const labHash = await hashLabDoc(doc);
+    await store
+      .getState()
+      .initLab('imported', labHash, { ...lab, id: labHash }, { labHash, labDoc: doc });
+
+    const importedCourse: Course = {
+      id: 'imported',
+      title: doc.meta.title,
+      storagePrefix: 'imported',
+      parentOriginAllowList: [],
+      labs: [{ ref: labHash, enabled: true }],
+    };
+    const answers = buildAnswersFromStore(importedCourse, store.getState());
+
+    expect(answers.schemaVersion).toBe(5);
+    expect(answers.labHash).toBe(labHash);
+    expect(answers.integrity.captureDisclosureCorePresent).toBe(true);
+    expect(answers.meta.courseTitle).toBe(doc.meta.title);
   });
 });

@@ -3,6 +3,7 @@ import { Info } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import type { Course, Lab } from '@/domain/schema';
+import type { ImportedLabSource } from '@/state/labStore';
 import {
   clearParentMessagingContext,
   configureParentMessaging,
@@ -39,6 +40,8 @@ import {
 type Props = {
   course: Course;
   lab: Lab;
+  /** Provenance for imported (authored) labs; omitted for built-in labs. */
+  importedSource?: ImportedLabSource;
 };
 
 const STUDENT_NAME_STORAGE_KEY = 'labframe:student-name';
@@ -83,7 +86,7 @@ function StableSimulationFrame({ simulationId, title, url, allow }: SimulationFr
   );
 }
 
-export function LabPage({ course, lab }: Props) {
+export function LabPage({ course, lab, importedSource }: Props) {
   const initLab = useLabStore((state) => state.initLab);
   const splitFraction = useLabStore((state) => state.splitFraction);
   const setSplitFraction = useLabStore((state) => state.setSplitFraction);
@@ -116,8 +119,8 @@ export function LabPage({ course, lab }: Props) {
   const exportPdfButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
-    void initLab(course.id, lab.id, lab);
-  }, [course.id, lab, initLab]);
+    void initLab(course.id, lab.id, lab, importedSource);
+  }, [course.id, lab, initLab, importedSource]);
 
   useEffect(() => {
     document.title = `LabFrame - ${lab.title}`;
@@ -250,11 +253,13 @@ export function LabPage({ course, lab }: Props) {
         signature: signing.signature,
         signedAt: signing.signedAt,
       });
+      const labDocCanonical = store.labDoc ? canonicalize(store.labDoc) : undefined;
       const sealedBytes = await sealPDF(rendered, {
         canonical,
         signature: signing.signature,
         signedAt: signing.signedAt,
         title: `${lab.title} Report`,
+        ...(labDocCanonical ? { labDoc: labDocCanonical } : {}),
       });
       const normalizedBytes = Uint8Array.from(sealedBytes);
       const sealed = new Blob([normalizedBytes], { type: 'application/pdf' });
@@ -299,8 +304,10 @@ export function LabPage({ course, lab }: Props) {
         answers,
         course,
       });
+      const labDocCanonical = store.labDoc ? canonicalize(store.labDoc) : undefined;
       const draftBytes = await prepareDraftPdf(rendered, {
         title: `${lab.title} Draft`,
+        ...(labDocCanonical ? { labDoc: labDocCanonical } : {}),
       });
       const draftBlob = new Blob([Uint8Array.from(draftBytes)], { type: 'application/pdf' });
       const filename = buildPdfFilename({
