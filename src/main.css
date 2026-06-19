@@ -172,21 +172,6 @@ html {
   min-width: 0;
 }
 
-.catalog-hero-compact {
-  display: block;
-  padding: var(--space-6) 0 var(--space-4);
-}
-
-.catalog-hero-compact .catalog-hero-title {
-  font-size: var(--text-2xl);
-}
-
-.catalog-hero-compact .catalog-hero-description {
-  margin-top: var(--space-2);
-  font-size: var(--text-sm);
-  color: var(--text-tertiary);
-}
-
 @media (max-width: 880px) {
   .catalog-hero {
     grid-template-columns: 1fr;
@@ -766,10 +751,6 @@ html {
   display: flex;
   flex-direction: column;
   gap: var(--space-7);
-}
-
-.catalog-hero-compact + .catalog-courses {
-  margin-top: var(--space-4);
 }
 
 .catalog-course-header {
@@ -2319,6 +2300,14 @@ tr:hover td {
 .section-instructions p {
   margin: var(--space-2) 0;
   line-height: var(--leading-prose);
+}
+
+/* Author figures inlined into markdown (compileLabDoc) scale to the column
+   instead of rendering at their intrinsic pixel size. */
+.markdown-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 .chart canvas {

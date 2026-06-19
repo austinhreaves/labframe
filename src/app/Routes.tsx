@@ -111,7 +111,7 @@ function CoursePage() {
     return <Navigate to="/" replace />;
   }
 
-  return <Catalog courses={[course]} labsByCourse={labsByCourse} showWizard={false} />;
+  return <Catalog courses={[course]} labsByCourse={labsByCourse} showWizard={false} standalone />;
 }
 
 function LabRoutePage() {

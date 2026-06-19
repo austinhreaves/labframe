@@ -1,4 +1,4 @@
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import type { ReactNode } from 'react';
 import rehypeKatex from 'rehype-katex';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
@@ -27,6 +27,14 @@ const instructionSchema = {
     ],
   },
 };
+
+// react-markdown's default urlTransform strips anything that is not http(s) or
+// mailto, which drops the inline `data:` image URLs compileLabDoc produces for
+// authored-lab figures. Pass `data:` through (rehypeSanitize still enforces the
+// `src` protocol allow-list below); defer everything else to the default.
+function urlTransform(url: string): string {
+  return url.startsWith('data:') ? url : defaultUrlTransform(url);
+}
 
 const CALLOUT_PATTERN = /^\[!(NOTE|TIP|WARNING|IMPORTANT|CAUTION)\]\s*\n?/i;
 
@@ -92,13 +100,16 @@ const markdownComponents: Components = {
 
 export function MarkdownBlock({ markdown }: MarkdownBlockProps) {
   return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm, remarkMath]}
-      rehypePlugins={[[rehypeSanitize, instructionSchema], rehypeKatex]}
-      components={markdownComponents}
-    >
-      {markdown}
-    </ReactMarkdown>
+    <div className="markdown-content">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[[rehypeSanitize, instructionSchema], rehypeKatex]}
+        urlTransform={urlTransform}
+        components={markdownComponents}
+      >
+        {markdown}
+      </ReactMarkdown>
+    </div>
   );
 }
 

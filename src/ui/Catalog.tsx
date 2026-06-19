@@ -20,6 +20,9 @@ type CatalogProps = {
   courses: Course[];
   labsByCourse: Record<string, Record<string, Lab>>;
   showWizard: boolean;
+  /** Single-course landing (e.g. /c/phy114): renders the full hero figure and a
+   *  course-scoped wizard that skips the course-selection step. */
+  standalone?: boolean;
 };
 
 type WizardStep = 'name' | 'course' | 'lab';
@@ -44,8 +47,12 @@ function safeStorageSet(key: string, value: string): void {
   }
 }
 
-function normalizeStep(value: string | null): WizardStep {
-  if (value === 'course' || value === 'lab') {
+function normalizeStep(value: string | null, standalone: boolean): WizardStep {
+  if (value === 'lab') {
+    return value;
+  }
+  // Single-course pages have no course-selection step.
+  if (value === 'course' && !standalone) {
     return value;
   }
   return 'name';
@@ -248,12 +255,18 @@ function AboutAndPrivacy() {
   );
 }
 
-function WizardSteps({ step }: { step: WizardStep }) {
-  const steps: { id: WizardStep; label: string }[] = [
-    { id: 'name', label: 'Name' },
-    { id: 'course', label: 'Course' },
-    { id: 'lab', label: 'Lab' },
-  ];
+function WizardSteps({ step, standalone }: { step: WizardStep; standalone: boolean }) {
+  // Single-course pages skip course selection: Name then Lab.
+  const steps: { id: WizardStep; label: string }[] = standalone
+    ? [
+        { id: 'name', label: 'Name' },
+        { id: 'lab', label: 'Lab' },
+      ]
+    : [
+        { id: 'name', label: 'Name' },
+        { id: 'course', label: 'Course' },
+        { id: 'lab', label: 'Lab' },
+      ];
   const activeIndex = steps.findIndex((entry) => entry.id === step);
   return (
     <ol className="wizard-steps" aria-label="Setup progress">
@@ -391,12 +404,17 @@ function ImportedLabsSection() {
   );
 }
 
-export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
+export function Catalog({ courses, labsByCourse, showWizard, standalone = false }: CatalogProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [nameDraft, setNameDraft] = useState('');
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
 
-  const step = showWizard ? normalizeStep(searchParams.get('step')) : 'name';
+  const standaloneCourse = standalone && courses.length === 1 ? courses[0] : null;
+  const wizardEnabled = showWizard || standaloneCourse !== null;
+
+  const step = wizardEnabled
+    ? normalizeStep(searchParams.get('step'), standaloneCourse !== null)
+    : 'name';
   const selectedCourse = useMemo(
     () => courses.find((course) => course.id === selectedCourseId) ?? null,
     [courses, selectedCourseId],
@@ -406,7 +424,13 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
     [selectedCourse],
   );
 
-  const standaloneCourse = !showWizard && courses.length === 1 ? courses[0] : null;
+  // On a single-course page there is no course-selection step; pre-select it so
+  // the Lab step has its course.
+  useEffect(() => {
+    if (standaloneCourse && selectedCourseId !== standaloneCourse.id) {
+      setSelectedCourseId(standaloneCourse.id);
+    }
+  }, [standaloneCourse, selectedCourseId]);
 
   useEffect(() => {
     document.title = standaloneCourse ? `LabFrame - ${standaloneCourse.title}` : 'LabFrame';
@@ -416,7 +440,7 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
     const storedName = safeStorageGet(STUDENT_NAME_STORAGE_KEY)?.trim() ?? '';
     if (storedName) {
       setNameDraft(storedName);
-      if (showWizard) {
+      if (wizardEnabled) {
         const next = new URLSearchParams(searchParams);
         if (!next.get('step')) {
           next.set('step', 'name');
@@ -424,7 +448,7 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
         }
       }
     }
-  }, [searchParams, setSearchParams, showWizard]);
+  }, [searchParams, setSearchParams, wizardEnabled]);
 
   const saveName = () => {
     const value = nameDraft.trim();
@@ -452,13 +476,16 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
       </header>
       <main className="catalog">
         {standaloneCourse ? (
-          <section className="catalog-hero catalog-hero-compact">
+          <section className="catalog-hero">
             <div className="catalog-hero-copy">
               <p className="catalog-hero-eyebrow">
                 <Link to="/labs">All courses</Link>
               </p>
               <h1 className="catalog-hero-title">{standaloneCourse.title}</h1>
               <p className="catalog-hero-description">{courseMetaLabel(standaloneCourse)}</p>
+            </div>
+            <div className="catalog-hero-figure">
+              <HeroIllustration />
             </div>
           </section>
         ) : (
@@ -485,11 +512,11 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
           </section>
         )}
 
-        {showWizard ? (
+        {wizardEnabled ? (
           <section className="catalog-wizard" aria-labelledby="catalog-wizard-heading">
             <div className="catalog-wizard-head">
               <h2 id="catalog-wizard-heading">Start a lab</h2>
-              <WizardSteps step={step} />
+              <WizardSteps step={step} standalone={standaloneCourse !== null} />
             </div>
             {step === 'name' ? (
               <div className="catalog-wizard-step">
@@ -514,7 +541,7 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
                     disabled={!nameDraft.trim()}
                     onClick={() => {
                       if (saveName()) {
-                        goToStep('course');
+                        goToStep(standaloneCourse ? 'lab' : 'course');
                       }
                     }}
                     trailingIcon={<Icon icon={ChevronRight} size={16} />}
@@ -604,7 +631,11 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
                   <p className="catalog-empty">Select a course first.</p>
                 )}
                 <div className="catalog-wizard-actions">
-                  <Button variant="ghost" size="md" onClick={() => goToStep('course')}>
+                  <Button
+                    variant="ghost"
+                    size="md"
+                    onClick={() => goToStep(standaloneCourse ? 'name' : 'course')}
+                  >
                     Back
                   </Button>
                 </div>
