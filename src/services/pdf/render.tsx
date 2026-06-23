@@ -5,7 +5,7 @@ type RenderPDFArgs = {
   answers: LabAnswers;
   course: Course;
   /** Image bytes as data URLs keyed by image id, for embedding in the PDF. */
-  images?: Record<string, string>;
+  images?: Record<string, string> | undefined;
 } & ({ mode: 'signed'; signature: string; signedAt: number } | { mode: 'draft' });
 
 export async function renderPDF(args: RenderPDFArgs): Promise<Uint8Array> {

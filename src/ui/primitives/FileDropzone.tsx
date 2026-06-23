@@ -11,7 +11,7 @@ type FileDropzoneProps = {
   id?: string;
   value: { fileName: string; objectUrl: string; sizeBytes?: number } | undefined;
   accept?: string;
-  maxBytes?: number;
+  maxBytes?: number | undefined;
   onFileChange: (file: File | null) => void;
   disabled?: boolean;
   label?: string;

@@ -24,7 +24,7 @@ type PDFProps = {
    * the runtime store. Kept separate from `answers` so the signed envelope
    * stays byte-stable (it binds images by SHA-256, not by their pixels).
    */
-  imageData?: Record<string, string>;
+  imageData?: Record<string, string> | undefined;
 } & ({ mode: 'signed'; signature: string; signedAt: number } | { mode: 'draft' });
 
 type ProcessRecordSection = Section | { kind: 'equation'; fieldId: string };
@@ -65,7 +65,7 @@ function pdfPointsSuffix(points: number | undefined): string {
   return ` (${formatPointsLabel(points)} pts)`;
 }
 
-function imageCaption(blobRef: { bytes: number; sha256?: string } | undefined): string {
+function imageCaption(blobRef: { bytes: number; sha256?: string | undefined } | undefined): string {
   if (!blobRef) {
     return 'No image attached';
   }
