@@ -2166,3 +2166,122 @@ code {
   font-size: var(--text-sm);
   color: var(--text-secondary);
 }
+
+/* ============================================================
+   Tablet layout -- max-width: 1024px
+   Collapses the side-by-side sim/worksheet layout to stacked,
+   and switches the simulation frame from fixed height to a
+   responsive 16:9 aspect-ratio box. No numeric literals beyond
+   the breakpoint boundary itself.
+   ============================================================ */
+
+@media (max-width: 1024px) {
+  /* Responsive sim height: replaces the fixed 720px.
+     The min-height floor keeps the sim usable on short viewports. */
+  .simulation-frame {
+    height: auto;
+    aspect-ratio: 16 / 9;
+    min-height: 360px;
+  }
+
+  /* Side-by-side collapses: sim on top, worksheet below.
+     The split handle has no purpose in a single-column layout. */
+  .lab-layout-side,
+  .lab-layout-side.lab-layout-sim-right {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'sim'
+      'worksheet';
+  }
+
+  /* Unstick the simulation pane -- sticky only makes sense when
+     the sim and worksheet are side by side. */
+  .lab-layout-side .layout-pane-simulation {
+    position: static;
+    top: auto;
+  }
+
+  .split-handle {
+    display: none;
+  }
+}
+
+/* ============================================================
+   Tablet layout -- max-width: 768px
+   Tighter padding for portrait tablets. Bumps the sticky header
+   offset so section anchors don't scroll under the header when
+   it wraps to a second line.
+   ============================================================ */
+
+@media (max-width: 768px) {
+  :root {
+    --lab-header-offset: 160px;
+  }
+
+  .lab-page {
+    padding: var(--space-3) var(--space-4) var(--space-3);
+  }
+
+  .catalog {
+    padding: 0 var(--space-4) var(--space-7);
+  }
+
+  .catalog-header {
+    padding: var(--space-3) var(--space-4);
+  }
+}
+
+/* ============================================================
+   Hover guards -- touch-primary devices (hover: none)
+   Transform-based hover states (translateY, box-shadow lifts)
+   persist as phantom states after a tap. Reset them here so
+   tapping a card doesn't leave it "stuck" in hover position.
+   Simple color transitions on inputs are left as-is since
+   they are overridden by focus state immediately on tap.
+   ============================================================ */
+
+@media (hover: none) {
+  a.lab-card:hover {
+    transform: none;
+    box-shadow: var(--shadow-1);
+    border-color: var(--border-default);
+  }
+
+  .lab-card:hover .lab-card-chevron {
+    transform: none;
+    color: var(--text-tertiary);
+  }
+
+  .catalog-wizard-card:hover {
+    transform: none;
+    box-shadow: var(--shadow-none);
+    border-color: var(--border-default);
+  }
+
+  .catalog-wizard-card:hover .catalog-wizard-card-chevron {
+    transform: none;
+    color: var(--text-tertiary);
+  }
+
+  .catalog-hero-course-chip:hover {
+    border-color: var(--border-default);
+    color: var(--text-secondary);
+  }
+}
+
+/* ============================================================
+   Tap targets -- coarse pointers (touch / stylus)
+   WCAG 2.5.5 asks for a 44px minimum touch target. The desktop
+   button tiers (28 / 36 / 44px) are intentionally dense, so we
+   only enlarge on coarse pointers rather than globally. Placed
+   after the .btn tiers so it wins on equal specificity.
+   Disclosure summaries (TOC, symbol "more") are tap targets too.
+   ============================================================ */
+
+@media (pointer: coarse) {
+  button,
+  .btn,
+  summary {
+    min-height: 44px;
+  }
+}

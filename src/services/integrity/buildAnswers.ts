@@ -33,6 +33,7 @@ export function buildAnswersFromStore(course: Course, store: LabStoreState): Lab
           idbKey: image.idbKey,
           mime: image.mime,
           bytes: image.bytes,
+          ...(image.sha256 ? { sha256: image.sha256 } : {}),
         },
       ]),
     ),

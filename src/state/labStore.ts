@@ -22,6 +22,7 @@ type FitSelection = {
 type RuntimeImage = PersistedImageMeta & {
   objectUrl: string;
   persisted: boolean;
+  sha256?: string;
 };
 
 export type RecoverableAttachment = {
@@ -150,10 +151,17 @@ function initFieldsFromSchema(sections: Section[]): Record<string, FieldValue> {
     if (
       section.kind === 'objective' ||
       section.kind === 'measurement' ||
-      section.kind === 'calculation' ||
       section.kind === 'concept'
     ) {
       fields[section.fieldId] = createEmptyFieldValue();
+      continue;
+    }
+
+    if (section.kind === 'calculation') {
+      // Image-mode sections store their answer as a blob in store.images, not a text field.
+      if (section.responseMode !== 'image') {
+        fields[section.fieldId] = createEmptyFieldValue();
+      }
       continue;
     }
 
@@ -231,6 +239,7 @@ function serializePersistedState(state: LabStoreState, savedAt: number): Persist
           mime: image.mime,
           bytes: image.bytes,
           fileName: image.fileName,
+          ...(image.sha256 ? { sha256: image.sha256 } : {}),
         },
       ]),
   );
@@ -561,7 +570,20 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
 
       void adapter
         .saveBlob(idbKey, file)
-        .then(() => {
+        .then(async () => {
+          // Compute SHA-256 after the blob is safely stored. Failure here is
+          // non-fatal: some environments (older browsers, test runners) do not
+          // expose crypto.subtle or File.arrayBuffer.
+          let sha256: string | undefined;
+          try {
+            const buf = await file.arrayBuffer();
+            const hash = await crypto.subtle.digest('SHA-256', buf);
+            sha256 = Array.from(new Uint8Array(hash))
+              .map((b) => b.toString(16).padStart(2, '0'))
+              .join('');
+          } catch {
+            // persist without hash
+          }
           set((current) => {
             const image = current.images[imageId];
             if (!image || image.idbKey !== idbKey) {
@@ -570,10 +592,7 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
             return {
               images: {
                 ...current.images,
-                [imageId]: {
-                  ...image,
-                  persisted: true,
-                },
+                [imageId]: { ...image, ...(sha256 ? { sha256 } : {}), persisted: true },
               },
             };
           });

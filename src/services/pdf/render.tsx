@@ -4,6 +4,8 @@ type RenderPDFArgs = {
   lab: Lab;
   answers: LabAnswers;
   course: Course;
+  /** Image bytes as data URLs keyed by image id, for embedding in the PDF. */
+  images?: Record<string, string>;
 } & ({ mode: 'signed'; signature: string; signedAt: number } | { mode: 'draft' });
 
 export async function renderPDF(args: RenderPDFArgs): Promise<Uint8Array> {
@@ -13,9 +15,9 @@ export async function renderPDF(args: RenderPDFArgs): Promise<Uint8Array> {
   ]);
   const document =
     args.mode === 'signed' ? (
-      <LabReportDocument lab={args.lab} answers={args.answers} course={args.course} mode="signed" signature={args.signature} signedAt={args.signedAt} />
+      <LabReportDocument lab={args.lab} answers={args.answers} course={args.course} imageData={args.images} mode="signed" signature={args.signature} signedAt={args.signedAt} />
     ) : (
-      <LabReportDocument lab={args.lab} answers={args.answers} course={args.course} mode="draft" />
+      <LabReportDocument lab={args.lab} answers={args.answers} course={args.course} imageData={args.images} mode="draft" />
     );
   const instance = pdf(document);
   const blob = await instance.toBlob();

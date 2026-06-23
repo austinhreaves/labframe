@@ -30,6 +30,7 @@ export const BlobRefSchema = z.object({
   idbKey: z.string().min(1),
   mime: z.string().min(1),
   bytes: z.number().int().nonnegative(),
+  sha256: z.string().optional(),
 });
 
 export const FitResultSchema = z.object({

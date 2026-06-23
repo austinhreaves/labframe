@@ -1,5 +1,21 @@
 import { expect, test } from '@playwright/test';
 
+test.describe('tablet viewport (768x1024)', () => {
+  test.use({ viewport: { width: 768, height: 1024 } });
+
+  test('no horizontal scroll at 768x1024 tablet viewport -- Snells Law side layout', async ({
+    page,
+  }) => {
+    await page.goto('/c/phy132/snellsLaw?layout=side');
+    await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();
+
+    const hasHorizontalScroll = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    );
+    expect(hasHorizontalScroll).toBe(false);
+  });
+});
+
 test('sticky header stays visible over long scroll', async ({ page }, testInfo) => {
   await page.goto('/c/phy132/snellsLaw?layout=side');
   await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();

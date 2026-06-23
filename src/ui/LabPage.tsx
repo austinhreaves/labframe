@@ -238,8 +238,12 @@ export function LabPage({ course, lab }: Props) {
 
     setIsExportingPdf(true);
     try {
-      const { renderPDF } = await import('@/services/pdf/render');
+      const [{ renderPDF }, { collectPdfImageData }] = await Promise.all([
+        import('@/services/pdf/render'),
+        import('@/services/pdf/collectImageData'),
+      ]);
       const answers = buildAnswersFromStore(course, { ...store, studentName: studentNameForPdf });
+      const images = await collectPdfImageData(store.images);
       const signing = await signAnswers(answers);
       const canonical = canonicalize(answers);
       const rendered = await renderPDF({
@@ -247,6 +251,7 @@ export function LabPage({ course, lab }: Props) {
         lab,
         answers,
         course,
+        images,
         signature: signing.signature,
         signedAt: signing.signedAt,
       });
@@ -291,13 +296,18 @@ export function LabPage({ course, lab }: Props) {
 
     setIsExportingDraft(true);
     try {
-      const { renderPDF } = await import('@/services/pdf/render');
+      const [{ renderPDF }, { collectPdfImageData }] = await Promise.all([
+        import('@/services/pdf/render'),
+        import('@/services/pdf/collectImageData'),
+      ]);
       const answers = buildAnswersFromStore(course, { ...store, studentName: studentNameForPdf });
+      const images = await collectPdfImageData(store.images);
       const rendered = await renderPDF({
         mode: 'draft',
         lab,
         answers,
         course,
+        images,
       });
       const draftBytes = await prepareDraftPdf(rendered, {
         title: `${lab.title} Draft`,
