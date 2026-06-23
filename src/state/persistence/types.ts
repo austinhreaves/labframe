@@ -3,6 +3,7 @@ export type PersistedImageMeta = {
   mime: string;
   bytes: number;
   fileName: string;
+  sha256?: string;
 };
 
 export type PersistedLabState = {

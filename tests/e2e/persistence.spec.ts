@@ -6,8 +6,36 @@ test('persists per course/lab key when switching catalog routes', async ({ page 
   await page.goto('/c/phy132/snellsLaw');
   await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();
   const incidentField = page.getByLabel(/incident angle \(deg\) row 1/i).nth(1);
+  // Wait for initLab defaults to land before filling; prevents the race where
+  // initLab's set(defaults) fires after fill and overwrites '31' with ''.
+  await expect(incidentField).toHaveValue('');
   await incidentField.fill('31');
-  await page.waitForTimeout(450);
+  // Poll until the lab store has saved the value; avoids a hard-coded timeout
+  // that becomes flaky under parallel-worker load from the full e2e suite.
+  await page.waitForFunction(
+    (expected) => {
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (!key?.startsWith('lab:')) {
+          continue;
+        }
+        try {
+          const parsed = JSON.parse(localStorage.getItem(key) ?? '') as {
+            tables?: Record<string, Array<Record<string, { text: string }>>>;
+          };
+          const row0 = parsed.tables?.part2Table?.[0];
+          if (row0 && Object.values(row0).some((v) => v.text === expected)) {
+            return true;
+          }
+        } catch {
+          continue;
+        }
+      }
+      return false;
+    },
+    '31',
+    { timeout: 3000 },
+  );
 
   await page.goto('/c/phy114/snellsLaw');
   await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();

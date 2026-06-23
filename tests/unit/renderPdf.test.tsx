@@ -52,6 +52,10 @@ const answersFixture: LabAnswers = {
   },
 };
 
+// 1x1 transparent PNG, the smallest valid raster for exercising the embed path.
+const PNG_DATA_URL =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
 describe('renderPDF', () => {
   function collectText(node: unknown): string {
     if (typeof node === 'string' || typeof node === 'number') {
@@ -65,6 +69,86 @@ describe('renderPDF', () => {
     }
     return collectText((node as { props: { children?: unknown } }).props.children);
   }
+
+  function collectImageSrcs(node: unknown, acc: string[] = []): string[] {
+    if (Array.isArray(node)) {
+      node.forEach((child) => collectImageSrcs(child, acc));
+      return acc;
+    }
+    if (!isValidElement(node)) {
+      return acc;
+    }
+    const props = (node as { props: Record<string, unknown> }).props;
+    if (typeof props.src === 'string') {
+      acc.push(props.src);
+    }
+    collectImageSrcs(props.children, acc);
+    return acc;
+  }
+
+  const calcImageLab: Lab = {
+    ...labFixture,
+    sections: [
+      {
+        kind: 'calculation',
+        fieldId: 'calc-photo',
+        prompt: 'Attach a photo of your work',
+        responseMode: 'image',
+        imageId: 'photo1',
+      },
+    ],
+  };
+
+  const calcImageAnswers: LabAnswers = {
+    ...answersFixture,
+    images: {
+      photo1: { idbKey: 'idb-photo1', mime: 'image/png', bytes: 68, sha256: 'a'.repeat(64) },
+    },
+  };
+
+  it('embeds the calculation image as an Image node when data is provided', () => {
+    const tree = LabReportDocument({
+      lab: calcImageLab,
+      answers: calcImageAnswers,
+      course: courseFixture,
+      mode: 'signed',
+      signature: '0123456789abcdef0123456789abcdef',
+      signedAt: 1714450000000,
+      imageData: { photo1: PNG_DATA_URL },
+    });
+
+    expect(collectImageSrcs(tree)).toContain(PNG_DATA_URL);
+    expect(collectText(tree)).toContain('Image attached: 68 bytes');
+  });
+
+  it('omits the Image node and keeps the caption when image data is absent', () => {
+    const tree = LabReportDocument({
+      lab: calcImageLab,
+      answers: calcImageAnswers,
+      course: courseFixture,
+      mode: 'signed',
+      signature: '0123456789abcdef0123456789abcdef',
+      signedAt: 1714450000000,
+    });
+
+    expect(collectImageSrcs(tree)).toHaveLength(0);
+    expect(collectText(tree)).toContain('Image attached: 68 bytes');
+  });
+
+  it('renders a calculation-image PDF to bytes with the embedded image', async () => {
+    const bytes = await renderPDF({
+      mode: 'signed',
+      lab: calcImageLab,
+      answers: calcImageAnswers,
+      course: courseFixture,
+      images: { photo1: PNG_DATA_URL },
+      signature: '0123456789abcdef0123456789abcdef',
+      signedAt: 1714450000000,
+    });
+
+    expect(bytes).toBeInstanceOf(Uint8Array);
+    expect(bytes.byteLength).toBeGreaterThan(0);
+  });
 
   it('returns Uint8Array bytes in browser-compatible path', async () => {
     const bytes = await renderPDF({

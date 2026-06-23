@@ -1,4 +1,4 @@
-import { Document, Page, StyleSheet, Svg, Text, View, Circle, Line } from '@react-pdf/renderer';
+import { Document, Image, Page, StyleSheet, Svg, Text, View, Circle, Line } from '@react-pdf/renderer';
 
 import { formatPointsLabel, sumSectionPoints } from '@/domain/pointsFormatting';
 import type {
@@ -19,6 +19,12 @@ type PDFProps = {
   lab: Lab;
   answers: LabAnswers;
   course: Course;
+  /**
+   * Image bytes as data URLs keyed by image id, collected at export time from
+   * the runtime store. Kept separate from `answers` so the signed envelope
+   * stays byte-stable (it binds images by SHA-256, not by their pixels).
+   */
+  imageData?: Record<string, string>;
 } & ({ mode: 'signed'; signature: string; signedAt: number } | { mode: 'draft' });
 
 type ProcessRecordSection = Section | { kind: 'equation'; fieldId: string };
@@ -41,6 +47,7 @@ const styles = StyleSheet.create({
   tableCell: { flex: 1, padding: 3, borderRightWidth: 0.5, borderRightColor: '#ddd' },
   tableHeaderStack: { flexDirection: 'column' },
   tableFormulaLabel: { fontSize: 8, color: '#555' },
+  calcImage: { maxWidth: 515, maxHeight: 360, objectFit: 'contain', marginTop: 4 },
   typed: { fontStyle: 'normal', color: '#111' },
   pasteClipboard: { fontStyle: 'italic', color: '#111' },
   pasteAutocomplete: { color: '#3f3f99' },
@@ -56,6 +63,14 @@ function pdfPointsSuffix(points: number | undefined): string {
     return '';
   }
   return ` (${formatPointsLabel(points)} pts)`;
+}
+
+function imageCaption(blobRef: { bytes: number; sha256?: string } | undefined): string {
+  if (!blobRef) {
+    return 'No image attached';
+  }
+  const sha = blobRef.sha256 ? ` · SHA-256: ${blobRef.sha256.slice(0, 16)}…` : '';
+  return `Image attached: ${blobRef.bytes} bytes${sha}`;
 }
 
 function parseNumber(value: string): number | null {
@@ -175,12 +190,32 @@ function processRecordForSection(
   return { activeMs, keystrokes, pastes };
 }
 
-function sectionView(section: Section, answers: LabAnswers, index: number): React.ReactNode {
+function sectionView(
+  section: Section,
+  answers: LabAnswers,
+  index: number,
+  imageData: Record<string, string> = {},
+): React.ReactNode {
   if (section.kind === 'instructions') {
     return (
       <View key={`section-${index}`} style={styles.section}>
         <Text style={styles.sectionTitle}>Instructions{pdfPointsSuffix(section.points)}</Text>
         <View>{renderMarkdownToPdf(section.html)}</View>
+      </View>
+    );
+  }
+
+  if (section.kind === 'calculation' && section.responseMode === 'image') {
+    const blobRef = section.imageId ? answers.images[section.imageId] : undefined;
+    const src = section.imageId ? imageData[section.imageId] : undefined;
+    return (
+      <View key={`section-${index}`} style={styles.section}>
+        <Text style={styles.sectionTitle}>
+          calculation
+          {pdfPointsSuffix(section.points)}
+        </Text>
+        {src ? <Image src={src} style={styles.calcImage} /> : null}
+        <Text style={styles.note}>{imageCaption(blobRef)}</Text>
       </View>
     );
   }
@@ -335,13 +370,16 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
   }
 
   if (section.kind === 'image') {
+    const blobRef = answers.images[section.imageId];
+    const src = imageData[section.imageId];
     return (
       <View key={`section-${index}`} style={styles.section}>
         <Text style={styles.sectionTitle}>
           Image: {section.imageId}
           {pdfPointsSuffix(section.points)}
         </Text>
-        <Text>Attachment metadata: {answers.images[section.imageId] ? 'included' : 'none'}</Text>
+        {src ? <Image src={src} style={styles.calcImage} /> : null}
+        <Text style={styles.note}>{imageCaption(blobRef)}</Text>
         <Text>Caption:</Text>
         {fieldView(answers.fields[section.captionFieldId])}
       </View>
@@ -352,7 +390,7 @@ function sectionView(section: Section, answers: LabAnswers, index: number): Reac
 }
 
 export function LabReportDocument(props: PDFProps) {
-  const { lab, answers, course } = props;
+  const { lab, answers, course, imageData = {} } = props;
   const totalPoints = sumSectionPoints(lab.sections);
   const integrityAgreementText =
     answers.integrity.agreementText || resolveIntegrityAgreementText(lab);
@@ -391,7 +429,7 @@ export function LabReportDocument(props: PDFProps) {
         {aiLinks ? <Text style={styles.row}>AI shared links: {aiLinks}</Text> : null}
       </Page>
       <Page size="A4" style={styles.page}>
-        {lab.sections.map((section, index) => sectionView(section, answers, index))}
+        {lab.sections.map((section, index) => sectionView(section, answers, index, imageData))}
       </Page>
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>Process Record</Text>
