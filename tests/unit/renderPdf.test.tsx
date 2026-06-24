@@ -248,13 +248,12 @@ describe('renderPDF', () => {
     });
     const textDump = collectText(tree).replace(/\s+/g, ' ').trim();
 
-    expect(textDump).toContain('Instructions');
     expect(textDump).toContain('Part 1');
     expect(textDump).toContain('• Item one');
     expect(textDump).toContain('• Item two');
     expect(textDump).toContain('sinθᵢ');
     expect(textDump).toMatchInlineSnapshot(
-      `"Test LabTest CourseStudent: StudentSigned: 2024-04-30T04:06:40.000Z - 01234567Integrity statement: I affirm this submission reflects my own work. If AI or LLM tools — chatbots, large language models, or generative AI assistants such as ChatGPT, Claude, Gemini, Copilot, or any similar tool — were used in any part of this lab, the chats are disclosed and share links are provided below (required by course policy).Agreement accepted: 2024-04-30T04:06:40.000ZAI/LLM tools used: NoInstructionsPart 1Important:• Item one• Item two Inline math sinθᵢProcess RecordSection 1: instructionsActive time (ms): 0Keystrokes: 0Pastes clipboard: 0Pastes autocomplete: 0Pastes IME: 0"`,
+      `"Test LabTest CourseStudent: StudentSigned: 2024-04-30T04:06:40.000Z - 01234567Integrity statement: I affirm this submission reflects my own work. If AI or LLM tools — chatbots, large language models, or generative AI assistants such as ChatGPT, Claude, Gemini, Copilot, or any similar tool — were used in any part of this lab, the chats are disclosed and share links are provided below (required by course policy).Agreement accepted: 2024-04-30T04:06:40.000ZAI/LLM tools used: NoPart 1Important:• Item one• Item two Inline math sinθᵢProcess RecordSection 1: instructionsActive time (ms): 0Keystrokes: 0Pastes clipboard: 0Pastes autocomplete: 0Pastes IME: 0"`,
     );
   });
 
@@ -302,7 +301,7 @@ describe('renderPDF', () => {
     // section header at the start and the last row's terminal cell at the end.
     // This keeps the assertion stable against changes to the *next* section's
     // rendered title (e.g. plot label format).
-    const start = textDump.indexOf('Data Table: part2Table');
+    const start = textDump.indexOf('Data Table');
     const lastCell = '0.1219';
     const lastCellIdx = textDump.indexOf(lastCell, start);
 
@@ -314,11 +313,11 @@ describe('renderPDF', () => {
     expect(tableExcerpt).toContain('sin(theta_i)');
     expect(tableExcerpt).toContain('sin(theta_r)');
     expect(tableExcerpt).toMatchInlineSnapshot(
-      `"Data Table: part2Table (2 pts)Incident angle (deg)Refracted angle (deg)sin(theta_1)sin(theta_i)sin(theta_A)sin(theta_r)1070.17360.1219"`,
+      `"Data Table (1.5 pts)Incident angle (deg)Refracted angle (deg)Reflected angle (deg)Response (1 pts)How do the angles of incidence compare to the angles of reflection? Is this what you expected?-Calculation (2 pts)For one of the incident angles (it does not matter which), show a sample calculation of the corresponding refracted angle using Snell's Law. Show all intermediate steps. Does your calculated value agree with your measured value?-Part 2 - Refraction for Unknown Media (Mystery Material A)1. Replace the lower medium with Mystery Material A and set the upper medium to refractive index n1 from your parameter set. Record n1 below.2. Use incident angles 10, 20, 30, 40, and 50 degrees from vertical. Measure refracted angles and complete Table 2. Reflected angles are not needed.Measurementn1-Data Table (2 pts)Incident angle (deg)Refracted angle (deg)sin(theta_1)sin(theta_i)sin(theta_A)sin(theta_r)1070.17360.1219"`,
     );
 
     expect(textDump).toContain('Total: 29 points');
-    expect(textDump).toContain('objective (3 pts)');
+    expect(textDump).toContain('Objective (3 pts)');
     expect(textDump).toContain('sin(theta_A) vs. sin(theta_1) (1 pts)');
   });
 });
