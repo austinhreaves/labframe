@@ -47,6 +47,20 @@ describe('latexToUnicode', () => {
   it('handles a unit expression end to end', () => {
     expect(latexToUnicode('\\mathrm{N \\cdot m^2 / C^2}')).toBe('N · m² / C²');
   });
+
+  // Exact strings authored in the Coulomb's Law lab (String.raw avoids escaping
+  // ambiguity); these are the cases that previously leaked braces and commands.
+  it('renders the real lab formulas with no leftover LaTeX', () => {
+    expect(latexToUnicode(String.raw`F = k\,\frac{|Q_1 Q_2|}{d^{2}}`)).toBe('F = k (|Q₁ Q₂|)/(d²)');
+    expect(
+      latexToUnicode(String.raw`k \approx 8.988 \times 10^{9}\,\mathrm{N}\cdot\mathrm{m}^{2}/\mathrm{C}^{2}.`),
+    ).toBe('k ≈ 8.988 × 10⁹ N·m²/C².');
+    expect(latexToUnicode(String.raw`1\,\mathrm{e} \approx 1.602 \times 10^{-19}\,\mathrm{C}.`)).toBe(
+      '1 e ≈ 1.602 × 10⁻¹⁹ C.',
+    );
+    expect(latexToUnicode(String.raw`\mathrm{N \cdot m^{2} / C^{2}}`)).toBe('N · m² / C²');
+    expect(latexToUnicode(String.raw`-3\,\mathrm{e}`)).toBe('-3 e');
+  });
 });
 
 describe('mathToInline', () => {

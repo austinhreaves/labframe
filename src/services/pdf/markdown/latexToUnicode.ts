@@ -227,27 +227,38 @@ function replaceSquareRoots(input: string): string {
   return input.replace(/\\sqrt\{([^{}]+)\}/g, (_full, value: string) => `√(${value})`);
 }
 
+// Match only known commands, longest first, so a command directly followed by a
+// letter (e.g. "\cdot\mathrm{m}" reduced to "\cdotm") is not swallowed whole by a
+// greedy "\[A-Za-z]+".
+const MAPPED_COMMAND_PATTERN = new RegExp(
+  Object.keys(COMMAND_MAP)
+    .sort((a, b) => b.length - a.length)
+    .map((key) => key.replace(/\\/g, '\\\\'))
+    .join('|'),
+  'g',
+);
+
 function replaceMappedCommands(input: string): string {
-  return input.replace(/\\[A-Za-z]+/g, (command: string) => {
-    const mapped = COMMAND_MAP[command];
-    if (mapped !== undefined) {
-      return mapped;
-    }
+  const output = input.replace(MAPPED_COMMAND_PATTERN, (command) => COMMAND_MAP[command] ?? command);
+  if (/\\[A-Za-z]+/.test(output)) {
+    // Something command-shaped is left over: leave it verbatim.
     warnOnceUnknownCommand();
-    return command;
-  });
+  }
+  return output;
 }
 
 export function latexToUnicode(input: string): string {
   let output = input;
   output = stripSpacingMacros(output);
+  // Super/subscripts first: this collapses braces like `d^{2}` so they no longer
+  // block fraction matching or wrapper stripping further down.
+  output = convertSimpleSuperSub(output);
   output = stripWrappers(output);
   // Sizing delimiters carry no meaning once rendered as text.
   output = output.replace(/\\left/g, '').replace(/\\right/g, '');
   output = replaceFractions(output);
   output = replaceSquareRoots(output);
   output = replaceMappedCommands(output);
-  output = convertSimpleSuperSub(output);
   return output;
 }
 
