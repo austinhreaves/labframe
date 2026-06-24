@@ -1,7 +1,8 @@
 # Tablet Layout, Rich Calculations, and PhET-iO Integration Spec
 
-**Status:** Planning. Not yet implemented.
+**Status:** In progress. T-A (tablet layout), T-B (touch keyboard), and C-A (image upload) landed on branch `claude/clever-mayer-09af19`. C-B (free draw), C-C (student-selectable response mode), and all of Track S remain.
 **Created:** 2026-06-19
+**Updated:** 2026-06-23
 **Tracks:** Three parallel feature tracks executed in dependency order within each track. Tracks are independent; they may be handed off to agents concurrently or sequentially.
 
 ---
@@ -13,7 +14,7 @@ This spec covers three related capability expansions:
 | Track | Goal |
 |---|---|
 | T: Tablet Layout | Make LabFrame usable on tablet-sized viewports (768px+) without a dedicated mobile layout |
-| C: Rich Calculations | Add free-draw canvas and image upload as response modes in `CalculationSection` |
+| C: Rich Calculations | Add free-draw canvas and image upload as response modes in `CalculationSection`, and let students choose their response mode per calculation |
 | S: Sim Capture / PhET-iO | Move from manual screenshot workflow toward PhET-iO native snapshot and engagement data |
 
 **Non-goals across all tracks:**
@@ -203,7 +204,7 @@ Rules:
 
 **Canvas implementation:**
 - Use a `<canvas>` element with `pointer-events` (supports both stylus and mouse; works on iPad with Apple Pencil via `PointerEvent.pointerType === 'pen'`).
-- Stroke data format: serialize as an array of stroke objects `{ color, width, points: [{x, y, pressure}] }`. Store the serialized JSON in `FieldValue.text` for the `fieldId` (strokes are small enough for localStorage; no IndexedDB blob needed unless stroke count grows large).
+- Stroke data format: serialize as an array of stroke objects `{ color, width, points: [{x, y, pressure}] }`. Store the serialized JSON in `FieldValue.text` under the draw storage key `${fieldId}__draw` (see C-C "Storage keys") so a later student-selectable section can hold text, draw, and image answers side by side without collision. Strokes are small enough for localStorage; no IndexedDB blob needed unless stroke count grows large.
 - Render: on load, deserialize strokes and redraw to canvas. This is synchronous and fast.
 - Export for PDF: call `canvas.toDataURL('image/png')` to get a data URL; embed as an image in the PDF at that section. The SHA-256 of the PNG bytes goes in the canonical envelope.
 - Controls: color picker (black default, 3-4 preset colors), stroke width toggle (thin/thick), eraser toggle, clear button. Do not build a full drawing toolbar; keep it minimal.
@@ -239,7 +240,7 @@ Read these files first:
 Canvas implementation:
 - Use <canvas> with pointer events (PointerEvent API, not MouseEvent). Support pen, mouse, and touch.
 - Stroke data: array of { color: string, width: number, points: Array<{x: number, y: number, pressure: number}> }
-- Serialize strokes to JSON and store in FieldValue.text for the section fieldId (localStorage is fine -- strokes are small)
+- Serialize strokes to JSON and store in FieldValue.text under the key `${fieldId}__draw` (see C-C "Storage keys"; localStorage is fine -- strokes are small)
 - On mount: deserialize and redraw all strokes
 - Controls: color (black default + 3 presets), stroke width (2 toggles: thin 2px / thick 5px), eraser, clear
 - Pressure: use PointerEvent.pressure * baseWidth when pointerType === 'pen', else constant baseWidth
@@ -253,6 +254,102 @@ Rules:
 - No em dashes in prose or comments
 - Keep toolbar minimal -- resist adding more tools than specified
 - Graceful degradation: if canvas is not supported, fall back to text mode with a note
+```
+
+---
+
+### C-C: Student-Selectable Response Mode
+
+**Goal:** Let a student choose how to answer a calculation -- type (text or equation), draw (stylus or mouse canvas), or photo (image upload) -- per section, instead of the lab author forcing a single mode. This makes "show your work" prompts flexible: a student can type LaTeX, sketch a free-body diagram, or photograph handwritten algebra, whichever fits the problem.
+
+**Relationship to C-A / C-B:** This phase reuses their input components and per-mode PDF rendering. It depends on C-A for the image path and C-B for the draw path. The `text` and `image` modes work without C-B; the `draw` mode requires C-B. An author may enable `['text', 'image']` before C-B ships.
+
+**Schema changes (`src/domain/schema/lab.ts`, `CalculationSectionSchema`):**
+- Add `responseModes: z.array(z.enum(['text', 'draw', 'image'])).min(1).optional()`. When present with 2+ entries, the student sees a mode switcher offering exactly those modes, in that order; the first entry is the default. Absent (or a single entry) preserves today's author-controlled behavior.
+- Precedence: if `responseModes` has 2+ entries it governs the section and the singular `responseMode` is ignored. `responseMode` (singular) is retained for author-forced single-mode sections and backward compatibility.
+- `equationEditor` continues to control whether the `text` mode uses MathLive or a plain textarea.
+- Backward compat: existing sections without `responseModes` are unchanged; no migration.
+
+**Storage keys (canonical for all three modes; also adopted by C-B):**
+Each calculation's answers are keyed off its `fieldId` so all enabled modes coexist without collision, and entered work is never silently dropped when the student switches modes:
+- `text` / equation answer -> `fields[fieldId]` (existing `FieldValue`)
+- `draw` answer (stroke JSON) -> `fields[`${fieldId}__draw`]`
+- `image` answer (blob) -> `images[section.imageId ?? `${fieldId}__image`]`
+- selected mode -> a new `responseSelections: Record<fieldId, 'text' | 'draw' | 'image'>` map
+
+**Store / persistence (`src/state/labStore.ts`, `src/state/persistence/types.ts`):**
+- Add `responseSelections` to `LabStoreState` and `PersistedLabState`; in `initLab`, default each selectable section to its first `responseModes` entry.
+- Add a `setResponseSelection(fieldId, mode)` action. Switching modes only changes the selection; it does not clear any mode's stored answer.
+- Persist `responseSelections` through the existing debounced save path.
+
+**View (`src/ui/sections/CalculationSectionView.tsx`):**
+- When `responseModes` has 2+ entries, render a mode switcher above the input: a labelled segmented control / tablist with one button per allowed mode ("Type", "Draw", "Photo"). The active selection comes from `responseSelections[fieldId]`.
+- Render the input for the active mode by reusing the existing branches (text -> `Field` / `EquationEditor`, image -> `FileDropzone` keyed to the derived imageId, draw -> the C-B canvas keyed to `${fieldId}__draw`).
+- Switching modes preserves each mode's entered data.
+- Accessibility: the switcher is a real tablist or radiogroup, keyboard-navigable, each option labelled; the active input keeps its association with the section prompt. The switcher buttons meet the 44px coarse-pointer target from T-A.
+- Single-mode sections (no `responseModes`) render exactly as today, with no switcher.
+
+**Export / PDF (`src/services/pdf/Document.tsx`, `src/services/integrity/buildAnswers.ts`):**
+- The PDF renders the **active** mode's answer for the section (text, embedded drawing PNG, or embedded photo), reusing the per-mode rendering from C-A / C-B.
+- Record `responseSelections` in the canonical envelope so the grader sees which mode each answer used; it is part of the signed payload.
+- Non-active answers the student also entered remain in the envelope under their keys (process-tracking value) but are not drawn in the PDF body. This is deliberate, not an omission (see Open decisions).
+- Image SHA-256 (C-A) and drawing PNG SHA-256 (C-B) handling are unchanged.
+
+**Files to read before starting:**
+- `src/domain/schema/lab.ts` -- `CalculationSectionSchema`
+- `src/ui/sections/CalculationSectionView.tsx` -- existing mode branches from C-A / C-B
+- `src/state/labStore.ts` -- `initLab`, field / image init, persistence subscriber
+- `src/state/persistence/types.ts` -- `PersistedLabState`
+- `src/services/integrity/buildAnswers.ts` and `src/services/pdf/Document.tsx` -- envelope + PDF rendering
+
+**Acceptance:** A calculation with `responseModes: ['text', 'draw', 'image']` renders a three-way switcher; the student can type, draw, and attach a photo; each mode's answer persists independently across reload; switching modes does not lose data; the exported PDF shows the active mode's answer; and the envelope records the selected mode. A section without `responseModes` behaves exactly as before.
+
+---
+
+**Agent handoff -- C-C:**
+
+```
+You are implementing Phase C-C of the LabFrame rich calculations spec (docs/specs/TABLET_RICHCALC_PHETIO_SPEC.md). Phases C-A (image upload) and C-B (free draw canvas) are complete; their input components and per-mode PDF rendering already exist in CalculationSectionView and Document.tsx.
+
+Goal: let a student choose their response mode (Type / Draw / Photo) per calculation, instead of the author forcing one.
+
+Read first:
+1. src/domain/schema/lab.ts -- CalculationSectionSchema
+2. src/ui/sections/CalculationSectionView.tsx -- the existing text / image / draw branches
+3. src/state/labStore.ts -- initLab, field and image initialization, the persistence subscriber
+4. src/state/persistence/types.ts -- PersistedLabState
+5. src/services/integrity/buildAnswers.ts and src/services/pdf/Document.tsx
+
+Schema:
+- Add responseModes: z.array(z.enum(['text','draw','image'])).min(1).optional() to CalculationSectionSchema
+- If responseModes has 2+ entries it wins; the first entry is the default; singular responseMode is ignored for that section
+- Keep responseMode (singular) for backward compatibility; sections without responseModes are unchanged
+
+Storage keys (must coexist without collision):
+- text / equation -> fields[fieldId]
+- draw strokes -> fields[`${fieldId}__draw`]   (same key C-B uses)
+- image blob -> images[section.imageId ?? `${fieldId}__image`]
+- selected mode -> new responseSelections: Record<fieldId, 'text'|'draw'|'image'> in store + PersistedLabState
+
+Store:
+- Add responseSelections to LabStoreState and PersistedLabState; default each selectable section to its first responseModes entry in initLab
+- Add setResponseSelection(fieldId, mode); switching modes must NOT clear any mode's stored answer
+- Persist responseSelections through the existing debounced save path
+
+View:
+- When responseModes has 2+ entries, render a labelled tablist / radiogroup switcher (Type / Draw / Photo) above the input; active = responseSelections[fieldId]
+- Render the active mode's input by reusing the existing branches; switching preserves each mode's data
+- Accessibility: real tablist or radiogroup, keyboard navigable, labelled; switcher buttons already meet 44px on coarse pointers (T-A)
+
+PDF / envelope:
+- Render the active mode's answer in the PDF (reuse the C-A image embed and the C-B drawing embed)
+- Record responseSelections in the canonical envelope (signed); leave non-active answers in storage but do not render them in the PDF body
+- Do not change the SHA-256 handling from C-A / C-B
+
+Rules:
+- No em dashes in prose or comments
+- Backward compat: no responseModes == current single-mode behavior, no migration
+- Verify types with `npm run typecheck` (tsc -b), NOT `npx tsc --noEmit`; declare undefined-accepting optionals as `T | undefined`
 ```
 
 ---
@@ -447,7 +544,7 @@ Rules:
 ```
 T-A (layout CSS) --> T-B (touch audit)
 
-C-A (image upload in calc) --> C-B (free draw canvas)
+C-A (image upload in calc) --> C-B (free draw canvas) --> C-C (student-selectable response mode)
 
 S-A (guided screenshot)
     |
@@ -471,3 +568,5 @@ Track S phases must execute in order. S-B requires the blob storage helpers from
 | 2 | Which sims get phetio: true first | Snell's Law (Bending Light) is the obvious first candidate as it is already embedded. Confirm PhET-iO availability of that specific sim. |
 | 3 | Canvas stroke storage ceiling | If a student draws many strokes, FieldValue.text (localStorage) may grow large. Monitor and add IndexedDB overflow if needed after C-B ships. |
 | 4 | phETioMeta in PDF appendix | Decide with course instructors whether graders want this data visible or only in the embedded JSON. The spec defaults to a human-readable summary; make it opt-in per lab if instructors prefer. |
+| 5 | Retaining non-active answers (C-C) | C-C keeps every mode's entered answer in the envelope even after the student switches modes; only the active mode renders in the PDF body. Confirm graders want inactive answers retained for process tracking rather than cleared on switch. |
+| 6 | Default response mode (C-C) | C-C defaults a selectable section to the first `responseModes` entry. Confirm authors order the array intentionally (e.g. put `text` first so typed answers are the default). |
