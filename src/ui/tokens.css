@@ -77,6 +77,11 @@
   --surface-overlay: var(--neutral-0);
   --surface-sunken: var(--neutral-100);
 
+  /* Free-draw "paper": always white in both themes so the dark default ink
+     contrasts and the live canvas matches the white-matte PNG export. Not
+     overridden in the dark-theme block on purpose. */
+  --draw-paper: #ffffff;
+
   --text-primary: var(--neutral-900);
   --text-secondary: var(--neutral-600);
   --text-tertiary: var(--neutral-500);

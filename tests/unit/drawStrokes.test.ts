@@ -10,16 +10,14 @@ import {
 } from '@/ui/primitives/drawStrokes';
 
 const sampleDoc: DrawDocument = {
-  version: 1,
-  width: 400,
-  height: 240,
+  version: 2,
   strokes: [
     {
       color: '#111827',
       width: DRAW_WIDTH_THIN,
       points: [
-        { x: 10, y: 10, pressure: 0 },
-        { x: 20, y: 25, pressure: 0.6 },
+        { x: 100, y: 100, pressure: 0 },
+        { x: 200, y: 250, pressure: 0.6 },
       ],
     },
   ],
@@ -32,16 +30,30 @@ describe('drawStorageKey', () => {
 });
 
 describe('serialize / parse round trip', () => {
-  it('preserves strokes, dimensions, and pressure', () => {
+  it('preserves strokes and pressure in logical space', () => {
     const parsed = parseDrawing(serializeDrawing(sampleDoc));
     expect(parsed).toEqual(sampleDoc);
+  });
+
+  it('upconverts a legacy v1 (pixel-space) document into logical units', () => {
+    const legacy = JSON.stringify({
+      version: 1,
+      width: 500,
+      height: 707,
+      strokes: [{ color: '#111827', width: 2, points: [{ x: 250, y: 353.5, pressure: 0 }] }],
+    });
+    const parsed = parseDrawing(legacy);
+    expect(parsed?.version).toBe(2);
+    // A point at the pixel-space center lands at the logical-page center.
+    expect(parsed?.strokes[0]?.points[0]?.x).toBeCloseTo(500, 0);
+    expect(parsed?.strokes[0]?.points[0]?.y).toBeCloseTo(707, 0);
   });
 
   it('returns null for empty, malformed, or non-stroke payloads', () => {
     expect(parseDrawing(undefined)).toBeNull();
     expect(parseDrawing('')).toBeNull();
     expect(parseDrawing('not json')).toBeNull();
-    expect(parseDrawing('{"version":1}')).toBeNull();
+    expect(parseDrawing('{"version":2}')).toBeNull();
   });
 });
 

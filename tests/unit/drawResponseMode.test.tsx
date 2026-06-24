@@ -118,7 +118,7 @@ describe('collectDrawArtifacts', () => {
   });
 
   it('skips draw sections whose stored drawing has no strokes', async () => {
-    const emptyDoc: DrawDocument = { version: 1, width: 400, height: 240, strokes: [] };
+    const emptyDoc: DrawDocument = { version: 2, strokes: [] };
     const fields = {
       [drawStorageKey('hand-calc')]: { ...createEmptyFieldValue(), text: serializeDrawing(emptyDoc) },
     };

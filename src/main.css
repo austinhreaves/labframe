@@ -1414,11 +1414,17 @@ a.lab-card:hover {
 }
 
 .draw-canvas-surface {
-  width: 100%;
   display: block;
-  border: 1.5px solid var(--border-default);
+  margin-inline: auto;
+  /* A4-portrait page: height drives the box, width follows the aspect ratio so
+     the surface never distorts. Paper stays white in both themes. */
+  height: clamp(300px, 55vh, 540px);
+  aspect-ratio: 1000 / 1414;
+  max-width: 100%;
+  border: 1.5px solid var(--border-strong);
   border-radius: var(--radius-md);
-  background: var(--surface-raised);
+  background: var(--draw-paper);
+  box-shadow: var(--shadow-sm, 0 1px 2px rgb(0 0 0 / 0.08));
   touch-action: none;
   cursor: crosshair;
 }
