@@ -3,10 +3,10 @@ import { isValidElement } from 'react';
 
 import type { Course, Lab, LabAnswers } from '@/domain/schema';
 import { LabReportDocument } from '@/services/pdf/Document';
-import { drawStorageKey } from '@/domain/calculationResponse';
+import { drawPageKey, drawStorageKey } from '@/domain/calculationResponse';
 import { collectDrawArtifacts } from '@/services/pdf/collectDrawImages';
 import { createEmptyFieldValue } from '@/state/labStore';
-import { serializeDrawing, type DrawDocument } from '@/ui/primitives/drawStrokes';
+import { serializeDrawing, type DrawDrawing } from '@/ui/primitives/drawStrokes';
 
 const courseFixture: Course = {
   id: 'course-1',
@@ -25,6 +25,27 @@ const drawLab: Lab = {
   sections: [{ kind: 'calculation', fieldId: 'hand-calc', prompt: 'Show your work', responseMode: 'draw' }],
 };
 
+const oneStrokeDrawing = serializeDrawing({
+  version: 3,
+  pages: [
+    {
+      strokes: [
+        {
+          color: '#111827',
+          width: 3.5,
+          points: [
+            { x: 10, y: 10, pressure: 0 },
+            { x: 20, y: 20, pressure: 0 },
+          ],
+        },
+      ],
+    },
+  ],
+});
+
+const drawKey = drawStorageKey('hand-calc');
+const pageKey = drawPageKey('hand-calc', 1);
+
 const answersFixture: LabAnswers = {
   schemaVersion: 4,
   meta: { studentName: 'Student', semester: 'Fall', session: 'C', year: '2026', taName: 'TA' },
@@ -35,10 +56,10 @@ const answersFixture: LabAnswers = {
     agreementAcceptedAt: 1714450000000,
     agreementText: 'Affirmation.',
   },
-  fields: {},
+  fields: { [drawKey]: { ...createEmptyFieldValue(), text: oneStrokeDrawing } },
   tables: {},
   selectedFits: {},
-  images: { 'hand-calc__draw': { idbKey: 'hand-calc__draw', mime: 'image/png', bytes: 128, sha256: 'b'.repeat(64) } },
+  images: { [pageKey]: { idbKey: pageKey, mime: 'image/png', bytes: 128, sha256: 'b'.repeat(64) } },
   fits: {},
   status: { submitted: false, lastSavedAt: 0 },
 };
@@ -76,7 +97,7 @@ function collectText(node: unknown): string {
 }
 
 describe('calculation draw response mode in the PDF', () => {
-  it('embeds the rasterized drawing and reports its byte count', () => {
+  it('embeds the rasterized page and reports its byte count', () => {
     const tree = LabReportDocument({
       lab: drawLab,
       answers: answersFixture,
@@ -84,14 +105,14 @@ describe('calculation draw response mode in the PDF', () => {
       mode: 'signed',
       signature: '0123456789abcdef0123456789abcdef',
       signedAt: 1714450000000,
-      imageData: { 'hand-calc__draw': PNG_DATA_URL },
+      imageData: { [pageKey]: PNG_DATA_URL },
     });
 
     expect(collectImageSrcs(tree)).toContain(PNG_DATA_URL);
     expect(collectText(tree)).toContain('Drawing attached: 128 bytes');
   });
 
-  it('keeps the caption but omits the image when no drawing was rasterized', () => {
+  it('shows the empty-state note when no page rasterized', () => {
     const tree = LabReportDocument({
       lab: drawLab,
       answers: answersFixture,
@@ -102,7 +123,7 @@ describe('calculation draw response mode in the PDF', () => {
     });
 
     expect(collectImageSrcs(tree)).toHaveLength(0);
-    expect(collectText(tree)).toContain('Drawing attached: 128 bytes');
+    expect(collectText(tree)).toContain('No drawing attached');
   });
 });
 
@@ -117,10 +138,10 @@ describe('collectDrawArtifacts', () => {
     expect(artifacts.blobRefs).toEqual({});
   });
 
-  it('skips draw sections whose stored drawing has no strokes', async () => {
-    const emptyDoc: DrawDocument = { version: 2, strokes: [] };
+  it('skips pages with no strokes', async () => {
+    const emptyDoc: DrawDrawing = { version: 3, pages: [{ strokes: [] }] };
     const fields = {
-      [drawStorageKey('hand-calc')]: { ...createEmptyFieldValue(), text: serializeDrawing(emptyDoc) },
+      [drawKey]: { ...createEmptyFieldValue(), text: serializeDrawing(emptyDoc) },
     };
     const artifacts = await collectDrawArtifacts(drawLab, fields);
     expect(artifacts.blobRefs).toEqual({});

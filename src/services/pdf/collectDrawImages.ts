@@ -1,6 +1,11 @@
-import { drawStorageKey, resolveResponseMode, type ResponseMode } from '@/domain/calculationResponse';
+import {
+  drawPageKey,
+  drawStorageKey,
+  resolveResponseMode,
+  type ResponseMode,
+} from '@/domain/calculationResponse';
 import type { BlobRef, FieldValue, Lab } from '@/domain/schema';
-import { parseDrawing, rasterizeDrawingToDataUrl } from '@/ui/primitives/drawStrokes';
+import { parseDrawing, rasterizePageToDataUrl } from '@/ui/primitives/drawStrokes';
 
 /**
  * Rasterized free-draw answers for the exported PDF. `dataUrls` are PNG data
@@ -37,10 +42,10 @@ async function sha256Hex(bytes: Uint8Array<ArrayBuffer>): Promise<string | undef
 
 /**
  * Walk the lab for calculations whose effective mode is `draw`, rasterize each
- * stored drawing to PNG, and return the data URLs plus byte/hash references.
- * Only the active mode is rasterized, so a drawing the student entered but did
- * not select is left in storage and not embedded. Sections with no strokes are
- * skipped (they render as "No drawing attached").
+ * stored drawing page to PNG, and return the data URLs plus byte/hash references
+ * keyed per page. Only the active mode is rasterized, so a drawing the student
+ * entered but did not select is left in storage and not embedded. Empty pages
+ * are skipped.
  */
 export async function collectDrawArtifacts(
   lab: Lab,
@@ -57,21 +62,26 @@ export async function collectDrawArtifacts(
     if (resolveResponseMode(section, responseSelections) !== 'draw') {
       continue;
     }
-    const key = drawStorageKey(section.fieldId);
-    const doc = parseDrawing(fields[key]?.text);
-    const dataUrl = rasterizeDrawingToDataUrl(doc);
-    if (!dataUrl) {
+    const drawing = parseDrawing(fields[drawStorageKey(section.fieldId)]?.text);
+    if (!drawing) {
       continue;
     }
-    const bytes = dataUrlToBytes(dataUrl);
-    const sha256 = await sha256Hex(bytes);
-    dataUrls[key] = dataUrl;
-    blobRefs[key] = {
-      idbKey: key,
-      mime: 'image/png',
-      bytes: bytes.byteLength,
-      ...(sha256 ? { sha256 } : {}),
-    };
+    for (let pageIndex = 0; pageIndex < drawing.pages.length; pageIndex += 1) {
+      const dataUrl = rasterizePageToDataUrl(drawing.pages[pageIndex] ?? null);
+      if (!dataUrl) {
+        continue;
+      }
+      const key = drawPageKey(section.fieldId, pageIndex + 1);
+      const bytes = dataUrlToBytes(dataUrl);
+      const sha256 = await sha256Hex(bytes);
+      dataUrls[key] = dataUrl;
+      blobRefs[key] = {
+        idbKey: key,
+        mime: 'image/png',
+        bytes: bytes.byteLength,
+        ...(sha256 ? { sha256 } : {}),
+      };
+    }
   }
 
   return { dataUrls, blobRefs };

@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Eraser, Maximize2, Minimize2, Pen, RotateCcw, Trash2 } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Eraser,
+  Maximize2,
+  Minimize2,
+  Pen,
+  Plus,
+  RotateCcw,
+  Trash2,
+} from 'lucide-react';
 
 import { Icon } from '@/ui/primitives/Icon';
 import {
@@ -9,7 +19,7 @@ import {
   DRAW_PAGE_WIDTH,
   DRAW_WIDTH_THICK,
   DRAW_WIDTH_THIN,
-  type DrawDocument,
+  type DrawPage,
   type DrawPoint,
   type DrawStroke,
   drawStrokesToContext,
@@ -19,7 +29,7 @@ import {
 
 type Props = {
   id?: string;
-  /** Serialized DrawDocument JSON, or undefined / '' for an empty canvas. */
+  /** Serialized drawing JSON, or undefined / '' for an empty canvas. */
   value: string | undefined;
   onChange: (serialized: string) => void;
   /** Accessible name for the drawing surface (the calculation prompt). */
@@ -43,9 +53,14 @@ function distanceToStroke(stroke: DrawStroke, x: number, y: number): number {
   return min;
 }
 
+function pagesFromValue(value: string | undefined): DrawPage[] {
+  return parseDrawing(value)?.pages ?? [{ strokes: [] }];
+}
+
 export function DrawCanvas({ id, value, onChange, label }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [strokes, setStrokes] = useState<DrawStroke[]>(() => parseDrawing(value)?.strokes ?? []);
+  const [pages, setPages] = useState<DrawPage[]>(() => pagesFromValue(value));
+  const [pageIndex, setPageIndex] = useState(0);
   const [color, setColor] = useState<string>(DRAW_COLORS[0]);
   const [width, setWidth] = useState<number>(DRAW_WIDTH_THIN);
   const [erasing, setErasing] = useState(false);
@@ -56,8 +71,12 @@ export function DrawCanvas({ id, value, onChange, label }: Props) {
   // re-seeds the canvas while our own edits do not bounce back through props.
   const lastEmitted = useRef<string | undefined>(value);
   const activeStroke = useRef<DrawStroke | null>(null);
-  const strokesRef = useRef<DrawStroke[]>(strokes);
-  strokesRef.current = strokes;
+  const pagesRef = useRef<DrawPage[]>(pages);
+  pagesRef.current = pages;
+  const pageIndexRef = useRef<number>(pageIndex);
+  pageIndexRef.current = pageIndex;
+
+  const currentStrokes = (): DrawStroke[] => pagesRef.current[pageIndexRef.current]?.strokes ?? [];
 
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -86,7 +105,7 @@ export function DrawCanvas({ id, value, onChange, label }: Props) {
       0,
     );
     ctx.clearRect(0, 0, DRAW_PAGE_WIDTH, DRAW_PAGE_HEIGHT);
-    drawStrokesToContext(ctx, strokesRef.current);
+    drawStrokesToContext(ctx, currentStrokes());
     if (activeStroke.current) {
       drawStrokesToContext(ctx, [activeStroke.current]);
     }
@@ -98,15 +117,17 @@ export function DrawCanvas({ id, value, onChange, label }: Props) {
       return;
     }
     lastEmitted.current = value;
-    setStrokes(parseDrawing(value)?.strokes ?? []);
+    const nextPages = pagesFromValue(value);
+    setPages(nextPages);
+    setPageIndex((index) => Math.min(index, nextPages.length - 1));
   }, [value]);
 
-  // `fullscreen` is a dependency because toggling it moves the canvas between the
-  // inline tree and the portal, remounting the node; the effects must repaint and
-  // re-observe the new element.
+  // `fullscreen` moves the canvas between the inline tree and the portal,
+  // remounting it; `pageIndex` switches which page is shown. Both must repaint
+  // (and re-observe) the current canvas node.
   useEffect(() => {
     redraw();
-  }, [strokes, redraw, fullscreen]);
+  }, [pages, pageIndex, redraw, fullscreen]);
 
   useEffect(() => {
     if (typeof ResizeObserver === 'undefined') {
@@ -135,14 +156,22 @@ export function DrawCanvas({ id, value, onChange, label }: Props) {
   }, [fullscreen]);
 
   const emit = useCallback(
-    (next: DrawStroke[]) => {
-      const doc: DrawDocument = { version: 2, strokes: next };
-      const serialized = serializeDrawing(doc);
+    (nextPages: DrawPage[]) => {
+      const serialized = serializeDrawing({ version: 3, pages: nextPages });
       lastEmitted.current = serialized;
       onChange(serialized);
     },
     [onChange],
   );
+
+  // Replace the active page's strokes and persist the whole drawing.
+  const commitStrokes = (nextStrokes: DrawStroke[]) => {
+    const next = pagesRef.current.map((page, index) =>
+      index === pageIndexRef.current ? { strokes: nextStrokes } : page,
+    );
+    setPages(next);
+    emit(next);
+  };
 
   const pointFromEvent = (event: React.PointerEvent<HTMLCanvasElement>): DrawPoint => {
     const canvas = canvasRef.current!;
@@ -157,12 +186,12 @@ export function DrawCanvas({ id, value, onChange, label }: Props) {
   };
 
   const eraseAt = (point: DrawPoint) => {
-    const remaining = strokesRef.current.filter(
+    const strokes = currentStrokes();
+    const remaining = strokes.filter(
       (stroke) => distanceToStroke(stroke, point.x, point.y) > ERASE_RADIUS,
     );
-    if (remaining.length !== strokesRef.current.length) {
-      setStrokes(remaining);
-      emit(remaining);
+    if (remaining.length !== strokes.length) {
+      commitStrokes(remaining);
     }
   };
 
@@ -199,26 +228,44 @@ export function DrawCanvas({ id, value, onChange, label }: Props) {
     if (!stroke || stroke.points.length === 0) {
       return;
     }
-    const next = [...strokesRef.current, stroke];
-    setStrokes(next);
+    commitStrokes([...currentStrokes(), stroke]);
+  };
+
+  const undo = () => {
+    const strokes = currentStrokes();
+    if (strokes.length === 0) {
+      return;
+    }
+    commitStrokes(strokes.slice(0, -1));
+  };
+
+  const clear = () => {
+    if (currentStrokes().length === 0) {
+      return;
+    }
+    commitStrokes([]);
+  };
+
+  const goToPage = (next: number) => {
+    setPageIndex(Math.max(0, Math.min(pagesRef.current.length - 1, next)));
+  };
+
+  const addPage = () => {
+    const next = [...pagesRef.current, { strokes: [] }];
+    setPages(next);
+    setPageIndex(next.length - 1);
     emit(next);
   };
 
-  const undo = useCallback(() => {
-    if (strokesRef.current.length === 0) {
+  const deletePage = () => {
+    if (pagesRef.current.length <= 1) {
       return;
     }
-    const next = strokesRef.current.slice(0, -1);
-    setStrokes(next);
+    const removeAt = pageIndexRef.current;
+    const next = pagesRef.current.filter((_, index) => index !== removeAt);
+    setPages(next);
+    setPageIndex(Math.min(removeAt, next.length - 1));
     emit(next);
-  }, [emit]);
-
-  const clear = () => {
-    if (strokesRef.current.length === 0) {
-      return;
-    }
-    setStrokes([]);
-    emit([]);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLCanvasElement>) => {
@@ -317,7 +364,7 @@ export function DrawCanvas({ id, value, onChange, label }: Props) {
           <button type="button" aria-label="Undo last stroke" onClick={undo}>
             <Icon icon={RotateCcw} size={16} /> Undo
           </button>
-          <button type="button" aria-label="Clear drawing" onClick={clear}>
+          <button type="button" aria-label="Clear page" onClick={clear}>
             <Icon icon={Trash2} size={16} /> Clear
           </button>
           <button
@@ -330,6 +377,38 @@ export function DrawCanvas({ id, value, onChange, label }: Props) {
             {fullscreen ? 'Exit' : 'Full screen'}
           </button>
         </div>
+      </div>
+      <div className="draw-canvas-pages" role="group" aria-label="Pages">
+        <button
+          type="button"
+          aria-label="Previous page"
+          onClick={() => goToPage(pageIndex - 1)}
+          disabled={pageIndex === 0}
+        >
+          <Icon icon={ChevronLeft} size={16} />
+        </button>
+        <span className="draw-canvas-page-label" aria-live="polite">
+          Page {pageIndex + 1} of {pages.length}
+        </span>
+        <button
+          type="button"
+          aria-label="Next page"
+          onClick={() => goToPage(pageIndex + 1)}
+          disabled={pageIndex >= pages.length - 1}
+        >
+          <Icon icon={ChevronRight} size={16} />
+        </button>
+        <button type="button" aria-label="Add page" onClick={addPage}>
+          <Icon icon={Plus} size={16} /> Add page
+        </button>
+        <button
+          type="button"
+          aria-label="Delete page"
+          onClick={deletePage}
+          disabled={pages.length <= 1}
+        >
+          Delete page
+        </button>
       </div>
       <canvas
         id={id}
