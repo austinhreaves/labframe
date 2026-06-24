@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Eraser, Pen, RotateCcw, Trash2 } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Eraser, Maximize2, Minimize2, Pen, RotateCcw, Trash2 } from 'lucide-react';
 
 import { Icon } from '@/ui/primitives/Icon';
 import {
@@ -48,6 +49,8 @@ export function DrawCanvas({ id, value, onChange, label }: Props) {
   const [color, setColor] = useState<string>(DRAW_COLORS[0]);
   const [width, setWidth] = useState<number>(DRAW_WIDTH_THIN);
   const [erasing, setErasing] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
   // Track the JSON we last emitted so an external reset (reload, "Start fresh")
   // re-seeds the canvas while our own edits do not bounce back through props.
@@ -98,9 +101,12 @@ export function DrawCanvas({ id, value, onChange, label }: Props) {
     setStrokes(parseDrawing(value)?.strokes ?? []);
   }, [value]);
 
+  // `fullscreen` is a dependency because toggling it moves the canvas between the
+  // inline tree and the portal, remounting the node; the effects must repaint and
+  // re-observe the new element.
   useEffect(() => {
     redraw();
-  }, [strokes, redraw]);
+  }, [strokes, redraw, fullscreen]);
 
   useEffect(() => {
     if (typeof ResizeObserver === 'undefined') {
@@ -113,7 +119,20 @@ export function DrawCanvas({ id, value, onChange, label }: Props) {
     const observer = new ResizeObserver(() => redraw());
     observer.observe(canvas);
     return () => observer.disconnect();
-  }, [redraw]);
+  }, [redraw, fullscreen]);
+
+  // Lock body scroll and move focus into the overlay while fullscreen is open.
+  useEffect(() => {
+    if (!fullscreen) {
+      return;
+    }
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    panelRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [fullscreen]);
 
   const emit = useCallback(
     (next: DrawStroke[]) => {
@@ -209,8 +228,40 @@ export function DrawCanvas({ id, value, onChange, label }: Props) {
     }
   };
 
-  return (
-    <div className="draw-canvas">
+  // Escape closes the overlay; Tab is trapped within the panel.
+  const handleOverlayKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setFullscreen(false);
+      return;
+    }
+    if (event.key !== 'Tab') {
+      return;
+    }
+    const root = panelRef.current;
+    if (!root) {
+      return;
+    }
+    const focusable = Array.from(
+      root.querySelectorAll<HTMLElement>('button, [tabindex]:not([tabindex="-1"])'),
+    ).filter((el) => !el.hasAttribute('disabled'));
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (!first || !last) {
+      return;
+    }
+    const active = document.activeElement;
+    if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
+  const content = (
+    <>
       <div className="draw-canvas-toolbar" role="toolbar" aria-label="Drawing tools">
         <div className="draw-canvas-colors" role="group" aria-label="Stroke color">
           {DRAW_COLORS.map((preset) => (
@@ -269,6 +320,15 @@ export function DrawCanvas({ id, value, onChange, label }: Props) {
           <button type="button" aria-label="Clear drawing" onClick={clear}>
             <Icon icon={Trash2} size={16} /> Clear
           </button>
+          <button
+            type="button"
+            aria-label={fullscreen ? 'Exit full screen' : 'Draw full screen'}
+            aria-pressed={fullscreen}
+            onClick={() => setFullscreen((prev) => !prev)}
+          >
+            <Icon icon={fullscreen ? Minimize2 : Maximize2} size={16} />{' '}
+            {fullscreen ? 'Exit' : 'Full screen'}
+          </button>
         </div>
       </div>
       <canvas
@@ -291,8 +351,27 @@ export function DrawCanvas({ id, value, onChange, label }: Props) {
         }}
         onKeyDown={handleKeyDown}
       />
-    </div>
+    </>
   );
+
+  if (fullscreen) {
+    return createPortal(
+      <div className="draw-fullscreen-backdrop" onKeyDown={handleOverlayKeyDown}>
+        <div
+          ref={panelRef}
+          className="draw-canvas draw-fullscreen-panel"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Drawing: ${label}`}
+        >
+          {content}
+        </div>
+      </div>,
+      document.body,
+    );
+  }
+
+  return <div className="draw-canvas">{content}</div>;
 }
 
 export default DrawCanvas;

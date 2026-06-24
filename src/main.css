@@ -1433,6 +1433,31 @@ a.lab-card:hover {
   cursor: cell;
 }
 
+/* Fullscreen drawing overlay (portaled to body). */
+.draw-fullscreen-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: var(--overlay-backdrop);
+}
+
+.draw-fullscreen-panel {
+  max-width: 100%;
+  max-height: 100%;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface-overlay);
+  box-shadow: var(--shadow-4);
+}
+
+.draw-fullscreen-panel .draw-canvas-surface {
+  /* Fill most of the viewport height; width follows the A4 aspect ratio. */
+  height: min(82vh, 1200px);
+}
+
 .draw-canvas-surface:focus-visible {
   outline: none;
   border-color: var(--accent-600);
