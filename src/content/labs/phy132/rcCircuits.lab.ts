@@ -151,6 +151,7 @@ export const phy132RcCircuitsLab: Lab = {
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'tauACalculation',
       prompt:
         'Calculate τ_A = -1 / m_A and propagate the uncertainty: Δτ_A = |τ_A| · |Δm_A / m_A|. Compare your experimental τ_A to the predicted τ₁ = R₁ · C₁ via percent difference.',
@@ -217,6 +218,7 @@ export const phy132RcCircuitsLab: Lab = {
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'tauBCalculation',
       prompt: 'Calculate τ_B and Δτ_B. Compare to predicted τ₂ via percent difference.',
       equationEditor: true,
@@ -262,6 +264,7 @@ export const phy132RcCircuitsLab: Lab = {
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'tauCCalculation',
       prompt: 'Calculate τ_C and Δτ_C. Compare to predicted τ₃ via percent difference.',
       equationEditor: true,

@@ -119,6 +119,7 @@ Record the values of $q$ and $r$ you used below. These same values will be used 
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'sampleCalculation',
       prompt:
         'Show a sample calculation of $E = k|q|/r^{2}$ for one of your four sensor positions. Use the $q$ and $r$ values you recorded above.',
@@ -127,6 +128,7 @@ Record the values of $q$ and $r$ you used below. These same values will be used 
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'percentErrorCalculation',
       prompt:
         'Compute the average of your four *measured* field values and the average of your four *calculated* field values. Use these to compute a percent error between the measured and calculated averages.',
@@ -354,6 +356,7 @@ In Part 1B you'll measure $V$ at five equipotential rings around a single point 
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'kqCalculation',
       prompt:
         'Equation (6) predicts $V = (kq) \\cdot (1/r)$, so a $V$-vs-$1/r$ plot should be linear with slope $kq$. Use the known value of $q$ and $k \\approx 8.988 \\times 10^{9}\\,\\mathrm{N\\,m^{2}/C^{2}}$ to compute the *expected* slope $kq$. Then compare it to the slope $m$ you read off the plot by computing a percent error.',

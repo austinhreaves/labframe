@@ -240,6 +240,7 @@ Sanity check: the correlation coefficient $R$ should be greater than 0.98. If it
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'dipoleMomentCalculation',
       prompt:
         '**Procedure step 9.** Using Eq. (2) above and your fitted slope $A$, calculate the magnetic dipole moment $m$ of the bar magnet in units of $\\mathrm{A}\\cdot\\mathrm{m}^{2}$. Hint: match the terms in the $y = Ax$ model with the terms in Eq. (2). The independent variable is $1/d^{3}$ and the dependent variable is $B$; what is left over equals the slope $A$. Be careful with units: convert distances from cm to m before extracting $m$. Show all your work.',

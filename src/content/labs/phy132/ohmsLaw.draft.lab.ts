@@ -267,6 +267,7 @@ In Part 1B you will collect $I$-vs-$V$ data for a graphite pencil lead in series
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'resistanceCalculation',
       prompt:
         'From the slope of your $I$-vs-$V$ graph, calculate (1) the total equivalent resistance of the resistor-pencil series combination, and (2) the resistance of the pencil $R_p$ alone. Hint: what are the units of the slope? What are the units of resistance in terms of volts and amps? Show your work.',
@@ -275,6 +276,7 @@ In Part 1B you will collect $I$-vs-$V$ data for a graphite pencil lead in series
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'uncertaintyCalculation',
       prompt:
         'Propagate the uncertainty $\\Delta A$ in the slope to give the corresponding uncertainty $\\Delta R_p$ in the pencil resistance. Assume the known resistor has zero uncertainty. Show your work.',
@@ -360,6 +362,7 @@ In Part 1B you will collect $I$-vs-$V$ data for a graphite pencil lead in series
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'resistanceCalculation1C',
       prompt:
         "Propagate the uncertainty $\\Delta A$ in the slope to give the corresponding uncertainty $\\Delta R_b$ in the real lightbulb's resistance. Assume the known resistor has zero uncertainty. Show your work.",

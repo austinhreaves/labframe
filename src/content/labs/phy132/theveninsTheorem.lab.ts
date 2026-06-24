@@ -111,6 +111,7 @@ export const phy132TheveninsTheoremLab: Lab = {
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'rThCalculation',
       prompt: 'Calculate R_th = V_th / I_sc. Show units and significant figures.',
       equationEditor: true,
@@ -179,6 +180,7 @@ export const phy132TheveninsTheoremLab: Lab = {
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'percentAgreementCalculation',
       prompt:
         'For each load resistance, compute the percent difference between V_L measured with the original network and V_L measured with the Thevenin equivalent. Report the mean percent difference across all loads. Comment on whether the agreement is within expected measurement precision.',

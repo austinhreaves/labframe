@@ -163,6 +163,7 @@ Insert a screenshot of your I vs. V graph with the proportional fit clearly show
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'resistanceCalculation',
       prompt:
         'From the slope of your graph, calculate: (1) the total equivalent resistance and (2) the resistance of the pencil, Rp. Hint: what are the units of the slope? What are the units for resistance in terms of volts and amps?',
@@ -171,6 +172,7 @@ Insert a screenshot of your I vs. V graph with the proportional fit clearly show
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'uncertaintyCalculation',
       prompt:
         'Propagate this uncertainty in the slope A to calculate the corresponding uncertainty in the pencil resistance, Rp. Assume the resistor has zero uncertainty.',
@@ -239,6 +241,7 @@ Insert a screenshot of your I vs. V graph with the proportional fit clearly show
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'resistanceCalculation1C',
       prompt:
         "Propagate the uncertainty in the slope A to calculate the corresponding uncertainty in the real lightbulb's resistance, Rb. Assume the resistor has zero uncertainty.",
@@ -320,6 +323,7 @@ Hand-port this section. See LEGACY_PARITY_INVENTORY.md for the legacy column/row
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'currentLawEquations',
       prompt:
         'Add the currents entering and exiting the top junction and show they are equal, then do the same for the bottom junction.',
@@ -328,6 +332,7 @@ Hand-port this section. See LEGACY_PARITY_INVENTORY.md for the legacy column/row
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'voltageLawEquations',
       prompt:
         'Show the sum of voltages in Loop 1 is zero, then do the same for Loop 2. Hint: read the information in the procedure to know whether to add or subtract the voltage across each element.',
@@ -426,6 +431,7 @@ Insert screenshot of the circuit with source resistance, wire resistivity, and b
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'batteryVoltageCalculation',
       prompt:
         'Use the custom fit parameter A to calculate the experimental battery voltage, ε=sqrt(A), then calculate its % error from the battery voltage set in the simulation.',
@@ -434,6 +440,7 @@ Insert screenshot of the circuit with source resistance, wire resistivity, and b
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'sourceResistanceCalculation',
       prompt:
         'Compare the custom fit parameter B = r_exp to the fixed internal source resistance, r. Calculate the % error.',
@@ -442,6 +449,7 @@ Insert screenshot of the circuit with source resistance, wire resistivity, and b
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'maximumPowerTransferDerivation',
       prompt:
         'Use calculus to find the theoretical prediction for the condition for maximum power transfer in a simple DC Circuit. No numerical values are needed here, you should do everything symbolically. Solve for R in terms of r and show your work below. Hint: start from Eq. 13 from the lab manual. Ask yourself: if I have the function P_R vs. R, and I want to find the location of the maximum, what should the derivative dP_R/dR equal?',
@@ -464,6 +472,7 @@ Suppose you're building a custom stereo system and you decide to use an amplifie
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'stereoSystemPartB',
       prompt:
         'b. (1.5 pts) Calculate the power consumed by the subwoofer, then calculate the total power output of the circuit. Take the ratio between these values to calculate the efficiency.',
@@ -472,6 +481,7 @@ Suppose you're building a custom stereo system and you decide to use an amplifie
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'stereoSystemPartC',
       prompt:
         'c. (1.5 pts) Suppose you accidentally used the wrong subwoofer with a resistance of 36 Ω. Calculate the power consumed by the subwoofer, the total power, and efficiency in this case.',

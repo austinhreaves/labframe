@@ -60,6 +60,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'calculationsExplanation',
       prompt:
         'Show your calculations for the predicted capacitance, C, top plate charge, Q, and stored energy, U.',

@@ -203,6 +203,7 @@ Add a proportional fit ($y = Ax$), since Coulomb's Law predicts the line passes 
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'coulombsConstantCalculation',
       prompt:
         "**Step 6.** Use $A$ to calculate your own value of Coulomb's constant $k$.\n\n> [!TIP]\n> **Setting up the equation.** Set Coulomb's law and your graph's equation equal to each other:\n>\n> $F = k\\,|Q_1 Q_2|/d^2 = A\\,Q_2.$\n>\n> You have known values for $Q_1$, $d$, and $A$, so solve for $k$.\n\n---\n\n> [!IMPORTANT]\n> **Unit conversion.** The accepted $k$ is in SI units, so convert before plugging in:\n>\n> - charges from $\\mathrm{e}$ to coulombs: $1\\,\\mathrm{e} \\approx 1.602 \\times 10^{-19}\\,\\mathrm{C}$\n> - distance from $\\mathrm{pm}$ to meters: $1\\,\\mathrm{pm} = 10^{-12}\\,\\mathrm{m}$\n> - force into $\\mathrm{N}$\n\n---\n\nShow all of your work, then compute the percent error against the accepted value:\n\n$$k \\approx 8.988 \\times 10^{9}\\,\\mathrm{N}\\cdot\\mathrm{m}^{2}/\\mathrm{C}^{2}.$$",
@@ -378,6 +379,7 @@ Then add a proportional fit ($y = Ax$) to the $F$ vs $1/d^2$ plot.`,
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'coulombsConstantCalculationSecond',
       prompt:
         "**Step 5.** Use $A$ to calculate your second experimental value of Coulomb's constant $k$.\n\n> [!TIP]\n> **Setting up the equation.** With $x = 1/d^2$, your graph's line equation is\n>\n> $F = A \\cdot (1/d^2),$\n>\n> and Coulomb's law gives\n>\n> $F = k\\,|Q_1 Q_2|/d^2.$\n>\n> Setting them equal yields $k\\,|Q_1 Q_2| = A$. Solve for $k$.\n\n---\n\n> [!IMPORTANT]\n> **Unit conversion.** The slope $A$ you read off the plot is in whatever units you used on each axis. Before extracting $k$, convert:\n>\n> - charges from $\\mathrm{e}$ to coulombs: $1\\,\\mathrm{e} \\approx 1.602 \\times 10^{-19}\\,\\mathrm{C}$\n> - distances from $\\mathrm{pm}$ to meters: $1\\,\\mathrm{pm} = 10^{-12}\\,\\mathrm{m}$\n> - force into $\\mathrm{N}$\n\n---\n\nShow your work, then compute the percent error against the accepted value:\n\n$$k \\approx 8.988 \\times 10^{9}\\,\\mathrm{N}\\cdot\\mathrm{m}^{2}/\\mathrm{C}^{2}.$$",

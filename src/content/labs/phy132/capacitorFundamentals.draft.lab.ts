@@ -119,6 +119,7 @@ Record the three input values you used below. These will be your reference (init
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'calculationsExplanation',
       prompt:
         '**Procedure step 2.** Using equations (1), (2), and (3) above, compute the predicted **capacitance** $C$, **top plate charge** $Q$, and **stored energy** $U$ from your values of $d$, $A$, and $V$. Show your substitutions and intermediate results for each of the three quantities.',

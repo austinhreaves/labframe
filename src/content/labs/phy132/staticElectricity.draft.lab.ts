@@ -203,6 +203,7 @@ Insert the raw data below: [See Set of Parameters for Q<sub>1</sub> value].`,
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'coulombsConstantCalculation',
       prompt:
         "Use A to calculate your own value of Coulomb's constant k. (Hint: start by setting Coulomb's law and your graph's equation equal to each other: F=k |Q₁Q₂|/d²=Ax. You have known values for Q₁, d, and A, and in your third graph, you set x=Q₂, so solve for k. k |Q₁Q₂|/d²=AQ₂ ). Show all of your work.",
@@ -329,6 +330,7 @@ Set up two charges according to the Set of Parameters`,
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'coulombsConstantCalculationSecond',
       prompt:
         "Use A to calculate your own value of Coulomb's constant k. (Hint: start by setting Coulomb's law and your graph's equation equal to each other: F=k |Q1Q2|/d^2=Ax. You have known values for Q1, Q2, and A, and in your third graph, you set x=1/d^2, so solve for k. k |Q1Q2|/d^2=A/d^2 ). Show all of your work.",

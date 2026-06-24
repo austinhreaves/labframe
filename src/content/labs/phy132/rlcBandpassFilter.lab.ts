@@ -205,6 +205,7 @@ export const phy132RlcBandpassFilterLab: Lab = {
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'part1ResonanceComparisonCalculation',
       prompt:
         'Compute percent differences: (f₀,exp vs predicted f₀), (Δf,exp vs predicted Δf = Δω/(2π)), (Q,exp vs predicted Q). Show your arithmetic and comment on whether the agreement is within reasonable measurement precision.',
@@ -304,6 +305,7 @@ export const phy132RlcBandpassFilterLab: Lab = {
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'part2PredictedGainCalculation',
       prompt:
         'Show the calculation of |H_LC(jω)|_predicted at f = f₀ (should equal 0) and at one frequency well outside the notch (should approach 1). Tabulate predicted gains at all eleven test frequencies.',
@@ -312,6 +314,7 @@ export const phy132RlcBandpassFilterLab: Lab = {
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'part2IdentityCheck',
       prompt:
         'For each of your eleven test frequencies, compute |H_R|² + |H_LC|² using the gains measured in Parts 1 and 2. Tabulate. The expected value is 1.000 at every frequency. Report the mean and the largest deviation from 1. Pay particular attention to the result at f₀: |H_R| should be near 1 and |H_LC| should be near 0, and their squares should still sum to ~1.',

@@ -75,6 +75,7 @@ Hand-port this section. See LEGACY_PARITY_INVENTORY.md for the legacy column/row
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'sampleCalculation',
       prompt: '⚠️ TODO(human): missing prompt',
       equationEditor: true,
@@ -82,6 +83,7 @@ Hand-port this section. See LEGACY_PARITY_INVENTORY.md for the legacy column/row
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'percentErrorCalculation',
       prompt: '⚠️ TODO(human): missing prompt',
       equationEditor: true,
@@ -238,6 +240,7 @@ Is the graph of V vs. 1/r linear? How do you know?`,
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'kqCalculation',
       prompt: '⚠️ TODO(human): missing prompt',
       equationEditor: true,
@@ -245,6 +248,7 @@ Is the graph of V vs. 1/r linear? How do you know?`,
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'slopeErrorCalculation',
       prompt: '⚠️ TODO(human): missing prompt',
       equationEditor: true,

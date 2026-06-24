@@ -177,6 +177,7 @@ Pay attention to **signs**: if the meter reads a negative value, that means the 
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'currentLawEquations',
       prompt:
         '**Procedure step 5.** Add the currents entering and exiting the **top** junction and show that they are equal (i.e., the signed sum is zero). Then do the same for the **bottom** junction. Show your work.',
@@ -185,6 +186,7 @@ Pay attention to **signs**: if the meter reads a negative value, that means the 
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'voltageLawEquations',
       prompt:
         '**Procedure step 6.** Show that the sum of voltage changes around **Loop 1** is zero, then do the same for **Loop 2**. Use your chosen traversal direction for each loop, and remember the sign convention (rise across a battery from $-$ to $+$, drop across a resistor when traversed with the current). Show your work.',
@@ -306,6 +308,7 @@ $$R = 1.0,\\ 1.5,\\ 2.0,\\ 2.5,\\ 3.0,\\ 3.5,\\ 4.0,\\ 5.0,\\ 6.0,\\ 7.0,\\ 8.0,
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'batteryVoltageCalculation',
       prompt:
         'Use the custom-fit parameter $A$ to calculate the experimental battery EMF, $\\varepsilon_{\\text{exp}} = \\sqrt{A}$. Then compute its percent error relative to the EMF you set in the simulation. Show your work.',
@@ -314,6 +317,7 @@ $$R = 1.0,\\ 1.5,\\ 2.0,\\ 2.5,\\ 3.0,\\ 3.5,\\ 4.0,\\ 5.0,\\ 6.0,\\ 7.0,\\ 8.0,
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'sourceResistanceCalculation',
       prompt:
         'Compare the custom-fit parameter $B = r_{\\text{exp}}$ to the source resistance $r$ you set in the sim. Calculate the percent error.',
@@ -322,6 +326,7 @@ $$R = 1.0,\\ 1.5,\\ 2.0,\\ 2.5,\\ 3.0,\\ 3.5,\\ 4.0,\\ 5.0,\\ 6.0,\\ 7.0,\\ 8.0,
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'maximumPowerTransferDerivation',
       prompt:
         'Use calculus to find the theoretical prediction for the condition for **maximum power transfer** in a simple DC circuit with a non-ideal battery. Do this symbolically (no numerical values), and solve for $R$ in terms of $r$. Show your work. Hint: start from equation (13). Ask yourself, given the function $P_R(R)$, what should $dP_R/dR$ equal at the location of the maximum?',
@@ -345,6 +350,7 @@ Suppose you're building a custom stereo system and you decide to use an amplifie
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'stereoSystemPartB',
       prompt:
         '(b) Calculate the power consumed by the subwoofer at the resistance you chose in part (a), then calculate the total power output of the circuit (subwoofer + internal source). Take the ratio between these values to calculate the **efficiency** $\\eta = P_R / P_{\\text{total}}$. Show your work.',
@@ -353,6 +359,7 @@ Suppose you're building a custom stereo system and you decide to use an amplifie
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'stereoSystemPartC',
       prompt:
         '(c) Suppose you accidentally used the wrong subwoofer with a resistance of 36 Ω. Calculate the power consumed by the subwoofer, the total power output of the circuit, and the efficiency in this case. Show your work.',

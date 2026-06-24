@@ -174,6 +174,7 @@ c. Is the data linear in the 'near-field' or 'far-field' region? Hint: On your B
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'part1_dipole_calculation',
       prompt:
         'Using Eq. (2) and the slope of the y = Ax fit, calculate the magnetic dipole moment of the bar magnet m in units of Amp·m². Hint: match the terms in the y = Ax model with the terms in Eq. (2) in the lab manual. What is the independent/dependent variable? The part that is left over is equal to the slope A.',
