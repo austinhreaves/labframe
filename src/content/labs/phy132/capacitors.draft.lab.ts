@@ -61,6 +61,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'calculationsExplanation',
       prompt:
         'Show your calculations for the predicted capacitance, C, top plate charge, Q, and stored energy, U.',
@@ -251,6 +252,7 @@ Hand-port this section. See LEGACY_PARITY_INVENTORY.md for the legacy column/row
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'voltageCalculations',
       prompt:
         'Show your calculations for the predicted voltages for Step A, B, and C. Hint: follow along with the Capacitors Data Analysis Video.',
@@ -288,6 +290,7 @@ Hand-port this section. See LEGACY_PARITY_INVENTORY.md for the legacy column/row
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'voltageCalculationsSeries',
       prompt:
         'Show your calculations for the predicted voltages for Step A and B. Hint: use the equation for series capacitance to replace C₂ and C₃ with an equivalent capacitor C₂₃.',

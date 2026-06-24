@@ -85,6 +85,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'part1SampleCalculation',
       prompt:
         "For one of the incident angles (it doesn't matter which), show a sample calculation of the corresponding refracted angle using Snell's Law. Show all intermediate steps. Does your calculated value agree with your measured value?",
@@ -178,6 +179,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'part2_n2Calculation',
       prompt: 'Step 1: Calculate n₂ using the slope value',
       equationEditor: true,
@@ -270,6 +272,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'part3_n2Calculation',
       prompt: 'Step 1: Calculate n₂ using the slope value',
       equationEditor: true,
@@ -309,6 +312,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'part4_n2Calculation',
       prompt: 'Calculate n₂ using the critical angle formula',
       equationEditor: true,
@@ -316,6 +320,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'part4PercentDifferenceCalculation',
       prompt: 'Calculate the % difference between the n₂ values from Part 2 and Part 4',
       equationEditor: true,

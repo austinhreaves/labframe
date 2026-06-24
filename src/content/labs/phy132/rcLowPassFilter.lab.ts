@@ -178,6 +178,7 @@ export const phy132RcLowPassFilterLab: Lab = {
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'part1PredictedGainCalculation',
       prompt:
         'Show the calculation of |H_C(jω)|_predicted at the corner frequency f = f_c (predicted gain should equal 1/√2 ≈ 0.707) and at one frequency well above f_c. Tabulate predicted gains at all five test frequencies in your written response.',
@@ -186,6 +187,7 @@ export const phy132RcLowPassFilterLab: Lab = {
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'part1GainPercentErrorAnalysis',
       prompt:
         'Compute the percent error between |H_C|_measured and |H_C|_predicted at each frequency. Comment on whether the agreement is uniform across the spectrum or whether it degrades in any frequency range.',
@@ -194,6 +196,7 @@ export const phy132RcLowPassFilterLab: Lab = {
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'part1CornerFrequencyExtraction',
       prompt:
         'From your Part 1 data, estimate the experimental corner frequency f_c,exp (the frequency at which |H_C| = 0.707) by interpolation between adjacent frequency points. Compare to the predicted f_c = 1/(2πRC) via percent difference.',
@@ -289,6 +292,7 @@ export const phy132RcLowPassFilterLab: Lab = {
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'part2PredictedGainCalculation',
       prompt:
         'Show the calculation of |H_R(jω)|_predicted at f = f_c (should equal 1/√2 ≈ 0.707) and at one frequency well below f_c. Tabulate predicted gains at all five test frequencies.',
@@ -297,6 +301,7 @@ export const phy132RcLowPassFilterLab: Lab = {
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'part2IdentityCheck',
       prompt:
         'For each of your five test frequencies, compute |H_C|² + |H_R|² using the gains measured in Parts 1 and 2. Tabulate. The expected value is 1.000 at every frequency. Report the mean and the largest deviation from 1.',

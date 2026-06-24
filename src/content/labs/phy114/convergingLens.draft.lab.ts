@@ -152,6 +152,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'part1B_focalLengthCalculation',
       prompt:
         'Calculate the experimental focal length using 1/f = 1/d₀ + 1/dᵢ. Show work and units.',
@@ -160,6 +161,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'part1B_magnificationCalculation',
       prompt:
         'Compute the magnification two ways: M = -dᵢ/d₀ and M = hᵢ/h₀. If these magnifications do not agree, please reach out for help before moving on.',

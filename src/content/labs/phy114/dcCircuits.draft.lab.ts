@@ -156,6 +156,7 @@ Insert a screenshot of your I vs. V graph with the proportional fit clearly show
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'resistanceCalculation',
       prompt:
         'From the slope of your graph, calculate: (1) the total equivalent resistance and (2) the resistance of the pencil, Rp. Hint: what are the units of the slope? What are the units for resistance in terms of volts and amps?',
@@ -290,6 +291,7 @@ Hand-port this section. See LEGACY_PARITY_INVENTORY.md for the legacy column/row
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'currentLawEquations',
       prompt:
         'Add the currents entering and exiting the top junction and show they are equal, then do the same for the bottom junction.',
@@ -298,6 +300,7 @@ Hand-port this section. See LEGACY_PARITY_INVENTORY.md for the legacy column/row
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'voltageLawEquations',
       prompt:
         'Show the sum of voltages in Loop 1 is zero, then do the same for Loop 2. Hint: read the information in the procedure to know whether to add or subtract the voltage across each element.',

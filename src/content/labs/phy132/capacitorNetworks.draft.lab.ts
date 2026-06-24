@@ -163,6 +163,7 @@ Enter the nine voltage readings (3 capacitors × 3 steps) in the table below.`,
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'voltageCalculations',
       prompt:
         '**Procedure step 4.** Predict the voltage across each capacitor at each of the three sharing steps. Use conservation of charge: at each switching event, the total charge on whichever capacitors are currently connected together is conserved as it redistributes, and the connected capacitors end up at the same final voltage. Step A is immediate ($V_{C_{1}} = V_{0}$). For Step B, $C_{1}$ (charged to $V_{0}$) shares with $C_{2}$ in parallel. For Step C, $C_{2}$ (now carrying its Step-B charge) shares with $C_{3}$; $C_{1}$ is isolated and retains its Step-B voltage. Show your substitutions. Compute a percent error between each predicted voltage and the corresponding measured value from the table above.',
@@ -258,6 +259,7 @@ For each step, measure the voltage across each of the four labeled elements (the
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'voltageCalculationsSeries',
       prompt:
         '**Procedure step 4.** Predict the voltage across each of $C_{1}$, $C_{2}$, $C_{3}$, and $C_{23}$ at each of the two sharing steps. Start by replacing the series pair with its equivalent capacitance $C_{23} = (1/C_{2} + 1/C_{3})^{-1}$, then apply conservation of charge to the parallel sharing problem between $C_{1}$ and $C_{23}$. Finally, split $V_{C_{23}}$ back across $C_{2}$ and $C_{3}$ in inverse proportion to their capacitances (since they carry the same charge in series). Show your substitutions. Compute a percent error between each predicted voltage and the corresponding measured value.',

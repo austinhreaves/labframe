@@ -124,6 +124,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'p2ChargeCalc',
       prompt:
         'Using Q = C*deltaV, compute the charge stored on C1 and on C2 from your measured voltages and chosen capacitance values. Show the substitution for each capacitor.',
@@ -187,6 +188,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'p3ChargeCalc',
       prompt:
         'Using Q = C*deltaV, compute the charge stored on C1 and on C2 in the parallel circuit. Show the substitution for each capacitor.',
@@ -260,6 +262,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'calculation',
+      responseModes: ['text', 'draw', 'image'],
       fieldId: 'p5ChargeCalc',
       prompt:
         'Compute the charge stored on C1, C2, and C3 using Q = C*deltaV. Show the substitution for each capacitor.',
