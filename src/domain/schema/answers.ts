@@ -62,6 +62,10 @@ export const LabAnswersSchema = z.object({
   tables: z.record(idSchema, TableDataSchema),
   selectedFits: z.record(idSchema, z.string().min(1).nullable()),
   images: z.record(idSchema, BlobRefSchema),
+  /** Per-calculation response mode the student selected (C-C). Optional and
+   *  absent for labs with no selectable sections, keeping existing envelopes
+   *  byte-stable. */
+  responseSelections: z.record(idSchema, z.enum(['text', 'draw', 'image'])).optional(),
   fits: z.record(idSchema, FitResultSchema),
   status: z.object({
     submitted: z.boolean(),

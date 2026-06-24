@@ -1,3 +1,5 @@
+import type { ResponseMode } from '@/domain/calculationResponse';
+
 export type PersistedImageMeta = {
   idbKey: string;
   mime: string;
@@ -17,6 +19,7 @@ export type PersistedLabState = {
   tables: Record<string, unknown>;
   selectedFits?: Record<string, string | null>;
   fits: Record<string, unknown>;
+  responseSelections?: Record<string, ResponseMode>;
   images: Record<string, PersistedImageMeta>;
   splitFraction: number;
   status: {

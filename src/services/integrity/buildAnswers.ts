@@ -26,6 +26,11 @@ export function buildAnswersFromStore(course: Course, store: LabStoreState): Lab
     fields: store.fields,
     tables: store.tables,
     selectedFits: store.selectedFits,
+    // Only emit selections when the lab actually has selectable sections, so
+    // envelopes for single-mode labs stay byte-identical to before C-C.
+    ...(Object.keys(store.responseSelections).length > 0
+      ? { responseSelections: store.responseSelections }
+      : {}),
     images: Object.fromEntries(
       Object.entries(store.images).map(([imageId, image]) => [
         imageId,

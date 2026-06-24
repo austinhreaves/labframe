@@ -24,6 +24,7 @@ type PersistedSlices = Pick<
   | 'tables'
   | 'selectedFits'
   | 'fits'
+  | 'responseSelections'
   | 'images'
   | 'splitFraction'
 > & {
@@ -41,6 +42,7 @@ function selectPersistedSlices(state: LabStoreState): PersistedSlices {
     tables: state.tables,
     selectedFits: state.selectedFits,
     fits: state.fits,
+    responseSelections: state.responseSelections,
     images: state.images,
     splitFraction: state.splitFraction,
     submitted: state.status.submitted,
@@ -58,6 +60,7 @@ function hasPersistableChange(next: PersistedSlices, previous: PersistedSlices):
     next.tables !== previous.tables ||
     next.selectedFits !== previous.selectedFits ||
     next.fits !== previous.fits ||
+    next.responseSelections !== previous.responseSelections ||
     next.images !== previous.images ||
     next.splitFraction !== previous.splitFraction ||
     next.submitted !== previous.submitted

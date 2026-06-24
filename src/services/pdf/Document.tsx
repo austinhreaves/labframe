@@ -14,6 +14,7 @@ import { resolveIntegrityAgreementText } from '@/services/integrity/agreementTex
 import { attributePastes } from '@/services/pdf/attributePastes';
 import { computeClippedFitLineInPdfSvg } from '@/services/pdf/fitLine';
 import { renderMarkdownToPdf } from '@/services/pdf/markdown/renderMarkdownToPdf';
+import { calcImageId, drawStorageKey, resolveResponseMode } from '@/domain/calculationResponse';
 
 type PDFProps = {
   lab: Lab;
@@ -65,12 +66,19 @@ function pdfPointsSuffix(points: number | undefined): string {
   return ` (${formatPointsLabel(points)} pts)`;
 }
 
-function imageCaption(blobRef: { bytes: number; sha256?: string | undefined } | undefined): string {
+function attachmentCaption(
+  noun: string,
+  blobRef: { bytes: number; sha256?: string | undefined } | undefined,
+): string {
   if (!blobRef) {
-    return 'No image attached';
+    return `No ${noun} attached`;
   }
   const sha = blobRef.sha256 ? ` · SHA-256: ${blobRef.sha256.slice(0, 16)}…` : '';
-  return `Image attached: ${blobRef.bytes} bytes${sha}`;
+  return `${noun.charAt(0).toUpperCase()}${noun.slice(1)} attached: ${blobRef.bytes} bytes${sha}`;
+}
+
+function imageCaption(blobRef: { bytes: number; sha256?: string | undefined } | undefined): string {
+  return attachmentCaption('image', blobRef);
 }
 
 function parseNumber(value: string): number | null {
@@ -205,17 +213,34 @@ function sectionView(
     );
   }
 
-  if (section.kind === 'calculation' && section.responseMode === 'image') {
-    const blobRef = section.imageId ? answers.images[section.imageId] : undefined;
-    const src = section.imageId ? imageData[section.imageId] : undefined;
+  if (section.kind === 'calculation') {
+    // The PDF renders only the student's active mode (text, drawing, or photo);
+    // any answer entered in another mode stays in the envelope but is not drawn.
+    const mode = resolveResponseMode(section, answers.responseSelections ?? {});
+    if (mode === 'image') {
+      const imageId = calcImageId(section);
+      return (
+        <View key={`section-${index}`} style={styles.section}>
+          <Text style={styles.sectionTitle}>calculation{pdfPointsSuffix(section.points)}</Text>
+          {imageData[imageId] ? <Image src={imageData[imageId]} style={styles.calcImage} /> : null}
+          <Text style={styles.note}>{imageCaption(answers.images[imageId])}</Text>
+        </View>
+      );
+    }
+    if (mode === 'draw') {
+      const drawKey = drawStorageKey(section.fieldId);
+      return (
+        <View key={`section-${index}`} style={styles.section}>
+          <Text style={styles.sectionTitle}>calculation{pdfPointsSuffix(section.points)}</Text>
+          {imageData[drawKey] ? <Image src={imageData[drawKey]} style={styles.calcImage} /> : null}
+          <Text style={styles.note}>{attachmentCaption('drawing', answers.images[drawKey])}</Text>
+        </View>
+      );
+    }
     return (
       <View key={`section-${index}`} style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          calculation
-          {pdfPointsSuffix(section.points)}
-        </Text>
-        {src ? <Image src={src} style={styles.calcImage} /> : null}
-        <Text style={styles.note}>{imageCaption(blobRef)}</Text>
+        <Text style={styles.sectionTitle}>calculation{pdfPointsSuffix(section.points)}</Text>
+        {fieldView(answers.fields[section.fieldId])}
       </View>
     );
   }
@@ -223,7 +248,6 @@ function sectionView(
   if (
     section.kind === 'objective' ||
     section.kind === 'measurement' ||
-    section.kind === 'calculation' ||
     section.kind === 'concept'
   ) {
     return (

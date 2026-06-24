@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 
+import { getResponseModes, type ResponseMode } from '@/domain/calculationResponse';
 import type { FieldValue, Lab, NumericRow, Section, TableData, TableRow } from '@/domain/schema';
 import {
   CURRENT_PERSISTED_SCHEMA_VERSION,
@@ -52,6 +53,7 @@ export type LabStoreState = {
   selectedFits: Record<string, string | null>;
   images: Record<string, RuntimeImage>;
   fits: Record<string, FitSelection>;
+  responseSelections: Record<string, ResponseMode>;
   splitFraction: number;
   simSide: 'left' | 'right';
   status: LabStoreStatus;
@@ -64,6 +66,7 @@ export type LabStoreState = {
   setTableCell: (tableId: string, rowIndex: number, columnId: string, value: FieldValue) => void;
   setSelectedFit: (plotId: string, fitId: string | null) => void;
   setImage: (imageId: string, file: File | null) => void;
+  setResponseSelection: (fieldId: string, mode: ResponseMode) => void;
   setFitSelection: (plotId: string, fit: FitSelection | null) => void;
   setSplitFraction: (value: number) => void;
   setSimSide: (value: 'left' | 'right') => void;
@@ -180,6 +183,22 @@ function initFieldsFromSchema(sections: Section[]): Record<string, FieldValue> {
   return fields;
 }
 
+function initResponseSelectionsFromSchema(sections: Section[]): Record<string, ResponseMode> {
+  const selections: Record<string, ResponseMode> = {};
+  for (const section of sections) {
+    if (section.kind !== 'calculation') {
+      continue;
+    }
+    const modes = getResponseModes(section);
+    if (modes) {
+      // Default a selectable section to its first listed mode; authors order the
+      // array intentionally (e.g. text first so typed answers are the default).
+      selections[section.fieldId] = modes[0]!;
+    }
+  }
+  return selections;
+}
+
 function recomputeDerivedColumns(lab: Lab, tableId: string, row: TableRow): TableRow {
   const section = lab.sections.find(
     (candidate) => candidate.kind === 'dataTable' && candidate.tableId === tableId,
@@ -255,6 +274,7 @@ function serializePersistedState(state: LabStoreState, savedAt: number): Persist
     tables: state.tables,
     selectedFits: state.selectedFits,
     fits: state.fits,
+    responseSelections: state.responseSelections,
     images,
     splitFraction: state.splitFraction,
     status: {
@@ -333,6 +353,7 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
     selectedFits: {},
     images: {},
     fits: {},
+    responseSelections: {},
     splitFraction: DEFAULT_SPLIT_FRACTION,
     simSide: DEFAULT_SIM_SIDE,
     status: {
@@ -352,6 +373,7 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
         selectedFits: {},
         images: {},
         fits: {},
+        responseSelections: initResponseSelectionsFromSchema(lab.sections),
         splitFraction: DEFAULT_SPLIT_FRACTION,
         simSide: DEFAULT_SIM_SIDE,
       };
@@ -421,6 +443,10 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
         fits: {
           ...state.fits,
           ...migrated.fits,
+        },
+        responseSelections: {
+          ...state.responseSelections,
+          ...(migrated.responseSelections ?? {}),
         },
         images: hydratedImages,
         splitFraction: DEFAULT_SPLIT_FRACTION,
@@ -607,6 +633,15 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
           }));
         });
     },
+    setResponseSelection: (fieldId, mode) =>
+      // Switching modes only changes the selection; each mode's stored answer
+      // (text field, draw key, image blob) is left untouched.
+      set((state) => ({
+        responseSelections: {
+          ...state.responseSelections,
+          [fieldId]: mode,
+        },
+      })),
     setFitSelection: (plotId, fit) =>
       set((state) => {
         if (fit === null) {
@@ -673,6 +708,7 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
         selectedFits: {},
         images: {},
         fits: {},
+        responseSelections: initResponseSelectionsFromSchema(current.lab?.sections ?? []),
         splitFraction: DEFAULT_SPLIT_FRACTION,
         simSide: DEFAULT_SIM_SIDE,
         status: {

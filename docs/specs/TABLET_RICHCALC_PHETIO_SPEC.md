@@ -1,8 +1,8 @@
 # Tablet Layout, Rich Calculations, and PhET-iO Integration Spec
 
-**Status:** In progress. T-A (tablet layout), T-B (touch keyboard), and C-A (image upload) landed on branch `claude/clever-mayer-09af19`. C-B (free draw), C-C (student-selectable response mode), and all of Track S remain.
+**Status:** In progress. T-A (tablet layout), T-B (touch keyboard), and C-A (image upload) landed on branch `claude/clever-mayer-09af19`. C-B (free draw canvas) and C-C (student-selectable response mode) landed on branch `claude/musing-hamilton-ca5b08`. All of Track C is now complete; all of Track S remains.
 **Created:** 2026-06-19
-**Updated:** 2026-06-23
+**Updated:** 2026-06-24
 **Tracks:** Three parallel feature tracks executed in dependency order within each track. Tracks are independent; they may be handed off to agents concurrently or sequentially.
 
 ---
