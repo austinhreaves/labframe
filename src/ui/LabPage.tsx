@@ -238,12 +238,16 @@ export function LabPage({ course, lab }: Props) {
 
     setIsExportingPdf(true);
     try {
-      const [{ renderPDF }, { collectPdfImageData }] = await Promise.all([
+      const [{ renderPDF }, { collectPdfImageData }, { collectDrawArtifacts }] = await Promise.all([
         import('@/services/pdf/render'),
         import('@/services/pdf/collectImageData'),
+        import('@/services/pdf/collectDrawImages'),
       ]);
-      const answers = buildAnswersFromStore(course, { ...store, studentName: studentNameForPdf });
-      const images = await collectPdfImageData(store.images);
+      const draw = await collectDrawArtifacts(lab, store.fields, store.responseSelections);
+      const base = buildAnswersFromStore(course, { ...store, studentName: studentNameForPdf });
+      // Bind rasterized drawings into the signed envelope before canonicalizing.
+      const answers = { ...base, images: { ...base.images, ...draw.blobRefs } };
+      const images = { ...(await collectPdfImageData(store.images)), ...draw.dataUrls };
       const signing = await signAnswers(answers);
       const canonical = canonicalize(answers);
       const rendered = await renderPDF({
@@ -296,12 +300,15 @@ export function LabPage({ course, lab }: Props) {
 
     setIsExportingDraft(true);
     try {
-      const [{ renderPDF }, { collectPdfImageData }] = await Promise.all([
+      const [{ renderPDF }, { collectPdfImageData }, { collectDrawArtifacts }] = await Promise.all([
         import('@/services/pdf/render'),
         import('@/services/pdf/collectImageData'),
+        import('@/services/pdf/collectDrawImages'),
       ]);
-      const answers = buildAnswersFromStore(course, { ...store, studentName: studentNameForPdf });
-      const images = await collectPdfImageData(store.images);
+      const draw = await collectDrawArtifacts(lab, store.fields, store.responseSelections);
+      const base = buildAnswersFromStore(course, { ...store, studentName: studentNameForPdf });
+      const answers = { ...base, images: { ...base.images, ...draw.blobRefs } };
+      const images = { ...(await collectPdfImageData(store.images)), ...draw.dataUrls };
       const rendered = await renderPDF({
         mode: 'draft',
         lab,

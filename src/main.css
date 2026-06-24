@@ -1297,6 +1297,142 @@ a.lab-card:hover {
   cursor: not-allowed;
 }
 
+/* Student response-mode switcher (calculation responseModes, C-C). */
+.calc-mode-switcher {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+  padding: var(--space-0-5);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.calc-mode-tab {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  padding: var(--space-1) var(--space-4);
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+}
+
+.calc-mode-tab:hover {
+  color: var(--text-primary);
+}
+
+.calc-mode-tab:focus-visible {
+  outline: none;
+  border-color: var(--accent-600);
+  box-shadow: var(--focus-ring-soft);
+}
+
+.calc-mode-tab[data-active] {
+  background: var(--surface-raised);
+  border-color: var(--border-default);
+  color: var(--text-accent);
+}
+
+/* Free-draw canvas (calculation responseMode 'draw'). */
+.draw-canvas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.draw-canvas-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.draw-canvas-colors,
+.draw-canvas-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.draw-canvas-tools button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--text-sm);
+  padding: var(--space-1) var(--space-3);
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+}
+
+.draw-canvas-tools button:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.draw-canvas-tools button:focus-visible,
+.draw-canvas-swatch:focus-visible {
+  outline: none;
+  border-color: var(--accent-600);
+  box-shadow: var(--focus-ring-soft);
+}
+
+.draw-canvas-tools button[data-active] {
+  border-color: var(--accent-600);
+  color: var(--accent-text);
+  background: var(--accent-soft);
+}
+
+.draw-canvas-swatch {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+}
+
+.draw-canvas-swatch[data-active] {
+  border-color: var(--accent-700);
+  box-shadow: var(--focus-ring-soft);
+}
+
+.draw-canvas-surface {
+  width: 100%;
+  display: block;
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.draw-canvas-surface[data-erasing] {
+  cursor: cell;
+}
+
+.draw-canvas-surface:focus-visible {
+  outline: none;
+  border-color: var(--accent-600);
+  box-shadow: var(--focus-ring-soft);
+}
+
 .primitives-showcase {
   max-width: 960px;
   margin: 0 auto;
