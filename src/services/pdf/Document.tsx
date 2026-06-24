@@ -14,7 +14,13 @@ import { resolveIntegrityAgreementText } from '@/services/integrity/agreementTex
 import { attributePastes } from '@/services/pdf/attributePastes';
 import { computeClippedFitLineInPdfSvg } from '@/services/pdf/fitLine';
 import { renderMarkdownToPdf } from '@/services/pdf/markdown/renderMarkdownToPdf';
-import { calcImageId, drawStorageKey, resolveResponseMode } from '@/domain/calculationResponse';
+import {
+  calcImageId,
+  drawPageKey,
+  drawStorageKey,
+  resolveResponseMode,
+} from '@/domain/calculationResponse';
+import { parseDrawing } from '@/ui/primitives/drawStrokes';
 
 type PDFProps = {
   lab: Lab;
@@ -48,7 +54,8 @@ const styles = StyleSheet.create({
   tableCell: { flex: 1, padding: 3, borderRightWidth: 0.5, borderRightColor: '#ddd' },
   tableHeaderStack: { flexDirection: 'column' },
   tableFormulaLabel: { fontSize: 8, color: '#555' },
-  calcImage: { maxWidth: 515, maxHeight: 360, objectFit: 'contain', marginTop: 4 },
+  calcImage: { maxWidth: 515, maxHeight: 700, objectFit: 'contain', marginTop: 4 },
+  drawPage: { marginTop: 6 },
   typed: { fontStyle: 'normal', color: '#111' },
   pasteClipboard: { fontStyle: 'italic', color: '#111' },
   pasteAutocomplete: { color: '#3f3f99' },
@@ -228,12 +235,30 @@ function sectionView(
       );
     }
     if (mode === 'draw') {
-      const drawKey = drawStorageKey(section.fieldId);
+      const drawing = parseDrawing(answers.fields[drawStorageKey(section.fieldId)]?.text);
+      // One image block per page that rasterized (non-empty); each page is kept
+      // whole (wrap=false) but pages flow so the section paginates.
+      const pageKeys = Array.from({ length: drawing?.pages.length ?? 0 }, (_, i) =>
+        drawPageKey(section.fieldId, i + 1),
+      ).filter((key) => imageData[key]);
       return (
         <View key={`section-${index}`} style={styles.section}>
           <Text style={styles.sectionTitle}>calculation{pdfPointsSuffix(section.points)}</Text>
-          {imageData[drawKey] ? <Image src={imageData[drawKey]} style={styles.calcImage} /> : null}
-          <Text style={styles.note}>{attachmentCaption('drawing', answers.images[drawKey])}</Text>
+          {pageKeys.length === 0 ? (
+            <Text style={styles.note}>{attachmentCaption('drawing', undefined)}</Text>
+          ) : (
+            pageKeys.map((key, pageIndex) => (
+              <View key={key} style={styles.drawPage} wrap={false}>
+                {pageKeys.length > 1 ? (
+                  <Text style={styles.note}>
+                    Page {pageIndex + 1} of {pageKeys.length}
+                  </Text>
+                ) : null}
+                <Image src={imageData[key]} style={styles.calcImage} />
+                <Text style={styles.note}>{attachmentCaption('drawing', answers.images[key])}</Text>
+              </View>
+            ))
+          )}
         </View>
       );
     }

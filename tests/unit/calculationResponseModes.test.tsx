@@ -3,10 +3,18 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { isValidElement } from 'react';
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { drawPageKey } from '@/domain/calculationResponse';
 import type { CalculationSection, Course, Lab, LabAnswers } from '@/domain/schema';
 import { LabReportDocument } from '@/services/pdf/Document';
 import { createEmptyFieldValue, useLabStore } from '@/state/labStore';
 import { CalculationSectionView } from '@/ui/sections/CalculationSectionView';
+import { serializeDrawing } from '@/ui/primitives/drawStrokes';
+
+const oneStrokeDrawing = serializeDrawing({
+  version: 3,
+  pages: [{ strokes: [{ color: '#111827', width: 3.5, points: [{ x: 10, y: 10, pressure: 0 }] }] }],
+});
+const c1DrawPageKey = drawPageKey('c1', 1);
 
 const selectableSection: CalculationSection = {
   kind: 'calculation',
@@ -90,10 +98,15 @@ const baseAnswers: LabAnswers = {
     agreementAcceptedAt: 1714450000000,
     agreementText: 'Affirmation.',
   },
-  fields: { c1: { text: 'typed answer', pastes: [], meta: { activeMs: 0, keystrokes: 0, deletes: 0 } } },
+  fields: {
+    c1: { text: 'typed answer', pastes: [], meta: { activeMs: 0, keystrokes: 0, deletes: 0 } },
+    c1__draw: { ...createEmptyFieldValue(), text: oneStrokeDrawing },
+  },
   tables: {},
   selectedFits: {},
-  images: { c1__draw: { idbKey: 'c1__draw', mime: 'image/png', bytes: 99, sha256: 'c'.repeat(64) } },
+  images: {
+    [c1DrawPageKey]: { idbKey: c1DrawPageKey, mime: 'image/png', bytes: 99, sha256: 'c'.repeat(64) },
+  },
   fits: {},
   status: { submitted: false, lastSavedAt: 0 },
 };
@@ -139,7 +152,7 @@ describe('PDF renders the active selected mode', () => {
       mode: 'signed',
       signature: '0123456789abcdef0123456789abcdef',
       signedAt: 1714450000000,
-      imageData: { c1__draw: PNG_DATA_URL },
+      imageData: { [c1DrawPageKey]: PNG_DATA_URL },
     });
 
     expect(collectText(tree)).toContain('typed answer');
@@ -154,7 +167,7 @@ describe('PDF renders the active selected mode', () => {
       mode: 'signed',
       signature: '0123456789abcdef0123456789abcdef',
       signedAt: 1714450000000,
-      imageData: { c1__draw: PNG_DATA_URL },
+      imageData: { [c1DrawPageKey]: PNG_DATA_URL },
     });
 
     expect(collectImageSrcs(tree)).toContain(PNG_DATA_URL);

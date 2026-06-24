@@ -13,6 +13,12 @@ export function drawStorageKey(fieldId: string): string {
   return `${fieldId}${DRAW_KEY_SUFFIX}`;
 }
 
+/** Per-page key for a drawing's rasterized PNG in the export image map and the
+ *  signed envelope. `pageIndex` is 1-based. */
+export function drawPageKey(fieldId: string, pageIndex: number): string {
+  return `${drawStorageKey(fieldId)}#${pageIndex}`;
+}
+
 export function imageStorageKey(fieldId: string): string {
   return `${fieldId}${IMAGE_KEY_SUFFIX}`;
 }

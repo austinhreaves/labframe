@@ -6,20 +6,25 @@ import {
   effectiveLineWidth,
   parseDrawing,
   serializeDrawing,
-  type DrawDocument,
+  type DrawDrawing,
 } from '@/ui/primitives/drawStrokes';
 
-const sampleDoc: DrawDocument = {
-  version: 2,
-  strokes: [
+const sampleDoc: DrawDrawing = {
+  version: 3,
+  pages: [
     {
-      color: '#111827',
-      width: DRAW_WIDTH_THIN,
-      points: [
-        { x: 100, y: 100, pressure: 0 },
-        { x: 200, y: 250, pressure: 0.6 },
+      strokes: [
+        {
+          color: '#111827',
+          width: DRAW_WIDTH_THIN,
+          points: [
+            { x: 100, y: 100, pressure: 0 },
+            { x: 200, y: 250, pressure: 0.6 },
+          ],
+        },
       ],
     },
+    { strokes: [] },
   ],
 };
 
@@ -30,12 +35,12 @@ describe('drawStorageKey', () => {
 });
 
 describe('serialize / parse round trip', () => {
-  it('preserves strokes and pressure in logical space', () => {
+  it('preserves pages, strokes, and pressure in logical space', () => {
     const parsed = parseDrawing(serializeDrawing(sampleDoc));
     expect(parsed).toEqual(sampleDoc);
   });
 
-  it('upconverts a legacy v1 (pixel-space) document into logical units', () => {
+  it('upconverts a legacy v1 (pixel-space) document into a single logical page', () => {
     const legacy = JSON.stringify({
       version: 1,
       width: 500,
@@ -43,17 +48,29 @@ describe('serialize / parse round trip', () => {
       strokes: [{ color: '#111827', width: 2, points: [{ x: 250, y: 353.5, pressure: 0 }] }],
     });
     const parsed = parseDrawing(legacy);
-    expect(parsed?.version).toBe(2);
+    expect(parsed?.version).toBe(3);
+    expect(parsed?.pages).toHaveLength(1);
     // A point at the pixel-space center lands at the logical-page center.
-    expect(parsed?.strokes[0]?.points[0]?.x).toBeCloseTo(500, 0);
-    expect(parsed?.strokes[0]?.points[0]?.y).toBeCloseTo(707, 0);
+    expect(parsed?.pages[0]?.strokes[0]?.points[0]?.x).toBeCloseTo(500, 0);
+    expect(parsed?.pages[0]?.strokes[0]?.points[0]?.y).toBeCloseTo(707, 0);
   });
 
-  it('returns null for empty, malformed, or non-stroke payloads', () => {
+  it('wraps a v2 single-page document into the paged shape', () => {
+    const v2 = JSON.stringify({
+      version: 2,
+      strokes: [{ color: '#111827', width: 3.5, points: [{ x: 10, y: 10, pressure: 0 }] }],
+    });
+    const parsed = parseDrawing(v2);
+    expect(parsed?.version).toBe(3);
+    expect(parsed?.pages).toHaveLength(1);
+  });
+
+  it('returns null for empty, malformed, or structureless payloads', () => {
     expect(parseDrawing(undefined)).toBeNull();
     expect(parseDrawing('')).toBeNull();
     expect(parseDrawing('not json')).toBeNull();
-    expect(parseDrawing('{"version":2}')).toBeNull();
+    expect(parseDrawing('{"version":3}')).toBeNull();
+    expect(parseDrawing('{"version":3,"pages":[]}')).toBeNull();
   });
 });
 
