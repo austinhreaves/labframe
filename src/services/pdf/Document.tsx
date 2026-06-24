@@ -21,6 +21,7 @@ import {
   resolveResponseMode,
 } from '@/domain/calculationResponse';
 import { parseDrawing } from '@/ui/primitives/drawStrokes';
+import { mathToInline } from '@/services/pdf/markdown/latexToUnicode';
 
 type PDFProps = {
   lab: Lab;
@@ -56,6 +57,7 @@ const styles = StyleSheet.create({
   tableFormulaLabel: { fontSize: 8, color: '#555' },
   calcImage: { maxWidth: 515, maxHeight: 700, objectFit: 'contain', marginTop: 4 },
   drawPage: { marginTop: 6 },
+  prompt: { marginBottom: 4 },
   typed: { fontStyle: 'normal', color: '#111' },
   pasteClipboard: { fontStyle: 'italic', color: '#111' },
   pasteAutocomplete: { color: '#3f3f99' },
@@ -71,6 +73,25 @@ function pdfPointsSuffix(points: number | undefined): string {
     return '';
   }
   return ` (${formatPointsLabel(points)} pts)`;
+}
+
+// Human-readable section headings, replacing the raw schema `kind` strings.
+const SECTION_TITLES: Record<string, string> = {
+  objective: 'Objective',
+  measurement: 'Measurement',
+  multiMeasurement: 'Measurements',
+  calculation: 'Calculation',
+  concept: 'Response',
+  dataTable: 'Data Table',
+  image: 'Image',
+};
+
+// Render a section prompt (markdown, may contain inline math) above its answer.
+function promptBlock(markdown: string | undefined): React.ReactNode {
+  if (!markdown || !markdown.trim()) {
+    return null;
+  }
+  return <View style={styles.prompt}>{renderMarkdownToPdf(markdown)}</View>;
 }
 
 function attachmentCaption(
@@ -212,9 +233,12 @@ function sectionView(
   imageData: Record<string, string> = {},
 ): React.ReactNode {
   if (section.kind === 'instructions') {
+    // No generic "Instructions" heading: the markdown carries its own headings.
     return (
       <View key={`section-${index}`} style={styles.section}>
-        <Text style={styles.sectionTitle}>Instructions{pdfPointsSuffix(section.points)}</Text>
+        {section.points !== undefined ? (
+          <Text style={styles.note}>{formatPointsLabel(section.points)} pts</Text>
+        ) : null}
         <View>{renderMarkdownToPdf(section.html)}</View>
       </View>
     );
@@ -224,11 +248,17 @@ function sectionView(
     // The PDF renders only the student's active mode (text, drawing, or photo);
     // any answer entered in another mode stays in the envelope but is not drawn.
     const mode = resolveResponseMode(section, answers.responseSelections ?? {});
+    const header = (
+      <>
+        <Text style={styles.sectionTitle}>Calculation{pdfPointsSuffix(section.points)}</Text>
+        {promptBlock(section.prompt)}
+      </>
+    );
     if (mode === 'image') {
       const imageId = calcImageId(section);
       return (
         <View key={`section-${index}`} style={styles.section}>
-          <Text style={styles.sectionTitle}>calculation{pdfPointsSuffix(section.points)}</Text>
+          {header}
           {imageData[imageId] ? <Image src={imageData[imageId]} style={styles.calcImage} /> : null}
           <Text style={styles.note}>{imageCaption(answers.images[imageId])}</Text>
         </View>
@@ -243,7 +273,7 @@ function sectionView(
       ).filter((key) => imageData[key]);
       return (
         <View key={`section-${index}`} style={styles.section}>
-          <Text style={styles.sectionTitle}>calculation{pdfPointsSuffix(section.points)}</Text>
+          {header}
           {pageKeys.length === 0 ? (
             <Text style={styles.note}>{attachmentCaption('drawing', undefined)}</Text>
           ) : (
@@ -264,7 +294,7 @@ function sectionView(
     }
     return (
       <View key={`section-${index}`} style={styles.section}>
-        <Text style={styles.sectionTitle}>calculation{pdfPointsSuffix(section.points)}</Text>
+        {header}
         {fieldView(answers.fields[section.fieldId])}
       </View>
     );
@@ -278,9 +308,22 @@ function sectionView(
     return (
       <View key={`section-${index}`} style={styles.section}>
         <Text style={styles.sectionTitle}>
-          {section.kind}
+          {SECTION_TITLES[section.kind] ?? section.kind}
           {pdfPointsSuffix(section.points)}
         </Text>
+        {section.kind === 'objective' ? promptBlock(section.prompt) : null}
+        {section.kind === 'concept' ? (
+          <>
+            {promptBlock(section.preamble)}
+            {promptBlock(section.prompt)}
+          </>
+        ) : null}
+        {section.kind === 'measurement' ? (
+          <Text style={styles.label}>
+            {mathToInline(section.label)}
+            {section.unit ? ` (${section.unit})` : ''}
+          </Text>
+        ) : null}
         {fieldView(answers.fields[section.fieldId])}
       </View>
     );
@@ -292,7 +335,7 @@ function sectionView(
         <Text style={styles.sectionTitle}>Measurements{pdfPointsSuffix(section.points)}</Text>
         {section.rows.map((row) => (
           <View key={row.id} style={styles.row}>
-            <Text style={styles.label}>{row.label}: </Text>
+            <Text style={styles.label}>{mathToInline(row.label)}: </Text>
             {fieldView(answers.fields[row.id])}
           </View>
         ))}
@@ -305,7 +348,7 @@ function sectionView(
     return (
       <View key={`section-${index}`} style={styles.section}>
         <Text style={styles.sectionTitle}>
-          Data Table: {section.tableId}
+          Data Table
           {pdfPointsSuffix(section.points)}
         </Text>
         <View style={styles.table}>
@@ -315,9 +358,9 @@ function sectionView(
               return (
                 <View key={column.id} style={styles.tableCell}>
                   <View style={styles.tableHeaderStack}>
-                    <Text>{column.label}</Text>
+                    <Text>{mathToInline(column.label)}</Text>
                     {formulaLabel ? (
-                      <Text style={styles.tableFormulaLabel}>{formulaLabel}</Text>
+                      <Text style={styles.tableFormulaLabel}>{mathToInline(formulaLabel)}</Text>
                     ) : null}
                   </View>
                 </View>
@@ -376,7 +419,7 @@ function sectionView(
             },
           });
 
-    const plotTitle = section.title ?? `${section.yLabel} vs. ${section.xLabel}`;
+    const plotTitle = mathToInline(section.title ?? `${section.yLabel} vs. ${section.xLabel}`);
 
     return (
       <View key={`section-${index}`} style={styles.section}>
@@ -424,7 +467,7 @@ function sectionView(
     return (
       <View key={`section-${index}`} style={styles.section}>
         <Text style={styles.sectionTitle}>
-          Image: {section.imageId}
+          Image
           {pdfPointsSuffix(section.points)}
         </Text>
         {src ? <Image src={src} style={styles.calcImage} /> : null}

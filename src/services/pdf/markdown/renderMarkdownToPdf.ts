@@ -239,9 +239,10 @@ function renderBlockNode(node: MdNode, keyPrefix: string): ReactNode | null {
     return renderTableNode(node, keyPrefix);
   }
   if (node.type === 'math') {
-    // Block math visual layout is intentionally deferred; we render raw source as deterministic monospace fallback.
+    // Block math visual layout is intentionally deferred; convert to unicode and
+    // render in monospace as a deterministic fallback.
     warnBlockMathFallbackOnce();
-    return createElement(Text, { key: keyPrefix, style: styles.mathBlock }, node.value ?? '');
+    return createElement(Text, { key: keyPrefix, style: styles.mathBlock }, latexToUnicode(node.value ?? ''));
   }
   if (node.type === 'html') {
     return createElement(Text, { key: keyPrefix, style: styles.paragraph }, node.value ?? '');

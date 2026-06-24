@@ -10,18 +10,36 @@ const COMMAND_MAP: Record<string, string> = {
   '\\gamma': 'γ',
   '\\delta': 'δ',
   '\\epsilon': 'ε',
+  '\\varepsilon': 'ε',
+  '\\zeta': 'ζ',
+  '\\eta': 'η',
   '\\theta': 'θ',
+  '\\vartheta': 'ϑ',
+  '\\iota': 'ι',
+  '\\kappa': 'κ',
   '\\phi': 'φ',
+  '\\varphi': 'φ',
   '\\pi': 'π',
   '\\lambda': 'λ',
   '\\mu': 'μ',
+  '\\nu': 'ν',
+  '\\xi': 'ξ',
   '\\rho': 'ρ',
   '\\sigma': 'σ',
+  '\\tau': 'τ',
+  '\\upsilon': 'υ',
+  '\\chi': 'χ',
+  '\\psi': 'ψ',
   '\\omega': 'ω',
+  '\\Gamma': 'Γ',
+  '\\Delta': 'Δ',
   '\\Theta': 'Θ',
+  '\\Lambda': 'Λ',
+  '\\Xi': 'Ξ',
   '\\Phi': 'Φ',
   '\\Pi': 'Π',
   '\\Sigma': 'Σ',
+  '\\Psi': 'Ψ',
   '\\Omega': 'Ω',
   '\\sin': 'sin',
   '\\cos': 'cos',
@@ -32,13 +50,69 @@ const COMMAND_MAP: Record<string, string> = {
   '\\times': '×',
   '\\div': '÷',
   '\\pm': '±',
+  '\\mp': '∓',
+  '\\ast': '∗',
+  '\\star': '⋆',
+  '\\bullet': '•',
   '\\le': '≤',
+  '\\leq': '≤',
   '\\ge': '≥',
+  '\\geq': '≥',
   '\\ne': '≠',
+  '\\neq': '≠',
+  '\\equiv': '≡',
+  '\\sim': '∼',
+  '\\simeq': '≃',
   '\\approx': '≈',
-  '\\to': '→',
   '\\propto': '∝',
+  '\\to': '→',
+  '\\rightarrow': '→',
+  '\\leftarrow': '←',
+  '\\Rightarrow': '⇒',
+  '\\Leftarrow': '⇐',
+  '\\mapsto': '↦',
+  '\\infty': '∞',
+  '\\partial': '∂',
+  '\\nabla': '∇',
+  '\\ldots': '…',
+  '\\dots': '…',
+  '\\cdots': '⋯',
+  '\\degree': '°',
+  '\\circ': '∘',
+  '\\angle': '∠',
+  '\\perp': '⊥',
+  '\\parallel': '∥',
+  '\\hbar': 'ℏ',
+  '\\ell': 'ℓ',
+  '\\langle': '⟨',
+  '\\rangle': '⟩',
+  '\\quad': '  ',
+  '\\qquad': '    ',
 };
+
+// Wrapper commands whose only job is styling: drop the command, keep the braced
+// content (which is converted in a later pass).
+const WRAPPER_PATTERN =
+  /\\(?:mathrm|mathbf|mathit|mathsf|mathtt|mathcal|mathbb|mathfrak|text|textrm|textbf|textit|textsf|texttt|operatorname|boldsymbol|vec|hat|bar|tilde|overline|underline|overrightarrow)\s*\{([^{}]*)\}/g;
+
+// Spacing macros with non-letter names that the command map (letters only) cannot
+// reach: thin/medium spaces collapse to a single space, negative space drops.
+function stripSpacingMacros(input: string): string {
+  return input
+    .replace(/\\[,;:]/g, ' ')
+    .replace(/\\!/g, '')
+    .replace(/\\ /g, ' ');
+}
+
+function stripWrappers(input: string): string {
+  let output = input;
+  let previous: string;
+  do {
+    previous = output;
+    output = output.replace(WRAPPER_PATTERN, '$1');
+  } while (output !== previous);
+  return output;
+}
 
 const SUPERSCRIPT_MAP: Record<string, string> = {
   '0': '⁰',
@@ -166,9 +240,28 @@ function replaceMappedCommands(input: string): string {
 
 export function latexToUnicode(input: string): string {
   let output = input;
+  output = stripSpacingMacros(output);
+  output = stripWrappers(output);
+  // Sizing delimiters carry no meaning once rendered as text.
+  output = output.replace(/\\left/g, '').replace(/\\right/g, '');
   output = replaceFractions(output);
   output = replaceSquareRoots(output);
   output = replaceMappedCommands(output);
   output = convertSimpleSuperSub(output);
   return output;
+}
+
+/**
+ * Convert inline `$...$` (and `$$...$$`) math segments inside an otherwise plain
+ * string to unicode, leaving the surrounding text untouched. Used for section
+ * prompts, measurement labels, and table headers that are not run through the
+ * full markdown pipeline but may still contain inline math.
+ */
+export function mathToInline(input: string): string {
+  if (!input.includes('$')) {
+    return input;
+  }
+  return input
+    .replace(/\$\$([\s\S]+?)\$\$/g, (_full, inner: string) => latexToUnicode(inner))
+    .replace(/\$([^$]+)\$/g, (_full, inner: string) => latexToUnicode(inner));
 }
