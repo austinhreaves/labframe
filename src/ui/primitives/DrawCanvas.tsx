@@ -4,8 +4,8 @@ import { Eraser, Pen, RotateCcw, Trash2 } from 'lucide-react';
 import { Icon } from '@/ui/primitives/Icon';
 import {
   DRAW_COLORS,
-  DRAW_DEFAULT_ROWS,
-  DRAW_ROW_HEIGHT,
+  DRAW_PAGE_HEIGHT,
+  DRAW_PAGE_WIDTH,
   DRAW_WIDTH_THICK,
   DRAW_WIDTH_THIN,
   type DrawDocument,
@@ -23,12 +23,11 @@ type Props = {
   onChange: (serialized: string) => void;
   /** Accessible name for the drawing surface (the calculation prompt). */
   label: string;
-  rows?: number;
 };
 
-// Stroke-eraser hit radius in CSS pixels; erasing removes whole strokes near the
-// pointer rather than clearing pixels, which keeps the vector model intact.
-const ERASE_RADIUS = 12;
+// Stroke-eraser hit radius in logical units; erasing removes whole strokes near
+// the pointer rather than clearing pixels, which keeps the vector model intact.
+const ERASE_RADIUS = 22;
 
 function distanceToStroke(stroke: DrawStroke, x: number, y: number): number {
   let min = Infinity;
@@ -43,7 +42,7 @@ function distanceToStroke(stroke: DrawStroke, x: number, y: number): number {
   return min;
 }
 
-export function DrawCanvas({ id, value, onChange, label, rows }: Props) {
+export function DrawCanvas({ id, value, onChange, label }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [strokes, setStrokes] = useState<DrawStroke[]>(() => parseDrawing(value)?.strokes ?? []);
   const [color, setColor] = useState<string>(DRAW_COLORS[0]);
@@ -57,28 +56,38 @@ export function DrawCanvas({ id, value, onChange, label, rows }: Props) {
   const strokesRef = useRef<DrawStroke[]>(strokes);
   strokesRef.current = strokes;
 
-  const height = DRAW_ROW_HEIGHT * (rows ?? DRAW_DEFAULT_ROWS);
-
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) {
       return;
     }
-    const cssWidth = canvas.clientWidth || canvas.width;
+    const cssWidth = canvas.clientWidth;
+    const cssHeight = canvas.clientHeight;
+    if (cssWidth === 0 || cssHeight === 0) {
+      return;
+    }
     const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
     canvas.width = Math.max(1, Math.round(cssWidth * dpr));
-    canvas.height = Math.max(1, Math.round(height * dpr));
+    canvas.height = Math.max(1, Math.round(cssHeight * dpr));
     const ctx = canvas.getContext('2d');
     if (!ctx) {
       return;
     }
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, cssWidth, height);
+    // Map logical page units to device pixels (display size x dpr).
+    ctx.setTransform(
+      (cssWidth / DRAW_PAGE_WIDTH) * dpr,
+      0,
+      0,
+      (cssHeight / DRAW_PAGE_HEIGHT) * dpr,
+      0,
+      0,
+    );
+    ctx.clearRect(0, 0, DRAW_PAGE_WIDTH, DRAW_PAGE_HEIGHT);
     drawStrokesToContext(ctx, strokesRef.current);
     if (activeStroke.current) {
       drawStrokesToContext(ctx, [activeStroke.current]);
     }
-  }, [height]);
+  }, []);
 
   // Re-seed from props when an external change replaces our last emitted value.
   useEffect(() => {
@@ -108,23 +117,22 @@ export function DrawCanvas({ id, value, onChange, label, rows }: Props) {
 
   const emit = useCallback(
     (next: DrawStroke[]) => {
-      const canvas = canvasRef.current;
-      const cssWidth = canvas?.clientWidth ?? 0;
-      const doc: DrawDocument = { version: 1, width: cssWidth, height, strokes: next };
+      const doc: DrawDocument = { version: 2, strokes: next };
       const serialized = serializeDrawing(doc);
       lastEmitted.current = serialized;
       onChange(serialized);
     },
-    [height, onChange],
+    [onChange],
   );
 
   const pointFromEvent = (event: React.PointerEvent<HTMLCanvasElement>): DrawPoint => {
     const canvas = canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
     const pressure = event.pointerType === 'pen' ? event.pressure : 0;
+    // Display pixels to logical page units.
     return {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
+      x: ((event.clientX - rect.left) / rect.width) * DRAW_PAGE_WIDTH,
+      y: ((event.clientY - rect.top) / rect.height) * DRAW_PAGE_HEIGHT,
       pressure,
     };
   };
@@ -267,7 +275,7 @@ export function DrawCanvas({ id, value, onChange, label, rows }: Props) {
         id={id}
         ref={canvasRef}
         className="draw-canvas-surface"
-        style={{ height: `${height}px`, touchAction: 'none' }}
+        style={{ touchAction: 'none' }}
         role="application"
         aria-label={`Drawing area: ${label}`}
         tabIndex={0}
