@@ -28,7 +28,7 @@ PHY 112 Instructional Materials-20260307T231627Z-1-001/PHY 112 Instructional Mat
 
 ### Caveats every implementing agent must respect
 
-1. **These docx files are SOLUTION KEYS.** Every file is marked `KEY` and contains the correct answers inline. The LabFrame lab is the *student-facing worksheet*. Strip all answer text. Keep only: titles, theory/background, procedure, prompts, table skeletons, and point values.
+1. **These docx files are SOLUTION KEYS.** Every file is marked `KEY` and contains the correct answers inline. The LabFrame lab is the _student-facing worksheet_. Strip all answer text. Keep only: titles, theory/background, procedure, prompts, table skeletons, and point values.
 2. **Embedded figures come from the keys.** Circuit diagrams in ex04 to ex07 and the field/ray diagrams in ex10/ex11 are marked up with answer annotations (`+`/`-` plate labels, current-direction arrows, etc.). Extracted figures must be reviewed and, where annotated, replaced with clean versions before use. Flagged as an open question for Austin (Section 9).
 3. **Algebra-based.** No calculus. Keep derivations and hints at the algebra-based level. Do not copy math framing from the calculus-based `phy132` labs.
 
@@ -52,21 +52,21 @@ public/phy112/                  <- extracted figure assets (Vite static dir; doe
 
 ### Section kinds available (from `lab.ts`, discriminated union on `kind`)
 
-| kind | use for | key fields |
-|---|---|---|
-| `instructions` | theory, procedure, headers | `html`, optional `points`, `tocHidden`, `tocLabel` |
-| `objective` | "state the goal" free response | `fieldId`, `prompt`, `rows`, `points` |
-| `measurement` | one labelled numeric reading | `fieldId`, `label`, `unit`, `points` |
-| `multiMeasurement` | several labelled readings as named rows | `rows[]` of `{id,label,unit}`, `points` |
-| `dataTable` | repeated numeric rows; supports `derived` formula columns | `tableId`, `columns[]`, `rowCount`, `points` |
-| `plot` | scatter of two table columns with curve fits | `plotId`, `sourceTableId`, `xCol`, `yCol`, labels, `fits[]` |
-| `image` | student uploads a photo/drawing with a caption | `imageId`, `captionFieldId`, `maxMB`, `points` |
-| `calculation` | show-your-work response, optional equation editor | `fieldId`, `prompt`, `equationEditor`, `points` |
-| `concept` | free-text conceptual answer | `fieldId`, `prompt`, `rows`, `points` |
+| kind               | use for                                                   | key fields                                                  |
+| ------------------ | --------------------------------------------------------- | ----------------------------------------------------------- |
+| `instructions`     | theory, procedure, headers                                | `html`, optional `points`, `tocHidden`, `tocLabel`          |
+| `objective`        | "state the goal" free response                            | `fieldId`, `prompt`, `rows`, `points`                       |
+| `measurement`      | one labelled numeric reading                              | `fieldId`, `label`, `unit`, `points`                        |
+| `multiMeasurement` | several labelled readings as named rows                   | `rows[]` of `{id,label,unit}`, `points`                     |
+| `dataTable`        | repeated numeric rows; supports `derived` formula columns | `tableId`, `columns[]`, `rowCount`, `points`                |
+| `plot`             | scatter of two table columns with curve fits              | `plotId`, `sourceTableId`, `xCol`, `yCol`, labels, `fits[]` |
+| `image`            | student uploads a photo/drawing with a caption            | `imageId`, `captionFieldId`, `maxMB`, `points`              |
+| `calculation`      | show-your-work response, optional equation editor         | `fieldId`, `prompt`, `equationEditor`, `points`             |
+| `concept`          | free-text conceptual answer                               | `fieldId`, `prompt`, `rows`, `points`                       |
 
 Note on `instructions` content: despite the field being named `html`, it is rendered as **Markdown** (`react-markdown` with `remark-gfm`, `remark-math`/KaTeX, and `rehype-sanitize`). Authoring is Markdown: `##`/`####` headers, `---` rules, `[!WARNING]` callouts, GitHub-flavored tables. Raw HTML is sanitized. See the figure note (D5) for how images work.
 
-Note on tables: `dataTable` columns must be numeric (`input` or `derived`). The recitation voltage-drop tables have *named element rows* (Battery, C1, C2), not repeated numeric rows. Those map to **`multiMeasurement`**, not `dataTable`. Use `dataTable` only where a column of like readings repeats (e.g. ex11 angle sweeps, ex06 voltmeter walk).
+Note on tables: `dataTable` columns must be numeric (`input` or `derived`). The recitation voltage-drop tables have _named element rows_ (Battery, C1, C2), not repeated numeric rows. Those map to **`multiMeasurement`**, not `dataTable`. Use `dataTable` only where a column of like readings repeats (e.g. ex11 angle sweeps, ex06 voltmeter walk).
 
 ### House style (from existing labs and Austin's conventions)
 
@@ -80,7 +80,7 @@ Note on tables: `dataTable` columns must be numeric (`input` or `derived`). The 
 
 ## 4. Key design decisions (review before building)
 
-**D1. Tier A AC sim URL.** The recitations specify the *Virtual Lab* variant of the AC kit (it has the draggable meter toolbox). The existing `phy114/capacitors` lab embeds the plain `circuit-construction-kit-ac`. Tier A must use:
+**D1. Tier A AC sim URL.** The recitations specify the _Virtual Lab_ variant of the AC kit (it has the draggable meter toolbox). The existing `phy114/capacitors` lab embeds the plain `circuit-construction-kit-ac`. Tier A must use:
 `https://phet.colorado.edu/sims/html/circuit-construction-kit-ac-virtual-lab/latest/circuit-construction-kit-ac-virtual-lab_all.html`
 
 **D2. Tier B is augmented, not transcribed.** ex07, ex10, ex12, ex13 are analytic problems with no simulation in the source. This spec adds a PhET layer so each becomes a predict-then-verify lab: students solve analytically with `calculation` blocks, then build/measure in the sim and reconcile. This is a pedagogical change from the paper originals. If Austin wants strict parity instead, drop the sim sections and these become calculation-only labs (still valid, less LabFrame value). See Section 9.
@@ -101,16 +101,16 @@ Chunk 0 extracts the figures; clean (un-annotated) source review is an open ques
 
 ## 5. The 8 labs at a glance
 
-| # | Recitation | Lab `id` | Course `ref` | labNumber | Simulation |
-|---|---|---|---|---|---|
-| Tier A | ex04 | `capacitorsSeriesParallel` | same | 1 | CCK: AC Virtual Lab |
-| Tier A | ex05 | `resistorsSeriesParallel` | same | 2 | CCK: AC Virtual Lab |
-| Tier A | ex06 | `kirchhoffsRules` | same | 3 | CCK: AC Virtual Lab |
-| Tier B | ex07 | `dcCircuitAnalysis` | same | 4 | CCK: DC |
-| Tier B | ex10 | `magneticFluxInduction` | same | 5 | Faraday's EM Lab (HTML5 port; see Chunk 5) |
-| Tier B | ex11 | `refractionAndTIR` | same | 6 | Bending Light |
-| Tier B | ex12 | `mirrors` | same | 7 | Geometric Optics |
-| Tier B | ex13 | `lenses` | same | 8 | Geometric Optics |
+| #      | Recitation | Lab `id`                   | Course `ref` | labNumber | Simulation                                 |
+| ------ | ---------- | -------------------------- | ------------ | --------- | ------------------------------------------ |
+| Tier A | ex04       | `capacitorsSeriesParallel` | same         | 1         | CCK: AC Virtual Lab                        |
+| Tier A | ex05       | `resistorsSeriesParallel`  | same         | 2         | CCK: AC Virtual Lab                        |
+| Tier A | ex06       | `kirchhoffsRules`          | same         | 3         | CCK: AC Virtual Lab                        |
+| Tier B | ex07       | `dcCircuitAnalysis`        | same         | 4         | CCK: DC                                    |
+| Tier B | ex10       | `magneticFluxInduction`    | same         | 5         | Faraday's EM Lab (HTML5 port; see Chunk 5) |
+| Tier B | ex11       | `refractionAndTIR`         | same         | 6         | Bending Light                              |
+| Tier B | ex12       | `mirrors`                  | same         | 7         | Geometric Optics                           |
+| Tier B | ex13       | `lenses`                   | same         | 8         | Geometric Optics                           |
 
 `labNumber` ordering follows the recitation sequence. Tier B `enabled` may stay `false` until the sim layer is reviewed (D2).
 
@@ -147,9 +147,7 @@ The course object lists all 8 labs but with `enabled: false` for now (C9 flips t
 > Do these three things:
 >
 > 1. **Create the course file** `src/content/courses/phy112.course.ts`. Model it exactly on `src/content/courses/phy114.course.ts` (read that file first). Export `phy112Course: Course`. Use `id: 'phy112'`, `title: 'PHY 112'`, `storagePrefix: 'phy112'`, `parentOriginAllowList: ['https://canvas.asu.edu']`. The `labs` array must list all 8 labs in this order, each with `enabled: false` for now: `capacitorsSeriesParallel` (labNumber 1), `resistorsSeriesParallel` (2), `kirchhoffsRules` (3), `dcCircuitAnalysis` (4), `magneticFluxInduction` (5), `refractionAndTIR` (6), `mirrors` (7), `lenses` (8). The `ref` equals the lab id in every case.
->
 > 2. **Register the course:** add `export * from './phy112.course';` to `src/content/courses/index.ts`.
->
 > 3. **Extract figures.** The 8 source recitation keys are `.docx` files in the connected folder `PHY 112 Instructional Materials-20260307T231627Z-1-001/PHY 112 Instructional Materials/` (files `phy112_rec_ex04_soln.docx`, `ex05`, `ex06`, `ex07`, `ex10`, `ex11`; ex12 and ex13 have no figures). A `.docx` is a zip; embedded images live under `word/media/`. Extract every image, create the directory `public/phy112/`, and save them with descriptive names grouped by exercise (e.g. `ex04_part1_single_capacitor.png`). Produce a short manifest file `public/phy112/FIGURES.md` listing each extracted image, which recitation part it belongs to, and a one-line description.
 >
 > Important: these docx files are answer keys. The figures are very likely annotated with solution markings (plus/minus plate labels, current-direction arrows). In `FIGURES.md`, flag every figure that appears to carry answer annotations so a clean replacement can be sourced. Do not edit the images.
@@ -189,7 +187,7 @@ Section outline (docx Part -> schema):
 - Part II `instructions` + figure (two caps in series).
 - `multiMeasurement` rows `[p2BatteryV, p2C1V, p2C2V]`, 2 pts.
 - `concept` `p2VoltagePattern`, 2 pts.
-- `calculation` `p2ChargeCalc` (`equationEditor: true`): compute Q = C*deltaV for each capacitor, 2 pts.
+- `calculation` `p2ChargeCalc` (`equationEditor: true`): compute Q = C\*deltaV for each capacitor, 2 pts.
 - `concept` `p2ChargeCompare`, 1 pt.
 - Part III `instructions` + figure (two caps in parallel).
 - `concept` `p3LoopsDescription`: describe the three independent loops, 2 pts.
@@ -213,7 +211,7 @@ Section outline (docx Part -> schema):
 >
 > Read `src/content/labs/phy114/capacitors.draft.lab.ts` first to learn the exact `Lab` shape, the integrity-agreement opening block, the PDF-report-notes closing block, and house style. Read `src/domain/schema/lab.ts` for the section schema.
 >
-> Build the sections following the outline in `docs/PHY112_TIER_AB_SPEC.md` Section 8, Chunk 1. Use the shared `circuitConstructionKitAcVirtualLab` simulation entry given there. Use `multiMeasurement` for the voltage-drop tables (named element rows), `calculation` with `equationEditor: true` for the Q = C*deltaV charge work, `concept` for comparisons and pattern questions, and an `image` section for the Part V "draw the fourth capacitor" task. Preserve the per-question point values from the docx. Embed the Part I/II/III/V circuit diagrams in `instructions` blocks using Markdown image syntax with a root-relative path, `![Part I circuit](/phy112/<filename>.png)`, against the figures Chunk 0 extracted to `public/phy112/` (check `FIGURES.md` for filenames and the image render-test result; if a figure is flagged as answer-annotated, still reference it but add a `TODO(human)` note beside it).
+> Build the sections following the outline in `docs/PHY112_TIER_AB_SPEC.md` Section 8, Chunk 1. Use the shared `circuitConstructionKitAcVirtualLab` simulation entry given there. Use `multiMeasurement` for the voltage-drop tables (named element rows), `calculation` with `equationEditor: true` for the Q = C\*deltaV charge work, `concept` for comparisons and pattern questions, and an `image` section for the Part V "draw the fourth capacitor" task. Preserve the per-question point values from the docx. Embed the Part I/II/III/V circuit diagrams in `instructions` blocks using Markdown image syntax with a root-relative path, `![Part I circuit](/phy112/<filename>.png)`, against the figures Chunk 0 extracted to `public/phy112/` (check `FIGURES.md` for filenames and the image render-test result; if a figure is flagged as answer-annotated, still reference it but add a `TODO(human)` note beside it).
 >
 > House style: no em dashes; terse observation prompts; JIT theory placed right before the procedure it supports; `---` rules before preambled prompts. Field IDs are camelCase and unique within the lab (the spec lists suggested IDs). Do not modify `src/content/labs/index.ts` or any course file. When done, run `npx tsc --noEmit` and confirm the new file typechecks.
 

@@ -62,63 +62,64 @@ Canvas expects an ordered assignment list. A small generator script (`scripts/ex
 
 ## Per-legacy-lab decisions
 
-| Legacy lab | Decision | Rationale |
-|---|---|---|
-| snellsLaw 132 | **Removed from PHY 132** | Optics doesn't belong in calc-based E&M. Course staying topic-focused. |
-| snellsLaw 114 | **Kept, no split** | At edge of 90 min but coherent. Mystery materials A/B comparison defines the lab. |
-| staticElectricity 132/114 | **Split into 2** | Parts 1A+1B (Travoltage + Balloons) are pure phenomenology; Parts 2A+2B (Coulomb's Law) are quantitative. Different pedagogical modes warrant separate sessions. |
-| chargesFields 132/114 | **Split into 2** | Part 1A (E-field of point charge with three sub-experiments) is one full session. Part 1B (V vs r, V vs 1/r) + Part 2 (qualitative dipoles) is a second session. |
-| capacitors 132 | **Split into 2** | Parts 1A-1C (fundamentals) is one session. Parts 2A+2B (sharing charges in parallel + series-parallel) is a second session. PHY 114 *already* effectively split by dropping 2A+2B. |
-| capacitors 114 | **No split** | PHY 114 is just Parts 1A-1C; already 90-min sized. |
-| dcCircuits 132 | **Split into 2 from legacy + 5 new labs (7 total)** | Parts 1A-1C → ohmsLaw. Parts 2A+2B → kirchhoffsLaws (with carried-forward Discussion). Plus five new labs: theveninsTheorem, rcCircuits, rcLowPassFilter, rlHighPassFilter, rlcBandpassFilter. |
-| dcCircuits 114 | **Split into 2** | Parts 1A-1C → ohmsLaw. Part 2A → kirchhoffsLaws. (No Part 2B in PHY 114.) |
-| magneticFieldFaraday 132 | **Split into 2** | Part 1 (bar magnet far-field, dipole moment) is one full session. Parts 2+3 (pickup coil + generator) is a second session. |
-| geometricOptics 114 | **Split into 2** | Part 1 (converging lens) → convergingLens. Parts 2+3 (diverging lens + ray types) → divergingLensAndRays. |
+| Legacy lab                | Decision                                            | Rationale                                                                                                                                                                                      |
+| ------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| snellsLaw 132             | **Removed from PHY 132**                            | Optics doesn't belong in calc-based E&M. Course staying topic-focused.                                                                                                                         |
+| snellsLaw 114             | **Kept, no split**                                  | At edge of 90 min but coherent. Mystery materials A/B comparison defines the lab.                                                                                                              |
+| staticElectricity 132/114 | **Split into 2**                                    | Parts 1A+1B (Travoltage + Balloons) are pure phenomenology; Parts 2A+2B (Coulomb's Law) are quantitative. Different pedagogical modes warrant separate sessions.                               |
+| chargesFields 132/114     | **Split into 2**                                    | Part 1A (E-field of point charge with three sub-experiments) is one full session. Part 1B (V vs r, V vs 1/r) + Part 2 (qualitative dipoles) is a second session.                               |
+| capacitors 132            | **Split into 2**                                    | Parts 1A-1C (fundamentals) is one session. Parts 2A+2B (sharing charges in parallel + series-parallel) is a second session. PHY 114 _already_ effectively split by dropping 2A+2B.             |
+| capacitors 114            | **No split**                                        | PHY 114 is just Parts 1A-1C; already 90-min sized.                                                                                                                                             |
+| dcCircuits 132            | **Split into 2 from legacy + 5 new labs (7 total)** | Parts 1A-1C → ohmsLaw. Parts 2A+2B → kirchhoffsLaws (with carried-forward Discussion). Plus five new labs: theveninsTheorem, rcCircuits, rcLowPassFilter, rlHighPassFilter, rlcBandpassFilter. |
+| dcCircuits 114            | **Split into 2**                                    | Parts 1A-1C → ohmsLaw. Part 2A → kirchhoffsLaws. (No Part 2B in PHY 114.)                                                                                                                      |
+| magneticFieldFaraday 132  | **Split into 2**                                    | Part 1 (bar magnet far-field, dipole moment) is one full session. Parts 2+3 (pickup coil + generator) is a second session.                                                                     |
+| geometricOptics 114       | **Split into 2**                                    | Part 1 (converging lens) → convergingLens. Parts 2+3 (diverging lens + ray types) → divergingLensAndRays.                                                                                      |
 
 ## New PHY 132 lab manifest (15 labs, was 6)
 
 Suggested order follows standard calc-based E&M textbook progression (Halliday/Resnick/Walker, Young/Freedman): charge → field → potential → capacitance → current → DC circuits → magnetism → induction → AC.
 
-| # | Lab ID | Source | Prereqs |
-|---|---|---|---|
-| 1 | `staticChargingPhenomena` | legacy `staticElectricity` Parts 1A+1B | (none) |
-| 2 | `coulombsLaw` | legacy `staticElectricity` Parts 2A+2B | `staticChargingPhenomena` |
-| 3 | `electricFields` | legacy `chargesFields` Part 1A | `coulombsLaw` |
-| 4 | `electricPotential` | legacy `chargesFields` Parts 1B+2 | `electricFields` |
-| 5 | `capacitorFundamentals` | legacy `capacitors` Parts 1A+1B+1C | `electricPotential` |
-| 6 | `capacitorsInCircuits` | legacy `capacitors` Parts 2A+2B | `capacitorFundamentals` |
-| 7 | `ohmsLaw` | legacy `dcCircuits` Parts 1A+1B+1C | (none) |
-| 8 | `kirchhoffsLaws` | legacy `dcCircuits` Parts 2A+2B (+ carried Discussion) | `ohmsLaw` |
-| 9 | `theveninsTheorem` | **NEW** | `kirchhoffsLaws` |
-| 10 | `rcCircuits` | **NEW** (time-domain RC: discharge, time constant) | `capacitorFundamentals`, `ohmsLaw` |
-| 11 | `magneticDipoleField` | legacy `magneticFieldFaraday` Part 1 | (none) |
-| 12 | `electromagneticInduction` | legacy `magneticFieldFaraday` Parts 2+3 | `magneticDipoleField`, `rcCircuits` |
-| 13 | `rcLowPassFilter` | **NEW** (frequency-domain RC, gain across capacitor) | `rcCircuits`, `electromagneticInduction` |
-| 14 | `rlHighPassFilter` | **NEW** (series RL, gain across inductor) | `rcLowPassFilter` |
-| 15 | `rlcBandpassFilter` | **NEW** (series RLC, resonance, Q-factor) | `rlHighPassFilter` |
+| #   | Lab ID                     | Source                                                 | Prereqs                                  |
+| --- | -------------------------- | ------------------------------------------------------ | ---------------------------------------- |
+| 1   | `staticChargingPhenomena`  | legacy `staticElectricity` Parts 1A+1B                 | (none)                                   |
+| 2   | `coulombsLaw`              | legacy `staticElectricity` Parts 2A+2B                 | `staticChargingPhenomena`                |
+| 3   | `electricFields`           | legacy `chargesFields` Part 1A                         | `coulombsLaw`                            |
+| 4   | `electricPotential`        | legacy `chargesFields` Parts 1B+2                      | `electricFields`                         |
+| 5   | `capacitorFundamentals`    | legacy `capacitors` Parts 1A+1B+1C                     | `electricPotential`                      |
+| 6   | `capacitorsInCircuits`     | legacy `capacitors` Parts 2A+2B                        | `capacitorFundamentals`                  |
+| 7   | `ohmsLaw`                  | legacy `dcCircuits` Parts 1A+1B+1C                     | (none)                                   |
+| 8   | `kirchhoffsLaws`           | legacy `dcCircuits` Parts 2A+2B (+ carried Discussion) | `ohmsLaw`                                |
+| 9   | `theveninsTheorem`         | **NEW**                                                | `kirchhoffsLaws`                         |
+| 10  | `rcCircuits`               | **NEW** (time-domain RC: discharge, time constant)     | `capacitorFundamentals`, `ohmsLaw`       |
+| 11  | `magneticDipoleField`      | legacy `magneticFieldFaraday` Part 1                   | (none)                                   |
+| 12  | `electromagneticInduction` | legacy `magneticFieldFaraday` Parts 2+3                | `magneticDipoleField`, `rcCircuits`      |
+| 13  | `rcLowPassFilter`          | **NEW** (frequency-domain RC, gain across capacitor)   | `rcCircuits`, `electromagneticInduction` |
+| 14  | `rlHighPassFilter`         | **NEW** (series RL, gain across inductor)              | `rcLowPassFilter`                        |
+| 15  | `rlcBandpassFilter`        | **NEW** (series RLC, resonance, Q-factor)              | `rlHighPassFilter`                       |
 
 The filter sequence (13-15) intentionally goes after `electromagneticInduction` so students have already met inductors. The three filters together form a coherent capstone trio: each demonstrates one filter topology, and the discussion section of `rlcBandpassFilter` asks students to synthesize across all three.
 
 ## New PHY 114 lab manifest (10 labs, was 6)
 
-| # | Lab ID | Source | Prereqs |
-|---|---|---|---|
-| 1 | `snellsLaw` | legacy `phy_114/snellsLaw` (full lab) | (none) |
-| 2 | `staticChargingPhenomena` | same split as PHY 132 (no uncertainty fields) | (none) |
-| 3 | `coulombsLaw` | same split as PHY 132 (no uncertainty fields) | `staticChargingPhenomena` |
-| 4 | `electricFields` | same split as PHY 132 | `coulombsLaw` |
-| 5 | `electricPotential` | same split as PHY 132 (no uncertainty fields) | `electricFields` |
-| 6 | `capacitors` | legacy `phy_114/capacitors` (already lacks Parts 2A+2B) | `electricPotential` |
-| 7 | `ohmsLaw` | legacy `phy_114/dcCircuits` Parts 1A+1B+1C (no uncertainty fields) | (none) |
-| 8 | `kirchhoffsLaws` | legacy `phy_114/dcCircuits` Part 2A only | `ohmsLaw` |
-| 9 | `convergingLens` | legacy `phy_114/geometricOptics` Parts 1A+1B (+ optional Part 4A converging) | (none) |
-| 10 | `divergingLensAndRays` | legacy `phy_114/geometricOptics` Parts 2A+2B+3A (+ optional Part 4A diverging) | `convergingLens` |
+| #   | Lab ID                    | Source                                                                         | Prereqs                   |
+| --- | ------------------------- | ------------------------------------------------------------------------------ | ------------------------- |
+| 1   | `snellsLaw`               | legacy `phy_114/snellsLaw` (full lab)                                          | (none)                    |
+| 2   | `staticChargingPhenomena` | same split as PHY 132 (no uncertainty fields)                                  | (none)                    |
+| 3   | `coulombsLaw`             | same split as PHY 132 (no uncertainty fields)                                  | `staticChargingPhenomena` |
+| 4   | `electricFields`          | same split as PHY 132                                                          | `coulombsLaw`             |
+| 5   | `electricPotential`       | same split as PHY 132 (no uncertainty fields)                                  | `electricFields`          |
+| 6   | `capacitors`              | legacy `phy_114/capacitors` (already lacks Parts 2A+2B)                        | `electricPotential`       |
+| 7   | `ohmsLaw`                 | legacy `phy_114/dcCircuits` Parts 1A+1B+1C (no uncertainty fields)             | (none)                    |
+| 8   | `kirchhoffsLaws`          | legacy `phy_114/dcCircuits` Part 2A only                                       | `ohmsLaw`                 |
+| 9   | `convergingLens`          | legacy `phy_114/geometricOptics` Parts 1A+1B (+ optional Part 4A converging)   | (none)                    |
+| 10  | `divergingLensAndRays`    | legacy `phy_114/geometricOptics` Parts 2A+2B+3A (+ optional Part 4A diverging) | `convergingLens`          |
 
 ## Cross-course shared content
 
 Eight lab IDs appear in both courses and share the same content modulo the uncertainty-strip transformation: `staticChargingPhenomena`, `coulombsLaw`, `electricFields`, `electricPotential`, `ohmsLaw`, `kirchhoffsLaws`. The migration script's uncertainty-strip flag (per Stage 2 plan) handles the PHY 132 → PHY 114 transformation for all of these.
 
 Course-specific:
+
 - **PHY 132 only:** `capacitorFundamentals`, `capacitorsInCircuits`, `theveninsTheorem`, `rcCircuits`, `rcLowPassFilter`, `rlHighPassFilter`, `rlcBandpassFilter`, `magneticDipoleField`, `electromagneticInduction`
 - **PHY 114 only:** `snellsLaw`, `capacitors` (un-split version), `convergingLens`, `divergingLensAndRays`
 
@@ -138,11 +139,11 @@ Each is a structurally complete draft against the existing `Lab` schema, with `T
 
 The three filter labs are deliberately structured as a unit:
 
-| Lab | Topology | V_out across | Filter type | Corner f |
-|---|---|---|---|---|
-| `rcLowPassFilter` | series RC | capacitor | low-pass | f_c = 1/(2πRC) |
-| `rlHighPassFilter` | series RL | inductor | high-pass | f_c = R/(2πL) |
-| `rlcBandpassFilter` | series RLC | resistor | bandpass | f_0 = 1/(2π√(LC)) |
+| Lab                 | Topology   | V_out across | Filter type | Corner f          |
+| ------------------- | ---------- | ------------ | ----------- | ----------------- |
+| `rcLowPassFilter`   | series RC  | capacitor    | low-pass    | f_c = 1/(2πRC)    |
+| `rlHighPassFilter`  | series RL  | inductor     | high-pass   | f_c = R/(2πL)     |
+| `rlcBandpassFilter` | series RLC | resistor     | bandpass    | f_0 = 1/(2π√(LC)) |
 
 The contrast is the point: capacitor reactance falls with f, inductor reactance rises with f. Each lab references the previous and asks students to predict the swap behavior. The bandpass capstone asks them to derive that the RLC peak occurs where ωL = 1/(ωC) — which they've already implicitly seen as the corner frequencies for RC and RL.
 
@@ -156,11 +157,11 @@ The contrast is the point: capacitor reactance falls with f, inductor reactance 
 
 The new scaffolds surface three places where the current schema falls short. None block the scaffolds (they all have workarounds), but they should be addressed before the labs go live.
 
-| Need | Used by | Handoff doc |
-|---|---|---|
-| Multi-series plots (one plot, multiple Y-series) | `theveninsTheorem` | `docs/handoffs/multi-series-plot-handoff.md` |
-| Logarithmic axis support (log-x for frequency, optionally log-y for gain) | All three filter labs | `docs/handoffs/log-axis-support-handoff.md` |
-| Prereq-DAG schema fields + pacing config + Canvas exporter | All courses | TODO — needs writing |
+| Need                                                                      | Used by               | Handoff doc                                  |
+| ------------------------------------------------------------------------- | --------------------- | -------------------------------------------- |
+| Multi-series plots (one plot, multiple Y-series)                          | `theveninsTheorem`    | `docs/handoffs/multi-series-plot-handoff.md` |
+| Logarithmic axis support (log-x for frequency, optionally log-y for gain) | All three filter labs | `docs/handoffs/log-axis-support-handoff.md`  |
+| Prereq-DAG schema fields + pacing config + Canvas exporter                | All courses           | TODO — needs writing                         |
 
 Each handoff doc is self-contained: an outside agent can pick it up cold, knows what to read, what to build, and what the acceptance criteria are.
 

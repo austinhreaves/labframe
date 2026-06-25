@@ -220,7 +220,8 @@ Add a proportional fit ($y = Ax$), since Coulomb's Law predicts the line passes 
     {
       kind: 'concept',
       fieldId: 'forceChargeVariationQuestion',
-      prompt: 'How would the force have changed if you kept $Q_2$ constant and varied $Q_1$ instead?',
+      prompt:
+        'How would the force have changed if you kept $Q_2$ constant and varied $Q_1$ instead?',
       points: 0.5,
     },
     {

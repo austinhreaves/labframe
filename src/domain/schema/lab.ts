@@ -119,7 +119,10 @@ export const CalculationSectionSchema = SectionMetadataSchema.extend({
   prompt: nonEmptyText,
   equationEditor: z.boolean().optional(),
   responseMode: z.enum(['text', 'image', 'draw']).optional(),
-  responseModes: z.array(z.enum(['text', 'draw', 'image'])).min(1).optional(),
+  responseModes: z
+    .array(z.enum(['text', 'draw', 'image']))
+    .min(1)
+    .optional(),
   imageId: idSchema.optional(),
   maxMB: z.number().positive().optional(),
   points: z.number().nonnegative().optional(),

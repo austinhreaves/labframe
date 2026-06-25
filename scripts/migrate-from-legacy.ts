@@ -484,12 +484,7 @@ function isHtmlTag(name: string): boolean {
 // ============================================================================
 
 function jsxToMarkdown(
-  node:
-    | t.JSXElement
-    | t.JSXText
-    | t.JSXExpressionContainer
-    | t.JSXFragment
-    | t.JSXSpreadChild,
+  node: t.JSXElement | t.JSXText | t.JSXExpressionContainer | t.JSXFragment | t.JSXSpreadChild,
 ): string {
   if (t.isJSXText(node)) return node.value.replace(/\s+/g, ' ');
   if (t.isJSXExpressionContainer(node)) {
@@ -712,7 +707,10 @@ function handleConfigurableQuestion(el: t.JSXElement, ctx: WalkContext): Section
 
   if (!config) {
     return [
-      { kind: 'instructions', html: '⚠️ TODO(human): <ConfigurableQuestion> with no extractable config.' },
+      {
+        kind: 'instructions',
+        html: '⚠️ TODO(human): <ConfigurableQuestion> with no extractable config.',
+      },
     ];
   }
 
@@ -804,7 +802,10 @@ function handleMultiMeasurementField(el: t.JSXElement, ctx: WalkContext): Sectio
 
   if (!config || !Array.isArray(config) || config.length === 0) {
     return [
-      { kind: 'instructions', html: '⚠️ TODO(human): <MultiMeasurementField> with no extractable config.' },
+      {
+        kind: 'instructions',
+        html: '⚠️ TODO(human): <MultiMeasurementField> with no extractable config.',
+      },
     ];
   }
 
@@ -845,7 +846,10 @@ function handleDataTable(el: t.JSXElement, ctx: WalkContext): Section[] {
 
   if (!columnConfigs || !Array.isArray(columnConfigs)) {
     return [
-      { kind: 'instructions', html: `⚠️ TODO(human): <DataTable id=${tableId}> columnConfigs not extractable.` },
+      {
+        kind: 'instructions',
+        html: `⚠️ TODO(human): <DataTable id=${tableId}> columnConfigs not extractable.`,
+      },
     ];
   }
 
@@ -857,7 +861,9 @@ function handleDataTable(el: t.JSXElement, ctx: WalkContext): Section[] {
 
     if (c.type === 'calculated') {
       const formula = c.formula;
-      const legacySrc = isFn(formula) ? sliceSource(formula.node, ctx.rawSource) : '/* (no formula source) */';
+      const legacySrc = isFn(formula)
+        ? sliceSource(formula.node, ctx.rawSource)
+        : '/* (no formula source) */';
       let translated: TranslatedFormula | undefined;
       let precision: number | undefined = 4; // default for derived columns
 
@@ -889,9 +895,7 @@ function handleDataTable(el: t.JSXElement, ctx: WalkContext): Section[] {
     return { id, label, kind: 'input', unit };
   });
 
-  return [
-    { kind: 'dataTable', tableId, rowCount: numberOfRows ?? 1, columns, points },
-  ];
+  return [{ kind: 'dataTable', tableId, rowCount: numberOfRows ?? 1, columns, points }];
 }
 
 function inferTableId(el: t.JSXElement): string | undefined {
@@ -943,9 +947,7 @@ function handleGraph(el: t.JSXElement, ctx: WalkContext): Section[] {
       ]
     : undefined;
 
-  return [
-    { kind: 'plot', plotId: id, sourceTableId, xCol, yCol, xLabel, yLabel, fits, points },
-  ];
+  return [{ kind: 'plot', plotId: id, sourceTableId, xCol, yCol, xLabel, yLabel, fits, points }];
 }
 
 function handleGenericImageUploader(el: t.JSXElement, ctx: WalkContext): Section[] {
@@ -1161,9 +1163,7 @@ function emitSection(s: Section): string[] {
 
           if (c.translatedFormula) {
             const { localName, sourceCol, exprSrc } = c.translatedFormula;
-            colLines.push(
-              `      formula: (row: NumericRow): number => {`,
-            );
+            colLines.push(`      formula: (row: NumericRow): number => {`);
             colLines.push(`        const ${localName} = row.${sourceCol} ?? 0;`);
             colLines.push(`        return ${exprSrc};`);
             colLines.push(`      },`);
@@ -1203,9 +1203,7 @@ function emitSection(s: Section): string[] {
         ...(s.fits
           ? [
               `  fits: [`,
-              ...s.fits.map(
-                (f) => `    { id: ${tsString(f.id)}, label: ${tsString(f.label)} },`,
-              ),
+              ...s.fits.map((f) => `    { id: ${tsString(f.id)}, label: ${tsString(f.label)} },`),
               `  ],`,
             ]
           : []),
@@ -1326,7 +1324,9 @@ async function main() {
     const config = (await prettier.resolveConfig(args.outputPath)) ?? {};
     out = await prettier.format(out, { ...config, parser: 'typescript' });
   } catch (err) {
-    writeStderr(`Warning: Prettier formatting failed (${(err as Error).message}); writing unformatted output.`);
+    writeStderr(
+      `Warning: Prettier formatting failed (${(err as Error).message}); writing unformatted output.`,
+    );
   }
 
   await mkdir(dirname(args.outputPath), { recursive: true });

@@ -22,8 +22,7 @@ const MarkdownBlock = lazy(() => import('@/ui/primitives/MarkdownBlock'));
 // relies on MathLive's own virtual keyboard (see EquationEditor); this flag is
 // the escape hatch if that keyboard ever misbehaves on a given device.
 const forceTextCalc =
-  typeof window !== 'undefined' &&
-  new URLSearchParams(window.location.search).has('forceTextCalc');
+  typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('forceTextCalc');
 
 const MODE_LABELS: Record<ResponseMode, string> = {
   text: 'Type',
@@ -147,7 +146,11 @@ export function CalculationSectionView({ section }: Props) {
               </button>
             ))}
           </div>
-          <div id={panelId} role="tabpanel" aria-labelledby={`${section.fieldId}-tab-${activeMode}`}>
+          <div
+            id={panelId}
+            role="tabpanel"
+            aria-labelledby={`${section.fieldId}-tab-${activeMode}`}
+          >
             {renderInput(activeMode)}
           </div>
         </>

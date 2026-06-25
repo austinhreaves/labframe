@@ -11,13 +11,14 @@
 
 This spec covers three related capability expansions:
 
-| Track | Goal |
-|---|---|
-| T: Tablet Layout | Make LabFrame usable on tablet-sized viewports (768px+) without a dedicated mobile layout |
-| C: Rich Calculations | Add free-draw canvas and image upload as response modes in `CalculationSection`, and let students choose their response mode per calculation |
-| S: Sim Capture / PhET-iO | Move from manual screenshot workflow toward PhET-iO native snapshot and engagement data |
+| Track                    | Goal                                                                                                                                         |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| T: Tablet Layout         | Make LabFrame usable on tablet-sized viewports (768px+) without a dedicated mobile layout                                                    |
+| C: Rich Calculations     | Add free-draw canvas and image upload as response modes in `CalculationSection`, and let students choose their response mode per calculation |
+| S: Sim Capture / PhET-iO | Move from manual screenshot workflow toward PhET-iO native snapshot and engagement data                                                      |
 
 **Non-goals across all tracks:**
+
 - Phone-sized (< 600px) layout. Tablets only.
 - Offline / PWA / service worker support.
 - Any server-side state storage. The no-backend constraint (ADR-0002) is absolute.
@@ -32,6 +33,7 @@ This spec covers three related capability expansions:
 **Goal:** Every page in LabFrame -- catalog, lab worksheet, PDF preview -- is usable on a 768px-wide viewport in landscape orientation without horizontal scrolling or broken layout.
 
 **Scope:**
+
 - Audit `src/main.css` for fixed-width containers and magic-number widths. Replace with `max-width` + fluid padding using `var(--space-*)` tokens from `src/ui/tokens.css`.
 - Extend the existing `@media (max-width: 880px)` breakpoint set. Add explicit breakpoints at 768px and 1024px using the existing token vocabulary; do not introduce numeric literals.
 - Simulation iframes (`SimulationSchema`, rendered via `src/ui/sections/` or equivalent): wrap in an aspect-ratio container (`aspect-ratio: 16/9`) so they scale with viewport width. Add a minimum height floor (`min-height: 360px`) so the sim is still usable.
@@ -40,11 +42,13 @@ This spec covers three related capability expansions:
 - No layout changes to the PDF renderer -- it always renders at fixed A4 width.
 
 **What to leave for T-B:**
+
 - The equation editor (MathLive) touch behavior.
 - Any free-draw canvas touch behavior (that is Track C).
 - Accessibility audit beyond tap targets.
 
 **Files to read before starting:**
+
 - `src/main.css` -- primary layout and breakpoint styles
 - `src/ui/tokens.css` -- all spacing, color, and typography tokens
 - `src/ui/sections/` -- section view components (audit iframe rendering)
@@ -84,6 +88,7 @@ Deliver: CSS changes + one Playwright viewport test confirming no horizontal scr
 **Goal:** Resolve input and interaction regressions that appear on a physical tablet (stylus or finger). Focus on the equation editor and section-level interactions.
 
 **Scope:**
+
 - **MathLive / EquationEditor on iOS:** MathLive has known conflicts with the iOS virtual keyboard (the native keyboard pops and fights MathLive's virtual keyboard). Options in priority order:
   1. Configure MathLive to use `virtualKeyboardMode: 'onfocus'` with a custom small keyboard layout.
   2. If that is still broken, add a `?forceTextCalc=true` URL flag that suppresses `equationEditor: true` in the section schema, falling back to the plain textarea.
@@ -93,11 +98,13 @@ Deliver: CSS changes + one Playwright viewport test confirming no horizontal scr
 - **Button states:** Verify `hover` styles do not leave phantom hover states on touch (use `@media (hover: hover)` guards in CSS).
 
 **Files to read before starting:**
+
 - `src/ui/primitives/mathlive.css` -- MathLive overrides
 - The EquationEditor component (find via `grep -r "EquationEditor" src/`)
 - `src/ui/sections/CalculationSectionView.tsx`
 
 **Acceptance:** Manual verification checklist on Safari iOS (or BrowserStack equivalent):
+
 - [ ] Equation editor opens and accepts input without keyboard conflict
 - [ ] Fallback textarea works when equation editor is unavailable
 - [ ] No sticky element positioning bugs on scroll
@@ -139,23 +146,28 @@ Rules:
 **Goal:** Add an image upload response mode to `CalculationSection` so students can photograph handwritten work and attach it directly to a calculation prompt, rather than uploading to a separate `ImageSection`.
 
 **Schema changes (`src/domain/schema/lab.ts`):**
+
 - Add `responseMode: z.enum(['text', 'image', 'draw']).optional()` to `CalculationSectionSchema`. Default (undefined) means `'text'` for backward compatibility.
 - `equationEditor` retains its meaning within `responseMode: 'text'`; it is ignored when mode is `'image'` or `'draw'`.
 - Add `maxMB: z.number().positive().optional()` (matches `ImageSectionSchema`).
 
 **Answers schema (`src/domain/schema/answers.ts` or equivalent):**
+
 - When `responseMode === 'image'`, the answer value for this `fieldId` must be stored as an image blob in IndexedDB using the same key scheme as `ImageSection` (see ADR-0003 and `src/domain/store/` or equivalent). The `FieldValue.text` field holds the blob key reference; the blob itself lives in IndexedDB.
 - Do not duplicate the image storage logic; extract or reuse the existing `ImageSection` blob helpers.
 
 **View (`src/ui/sections/CalculationSectionView.tsx`):**
+
 - When `section.responseMode === 'image'`, render an upload button and thumbnail preview (same UI as `ImageSectionView` but without the separate caption field).
 - When `section.responseMode === 'text'` (or undefined), render existing textarea / equation editor unchanged.
 - Phase C-B will add the `'draw'` branch; leave a `// TODO: C-B` comment placeholder in the switch.
 
 **PDF rendering:**
+
 - When mode is `'image'`, embed the image inline at the calculation section in the PDF (same as `ImageSection` PDF rendering). Ensure the image SHA-256 is included in the canonical envelope per the binding decision 8 in `docs/SPEC.md` (currently not implemented -- implement it here for calculation images).
 
 **Files to read before starting:**
+
 - `src/domain/schema/lab.ts` -- current CalculationSectionSchema (line 116)
 - `src/ui/sections/CalculationSectionView.tsx`
 - `src/ui/sections/ImageSectionView.tsx` (or equivalent) -- reuse its upload/preview logic
@@ -203,6 +215,7 @@ Rules:
 **Goal:** Add a free-draw canvas response mode to `CalculationSection` for stylus or mouse input, primarily targeting tablet users with a stylus.
 
 **Canvas implementation:**
+
 - Use a `<canvas>` element with `pointer-events` (supports both stylus and mouse; works on iPad with Apple Pencil via `PointerEvent.pointerType === 'pen'`).
 - Stroke data format: serialize as an array of stroke objects `{ color, width, points: [{x, y, pressure}] }`. Store the serialized JSON in `FieldValue.text` under the draw storage key `${fieldId}__draw` (see C-C "Storage keys") so a later student-selectable section can hold text, draw, and image answers side by side without collision. Strokes are small enough for localStorage; no IndexedDB blob needed unless stroke count grows large.
 - Render: on load, deserialize strokes and redraw to canvas. This is synchronous and fast.
@@ -217,6 +230,7 @@ Rules:
 **Schema:** `responseMode: 'draw'` is already added in C-A. No additional schema changes.
 
 **Files to read before starting:**
+
 - `src/domain/schema/lab.ts` -- confirm responseMode enum includes 'draw' (from C-A)
 - `src/ui/sections/CalculationSectionView.tsx` -- find the // TODO: Phase C-B placeholder
 - `src/pdf/` or equivalent PDF renderer -- how images are embedded (to add canvas PNG export)
@@ -265,6 +279,7 @@ Rules:
 **Relationship to C-A / C-B:** This phase reuses their input components and per-mode PDF rendering. It depends on C-A for the image path and C-B for the draw path. The `text` and `image` modes work without C-B; the `draw` mode requires C-B. An author may enable `['text', 'image']` before C-B ships.
 
 **Schema changes (`src/domain/schema/lab.ts`, `CalculationSectionSchema`):**
+
 - Add `responseModes: z.array(z.enum(['text', 'draw', 'image'])).min(1).optional()`. When present with 2+ entries, the student sees a mode switcher offering exactly those modes, in that order; the first entry is the default. Absent (or a single entry) preserves today's author-controlled behavior.
 - Precedence: if `responseModes` has 2+ entries it governs the section and the singular `responseMode` is ignored. `responseMode` (singular) is retained for author-forced single-mode sections and backward compatibility.
 - `equationEditor` continues to control whether the `text` mode uses MathLive or a plain textarea.
@@ -272,17 +287,20 @@ Rules:
 
 **Storage keys (canonical for all three modes; also adopted by C-B):**
 Each calculation's answers are keyed off its `fieldId` so all enabled modes coexist without collision, and entered work is never silently dropped when the student switches modes:
+
 - `text` / equation answer -> `fields[fieldId]` (existing `FieldValue`)
-- `draw` answer (stroke JSON) -> `fields[`${fieldId}__draw`]`
-- `image` answer (blob) -> `images[section.imageId ?? `${fieldId}__image`]`
+- `draw` answer (stroke JSON) -> `fields[`${fieldId}\_\_draw`]`
+- `image` answer (blob) -> `images[section.imageId ?? `${fieldId}\_\_image`]`
 - selected mode -> a new `responseSelections: Record<fieldId, 'text' | 'draw' | 'image'>` map
 
 **Store / persistence (`src/state/labStore.ts`, `src/state/persistence/types.ts`):**
+
 - Add `responseSelections` to `LabStoreState` and `PersistedLabState`; in `initLab`, default each selectable section to its first `responseModes` entry.
 - Add a `setResponseSelection(fieldId, mode)` action. Switching modes only changes the selection; it does not clear any mode's stored answer.
 - Persist `responseSelections` through the existing debounced save path.
 
 **View (`src/ui/sections/CalculationSectionView.tsx`):**
+
 - When `responseModes` has 2+ entries, render a mode switcher above the input: a labelled segmented control / tablist with one button per allowed mode ("Type", "Draw", "Photo"). The active selection comes from `responseSelections[fieldId]`.
 - Render the input for the active mode by reusing the existing branches (text -> `Field` / `EquationEditor`, image -> `FileDropzone` keyed to the derived imageId, draw -> the C-B canvas keyed to `${fieldId}__draw`).
 - Switching modes preserves each mode's entered data.
@@ -290,12 +308,14 @@ Each calculation's answers are keyed off its `fieldId` so all enabled modes coex
 - Single-mode sections (no `responseModes`) render exactly as today, with no switcher.
 
 **Export / PDF (`src/services/pdf/Document.tsx`, `src/services/integrity/buildAnswers.ts`):**
+
 - The PDF renders the **active** mode's answer for the section (text, embedded drawing PNG, or embedded photo), reusing the per-mode rendering from C-A / C-B.
 - Record `responseSelections` in the canonical envelope so the grader sees which mode each answer used; it is part of the signed payload.
 - Non-active answers the student also entered remain in the envelope under their keys (process-tracking value) but are not drawn in the PDF body. This is deliberate, not an omission (see Open decisions).
 - Image SHA-256 (C-A) and drawing PNG SHA-256 (C-B) handling are unchanged.
 
 **Files to read before starting:**
+
 - `src/domain/schema/lab.ts` -- `CalculationSectionSchema`
 - `src/ui/sections/CalculationSectionView.tsx` -- existing mode branches from C-A / C-B
 - `src/state/labStore.ts` -- `initLab`, field / image init, persistence subscriber
@@ -363,6 +383,7 @@ Rules:
 **Approach:** This phase does not require a PhET-iO license. It uses the existing `ImageSection` (or the new `responseMode: 'image'` calculation mode from C-A) to receive a screenshot the student captures manually.
 
 **Changes:**
+
 - Add an optional `captureHint: z.boolean().optional()` field to `SimulationSchema`. When true, display a capture prompt callout above or below the sim iframe: "Take a screenshot of your simulation, then upload it below." with platform-specific shortcut hints (Windows: Win+Shift+S; Mac: Cmd+Shift+4; iPad: Power+Volume Up or top button).
 - If a section immediately follows a simulation zone and has `responseMode: 'image'` (or is an `ImageSection`), style it visually as a pair (remove the visual gap between them) to make the capture-then-upload flow obvious.
 - The actual image storage, PDF embedding, and SHA-256 envelope hash use the same path as C-A.
@@ -370,6 +391,7 @@ Rules:
 **This is a stopgap.** S-B will replace the manual step with PhET-iO's native screenshot API once the evaluative license is in place.
 
 **Files to read before starting:**
+
 - `src/domain/schema/lab.ts` -- SimulationSchema (line 27)
 - The component that renders simulation iframes (find via `grep -r "SimulationSchema\|sim.*iframe\|iframe.*phet" src/`)
 
@@ -413,10 +435,12 @@ Rules:
 **Goal:** Replace the manual screenshot workflow with PhET-iO's native `screenshot` API endpoint from the Hydrogen feature set, so a single button click in LabFrame captures the current sim state as a PNG without any OS-level interaction.
 
 **Prerequisites:**
+
 - Active PhET-iO evaluative license ($10,000/year, contact phet-io@colorado.edu). Do not begin implementation until the license is confirmed and the PhET-iO sim URLs (versioned, served from PhET's CDN) are available.
 - PhET-iO sims are served from a different URL pattern than the open CC-BY sims currently used. The `SimulationSchema.url` field will point to PhET-iO-served versions.
 
 **Architecture:**
+
 - PhET-iO communication uses `postMessage` between LabFrame and the sim iframe. LabFrame already has a parent-frame messaging allow-list (SPEC.md binding decision 5); the inverse (LabFrame -> sim iframe) will use `iframeEl.contentWindow.postMessage(message, phetioOrigin)` where `phetioOrigin` is the exact PhET-iO CDN origin (not `'*'`).
 - Screenshot API call (from PhET-iO "Hydrogen" feature set):
   ```js
@@ -426,13 +450,16 @@ Rules:
 - On receipt: decode the base64 PNG, store as a blob in IndexedDB using the same key scheme as `ImageSection`, update the relevant `fieldId` answer, and render the thumbnail in the capture section.
 
 **Schema changes:**
+
 - Add `phetio: z.boolean().optional()` to `SimulationSchema` to flag sims using the PhET-iO API (separate from the `captureHint` flag from S-A).
 - A sim with `phetio: true` must have a same-origin-postMessage-compatible URL. Validate this at lab-config load time (warn in dev, silent in prod).
 
 **Capture button:**
+
 - Render a "Capture Sim" button below or overlaid on the sim iframe (only when `phetio: true`). On click: send the screenshot message, await response, store blob, update UI. Show a spinner during the roundtrip. Timeout after 5 seconds with a user-visible error that falls back to the S-A manual workflow.
 
 **Files to read before starting:**
+
 - `src/domain/schema/lab.ts` -- SimulationSchema
 - The sim iframe render component (from S-A work)
 - `src/domain/store/` -- IndexedDB blob storage helpers (from C-A work)
@@ -480,6 +507,7 @@ Rules:
 **Goal:** Use PhET-iO's event-listening API to capture student engagement data (time-on-sim, interaction events, state at submission) and store it in the canonical envelope, making it available to graders and researchers without any server-side storage.
 
 **Scope:**
+
 - This phase is intentionally narrow: capture data, store locally, include in the signed PDF artifact. No server, no analytics pipeline, no real-time dashboard.
 - Event types to capture (from PhET-iO Hydrogen feature set): sim launch time, first-interaction time, total interaction count (bucketed by element), state at the moment the student clicks "Export PDF". Do not capture raw event streams (too large for local storage).
 - Storage: add a `phETioMeta` field to the canonical `LabAnswers` envelope. Type: `Record<simId, { launchTime: number, firstInteractionMs: number, interactionCount: number, finalState: unknown }>`. The `finalState` is the PhET-iO saved-state JSON blob for the sim at export time.
@@ -487,12 +515,14 @@ Rules:
 - PDF rendering: add a "Simulation Engagement" appendix section to the PDF (at the end, before the signature block) that renders a human-readable summary of the metrics. Raw state JSON is not rendered (it is only in the embedded `lab.json` attachment).
 
 **PhET-iO state API calls (Hydrogen feature set):**
+
 - Save state: `postMessage({ id: 'getState' }, phetioOrigin)` -> response `{ id: 'state', state: {...} }`
 - Listen for interactions: `postMessage({ id: 'startEventStream' }, phetioOrigin)` -> repeated `{ id: 'event', phetioID: '...', event: '...' }` messages
 
 **Privacy note:** The `finalState` blob may contain sim-specific pedagogical parameter values set by the student (e.g., angle of incidence in Snell's Law). It does not contain any personally identifying information beyond what is already in the envelope.
 
 **Files to read before starting:**
+
 - `src/domain/schema/` -- the canonical `LabAnswers` envelope type
 - S-B implementation (pheTio postMessage pattern and origin constant)
 - `src/pdf/` -- PDF renderer, specifically the signature block and appendix pattern
@@ -556,11 +586,13 @@ Replaced raw schema `kind` strings with human titles, render each section's prom
 **Goal:** stop the PDF from rendering pure background/theory content and a full block per blank response, while keeping the grader aware of what was skipped.
 
 **Schema (`src/domain/schema/lab.ts`, `SectionMetadataSchema`):**
+
 - Add `pdfHidden: z.boolean().optional()`. A section with `pdfHidden: true` is omitted from the PDF body and the Process Record. It still renders in the on-screen worksheet and does not affect the envelope.
 
 **Mark the content:** set `pdfHidden: true` on instructions sections that are purely expository background / theory / reference and are not needed to interpret a student's answer: headings like "Background ...", "A note on ...", standalone derivations, and reference-only tables. **Keep** the integrity agreement, procedural "Step N" instructions, and concept-check framing that gives context to an adjacent response. Apply across the enabled labs; authors can re-tune the flags later.
 
 **Response compaction (`src/services/pdf/Document.tsx`):** classify each field-owning section (objective, measurement, multiMeasurement, calculation, concept, image, dataTable) as **answered** (has any student content: non-empty field text, an uploaded image, a non-empty drawing page, or any filled table cell) or **unanswered**.
+
 - Answered sections render fully (title, prompt, answer) as today.
 - Unanswered field-owning sections are **not** rendered individually. Instead render one prominent block, e.g. "Unanswered sections (N): <human titles>", so the grader sees exactly what was left blank without paging through empty `-` blocks. Instructions and plots are not student-answerable and never appear in this list.
 
@@ -571,6 +603,7 @@ Replaced raw schema `kind` strings with human titles, render each section's prom
 **Goal:** replace the one-section-per-block, five-lines-each Process Record (which ran ~6 pages, listing field-less sections as zeros) with a dense, accountable table.
 
 **Scope (`src/services/pdf/Document.tsx`, plus a duration helper):**
+
 - Render a **compact table**: one row per field-owning section that has **recorded activity** (active time, keystrokes, or pastes > 0). Columns: Section (human title) | Active time | Keystrokes | Deletes | Pastes (clipboard / autocomplete / IME, e.g. `2 / 0 / 1`). Include a **totals row**.
 - Sections with **no recorded activity** are collapsed into a single prominent line: "No recorded activity: <human titles>", so nothing is silently dropped. (A draw- or image-answered section legitimately has zero typing activity and will appear here; that is correct.)
 - Field-less sections (instructions, plot) and `pdfHidden` sections do not appear in the Process Record at all.
@@ -583,6 +616,7 @@ Replaced raw schema `kind` strings with human titles, render each section's prom
 **Goal:** cut wasted vertical space and overall page count.
 
 **Scope (`src/services/pdf/Document.tsx`):**
+
 - **Empty plots:** when a plot has no data points, render a compact one-line placeholder ("<plot title>: no data plotted") instead of the full empty SVG axes box.
 - **Drawings:** shrink the embedded drawing image (a dedicated `drawImage` style, max height roughly half a page) and keep each page block whole (`wrap={false}`) with its "Page N of M" label and SHA caption grouped with the image, so about two drawing pages fit on one PDF page. Uploaded photos may keep a larger cap.
 - General: verify the combined effect of P-C / P-D / P-E meaningfully reduces page count on the Coulomb draft (the review sample was 15-16 pages mostly empty).
@@ -662,14 +696,14 @@ Track P is independent of T / C / S. P-C, P-D, and P-E build on P-A/P-B (done) a
 
 ## Open decisions
 
-| # | Decision | Notes |
-|---|---|---|
-| 1 | PhET-iO license timing | S-B and S-C cannot start until the evaluative license is signed. Contact phet-io@colorado.edu. |
-| 2 | Which sims get phetio: true first | Snell's Law (Bending Light) is the obvious first candidate as it is already embedded. Confirm PhET-iO availability of that specific sim. |
-| 3 | Canvas stroke storage ceiling | If a student draws many strokes, FieldValue.text (localStorage) may grow large. Monitor and add IndexedDB overflow if needed after C-B ships. |
-| 4 | phETioMeta in PDF appendix | Decide with course instructors whether graders want this data visible or only in the embedded JSON. The spec defaults to a human-readable summary; make it opt-in per lab if instructors prefer. |
-| 5 | Retaining non-active answers (C-C) | C-C keeps every mode's entered answer in the envelope even after the student switches modes; only the active mode renders in the PDF body. Confirm graders want inactive answers retained for process tracking rather than cleared on switch. |
-| 6 | Default response mode (C-C) | C-C defaults a selectable section to the first `responseModes` entry. Confirm authors order the array intentionally (e.g. put `text` first so typed answers are the default). |
-| 7 | Which instructions are "background theory" (P-C) | The agent marks `pdfHidden: true` on expository background/theory/reference instructions, keeping integrity + procedural steps. The author reviews the resulting flags per lab and re-tunes; the rule is a judgment call, not exhaustive. |
-| 8 | Compacting data tables (P-C) | An empty data table is a field-owning section and would land in the "Unanswered sections" summary. Confirm graders are fine with an unfilled table collapsing into that summary rather than printing an empty grid. |
-| 9 | True typeset math (P-F) | The unicode approximation is the accepted PDF math output for now. Revisit P-F (KaTeX to SVG/image) only when typeset-quality fractions/radicals are worth the added renderer complexity. |
+| #   | Decision                                         | Notes                                                                                                                                                                                                                                         |
+| --- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | PhET-iO license timing                           | S-B and S-C cannot start until the evaluative license is signed. Contact phet-io@colorado.edu.                                                                                                                                                |
+| 2   | Which sims get phetio: true first                | Snell's Law (Bending Light) is the obvious first candidate as it is already embedded. Confirm PhET-iO availability of that specific sim.                                                                                                      |
+| 3   | Canvas stroke storage ceiling                    | If a student draws many strokes, FieldValue.text (localStorage) may grow large. Monitor and add IndexedDB overflow if needed after C-B ships.                                                                                                 |
+| 4   | phETioMeta in PDF appendix                       | Decide with course instructors whether graders want this data visible or only in the embedded JSON. The spec defaults to a human-readable summary; make it opt-in per lab if instructors prefer.                                              |
+| 5   | Retaining non-active answers (C-C)               | C-C keeps every mode's entered answer in the envelope even after the student switches modes; only the active mode renders in the PDF body. Confirm graders want inactive answers retained for process tracking rather than cleared on switch. |
+| 6   | Default response mode (C-C)                      | C-C defaults a selectable section to the first `responseModes` entry. Confirm authors order the array intentionally (e.g. put `text` first so typed answers are the default).                                                                 |
+| 7   | Which instructions are "background theory" (P-C) | The agent marks `pdfHidden: true` on expository background/theory/reference instructions, keeping integrity + procedural steps. The author reviews the resulting flags per lab and re-tunes; the rule is a judgment call, not exhaustive.     |
+| 8   | Compacting data tables (P-C)                     | An empty data table is a field-owning section and would land in the "Unanswered sections" summary. Confirm graders are fine with an unfilled table collapsing into that summary rather than printing an empty grid.                           |
+| 9   | True typeset math (P-F)                          | The unicode approximation is the accepted PDF math output for now. Revisit P-F (KaTeX to SVG/image) only when typeset-quality fractions/radicals are worth the added renderer complexity.                                                     |

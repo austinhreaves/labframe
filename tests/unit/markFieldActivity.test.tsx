@@ -78,10 +78,20 @@ describe('Field IME handling', () => {
     fireEvent.compositionStart(input);
 
     input.setSelectionRange(1, 1);
-    fireEvent.input(input, { target: { value: 'あ' }, inputType: 'insertCompositionText', data: 'あ', isComposing: true });
+    fireEvent.input(input, {
+      target: { value: 'あ' },
+      inputType: 'insertCompositionText',
+      data: 'あ',
+      isComposing: true,
+    });
 
     input.setSelectionRange(2, 2);
-    fireEvent.input(input, { target: { value: 'あい' }, inputType: 'insertCompositionText', data: 'い', isComposing: true });
+    fireEvent.input(input, {
+      target: { value: 'あい' },
+      inputType: 'insertCompositionText',
+      data: 'い',
+      isComposing: true,
+    });
 
     fireEvent.compositionEnd(input);
 

@@ -6,10 +6,7 @@ const THEMES = ['light', 'dark'] as const;
 for (const theme of THEMES) {
   test(`primitives showcase has no axe violations (${theme})`, async ({ page }) => {
     await page.goto(`/__visual/primitives?theme=${theme}`);
-    await page.evaluate(
-      (next) => document.documentElement.setAttribute('data-theme', next),
-      theme,
-    );
+    await page.evaluate((next) => document.documentElement.setAttribute('data-theme', next), theme);
     await page.waitForSelector('[data-testid="showcase-progress"]');
 
     const results = await new AxeBuilder({ page })

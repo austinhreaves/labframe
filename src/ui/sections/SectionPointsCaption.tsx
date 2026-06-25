@@ -9,9 +9,5 @@ export function SectionPointsCaption({ points }: Props) {
   if (points === undefined) {
     return null;
   }
-  return (
-    <p className="section-points-caption">
-      ({formatPointsLabel(points)} points)
-    </p>
-  );
+  return <p className="section-points-caption">({formatPointsLabel(points)} points)</p>;
 }

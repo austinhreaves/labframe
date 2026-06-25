@@ -16,7 +16,12 @@ describe('labStore', () => {
   it('recomputes derived values after input change', () => {
     const store = useLabStore.getState();
     store.setTableCell('part2Table', 0, 'incidentAngle', createEmptyFieldValue('30'));
-    store.setTableCell('part2Table', 0, 'refractedAngle', createEmptyFieldValue('19.47122063449069'));
+    store.setTableCell(
+      'part2Table',
+      0,
+      'refractedAngle',
+      createEmptyFieldValue('19.47122063449069'),
+    );
 
     const row = useLabStore.getState().tables.part2Table?.[0];
     expect(row).toBeDefined();

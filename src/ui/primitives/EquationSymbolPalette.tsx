@@ -12,7 +12,8 @@ type EquationSymbolPaletteProps = {
 export function EquationSymbolPalette({ onInsert, onRestoreFocus }: EquationSymbolPaletteProps) {
   const [activeCategory, setActiveCategory] = useState(EQUATION_SYMBOL_CATEGORIES[0]?.id ?? '');
   const symbols = useMemo(
-    () => EQUATION_SYMBOL_CATEGORIES.find((category) => category.id === activeCategory)?.symbols ?? [],
+    () =>
+      EQUATION_SYMBOL_CATEGORIES.find((category) => category.id === activeCategory)?.symbols ?? [],
     [activeCategory],
   );
   const handleInsert = (latex: string) => {

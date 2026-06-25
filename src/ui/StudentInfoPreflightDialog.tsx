@@ -21,7 +21,9 @@ function getFocusableElements(root: HTMLElement): HTMLElement[] {
     'textarea:not([disabled])',
     '[tabindex]:not([tabindex="-1"])',
   ].join(', ');
-  return Array.from(root.querySelectorAll<HTMLElement>(selectors)).filter((el) => !el.hasAttribute('hidden'));
+  return Array.from(root.querySelectorAll<HTMLElement>(selectors)).filter(
+    (el) => !el.hasAttribute('hidden'),
+  );
 }
 
 export function StudentInfoPreflightDialog({ open, missing, onClose }: Props) {

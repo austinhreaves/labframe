@@ -30,7 +30,12 @@ function rowHasText(row: TableRow | undefined): boolean {
 }
 
 function sectionHasText(section: Section, state: LabStoreState): boolean {
-  if (section.kind === 'objective' || section.kind === 'measurement' || section.kind === 'calculation' || section.kind === 'concept') {
+  if (
+    section.kind === 'objective' ||
+    section.kind === 'measurement' ||
+    section.kind === 'calculation' ||
+    section.kind === 'concept'
+  ) {
     return hasText(state.fields[section.fieldId]?.text);
   }
   if (section.kind === 'multiMeasurement') {
@@ -52,7 +57,9 @@ function sectionHasText(section: Section, state: LabStoreState): boolean {
  */
 function buildSectionGroups(sections: Section[]): SectionGroup[] {
   const tocEntries = buildTocEntries(sections);
-  const tocIndices = tocEntries.map((entry) => Number.parseInt(entry.id.replace('section-', ''), 10));
+  const tocIndices = tocEntries.map((entry) =>
+    Number.parseInt(entry.id.replace('section-', ''), 10),
+  );
   return tocIndices.map((start, i) => {
     const end = i + 1 < tocIndices.length ? tocIndices[i + 1]! : sections.length;
     const fillables = sections.slice(start, end).filter(isCountedSection);
@@ -71,7 +78,9 @@ function isGroupComplete(group: SectionGroup, state: LabStoreState): boolean {
 
 export function ProgressBar({ sections }: Props) {
   const groups = useMemo(() => buildSectionGroups(sections), [sections]);
-  const filledCount = useLabStore((state) => groups.filter((group) => isGroupComplete(group, state)).length);
+  const filledCount = useLabStore(
+    (state) => groups.filter((group) => isGroupComplete(group, state)).length,
+  );
   const totalCount = groups.length;
   const safeTotal = Math.max(totalCount, 1);
   return (

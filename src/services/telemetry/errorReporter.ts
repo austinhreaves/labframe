@@ -16,7 +16,9 @@ let globalHandlersInstalled = false;
 
 function normalizeError(error: unknown): { message: string; stack?: string } {
   if (error instanceof Error) {
-    return error.stack ? { message: error.message, stack: error.stack } : { message: error.message };
+    return error.stack
+      ? { message: error.message, stack: error.stack }
+      : { message: error.message };
   }
   if (typeof error === 'string') {
     return { message: error };
@@ -33,7 +35,11 @@ export function clearTelemetryContext(): void {
   activeLabId = null;
 }
 
-export async function reportError(options: { error: unknown; sectionId?: string; labId?: string }): Promise<boolean> {
+export async function reportError(options: {
+  error: unknown;
+  sectionId?: string;
+  labId?: string;
+}): Promise<boolean> {
   if (!telemetryEndpoint) {
     return false;
   }

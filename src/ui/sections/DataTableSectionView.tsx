@@ -20,7 +20,9 @@ export function DataTableSectionView({ section }: Props) {
       <Table
         section={section}
         data={tableData}
-        onCellChange={(rowIndex, columnId, value) => setTableCell(section.tableId, rowIndex, columnId, value)}
+        onCellChange={(rowIndex, columnId, value) =>
+          setTableCell(section.tableId, rowIndex, columnId, value)
+        }
       />
     </section>
   );

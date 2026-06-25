@@ -44,14 +44,25 @@ const styles = {
   list: { marginBottom: 6 },
   listItem: { marginBottom: 2 },
   blockquote: { borderLeftWidth: 1.5, borderLeftColor: '#999', paddingLeft: 6, marginBottom: 6 },
-  calloutContainer: { borderLeftWidth: 2.5, paddingLeft: 6, marginBottom: 6, paddingTop: 3, paddingBottom: 3 },
+  calloutContainer: {
+    borderLeftWidth: 2.5,
+    paddingLeft: 6,
+    marginBottom: 6,
+    paddingTop: 3,
+    paddingBottom: 3,
+  },
   calloutLabel: { fontSize: 8, fontWeight: 700 as const, marginBottom: 2 },
   calloutNote: { borderLeftColor: '#2563eb', backgroundColor: '#eff6ff' },
   calloutTip: { borderLeftColor: '#059669', backgroundColor: '#ecfdf5' },
   calloutWarning: { borderLeftColor: '#d97706', backgroundColor: '#fff7ed' },
   calloutImportant: { borderLeftColor: '#be185d', backgroundColor: '#fdf2f8' },
   calloutCaution: { borderLeftColor: '#dc2626', backgroundColor: '#fef2f2' },
-  thematicBreak: { borderBottomWidth: 0.5, borderBottomColor: '#999', marginTop: 6, marginBottom: 6 },
+  thematicBreak: {
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#999',
+    marginTop: 6,
+    marginBottom: 6,
+  },
   table: { marginTop: 4, marginBottom: 6, borderWidth: 0.5, borderColor: '#777' },
   tableRow: { flexDirection: 'row' as const, borderBottomWidth: 0.5, borderBottomColor: '#ddd' },
   tableCell: { flex: 1, padding: 3, borderRightWidth: 0.5, borderRightColor: '#ddd' },
@@ -105,16 +116,28 @@ function renderInlineNodes(nodes: MdNode[], keyPrefix: string): ReactNode[] {
       return createElement(Text, { key }, node.value ?? '');
     }
     if (node.type === 'strong') {
-      return createElement(Text, { key, style: styles.strong }, renderInlineNodes(nodeChildren(node), key));
+      return createElement(
+        Text,
+        { key, style: styles.strong },
+        renderInlineNodes(nodeChildren(node), key),
+      );
     }
     if (node.type === 'emphasis') {
-      return createElement(Text, { key, style: styles.emphasis }, renderInlineNodes(nodeChildren(node), key));
+      return createElement(
+        Text,
+        { key, style: styles.emphasis },
+        renderInlineNodes(nodeChildren(node), key),
+      );
     }
     if (node.type === 'inlineCode') {
       return createElement(Text, { key, style: styles.inlineCode }, node.value ?? '');
     }
     if (node.type === 'inlineMath') {
-      return createElement(Text, { key, style: styles.inlineMath }, latexToUnicode(node.value ?? ''));
+      return createElement(
+        Text,
+        { key, style: styles.inlineMath },
+        latexToUnicode(node.value ?? ''),
+      );
     }
     if (node.type === 'link') {
       const label = flattenToText(nodeChildren(node));
@@ -144,7 +167,9 @@ function renderListItem(item: MdNode, itemPrefix: string, bulletPrefix: string):
     View,
     { key: itemPrefix, style: styles.listItem },
     createElement(Text, null, `${bulletPrefix}${firstParagraphText}`),
-    ...remainingBlocks.map((child, index) => renderBlockNode(child, `${itemPrefix}-nested-${index}`)),
+    ...remainingBlocks.map((child, index) =>
+      renderBlockNode(child, `${itemPrefix}-nested-${index}`),
+    ),
   );
 }
 
@@ -163,7 +188,10 @@ function renderTableNode(node: MdNode, keyPrefix: string): ReactNode {
             Text,
             {
               key: `${keyPrefix}-row-${rowIndex}-cell-${cellIndex}`,
-              style: rowIndex === 0 ? { ...styles.tableCell, ...styles.tableHeaderCell } : styles.tableCell,
+              style:
+                rowIndex === 0
+                  ? { ...styles.tableCell, ...styles.tableHeaderCell }
+                  : styles.tableCell,
             },
             flattenToText(nodeChildren(cell)),
           ),
@@ -175,7 +203,11 @@ function renderTableNode(node: MdNode, keyPrefix: string): ReactNode {
 
 function renderBlockNode(node: MdNode, keyPrefix: string): ReactNode | null {
   if (node.type === 'paragraph') {
-    return createElement(Text, { key: keyPrefix, style: styles.paragraph }, renderInlineNodes(nodeChildren(node), keyPrefix));
+    return createElement(
+      Text,
+      { key: keyPrefix, style: styles.paragraph },
+      renderInlineNodes(nodeChildren(node), keyPrefix),
+    );
   }
   if (node.type === 'heading') {
     const depth = node.depth ?? 6;
@@ -222,7 +254,10 @@ function renderBlockNode(node: MdNode, keyPrefix: string): ReactNode | null {
       const rest = quoteChildren.slice(1);
       return createElement(
         View,
-        { key: keyPrefix, style: { ...styles.calloutContainer, ...(styleByLabel[label] ?? styles.calloutNote) } },
+        {
+          key: keyPrefix,
+          style: { ...styles.calloutContainer, ...(styleByLabel[label] ?? styles.calloutNote) },
+        },
         createElement(Text, { style: styles.calloutLabel }, label),
         stripped ? createElement(Text, { style: styles.paragraph }, stripped) : null,
         ...rest.map((child, index) => renderBlockNode(child, `${keyPrefix}-quote-${index}`)),
@@ -244,7 +279,11 @@ function renderBlockNode(node: MdNode, keyPrefix: string): ReactNode | null {
     // Block math visual layout is intentionally deferred; convert to unicode and
     // render in monospace as a deterministic fallback.
     warnBlockMathFallbackOnce();
-    return createElement(Text, { key: keyPrefix, style: styles.mathBlock }, latexToUnicode(node.value ?? ''));
+    return createElement(
+      Text,
+      { key: keyPrefix, style: styles.mathBlock },
+      latexToUnicode(node.value ?? ''),
+    );
   }
   if (node.type === 'html') {
     return createElement(Text, { key: keyPrefix, style: styles.paragraph }, node.value ?? '');
@@ -264,7 +303,11 @@ function renderBlockNode(node: MdNode, keyPrefix: string): ReactNode | null {
 }
 
 export function renderMarkdownToPdf(markdownSource: string): ReactNode[] {
-  const root = unified().use(remarkParse).use(remarkGfm).use(remarkMath).parse(markdownSource) as MdNode;
+  const root = unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkMath)
+    .parse(markdownSource) as MdNode;
   return nodeChildren(root)
     .map((node, index) => renderBlockNode(node, `md-block-${index}`))
     .filter((node): node is ReactNode => node !== null);

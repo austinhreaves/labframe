@@ -84,7 +84,12 @@ const drawLab: Lab = {
   category: 'Physics',
   simulations: {},
   sections: [
-    { kind: 'calculation', fieldId: 'c1', prompt: 'Show your work', responseModes: ['text', 'draw'] },
+    {
+      kind: 'calculation',
+      fieldId: 'c1',
+      prompt: 'Show your work',
+      responseModes: ['text', 'draw'],
+    },
   ],
 };
 
@@ -105,7 +110,12 @@ const baseAnswers: LabAnswers = {
   tables: {},
   selectedFits: {},
   images: {
-    [c1DrawPageKey]: { idbKey: c1DrawPageKey, mime: 'image/png', bytes: 99, sha256: 'c'.repeat(64) },
+    [c1DrawPageKey]: {
+      idbKey: c1DrawPageKey,
+      mime: 'image/png',
+      bytes: 99,
+      sha256: 'c'.repeat(64),
+    },
   },
   fits: {},
   status: { submitted: false, lastSavedAt: 0 },

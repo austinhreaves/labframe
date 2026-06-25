@@ -1,4 +1,14 @@
-import { Document, Image, Page, StyleSheet, Svg, Text, View, Circle, Line } from '@react-pdf/renderer';
+import {
+  Document,
+  Image,
+  Page,
+  StyleSheet,
+  Svg,
+  Text,
+  View,
+  Circle,
+  Line,
+} from '@react-pdf/renderer';
 
 import { formatPointsLabel, sumSectionPoints } from '@/domain/pointsFormatting';
 import type {

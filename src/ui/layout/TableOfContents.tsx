@@ -25,7 +25,11 @@ export function TableOfContents({ sections }: Props) {
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const summaryRef = useRef<HTMLElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [panelLayout, setPanelLayout] = useState<{ left: number; top: number; width: number } | null>(null);
+  const [panelLayout, setPanelLayout] = useState<{
+    left: number;
+    top: number;
+    width: number;
+  } | null>(null);
 
   useEffect(() => {
     if (tocEntries[0]?.id) {

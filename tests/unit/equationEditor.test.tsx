@@ -107,7 +107,11 @@ describe('EquationEditor', () => {
     mathField.value = 'あ';
     mathField.selectionStart = 1;
     mathField.selectionEnd = 1;
-    fireEvent.input(mathField, { inputType: 'insertCompositionText', data: 'あ', isComposing: true });
+    fireEvent.input(mathField, {
+      inputType: 'insertCompositionText',
+      data: 'あ',
+      isComposing: true,
+    });
     fireEvent.compositionEnd(mathField);
 
     const imeEvents = latest?.pastes.filter((paste) => paste.source === 'ime') ?? [];
@@ -153,7 +157,9 @@ describe('EquationEditor', () => {
 
   it('Enter in math mode wraps value in \\begin{gathered}', async () => {
     let latest: FieldValue | undefined;
-    const { container } = render(<StatefulEditor initialText="a+b" onPatch={(value) => (latest = value)} />);
+    const { container } = render(
+      <StatefulEditor initialText="a+b" onPatch={(value) => (latest = value)} />,
+    );
     const mathField = await waitForMathField(container);
     mathField.value = 'a+b';
     mathField.selectionStart = 3;
@@ -243,7 +249,9 @@ describe('EquationEditor', () => {
 
   it('keeps field activity capture working across both modes', async () => {
     let latest: FieldValue | undefined;
-    const { container, getByRole } = render(<StatefulEditor onPatch={(value) => (latest = value)} />);
+    const { container, getByRole } = render(
+      <StatefulEditor onPatch={(value) => (latest = value)} />,
+    );
 
     const mathField = await waitForMathField(container);
     mathField.value = 'x';

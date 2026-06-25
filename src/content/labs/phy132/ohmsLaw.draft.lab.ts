@@ -381,7 +381,7 @@ In Part 1B you will collect $I$-vs-$V$ data for a graphite pencil lead in series
       kind: 'concept',
       fieldId: 'ohmicQuestion',
       prompt:
-        'Is the pencil ohmic or non-ohmic? Is the real lightbulb ohmic or non-ohmic? How do you know? Hint: re-read the background block above on Ohm\'s Law and non-ohmic materials.',
+        "Is the pencil ohmic or non-ohmic? Is the real lightbulb ohmic or non-ohmic? How do you know? Hint: re-read the background block above on Ohm's Law and non-ohmic materials.",
       rows: 4,
       points: 1,
     },
@@ -410,7 +410,7 @@ In Part 1B you will collect $I$-vs-$V$ data for a graphite pencil lead in series
       kind: 'concept',
       fieldId: 'discussionConclusion',
       prompt:
-        "Write your discussion and conclusion below according to the guidelines given in the Lab Report Rubric, found in the Course Information module on Canvas. (e.g., summarize what your Part 1A observations told you about the conductivity of the three test objects; how well your Part 1B data confirm $V = IR$ for the pencil; how the Part 1C lightbulb data deviate from ohmic behavior and what physical mechanism explains the deviation; sources of uncertainty.)",
+        'Write your discussion and conclusion below according to the guidelines given in the Lab Report Rubric, found in the Course Information module on Canvas. (e.g., summarize what your Part 1A observations told you about the conductivity of the three test objects; how well your Part 1B data confirm $V = IR$ for the pencil; how the Part 1C lightbulb data deviate from ohmic behavior and what physical mechanism explains the deviation; sources of uncertainty.)',
       rows: 12,
       points: 6,
     },

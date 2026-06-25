@@ -1,5 +1,16 @@
 import katex from 'katex';
-import { createElement, useEffect, useMemo, useRef, useState, type ClipboardEvent, type CompositionEvent, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
+import {
+  createElement,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ClipboardEvent,
+  type CompositionEvent,
+  type FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react';
 import type { FieldValue } from '@/domain/schema';
 
 import { appendPasteEvent, createEmptyFieldValue, markFieldActivity } from '@/state/labStore';
@@ -26,7 +37,14 @@ type MathFieldElement = HTMLElement & {
   executeCommand?: (command: unknown) => void;
 };
 
-export function EquationEditor({ id, label, labelDisplay, hideLabel = false, value, onChange }: EquationEditorProps) {
+export function EquationEditor({
+  id,
+  label,
+  labelDisplay,
+  hideLabel = false,
+  value,
+  onChange,
+}: EquationEditorProps) {
   const effective = value ?? createEmptyFieldValue();
   const [isReady, setIsReady] = useState(false);
   const [mode, setMode] = useState<'math' | 'latex'>('math');
@@ -169,8 +187,18 @@ export function EquationEditor({ id, label, labelDisplay, hideLabel = false, val
     };
   };
 
-  const commitInsertedText = (previous: FieldValue, nextText: string, caret: number, inputType: string, data: string) => {
-    const next = markFieldActivity(previous, { value: nextText, selectionStart: caret }, { inputType, data, isComposing: false });
+  const commitInsertedText = (
+    previous: FieldValue,
+    nextText: string,
+    caret: number,
+    inputType: string,
+    data: string,
+  ) => {
+    const next = markFieldActivity(
+      previous,
+      { value: nextText, selectionStart: caret },
+      { inputType, data, isComposing: false },
+    );
     onChange(next);
   };
 
@@ -180,11 +208,22 @@ export function EquationEditor({ id, label, labelDisplay, hideLabel = false, val
       return;
     }
     const sourceText = target.value ?? effective.text;
-    const inserted = insertAtRange(sourceText, insert, target.selectionStart ?? sourceText.length, target.selectionEnd ?? sourceText.length);
+    const inserted = insertAtRange(
+      sourceText,
+      insert,
+      target.selectionStart ?? sourceText.length,
+      target.selectionEnd ?? sourceText.length,
+    );
     target.value = inserted.text;
     target.selectionStart = inserted.caret;
     target.selectionEnd = inserted.caret;
-    commitInsertedText({ ...effective, text: sourceText }, inserted.text, inserted.caret, inputType, insert);
+    commitInsertedText(
+      { ...effective, text: sourceText },
+      inserted.text,
+      inserted.caret,
+      inputType,
+      insert,
+    );
   };
 
   const insertIntoMathInput = (insert: string, inputType = 'insertText') => {
@@ -198,14 +237,22 @@ export function EquationEditor({ id, label, labelDisplay, hideLabel = false, val
     target.executeCommand?.(['insert', insert]);
     const afterCommand = target.value ?? sourceText;
     const inserted =
-      afterCommand !== sourceText ? { text: afterCommand, caret: getSelectionStart(target), offset: start } : insertAtRange(sourceText, insert, start, end);
+      afterCommand !== sourceText
+        ? { text: afterCommand, caret: getSelectionStart(target), offset: start }
+        : insertAtRange(sourceText, insert, start, end);
     if (afterCommand === sourceText) {
       target.value = inserted.text;
       target.selectionStart = inserted.caret;
       target.selectionEnd = inserted.caret;
     }
     ignoreNextInputValue.current = inserted.text;
-    commitInsertedText({ ...effective, text: sourceText }, inserted.text, inserted.caret, inputType, insert);
+    commitInsertedText(
+      { ...effective, text: sourceText },
+      inserted.text,
+      inserted.caret,
+      inputType,
+      insert,
+    );
   };
 
   const handlePaste = (event: ClipboardEvent<MathFieldElement | HTMLTextAreaElement>) => {
@@ -262,118 +309,149 @@ export function EquationEditor({ id, label, labelDisplay, hideLabel = false, val
   return (
     <div className="field equation-editor">
       <div className="equation-editor-toolbar">
-        <span className={hideLabel ? 'field-label visually-hidden' : 'field-label'}>{labelDisplay ?? label}</span>
-        <button type="button" className="equation-editor-toggle" onClick={() => setMode((previous) => (previous === 'math' ? 'latex' : 'math'))}>
+        <span className={hideLabel ? 'field-label visually-hidden' : 'field-label'}>
+          {labelDisplay ?? label}
+        </span>
+        <button
+          type="button"
+          className="equation-editor-toggle"
+          onClick={() => setMode((previous) => (previous === 'math' ? 'latex' : 'math'))}
+        >
           {mode === 'math' ? 'View as LaTeX' : 'View as math'}
         </button>
       </div>
       <EquationSymbolPalette onInsert={insertSymbol} onRestoreFocus={focusActiveInput} />
       <div className="equation-editor-body">
-        {mode === 'math'
-          ? createElement('math-field', {
-              id,
-              title: label,
-              ref: (element: MathFieldElement | null): void => {
-                mathFieldRef.current = element;
-              },
-              onFocus: handleFocus,
-              onBlur: handleBlur,
-              onPaste: handlePaste,
-              onKeyDown: (event: KeyboardEvent<MathFieldElement>) => {
-                if (event.key !== 'Enter' || event.shiftKey) {
-                  return;
-                }
-                event.preventDefault();
-                const target = event.currentTarget;
-                const previousText = target.value ?? effective.text;
-                if (!previousText.includes('\\begin{gathered}')) {
-                  const wrapped = `\\begin{gathered}${previousText} \\\\ \\end{gathered}`;
-                  const caret = wrapped.lastIndexOf('\\end{gathered}');
-                  target.value = wrapped;
-                  target.selectionStart = caret;
-                  target.selectionEnd = caret;
-                } else {
-                  target.executeCommand?.(['addRowAfter']);
-                }
-                const nextText = target.value ?? previousText;
-                const caret = getSelectionStart(target);
-                ignoreNextInputValue.current = nextText;
-                commitInsertedText({ ...effective, text: previousText }, nextText, caret, 'insertText', '\\\\');
-              },
-              onCompositionStart: (event: CompositionEvent<MathFieldElement>) => {
-                const target = event.currentTarget;
-                composition.current = {
-                  startOffset: getSelectionStart(target),
-                  startText: effective.text,
-                };
-              },
-              onCompositionEnd: (event: CompositionEvent<MathFieldElement>) => {
-                const snapshot = composition.current;
-                composition.current = null;
-                if (!snapshot) {
-                  return;
-                }
+        {mode === 'math' ? (
+          createElement('math-field', {
+            id,
+            title: label,
+            ref: (element: MathFieldElement | null): void => {
+              mathFieldRef.current = element;
+            },
+            onFocus: handleFocus,
+            onBlur: handleBlur,
+            onPaste: handlePaste,
+            onKeyDown: (event: KeyboardEvent<MathFieldElement>) => {
+              if (event.key !== 'Enter' || event.shiftKey) {
+                return;
+              }
+              event.preventDefault();
+              const target = event.currentTarget;
+              const previousText = target.value ?? effective.text;
+              if (!previousText.includes('\\begin{gathered}')) {
+                const wrapped = `\\begin{gathered}${previousText} \\\\ \\end{gathered}`;
+                const caret = wrapped.lastIndexOf('\\end{gathered}');
+                target.value = wrapped;
+                target.selectionStart = caret;
+                target.selectionEnd = caret;
+              } else {
+                target.executeCommand?.(['addRowAfter']);
+              }
+              const nextText = target.value ?? previousText;
+              const caret = getSelectionStart(target);
+              ignoreNextInputValue.current = nextText;
+              commitInsertedText(
+                { ...effective, text: previousText },
+                nextText,
+                caret,
+                'insertText',
+                '\\\\',
+              );
+            },
+            onCompositionStart: (event: CompositionEvent<MathFieldElement>) => {
+              const target = event.currentTarget;
+              composition.current = {
+                startOffset: getSelectionStart(target),
+                startText: effective.text,
+              };
+            },
+            onCompositionEnd: (event: CompositionEvent<MathFieldElement>) => {
+              const snapshot = composition.current;
+              composition.current = null;
+              if (!snapshot) {
+                return;
+              }
 
-                const target = event.currentTarget;
-                const targetValue = target.value ?? '';
-                const base = markFieldActivity(effective, { value: targetValue, selectionStart: getSelectionStart(target) }, {});
-                const composedText = getComposedSubstring(snapshot.startText, targetValue, snapshot.startOffset);
-                onChange(appendPasteEvent(base, 'ime', composedText, snapshot.startOffset));
-              },
-              onInput: (event: FormEvent<MathFieldElement>) => {
-                const target = event.currentTarget;
-                const native = event.nativeEvent as InputEvent;
-                const targetValue = target.value ?? '';
-                if (ignoreNextInputValue.current !== null && ignoreNextInputValue.current === targetValue) {
-                  ignoreNextInputValue.current = null;
-                  return;
-                }
-                const next = markFieldActivity(
-                  effective,
-                  { value: targetValue, selectionStart: getSelectionStart(target) },
-                  { inputType: native.inputType, data: native.data, isComposing: native.isComposing },
-                );
-                onChange(next);
-              },
-            })
-          : (
-            <textarea
-              id={id}
-              ref={latexInputRef}
-              rows={4}
-              value={effective.text}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              onPaste={handlePaste}
-              onCompositionStart={(event) => {
-                composition.current = {
-                  startOffset: event.currentTarget.selectionStart ?? effective.text.length,
-                  startText: effective.text,
-                };
-              }}
-              onCompositionEnd={(event) => {
-                const snapshot = composition.current;
-                composition.current = null;
-                if (!snapshot) {
-                  return;
-                }
-                const target = event.currentTarget;
-                const base = markFieldActivity(effective, { value: target.value, selectionStart: target.selectionStart }, {});
-                const composedText = getComposedSubstring(snapshot.startText, target.value, snapshot.startOffset);
-                onChange(appendPasteEvent(base, 'ime', composedText, snapshot.startOffset));
-              }}
-              onInput={(event) => {
-                const target = event.currentTarget;
-                const native = event.nativeEvent as InputEvent;
-                const next = markFieldActivity(
-                  effective,
-                  { value: target.value, selectionStart: target.selectionStart },
-                  { inputType: native.inputType, data: native.data, isComposing: native.isComposing },
-                );
-                onChange(next);
-              }}
-            />
-            )}
+              const target = event.currentTarget;
+              const targetValue = target.value ?? '';
+              const base = markFieldActivity(
+                effective,
+                { value: targetValue, selectionStart: getSelectionStart(target) },
+                {},
+              );
+              const composedText = getComposedSubstring(
+                snapshot.startText,
+                targetValue,
+                snapshot.startOffset,
+              );
+              onChange(appendPasteEvent(base, 'ime', composedText, snapshot.startOffset));
+            },
+            onInput: (event: FormEvent<MathFieldElement>) => {
+              const target = event.currentTarget;
+              const native = event.nativeEvent as InputEvent;
+              const targetValue = target.value ?? '';
+              if (
+                ignoreNextInputValue.current !== null &&
+                ignoreNextInputValue.current === targetValue
+              ) {
+                ignoreNextInputValue.current = null;
+                return;
+              }
+              const next = markFieldActivity(
+                effective,
+                { value: targetValue, selectionStart: getSelectionStart(target) },
+                { inputType: native.inputType, data: native.data, isComposing: native.isComposing },
+              );
+              onChange(next);
+            },
+          })
+        ) : (
+          <textarea
+            id={id}
+            ref={latexInputRef}
+            rows={4}
+            value={effective.text}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onPaste={handlePaste}
+            onCompositionStart={(event) => {
+              composition.current = {
+                startOffset: event.currentTarget.selectionStart ?? effective.text.length,
+                startText: effective.text,
+              };
+            }}
+            onCompositionEnd={(event) => {
+              const snapshot = composition.current;
+              composition.current = null;
+              if (!snapshot) {
+                return;
+              }
+              const target = event.currentTarget;
+              const base = markFieldActivity(
+                effective,
+                { value: target.value, selectionStart: target.selectionStart },
+                {},
+              );
+              const composedText = getComposedSubstring(
+                snapshot.startText,
+                target.value,
+                snapshot.startOffset,
+              );
+              onChange(appendPasteEvent(base, 'ime', composedText, snapshot.startOffset));
+            }}
+            onInput={(event) => {
+              const target = event.currentTarget;
+              const native = event.nativeEvent as InputEvent;
+              const next = markFieldActivity(
+                effective,
+                { value: target.value, selectionStart: target.selectionStart },
+                { inputType: native.inputType, data: native.data, isComposing: native.isComposing },
+              );
+              onChange(next);
+            }}
+          />
+        )}
         <div className="equation-editor-preview">
           {mode === 'math' ? (
             <>
@@ -386,7 +464,10 @@ export function EquationEditor({ id, label, labelDisplay, hideLabel = false, val
               <pre>{effective.text}</pre>
             </>
           ) : (
-            <div className="equation-editor-katex" dangerouslySetInnerHTML={{ __html: latexPreview }} />
+            <div
+              className="equation-editor-katex"
+              dangerouslySetInnerHTML={{ __html: latexPreview }}
+            />
           )}
         </div>
       </div>

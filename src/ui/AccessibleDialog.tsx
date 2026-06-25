@@ -17,10 +17,18 @@ function getFocusableElements(root: HTMLElement): HTMLElement[] {
     'textarea:not([disabled])',
     '[tabindex]:not([tabindex="-1"])',
   ].join(', ');
-  return Array.from(root.querySelectorAll<HTMLElement>(selectors)).filter((el) => !el.hasAttribute('hidden'));
+  return Array.from(root.querySelectorAll<HTMLElement>(selectors)).filter(
+    (el) => !el.hasAttribute('hidden'),
+  );
 }
 
-export function AccessibleDialog({ open, title, onClose, children, footer }: AccessibleDialogProps) {
+export function AccessibleDialog({
+  open,
+  title,
+  onClose,
+  children,
+  footer,
+}: AccessibleDialogProps) {
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const titleId = useId();

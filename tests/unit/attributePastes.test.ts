@@ -144,7 +144,9 @@ describe('attributePastes', () => {
   });
 
   it('Unicode: accented paste vs ASCII-only final text — current matcher does not equate é with e (triage: possible follow-up)', () => {
-    const result = attributePastes('jose', [{ text: 'José', at: 0, offset: 0, source: 'clipboard' }]);
+    const result = attributePastes('jose', [
+      { text: 'José', at: 0, offset: 0, source: 'clipboard' },
+    ]);
     expect(result.removedPastes).toHaveLength(1);
     expect(result.spans).toEqual([{ text: 'jose', kind: 'typed' }]);
   });

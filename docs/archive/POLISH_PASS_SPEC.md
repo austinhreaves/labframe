@@ -23,13 +23,13 @@ Done well, this closes ~70% of the "looks dated" gap without touching a single c
 
 ## 1. Why this matters now
 
-Phase 5.5's dark-mode token list (surface / text / accent / border / shadow / focus) was an *outline* of a token system. It got us a working dark mode but did not get us a real design system, because:
+Phase 5.5's dark-mode token list (surface / text / accent / border / shadow / focus) was an _outline_ of a token system. It got us a working dark mode but did not get us a real design system, because:
 
 - Surfaces are 0/1/2 with no defined semantics. Components reach for whichever surface "looks right" and the visual hierarchy is accidental.
 - Text is `--text-0` and `--text-1`. The numbering gives no intuition (is 0 darker or lighter?), and there is no third tier for captions/disabled/help text — so `#374151`, `#555`, `#6b7280` keep showing up inline.
 - `--border-color` is a single value. Cards, inputs, popovers, and dividers all use it, so nothing has visual weight relative to anything else.
 - `--shadow-color` is one alpha. Cards (`0 1px 2px`), wizard (`0 6px 16px`), popovers (`0 4px 12px`), modals (`0 14px 36px`) all picked a depth out of the air.
-- `--accent` is a single shade. There is no `accent-soft` for backgrounds, no `accent-muted` for hover states, no semantic `success/warn/danger/info` (the callout system has its own per-variant variables — those should be the *application* of a real semantic ramp, not the source of truth).
+- `--accent` is a single shade. There is no `accent-soft` for backgrounds, no `accent-muted` for hover states, no semantic `success/warn/danger/info` (the callout system has its own per-variant variables — those should be the _application_ of a real semantic ramp, not the source of truth).
 - Spacing is a personal-taste exercise. Grepping `main.css` finds `0.1rem`, `0.15rem`, `0.2rem`, `0.25rem`, `0.3rem`, `0.35rem`, `0.4rem`, `0.45rem`, `0.5rem`, `0.55rem`, `0.6rem`, `0.65rem`, `0.7rem`, `0.75rem`, `0.8rem`, `0.85rem`, `0.9rem`, `1rem`, `1.1rem`, `1.2rem`, `1.5rem`, `2rem`. That is not a scale.
 - Radii: `3px`, `6px`, `8px`, `10px`, `999px`. Five values, no naming.
 - Type: `system-ui` stack. There is no scale; font-size is set per-component as `0.75rem`, `0.83rem`, `0.85rem`, `0.88rem`, `0.9rem`, `1rem`, `1.06rem` — eight different values just in `main.css`.
@@ -60,7 +60,7 @@ This is not a criticism of the engineering — these patterns are inevitable whe
 - **No print stylesheet.** PDF is the print artifact; browser-print is best-effort.
 - **No "dark mode v2" theming concepts** (e.g., per-course themes, instructor mode). Tokens are designed to make these trivial later, but they are not in scope.
 
-### 2.3 What this *won't* fix on its own
+### 2.3 What this _won't_ fix on its own
 
 A token system gets you to "professional and considered." It does not get you to "feels expensive." That last gap comes from things in Path 2: real micro-interactions, considered empty states, loading patterns that aren't shimmer rectangles, and motion that has personality. Don't expect this phase alone to make the app feel like Linear. Expect it to make the app feel like a product instead of a tool a TA wrote in 2009.
 
@@ -68,7 +68,7 @@ A token system gets you to "professional and considered." It does not get you to
 
 ## 3. Token system
 
-Tokens live in `src/ui/tokens.css`, imported once from `src/main.css` before any other rule. Component CSS files reference *only* tokens — no raw color, spacing, shadow, or font-size values after this phase lands. Lint enforces this (see §6).
+Tokens live in `src/ui/tokens.css`, imported once from `src/main.css` before any other rule. Component CSS files reference _only_ tokens — no raw color, spacing, shadow, or font-size values after this phase lands. Lint enforces this (see §6).
 
 ### 3.1 Type
 
@@ -85,38 +85,38 @@ Tokens live in `src/ui/tokens.css`, imported once from `src/main.css` before any
 **Type scale.** Modular but pragmatic — not strictly geometric.
 
 ```css
---text-xs:   0.75rem;  /* 12px — captions, table column meta */
---text-sm:   0.875rem; /* 14px — UI body, labels, secondary */
---text-base: 1rem;     /* 16px — body text, primary UI */
---text-md:   1.125rem; /* 18px — emphasized UI, section subtitles */
---text-lg:   1.375rem; /* 22px — h3, dialog titles */
---text-xl:   1.75rem;  /* 28px — h2, page titles */
---text-2xl:  2.25rem;  /* 36px — h1, hero (rare in this app) */
+--text-xs: 0.75rem; /* 12px — captions, table column meta */
+--text-sm: 0.875rem; /* 14px — UI body, labels, secondary */
+--text-base: 1rem; /* 16px — body text, primary UI */
+--text-md: 1.125rem; /* 18px — emphasized UI, section subtitles */
+--text-lg: 1.375rem; /* 22px — h3, dialog titles */
+--text-xl: 1.75rem; /* 28px — h2, page titles */
+--text-2xl: 2.25rem; /* 36px — h1, hero (rare in this app) */
 ```
 
 **Line heights.** Two values, used consistently.
 
 ```css
---leading-ui:    1.4;  /* compact UI: buttons, labels, table cells */
+--leading-ui: 1.4; /* compact UI: buttons, labels, table cells */
 --leading-prose: 1.65; /* instructions, explanations, conclusions */
 ```
 
 **Weights.** Use the variable axis. Reserve five points.
 
 ```css
---weight-regular:  400;
---weight-medium:   500;
+--weight-regular: 400;
+--weight-medium: 500;
 --weight-semibold: 600;
---weight-bold:     700;
---weight-display:  720; /* for the wordmark; tightens with letter-spacing -0.02em */
+--weight-bold: 700;
+--weight-display: 720; /* for the wordmark; tightens with letter-spacing -0.02em */
 ```
 
 **Tracking.** One global default; tighten only on display sizes.
 
 ```css
---tracking-tight:  -0.015em; /* applied to --text-lg and up */
---tracking-normal:  0;
---tracking-wide:    0.04em;  /* small caps, eyebrow labels */
+--tracking-tight: -0.015em; /* applied to --text-lg and up */
+--tracking-normal: 0;
+--tracking-wide: 0.04em; /* small caps, eyebrow labels */
 ```
 
 ### 3.2 Spacing
@@ -125,15 +125,15 @@ Tokens live in `src/ui/tokens.css`, imported once from `src/main.css` before any
 
 ```css
 --space-0-5: 2px;
---space-1:   4px;
---space-2:   8px;
---space-3:   12px;
---space-4:   16px;
---space-5:   24px;
---space-6:   32px;
---space-7:   48px;
---space-8:   64px;
---space-9:   96px; /* hero sections only */
+--space-1: 4px;
+--space-2: 8px;
+--space-3: 12px;
+--space-4: 16px;
+--space-5: 24px;
+--space-6: 32px;
+--space-7: 48px;
+--space-8: 64px;
+--space-9: 96px; /* hero sections only */
 ```
 
 **Rule:** Components use only these. If a layout needs something between, the layout is wrong, not the scale.
@@ -145,8 +145,8 @@ A real neutral ramp. Tinted slightly cool (matches the existing slate-ish accent
 **Light mode neutrals:**
 
 ```css
---neutral-0:   #ffffff;
---neutral-50:  #f8fafc;
+--neutral-0: #ffffff;
+--neutral-50: #f8fafc;
 --neutral-100: #f1f5f9;
 --neutral-200: #e2e8f0;
 --neutral-300: #cbd5e1;
@@ -162,8 +162,8 @@ A real neutral ramp. Tinted slightly cool (matches the existing slate-ish accent
 **Dark mode neutrals (data-theme="dark"):**
 
 ```css
---neutral-0:   #020617;
---neutral-50:  #0b1220;
+--neutral-0: #020617;
+--neutral-50: #0b1220;
 --neutral-100: #111a2c;
 --neutral-200: #172235;
 --neutral-300: #243049;
@@ -176,14 +176,14 @@ A real neutral ramp. Tinted slightly cool (matches the existing slate-ish accent
 --neutral-1000: #ffffff;
 ```
 
-The dark ramp is intentionally not a strict mirror — neutrals 50–200 are the dark surfaces, 700–900 are the dark text. Lower-numbered = darker in *both* modes. (This means token consumers can use the same numeric reference and it still makes physical sense.)
+The dark ramp is intentionally not a strict mirror — neutrals 50–200 are the dark surfaces, 700–900 are the dark text. Lower-numbered = darker in _both_ modes. (This means token consumers can use the same numeric reference and it still makes physical sense.)
 
 ### 3.4 Color — accent
 
 Single accent ramp, hue derived from the existing `#1558d6`. Use Radix `blue` or generate with Leonardo for proper contrast at every step.
 
 ```css
---accent-50:  #eff6ff;
+--accent-50: #eff6ff;
 --accent-100: #dbeafe;
 --accent-200: #bfdbfe;
 --accent-300: #93c5fd;
@@ -195,7 +195,7 @@ Single accent ramp, hue derived from the existing `#1558d6`. Use Radix `blue` or
 --accent-900: #1e3a8a;
 ```
 
-In dark mode, the *same* numeric ramp is used but the *semantic* aliases (below) point to lighter steps. Don't mirror the ramp itself.
+In dark mode, the _same_ numeric ramp is used but the _semantic_ aliases (below) point to lighter steps. Don't mirror the ramp itself.
 
 ### 3.5 Color — semantic aliases
 
@@ -203,37 +203,45 @@ The aliases are what components actually consume. Light mode shown; dark mode ov
 
 ```css
 /* Surfaces — increasing visual prominence */
---surface-base:    var(--neutral-50);  /* page background */
---surface-raised:  var(--neutral-0);   /* cards, sections */
---surface-overlay: var(--neutral-0);   /* popovers, dialogs (with shadow) */
---surface-sunken:  var(--neutral-100); /* code blocks, table headers */
+--surface-base: var(--neutral-50); /* page background */
+--surface-raised: var(--neutral-0); /* cards, sections */
+--surface-overlay: var(--neutral-0); /* popovers, dialogs (with shadow) */
+--surface-sunken: var(--neutral-100); /* code blocks, table headers */
 
 /* Text */
---text-primary:   var(--neutral-900);
+--text-primary: var(--neutral-900);
 --text-secondary: var(--neutral-600);
---text-tertiary:  var(--neutral-500);
---text-disabled:  var(--neutral-400);
---text-inverse:   var(--neutral-0);   /* on accent backgrounds */
---text-accent:    var(--accent-700);
+--text-tertiary: var(--neutral-500);
+--text-disabled: var(--neutral-400);
+--text-inverse: var(--neutral-0); /* on accent backgrounds */
+--text-accent: var(--accent-700);
 
 /* Borders — three weights */
---border-subtle:  var(--neutral-200); /* internal dividers, table cells */
+--border-subtle: var(--neutral-200); /* internal dividers, table cells */
 --border-default: var(--neutral-300); /* card borders, input borders */
---border-strong:  var(--neutral-400); /* emphasized borders, active states */
---border-accent:  var(--accent-600);  /* focus rings, selected */
+--border-strong: var(--neutral-400); /* emphasized borders, active states */
+--border-accent: var(--accent-600); /* focus rings, selected */
 
 /* Accent semantic */
---accent-bg:       var(--accent-600);
+--accent-bg: var(--accent-600);
 --accent-bg-hover: var(--accent-700);
---accent-soft:     var(--accent-50);  /* tinted backgrounds */
---accent-text:     var(--accent-700);
---accent-text-on:  var(--neutral-0);
+--accent-soft: var(--accent-50); /* tinted backgrounds */
+--accent-text: var(--accent-700);
+--accent-text-on: var(--neutral-0);
 
 /* Status colors — each gets bg/text/border at minimum */
---success-bg:     #dcfce7; --success-text: #166534; --success-border: #86efac;
---warning-bg:     #fef3c7; --warning-text: #92400e; --warning-border: #fcd34d;
---danger-bg:      #fee2e2; --danger-text:  #991b1b; --danger-border:  #fca5a5;
---info-bg:        #dbeafe; --info-text:    #1e40af; --info-border:    #93c5fd;
+--success-bg: #dcfce7;
+--success-text: #166534;
+--success-border: #86efac;
+--warning-bg: #fef3c7;
+--warning-text: #92400e;
+--warning-border: #fcd34d;
+--danger-bg: #fee2e2;
+--danger-text: #991b1b;
+--danger-border: #fca5a5;
+--info-bg: #dbeafe;
+--info-text: #1e40af;
+--info-border: #93c5fd;
 ```
 
 **Dark-mode overrides for aliases** live in the `:root[data-theme='dark']` block and substitute different neutral/accent steps. The status colors get tuned darker backgrounds and lighter text — copy the values from a known-good system (Radix dark variants are fine). Run axe-core after; `WCAG AA` 4.5:1 for body text, 3:1 for large text and UI.
@@ -248,8 +256,8 @@ Four shadow tiers. Light mode below; dark mode uses higher alpha and slightly bl
 /* Light */
 --shadow-1: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 3px rgb(15 23 42 / 0.08);
 --shadow-2: 0 2px 4px rgb(15 23 42 / 0.06), 0 4px 8px rgb(15 23 42 / 0.08);
---shadow-3: 0 4px 8px rgb(15 23 42 / 0.08), 0 8px 16px rgb(15 23 42 / 0.10);
---shadow-4: 0 8px 16px rgb(15 23 42 / 0.10), 0 16px 32px rgb(15 23 42 / 0.14);
+--shadow-3: 0 4px 8px rgb(15 23 42 / 0.08), 0 8px 16px rgb(15 23 42 / 0.1);
+--shadow-4: 0 8px 16px rgb(15 23 42 / 0.1), 0 16px 32px rgb(15 23 42 / 0.14);
 
 /* Dark — same structure, tuned alpha */
 --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4), 0 1px 3px rgb(0 0 0 / 0.5);
@@ -259,6 +267,7 @@ Four shadow tiers. Light mode below; dark mode uses higher alpha and slightly bl
 ```
 
 **Usage convention:**
+
 - `--shadow-1`: cards, sections, inline elements that need to feel slightly raised.
 - `--shadow-2`: hover states for interactive cards, default for popovers.
 - `--shadow-3`: dropdowns, tooltips, table-of-contents popovers.
@@ -269,9 +278,9 @@ In dark mode, surfaces lean on the surface tier system more than on shadows for 
 ### 3.7 Radius
 
 ```css
---radius-sm:   4px;  /* inputs, small buttons, table cells, code */
---radius-md:   8px;  /* cards, sections, dialogs, popovers */
---radius-lg:   12px; /* hero cards, major surfaces */
+--radius-sm: 4px; /* inputs, small buttons, table cells, code */
+--radius-md: 8px; /* cards, sections, dialogs, popovers */
+--radius-lg: 12px; /* hero cards, major surfaces */
 --radius-full: 9999px; /* pills, avatars, the split-handle indicator */
 ```
 
@@ -280,17 +289,18 @@ Three nominal sizes plus full. Stop using `3px`, `6px`, `10px`. Replace `999px` 
 ### 3.8 Motion
 
 ```css
---duration-instant: 80ms;   /* state changes that should feel "yes, now" */
---duration-fast:    150ms;  /* hover, focus, small UI transitions */
---duration-medium:  250ms;  /* popovers, dropdowns, larger elements */
---duration-slow:    400ms;  /* modal enter/exit, page transitions */
+--duration-instant: 80ms; /* state changes that should feel "yes, now" */
+--duration-fast: 150ms; /* hover, focus, small UI transitions */
+--duration-medium: 250ms; /* popovers, dropdowns, larger elements */
+--duration-slow: 400ms; /* modal enter/exit, page transitions */
 
---ease-out:   cubic-bezier(0.16, 1, 0.3, 1);    /* default for most things */
---ease-in:    cubic-bezier(0.7, 0, 0.84, 0);    /* exits */
---ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);  /* loops, reversals */
+--ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* default for most things */
+--ease-in: cubic-bezier(0.7, 0, 0.84, 0); /* exits */
+--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* loops, reversals */
 ```
 
 **Defaults:**
+
 - Hover/focus state changes: `transition: all var(--duration-fast) var(--ease-out)`
 - Popover/dropdown enter: `var(--duration-medium) var(--ease-out)`
 - Modal enter: `var(--duration-slow) var(--ease-out)`
@@ -301,9 +311,9 @@ Three nominal sizes plus full. Stop using `3px`, `6px`, `10px`. Replace `999px` 
 One canonical focus ring, applied via a utility class and a `:focus-visible` selector on every interactive primitive.
 
 ```css
---focus-ring:        0 0 0 2px var(--surface-base), 0 0 0 4px var(--accent-600);
+--focus-ring: 0 0 0 2px var(--surface-base), 0 0 0 4px var(--accent-600);
 --focus-ring-offset: 2px;
---focus-ring-width:  2px;
+--focus-ring-width: 2px;
 ```
 
 Applied as `box-shadow` (cleaner than `outline` for non-rectangular elements like rounded inputs). Always pair with `outline: none` to suppress the browser default. Default applies to `button, a, input, textarea, select, [tabindex], summary` via a base reset.
@@ -313,9 +323,9 @@ Applied as `box-shadow` (cleaner than `outline` for non-rectangular elements lik
 Lucide ships at 24×24 with 2px stroke. For dense UI we use:
 
 ```css
---icon-sm: 14px;  /* inline with --text-sm */
---icon-md: 18px;  /* default UI */
---icon-lg: 24px;  /* hero buttons, empty states */
+--icon-sm: 14px; /* inline with --text-sm */
+--icon-md: 18px; /* default UI */
+--icon-lg: 24px; /* hero buttons, empty states */
 ```
 
 Stroke width is 1.5 at all sizes (Lucide allows this via the `strokeWidth` prop). Set as a default in the `<Icon>` wrapper component — see §4.
@@ -324,7 +334,7 @@ Stroke width is 1.5 at all sizes (Lucide allows this via the `strokeWidth` prop)
 
 ## 4. Component-level changes
 
-The token system is the foundation; these are the first applications. They are deliberately *not* a component library — they are CSS conventions that fall out of consistent token use.
+The token system is the foundation; these are the first applications. They are deliberately _not_ a component library — they are CSS conventions that fall out of consistent token use.
 
 ### 4.1 Icons — adopt Lucide
 
@@ -340,7 +350,9 @@ A single canonical `.btn` class + variants `.btn-primary`, `.btn-secondary`, `.b
 
 ```css
 .btn {
-  display: inline-flex; align-items: center; gap: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   padding: var(--space-2) var(--space-4);
   font: var(--weight-medium) var(--text-sm)/var(--leading-ui) var(--font-sans);
   border-radius: var(--radius-sm);
@@ -348,13 +360,23 @@ A single canonical `.btn` class + variants `.btn-primary`, `.btn-secondary`, `.b
   background: transparent;
   color: var(--text-primary);
   cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-out),
-              border-color var(--duration-fast) var(--ease-out),
-              color var(--duration-fast) var(--ease-out);
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
 }
-.btn:hover { background: var(--neutral-100); }
-.btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-.btn:disabled { color: var(--text-disabled); cursor: not-allowed; background: transparent; }
+.btn:hover {
+  background: var(--neutral-100);
+}
+.btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.btn:disabled {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+  background: transparent;
+}
 ```
 
 ### 4.3 Inputs / textareas / `math-field`
@@ -362,23 +384,36 @@ A single canonical `.btn` class + variants `.btn-primary`, `.btn-secondary`, `.b
 Consistent border, padding, focus, and invalid styling. Sizing uses tokens. Label–field gap is `var(--space-2)`.
 
 ```css
-.input, input, textarea, math-field, select {
+.input,
+input,
+textarea,
+math-field,
+select {
   background: var(--surface-raised);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);
   font: var(--weight-regular) var(--text-sm)/var(--leading-ui) var(--font-sans);
   color: var(--text-primary);
-  transition: border-color var(--duration-fast) var(--ease-out),
-              box-shadow var(--duration-fast) var(--ease-out);
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
 }
-.input:hover, input:hover, textarea:hover { border-color: var(--border-strong); }
-.input:focus-visible, input:focus-visible, textarea:focus-visible {
+.input:hover,
+input:hover,
+textarea:hover {
+  border-color: var(--border-strong);
+}
+.input:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
   outline: none;
   border-color: var(--accent-600);
   box-shadow: 0 0 0 3px var(--accent-100);
 }
-.input[aria-invalid="true"] { border-color: var(--danger-border); }
+.input[aria-invalid='true'] {
+  border-color: var(--danger-border);
+}
 ```
 
 ### 4.4 Cards / sections
@@ -410,8 +445,13 @@ td {
   padding: var(--space-2) var(--space-3);
   color: var(--text-primary);
 }
-td input { font-family: var(--font-mono); text-align: right; }
-tr:hover td { background: var(--surface-sunken); }
+td input {
+  font-family: var(--font-mono);
+  text-align: right;
+}
+tr:hover td {
+  background: var(--surface-sunken);
+}
 ```
 
 The `td input { font-mono, right-align }` rule alone makes every measurement table feel like scientific software instead of a spreadsheet.
@@ -419,6 +459,7 @@ The `td input { font-mono, right-align }` rule alone makes every measurement tab
 ### 4.6 Popovers, dialogs, dropdowns
 
 All overlay surfaces share:
+
 - `background: var(--surface-overlay)`
 - `border: 1px solid var(--border-default)`
 - `border-radius: var(--radius-md)`
@@ -480,7 +521,7 @@ This sequence means every step leaves the app working. A failed step rolls back 
 
 A few things other things to consider:
 
-1. **Inter vs Geist** — Inter for the reasons in §3.1. 
+1. **Inter vs Geist** — Inter for the reasons in §3.1.
 2. **Self-hosted fonts vs CDN** — self-host (`@fontsource-variable/*`) for FERPA cleanliness and zero render-blocking. Cost is a one-time ~80KB to the bundle.
 3. **Token format: CSS variables vs CSS-in-JS vs a tokens.ts** — pure CSS variables. They're runtime-themable for free (already needed for dark mode), they're framework-agnostic, and they don't need a build step. If a future agent wants type-safe access, generating a `tokens.ts` from the CSS file is a 20-line script.
 4. **Stylelint enforcement** — use it. Without it, the next agent will reach for a raw hex within a week. If you'd rather not add another linter, document the rule in `DESIGN_SYSTEM.md` and rely on review.
@@ -494,7 +535,7 @@ A few things other things to consider:
 
 - `src/ui/tokens.css` exists with all sections in §3 populated, both light and dark.
 - `src/ui/base.css` exists, applies element defaults, and is the only file that touches bare element selectors at the global level.
-- Every CSS file in `src/` outside `tokens.css` references *only* tokens for color, spacing, shadow, radius, font-size, font-family, line-height, transition duration, and easing. No raw hex. No raw rem. No raw `cubic-bezier`. Stylelint enforces.
+- Every CSS file in `src/` outside `tokens.css` references _only_ tokens for color, spacing, shadow, radius, font-size, font-family, line-height, transition duration, and easing. No raw hex. No raw rem. No raw `cubic-bezier`. Stylelint enforces.
 - Lucide is integrated; `Icon` primitive exists; every visible unicode/emoji affordance has been replaced (or the ones that haven't are listed in a follow-up issue).
 - Every interactive element has a visible focus ring matching `--focus-ring`.
 - Every hover and focus transition uses `--duration-fast` + `--ease-out`. Reduced-motion respected.
@@ -619,7 +660,7 @@ prevents the next agent from inventing one-off values.
 
 ## 11. After this — what's next
 
-Path 2 (separate spec, separate phase) handles the things tokens *can't* fix on their own:
+Path 2 (separate spec, separate phase) handles the things tokens _can't_ fix on their own:
 
 - Motion choreography: route transitions, modal enter/exit, list reordering.
 - Considered loading states (skeletons that mimic the actual content shape, progressive reveal).
