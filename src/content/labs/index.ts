@@ -1,3 +1,6 @@
+// Onboarding tour demo lab (Track D of the onboarding spec). Staged by /welcome.
+export { welcomeIntroLab } from './_tour/welcome.lab';
+
 export { phy132SnellsLawLab, snellsLawLab } from './phy132/snellsLaw.lab';
 export { phy114SnellsLawLab } from './phy114/snellsLaw.lab';
 

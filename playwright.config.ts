@@ -12,6 +12,10 @@ export default defineConfig({
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    // Seed the onboarding flag so the suite runs as a returning student: no
+    // first-run splash on `/` and no deep-link tour toast on lab routes. Tests
+    // that exercise the tour (Track S) opt out via test.use({ storageState: ... }).
+    storageState: './tests/e2e/onboarded.storage.json',
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },

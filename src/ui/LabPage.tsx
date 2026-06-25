@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Info } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
-import type { Course, Lab } from '@/domain/schema';
+import type { Course, Lab, Section } from '@/domain/schema';
 import {
   clearParentMessagingContext,
   configureParentMessaging,
@@ -35,6 +35,15 @@ import {
   storeThemePreference,
   type ThemePreference,
 } from '@/ui/theme';
+import {
+  buildPhaseBSteps,
+  depositAfterTour,
+  driver,
+  isOnboarded,
+  setOnboarded,
+  stashTourReturn,
+  WELCOME_LAB_ID,
+} from '@/ui/tour/welcomeTour';
 
 type Props = {
   course: Course;
@@ -43,6 +52,7 @@ type Props = {
 
 const STUDENT_NAME_STORAGE_KEY = 'labframe:student-name';
 const STORAGE_NOTE_DISMISSED_KEY = 'labframe:storage-note-dismissed';
+const COURSE_STORAGE_KEY = 'labframe:course';
 
 function safeStorageGet(key: string): string | null {
   try {
@@ -60,6 +70,11 @@ function safeStorageSet(key: string, value: string): void {
   } catch {
     // ignore storage write errors (e.g. quota/full private mode)
   }
+}
+
+/** The answer-slot id for sections that own one, used as a stable tour anchor. */
+function sectionFieldId(section: Section): string | undefined {
+  return 'fieldId' in section ? section.fieldId : undefined;
 }
 
 type SimulationFrameProps = {
@@ -101,6 +116,16 @@ export function LabPage({ course, lab }: Props) {
   const deleteRecoverableAttachment = useLabStore((state) => state.deleteRecoverableAttachment);
   const store = useLabStore((state) => state);
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  // Track O: the wordmark target depends on whether a course is pinned. Read once
+  // on render; the value is stable for the life of the page.
+  const pinnedCourseId = safeStorageGet(COURSE_STORAGE_KEY);
+  // Track S: deep-link toast for a first-timer who landed straight on a real lab
+  // (not the demo). Never shown on the demo lab itself.
+  const [showTourToast, setShowTourToast] = useState<boolean>(
+    () => !isOnboarded() && lab.id !== WELCOME_LAB_ID,
+  );
+  const phaseBFinalizingRef = useRef(false);
   const [studentNameDraft, setStudentNameDraft] = useState(studentName);
   const [recoverable, setRecoverable] = useState<RecoverableAttachment[]>([]);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -138,6 +163,69 @@ export function LabPage({ course, lab }: Props) {
       safeStorageSet(STUDENT_NAME_STORAGE_KEY, preferredStudent);
     }
   }, [searchParams, setStudentName, studentName]);
+
+  // Track S, Phase B: the lab-side tour. Auto-starts only on the demo lab when
+  // ?tour=1 is present (set by Phase A finish, the deep-link toast, or the
+  // refresher). Strips the flag, lets the DOM settle, then drives. On finish or
+  // Esc-dismiss it marks the student onboarded and deposits them per S-4.
+  useEffect(() => {
+    if (lab.id !== WELCOME_LAB_ID) {
+      return;
+    }
+    if (new URLSearchParams(window.location.search).get('tour') !== '1') {
+      return;
+    }
+
+    const tourDriver = driver({
+      showProgress: true,
+      steps: buildPhaseBSteps(),
+      onDestroyed: () => {
+        if (phaseBFinalizingRef.current) {
+          return;
+        }
+        phaseBFinalizingRef.current = true;
+        setOnboarded();
+        depositAfterTour((to) => navigate(to));
+      },
+    });
+
+    // Let the DOM settle, then strip the flag and drive. The flag is removed at
+    // drive time (not before) so React StrictMode's double-invoked mount still
+    // sees ?tour=1 on its second pass and restarts cleanly. history.replaceState
+    // keeps the router from re-rendering and racing the spotlight.
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      if (cancelled) {
+        return;
+      }
+      const params = new URLSearchParams(window.location.search);
+      params.delete('tour');
+      const query = params.toString();
+      window.history.replaceState(
+        window.history.state,
+        '',
+        window.location.pathname + (query ? `?${query}` : ''),
+      );
+      tourDriver.drive();
+    }, 100);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+      // If the page unmounts while the tour is still up (the student navigated
+      // away by other means), tear it down without firing the deposit.
+      if (tourDriver.isActive()) {
+        phaseBFinalizingRef.current = true;
+        tourDriver.destroy();
+      }
+    };
+  }, [lab.id, navigate]);
+
+  const startRefresherTour = () => {
+    // Stash where we are so S-4 returns the student here after the tour.
+    stashTourReturn(window.location.pathname + window.location.search);
+    navigate('/welcome?tour=1');
+  };
 
   useEffect(() => {
     const nextTheme = getStoredThemePreference();
@@ -397,6 +485,7 @@ export function LabPage({ course, lab }: Props) {
           key={`${section.kind}-${index}`}
           id={`section-${index}`}
           className="worksheet-section-anchor"
+          data-field-id={sectionFieldId(section)}
         >
           <SectionRenderer section={section} />
         </div>
@@ -415,7 +504,9 @@ export function LabPage({ course, lab }: Props) {
       <header className="lab-header">
         <div className="lab-header-top">
           <div className="lab-header-left">
-            <Link to="/labs" className="lab-wordmark">
+            {/* Track O: a pinned student returns to their scoped course, not the
+                full /labs staff index. Falls back to /labs when unpinned. */}
+            <Link to={pinnedCourseId ? `/c/${pinnedCourseId}` : '/labs'} className="lab-wordmark">
               LabFrame
             </Link>
             <Link to={`/c/${course.id}`} className="lab-back-link">
@@ -439,6 +530,9 @@ export function LabPage({ course, lab }: Props) {
               </label>
               <button type="button" onClick={() => setIsAboutDialogOpen(true)}>
                 About
+              </button>
+              <button type="button" className="lab-tour-button" onClick={startRefresherTour}>
+                Take the tour
               </button>
               <LayoutToggle
                 layout={layout}
@@ -512,6 +606,31 @@ export function LabPage({ course, lab }: Props) {
           </div>
         </div>
       </header>
+      {showTourToast ? (
+        <section className="storage-note-banner lab-tour-toast" role="status" aria-live="polite">
+          <p>New here? Take the tour.</p>
+          <div className="lab-tour-toast-actions">
+            <button
+              type="button"
+              onClick={() => {
+                setShowTourToast(false);
+                navigate('/welcome?tour=1');
+              }}
+            >
+              Take the tour
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOnboarded();
+                setShowTourToast(false);
+              }}
+            >
+              Dismiss
+            </button>
+          </div>
+        </section>
+      ) : null}
       {!isStorageBannerDismissed ? (
         <section className="storage-note-banner" role="status" aria-live="polite">
           <p>

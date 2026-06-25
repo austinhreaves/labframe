@@ -72,7 +72,13 @@ export const IntegrityAgreement = forwardRef<HTMLButtonElement, Props>(function 
       </div>
 
       <div className="integrity-agreement-export">
-        <button ref={exportButtonRef} type="button" onClick={onExport} disabled={exportDisabled}>
+        <button
+          ref={exportButtonRef}
+          type="button"
+          data-tour="export-pdf"
+          onClick={onExport}
+          disabled={exportDisabled}
+        >
           {isExporting ? 'Exporting PDF...' : 'Export PDF'}
         </button>
         {!accepted ? (

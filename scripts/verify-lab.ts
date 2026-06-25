@@ -19,7 +19,12 @@
  */
 import * as labModule from '../src/content/labs/index.ts';
 import { LabSchema, type Lab } from '../src/domain/schema/index.ts';
-import { phy112Course, phy114Course, phy132Course } from '../src/content/courses/index.ts';
+import {
+  phy112Course,
+  phy114Course,
+  phy132Course,
+  welcomeCourse,
+} from '../src/content/courses/index.ts';
 import { latexToUnicode } from '../src/services/pdf/markdown/latexToUnicode.ts';
 
 type Severity = 'error' | 'warning' | 'info';
@@ -31,7 +36,7 @@ interface Finding {
   message: string;
 }
 
-const COURSES = [phy112Course, phy114Course, phy132Course];
+const COURSES = [phy112Course, phy114Course, phy132Course, welcomeCourse];
 
 /** Keys whose string values address an answer slot and must be unique per lab. */
 const ID_KEYS = new Set(['fieldId', 'tableId', 'plotId', 'imageId', 'captionFieldId']);
