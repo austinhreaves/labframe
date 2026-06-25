@@ -2,8 +2,23 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 
+// In the real Vite build a `.ttf` import becomes a fetchable asset URL, but under
+// the jsdom/node test runner react-pdf's font loader reads `src` from the
+// filesystem. Resolve font imports to their absolute on-disk path so PDF render
+// tests can actually load the bundled fonts.
+const fontPathPlugin = {
+  name: 'ttf-as-fs-path',
+  enforce: 'pre' as const,
+  load(id: string) {
+    if (id.endsWith('.ttf')) {
+      return `export default ${JSON.stringify(id)};`;
+    }
+    return null;
+  },
+};
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), fontPathPlugin],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),

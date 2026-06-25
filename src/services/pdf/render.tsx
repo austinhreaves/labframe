@@ -9,10 +9,12 @@ type RenderPDFArgs = {
 } & ({ mode: 'signed'; signature: string; signedAt: number } | { mode: 'draft' });
 
 export async function renderPDF(args: RenderPDFArgs): Promise<Uint8Array> {
-  const [{ pdf }, { LabReportDocument }] = await Promise.all([
+  const [{ pdf }, { LabReportDocument }, { registerPdfFonts }] = await Promise.all([
     import('@react-pdf/renderer'),
     import('@/services/pdf/Document'),
+    import('@/services/pdf/registerFonts'),
   ]);
+  registerPdfFonts();
   const document =
     args.mode === 'signed' ? (
       <LabReportDocument lab={args.lab} answers={args.answers} course={args.course} imageData={args.images} mode="signed" signature={args.signature} signedAt={args.signedAt} />
