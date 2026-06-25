@@ -79,6 +79,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: 'Background: Generator EMF',
       html: `## Background: Generator EMF
 

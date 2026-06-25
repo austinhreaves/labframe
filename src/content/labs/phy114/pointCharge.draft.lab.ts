@@ -44,6 +44,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: "Background: Coulomb's Law and the Electric Field",
       html: `## Background: Coulomb's Law and the Electric Field
 
@@ -227,6 +228,7 @@ Record the (held-constant) charge $q$ here, then enter the two measurements in t
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: 'Background: Electric Potential of a Point Charge',
       html: `## Background: Electric Potential of a Point Charge
 

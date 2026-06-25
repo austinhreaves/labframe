@@ -71,23 +71,31 @@ function collectText(node: unknown): string {
 }
 
 describe('process record appendix', () => {
-  it('renders non-zero telemetry for equation sections', () => {
+  it('renders one dense activity row plus totals for an active section', () => {
     const answers = makeAnswers({
       fields: {
-        eqField: makeFieldValue({
+        calcField: makeFieldValue({
           text: 'x^2 + 1',
           pastes: [{ text: 'x^2', at: 1000, offset: 0, source: 'clipboard' }],
-          meta: { activeMs: 321, keystrokes: 14, deletes: 2 },
+          meta: { activeMs: 125_000, keystrokes: 14, deletes: 2 },
         }),
       },
     });
-    const legacyEquationLab = {
+    const calcLab: Lab = {
       ...snellsLawLab,
-      sections: [{ kind: 'equation', fieldId: 'eqField', prompt: 'Solve for n2', points: 1 }],
-    } as unknown as Lab;
+      sections: [
+        {
+          kind: 'calculation',
+          fieldId: 'calcField',
+          prompt: 'Solve for n2',
+          equationEditor: true,
+          points: 1,
+        },
+      ],
+    };
 
     const tree = LabReportDocument({
-      lab: legacyEquationLab,
+      lab: calcLab,
       answers,
       course: courseFixture,
       mode: 'signed',
@@ -95,16 +103,19 @@ describe('process record appendix', () => {
       signedAt: 1714450000000,
     });
     const textDump = collectText(tree).replace(/\s+/g, ' ').trim();
+    const record = textDump.slice(textDump.indexOf('Process Record'));
 
-    expect(textDump).toContain('Section 1: equation');
-    expect(textDump).toContain('Active time (ms): 321');
-    expect(textDump).toContain('Keystrokes: 14');
-    expect(textDump).toContain('Pastes clipboard: 1');
-    expect(textDump).toContain('Pastes autocomplete: 0');
-    expect(textDump).toContain('Pastes IME: 0');
+    // Dense table header, not the old five-line-per-section blocks.
+    expect(record).toContain('Pastes (clip / auto / IME)');
+    expect(textDump).not.toContain('Active time (ms):');
+    // Active time reads H/M/S; the row carries keystrokes, deletes, and pastes.
+    expect(record).toContain('Calculation2m 05s142');
+    expect(record).toContain('1 / 0 / 0');
+    // The totals row mirrors the single active section.
+    expect(record).toContain('Total2m 05s142');
   });
 
-  it('renders process-record telemetry lines for every current section kind', () => {
+  it('collapses zero-activity field-owning sections and omits field-less ones', () => {
     const answers = makeAnswers();
     const tree = LabReportDocument({
       lab: snellsLawLab,
@@ -115,16 +126,18 @@ describe('process record appendix', () => {
       signedAt: 1714450000000,
     });
     const textDump = collectText(tree).replace(/\s+/g, ' ').trim();
+    const record = textDump.slice(textDump.indexOf('Process Record'));
 
-    expect((textDump.match(/Active time \(ms\):/g) ?? []).length).toBe(
-      snellsLawLab.sections.length,
-    );
-    expect((textDump.match(/Keystrokes:/g) ?? []).length).toBe(snellsLawLab.sections.length);
-    expect((textDump.match(/Pastes clipboard:/g) ?? []).length).toBe(snellsLawLab.sections.length);
-    expect((textDump.match(/Pastes autocomplete:/g) ?? []).length).toBe(
-      snellsLawLab.sections.length,
-    );
-    expect((textDump.match(/Pastes IME:/g) ?? []).length).toBe(snellsLawLab.sections.length);
+    // Every section is blank here, so all field-owning sections collapse into a
+    // single line and the totals are zero.
+    expect(record).toContain('No recorded activity:');
+    expect(record).toContain('Total0s000 / 0 / 0');
+    // Field-owning titles are listed; field-less (instructions/plot) are absent.
+    expect(record).toContain('Objective');
+    expect(record).toContain('Data Table');
+    expect(record).not.toContain('Instructions');
+    // The old per-section format is gone.
+    expect(record).not.toContain('Active time (ms):');
   });
 });
 

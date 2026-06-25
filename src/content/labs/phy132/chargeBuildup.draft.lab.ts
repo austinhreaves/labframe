@@ -58,6 +58,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: 'Background: Charge Imbalance',
       html: `## Background: How Charge Imbalances Form
 
@@ -133,6 +134,7 @@ Note John's charge meter (the row of electrons in his body) both **before** and 
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: 'Background: Conservation of Charge',
       html: `## Background: Conservation of Charge
 
@@ -201,6 +203,7 @@ Try varying the distance between the balloon and the wall.
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: 'Background: Polarization vs. Induction',
       html: `## Background: Polarization vs. Induction
 

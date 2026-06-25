@@ -46,6 +46,7 @@ export const phy132RcCircuitsLab: Lab = {
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       html: [
         '## Background',
         'When a charged capacitor C discharges through a resistor R, the voltage across the capacitor decays exponentially:',

@@ -60,6 +60,7 @@ export const phy132RlHighPassFilterLab: Lab = {
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       html: [
         '## Background',
         'You characterized RC circuits as low-pass filters in the previous lab. RL circuits exhibit the **opposite** asymmetry: they can act as **high-pass** filters when V_out is taken across the inductor.',

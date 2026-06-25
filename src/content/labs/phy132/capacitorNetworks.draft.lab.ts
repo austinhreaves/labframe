@@ -69,6 +69,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: 'Background: Capacitor Networks and Charge Sharing',
       html: `## Background: Capacitor Networks and Charge Sharing
 
@@ -172,6 +173,7 @@ Enter the nine voltage readings (3 capacitors × 3 steps) in the table below.`,
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: 'Background: Mixed Series and Parallel Networks',
       html: `## Background: Mixing Series with Parallel
 

@@ -72,6 +72,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: 'Background: Parallel-Plate Capacitance and Energy',
       html: `## Background: Parallel-Plate Capacitance and Energy
 
@@ -169,6 +170,7 @@ Record the three input values you used below. These will be your reference (init
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: 'Background: Varying the Plate Separation',
       html: `## Background: How Plate Separation Affects Capacitance
 
@@ -267,6 +269,7 @@ Now change the plate separation $d$ to the new value given in your Set of Parame
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: 'Background: Varying the Plate Area',
       html: `## Background: How Plate Area Affects Capacitance
 

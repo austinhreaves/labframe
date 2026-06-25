@@ -12,6 +12,7 @@ import {
 
 import { formatPointsLabel, sumSectionPoints } from '@/domain/pointsFormatting';
 import type {
+  CalculationSection,
   Course,
   FieldValue,
   Lab,
@@ -23,7 +24,9 @@ import type {
 import { resolveIntegrityAgreementText } from '@/services/integrity/agreementText';
 import { attributePastes } from '@/services/pdf/attributePastes';
 import { computeClippedFitLineInPdfSvg } from '@/services/pdf/fitLine';
+import { formatDuration } from '@/services/pdf/formatDuration';
 import { renderMarkdownToPdf } from '@/services/pdf/markdown/renderMarkdownToPdf';
+import { SECTION_TITLES, sectionTitle } from '@/services/pdf/sectionTitle';
 import {
   calcImageId,
   drawPageKey,
@@ -45,8 +48,6 @@ type PDFProps = {
   imageData?: Record<string, string> | undefined;
 } & ({ mode: 'signed'; signature: string; signedAt: number } | { mode: 'draft' });
 
-type ProcessRecordSection = Section | { kind: 'equation'; fieldId: string };
-
 const styles = StyleSheet.create({
   page: { padding: 24, fontSize: 10, lineHeight: 1.35, fontFamily: 'DejaVu Sans' },
   title: { fontSize: 18, marginBottom: 8 },
@@ -66,12 +67,36 @@ const styles = StyleSheet.create({
   tableHeaderStack: { flexDirection: 'column' },
   tableFormulaLabel: { fontSize: 8, color: '#555' },
   calcImage: { maxWidth: 515, maxHeight: 700, objectFit: 'contain', marginTop: 4 },
+  // Drawings are capped near half a page so about two drawing pages share one
+  // PDF page; uploaded photos keep the larger `calcImage` cap.
+  drawImage: { maxWidth: 515, maxHeight: 360, objectFit: 'contain', marginTop: 4 },
   drawPage: { marginTop: 6 },
   prompt: { marginBottom: 4 },
   typed: { fontStyle: 'normal', color: '#111' },
   pasteClipboard: { fontStyle: 'italic', color: '#111' },
   pasteAutocomplete: { color: '#3f3f99' },
   note: { marginTop: 2, fontSize: 8, color: '#666' },
+  summaryBlock: {
+    marginBottom: 12,
+    padding: 6,
+    borderWidth: 0.5,
+    borderColor: '#777',
+    backgroundColor: '#f4f4f4',
+  },
+  summaryTitle: { fontSize: 11, fontWeight: 700, marginBottom: 3 },
+  recordCellSection: { flex: 2, padding: 3, borderRightWidth: 0.5, borderRightColor: '#ddd' },
+  recordHeaderRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#777',
+    fontWeight: 700,
+  },
+  recordTotalRow: {
+    flexDirection: 'row',
+    borderTopWidth: 0.5,
+    borderTopColor: '#777',
+    fontWeight: 700,
+  },
 });
 
 function formatSignedAt(signedAt: number): string {
@@ -84,17 +109,6 @@ function pdfPointsSuffix(points: number | undefined): string {
   }
   return ` (${formatPointsLabel(points)} pts)`;
 }
-
-// Human-readable section headings, replacing the raw schema `kind` strings.
-const SECTION_TITLES: Record<string, string> = {
-  objective: 'Objective',
-  measurement: 'Measurement',
-  multiMeasurement: 'Measurements',
-  calculation: 'Calculation',
-  concept: 'Response',
-  dataTable: 'Data Table',
-  image: 'Image',
-};
 
 // Render a section prompt (markdown, may contain inline math) above its answer.
 function promptBlock(markdown: string | undefined): React.ReactNode {
@@ -171,69 +185,123 @@ function fieldView(value: FieldValue | undefined): JSX.Element {
   );
 }
 
-function emptyProcessRecord(): {
-  activeMs: number;
-  keystrokes: number;
-  pastes: Record<string, number>;
-} {
-  return { activeMs: 0, keystrokes: 0, pastes: { clipboard: 0, autocomplete: 0, ime: 0 } };
+// Sections that own student input (and so can be answered/unanswered and carry
+// process-record telemetry). `instructions` and `plot` are field-less.
+function isFieldOwning(section: Section): boolean {
+  return section.kind !== 'instructions' && section.kind !== 'plot';
 }
 
-function processRecordForSection(
-  section: ProcessRecordSection,
-  answers: LabAnswers,
-): { activeMs: number; keystrokes: number; pastes: Record<string, number> } {
-  const fieldIds: string[] = [];
+function hasText(field: FieldValue | undefined): boolean {
+  return !!field && field.text.trim().length > 0;
+}
+
+function isCalculationAnswered(section: CalculationSection, answers: LabAnswers): boolean {
+  // Only the student's active mode counts as their answer (the others stay in
+  // the envelope but are not drawn).
+  const mode = resolveResponseMode(section, answers.responseSelections ?? {});
+  if (mode === 'image') {
+    return answers.images[calcImageId(section)] !== undefined;
+  }
+  if (mode === 'draw') {
+    const drawing = parseDrawing(answers.fields[drawStorageKey(section.fieldId)]?.text);
+    return !!drawing && drawing.pages.some((page) => page.strokes.length > 0);
+  }
+  return hasText(answers.fields[section.fieldId]);
+}
+
+// A field-owning section is answered when it carries any student content:
+// non-empty text, an uploaded image, a non-empty drawing page, or a filled cell.
+function isSectionAnswered(section: Section, answers: LabAnswers): boolean {
+  switch (section.kind) {
+    case 'objective':
+    case 'measurement':
+    case 'concept':
+      return hasText(answers.fields[section.fieldId]);
+    case 'calculation':
+      return isCalculationAnswered(section, answers);
+    case 'multiMeasurement':
+      return section.rows.some((row) => hasText(answers.fields[row.id]));
+    case 'image':
+      return (
+        answers.images[section.imageId] !== undefined ||
+        hasText(answers.fields[section.captionFieldId])
+      );
+    case 'dataTable': {
+      const rows = answers.tables[section.tableId] ?? [];
+      return rows.some((row) => Object.values(row).some((cell) => hasText(cell)));
+    }
+    default:
+      // instructions, plot are not field-owning and never classified.
+      return true;
+  }
+}
+
+type SectionActivity = {
+  activeMs: number;
+  keystrokes: number;
+  deletes: number;
+  pastes: { clipboard: number; autocomplete: number; ime: number };
+};
+
+function emptyActivity(): SectionActivity {
+  return { activeMs: 0, keystrokes: 0, deletes: 0, pastes: { clipboard: 0, autocomplete: 0, ime: 0 } };
+}
+
+// Sum typing telemetry across a field-owning section's fields. Calculations
+// count only their text field: a draw- or image-answered calculation has zero
+// typing activity and is reported under "No recorded activity", which is correct.
+function sectionActivity(section: Section, answers: LabAnswers): SectionActivity {
+  const activity = emptyActivity();
+  const addField = (field: FieldValue | undefined): void => {
+    if (!field) {
+      return;
+    }
+    activity.activeMs += field.meta.activeMs;
+    activity.keystrokes += field.meta.keystrokes;
+    activity.deletes += field.meta.deletes;
+    for (const paste of field.pastes) {
+      activity.pastes[paste.source] += 1;
+    }
+  };
 
   switch (section.kind) {
     case 'objective':
     case 'measurement':
-    case 'calculation':
     case 'concept':
-    case 'equation':
-      fieldIds.push(section.fieldId);
+    case 'calculation':
+      addField(answers.fields[section.fieldId]);
       break;
     case 'multiMeasurement':
-      fieldIds.push(...section.rows.map((row) => row.id));
+      section.rows.forEach((row) => addField(answers.fields[row.id]));
       break;
     case 'image':
-      fieldIds.push(section.captionFieldId);
+      addField(answers.fields[section.captionFieldId]);
       break;
     case 'dataTable': {
       const rows = answers.tables[section.tableId] ?? [];
-      for (const row of rows) {
-        fieldIds.push(...Object.keys(row));
-      }
+      rows.forEach((row) => Object.values(row).forEach(addField));
       break;
     }
-    case 'instructions':
-      // Instructions sections own no fields, so process record is intentionally empty.
-      return emptyProcessRecord();
-    case 'plot':
-      // Plot sections also own no fields directly, so process record is intentionally empty.
-      return emptyProcessRecord();
-    default: {
-      const _exhaustive: never = section;
-      return _exhaustive;
-    }
+    default:
+      // instructions, plot: field-less.
+      break;
   }
 
-  let activeMs = 0;
-  let keystrokes = 0;
-  const pastes: Record<string, number> = { clipboard: 0, autocomplete: 0, ime: 0 };
+  return activity;
+}
 
-  for (const fieldId of fieldIds) {
-    const field = answers.fields[fieldId];
-    if (field) {
-      activeMs += field.meta.activeMs;
-      keystrokes += field.meta.keystrokes;
-      for (const paste of field.pastes) {
-        pastes[paste.source] = (pastes[paste.source] ?? 0) + 1;
-      }
-    }
-  }
+function hasRecordedActivity(activity: SectionActivity): boolean {
+  return (
+    activity.activeMs > 0 ||
+    activity.keystrokes > 0 ||
+    activity.pastes.clipboard > 0 ||
+    activity.pastes.autocomplete > 0 ||
+    activity.pastes.ime > 0
+  );
+}
 
-  return { activeMs, keystrokes, pastes };
+function formatPasteCounts(pastes: SectionActivity['pastes']): string {
+  return `${pastes.clipboard} / ${pastes.autocomplete} / ${pastes.ime}`;
 }
 
 function sectionView(
@@ -294,7 +362,7 @@ function sectionView(
                     Page {pageIndex + 1} of {pageKeys.length}
                   </Text>
                 ) : null}
-                <Image src={imageData[key]} style={styles.calcImage} />
+                <Image src={imageData[key]} style={styles.drawImage} />
                 <Text style={styles.note}>{attachmentCaption('drawing', answers.images[key])}</Text>
               </View>
             ))
@@ -318,7 +386,7 @@ function sectionView(
     return (
       <View key={`section-${index}`} style={styles.section}>
         <Text style={styles.sectionTitle}>
-          {SECTION_TITLES[section.kind] ?? section.kind}
+          {SECTION_TITLES[section.kind]}
           {pdfPointsSuffix(section.points)}
         </Text>
         {section.kind === 'objective' ? promptBlock(section.prompt) : null}
@@ -394,6 +462,16 @@ function sectionView(
   if (section.kind === 'plot') {
     const table = answers.tables[section.sourceTableId] ?? [];
     const scatterPoints = getPlotPoints(section, table);
+
+    // An empty plot collapses to a one-line note instead of a blank axes box.
+    if (scatterPoints.length === 0) {
+      return (
+        <View key={`section-${index}`} style={styles.section}>
+          <Text style={styles.note}>{sectionTitle(section)}: no data plotted</Text>
+        </View>
+      );
+    }
+
     const fit = answers.fits[section.plotId];
     const width = 360;
     const height = 220;
@@ -491,9 +569,52 @@ function sectionView(
   return null;
 }
 
+type RecordRow = { index: number; title: string; activity: SectionActivity };
+
 export function LabReportDocument(props: PDFProps) {
   const { lab, answers, course, imageData = {} } = props;
   const totalPoints = sumSectionPoints(lab.sections);
+
+  // Body (P-C): render answered sections fully; collapse every unanswered
+  // field-owning section into one block. `pdfHidden` sections (background/theory)
+  // are dropped entirely. Instructions and plots are never "unanswerable".
+  const unansweredTitles: string[] = [];
+  const bodyNodes = lab.sections.map((section, index) => {
+    if (section.pdfHidden) {
+      return null;
+    }
+    if (isFieldOwning(section) && !isSectionAnswered(section, answers)) {
+      unansweredTitles.push(sectionTitle(section));
+      return null;
+    }
+    return sectionView(section, answers, index, imageData);
+  });
+
+  // Process Record (P-D): one dense row per field-owning section with recorded
+  // activity, a totals row, and a single "No recorded activity" summary line for
+  // the rest. Field-less and `pdfHidden` sections are omitted entirely.
+  const recordRows: RecordRow[] = [];
+  const noActivityTitles: string[] = [];
+  const totals = emptyActivity();
+  lab.sections.forEach((section, index) => {
+    if (section.pdfHidden || !isFieldOwning(section)) {
+      return;
+    }
+    const activity = sectionActivity(section, answers);
+    const title = sectionTitle(section);
+    if (hasRecordedActivity(activity)) {
+      recordRows.push({ index, title, activity });
+      totals.activeMs += activity.activeMs;
+      totals.keystrokes += activity.keystrokes;
+      totals.deletes += activity.deletes;
+      totals.pastes.clipboard += activity.pastes.clipboard;
+      totals.pastes.autocomplete += activity.pastes.autocomplete;
+      totals.pastes.ime += activity.pastes.ime;
+    } else {
+      noActivityTitles.push(title);
+    }
+  });
+
   const integrityAgreementText =
     answers.integrity.agreementText || resolveIntegrityAgreementText(lab);
   const aiUsage = answers.integrity.aiUsed ? 'Yes' : 'No';
@@ -531,25 +652,49 @@ export function LabReportDocument(props: PDFProps) {
         {aiLinks ? <Text style={styles.row}>AI shared links: {aiLinks}</Text> : null}
       </Page>
       <Page size="A4" style={styles.page}>
-        {lab.sections.map((section, index) => sectionView(section, answers, index, imageData))}
+        {bodyNodes}
+        {unansweredTitles.length > 0 ? (
+          <View style={styles.summaryBlock}>
+            <Text style={styles.summaryTitle}>
+              Unanswered sections ({unansweredTitles.length}): {unansweredTitles.join(', ')}
+            </Text>
+          </View>
+        ) : null}
       </Page>
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>Process Record</Text>
-        {lab.sections.map((section, index) => {
-          const record = processRecordForSection(section, answers);
-          return (
-            <View key={`process-${index}`} style={styles.section}>
-              <Text style={styles.sectionTitle}>
-                Section {index + 1}: {section.kind}
-              </Text>
-              <Text>Active time (ms): {record.activeMs}</Text>
-              <Text>Keystrokes: {record.keystrokes}</Text>
-              <Text>Pastes clipboard: {record.pastes.clipboard ?? 0}</Text>
-              <Text>Pastes autocomplete: {record.pastes.autocomplete ?? 0}</Text>
-              <Text>Pastes IME: {record.pastes.ime ?? 0}</Text>
+        <View style={styles.table}>
+          <View style={styles.recordHeaderRow}>
+            <Text style={styles.recordCellSection}>Section</Text>
+            <Text style={styles.tableCell}>Active time</Text>
+            <Text style={styles.tableCell}>Keystrokes</Text>
+            <Text style={styles.tableCell}>Deletes</Text>
+            <Text style={styles.tableCell}>Pastes (clip / auto / IME)</Text>
+          </View>
+          {recordRows.map(({ index, title, activity }) => (
+            <View key={`record-${index}`} style={styles.tableRow}>
+              <Text style={styles.recordCellSection}>{title}</Text>
+              <Text style={styles.tableCell}>{formatDuration(activity.activeMs)}</Text>
+              <Text style={styles.tableCell}>{activity.keystrokes}</Text>
+              <Text style={styles.tableCell}>{activity.deletes}</Text>
+              <Text style={styles.tableCell}>{formatPasteCounts(activity.pastes)}</Text>
             </View>
-          );
-        })}
+          ))}
+          <View style={styles.recordTotalRow}>
+            <Text style={styles.recordCellSection}>Total</Text>
+            <Text style={styles.tableCell}>{formatDuration(totals.activeMs)}</Text>
+            <Text style={styles.tableCell}>{totals.keystrokes}</Text>
+            <Text style={styles.tableCell}>{totals.deletes}</Text>
+            <Text style={styles.tableCell}>{formatPasteCounts(totals.pastes)}</Text>
+          </View>
+        </View>
+        {noActivityTitles.length > 0 ? (
+          <View style={styles.summaryBlock}>
+            <Text style={styles.summaryTitle}>
+              No recorded activity: {noActivityTitles.join(', ')}
+            </Text>
+          </View>
+        ) : null}
       </Page>
     </Document>
   );

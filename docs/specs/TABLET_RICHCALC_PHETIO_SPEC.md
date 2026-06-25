@@ -1,6 +1,6 @@
 # Tablet Layout, Rich Calculations, and PhET-iO Integration Spec
 
-**Status:** In progress. T-A (tablet layout), T-B (touch keyboard), and C-A (image upload) landed on branch `claude/clever-mayer-09af19`. C-B (free draw canvas) and C-C (student-selectable response mode) landed on branch `claude/musing-hamilton-ca5b08`. All of Track C is complete. Track P (PDF report quality): P-A (font embedding) and P-B (titles/prompts) landed on `claude/musing-hamilton-ca5b08`; P-C / P-D / P-E pending; P-F deferred. All of Track S remains.
+**Status:** In progress. T-A (tablet layout), T-B (touch keyboard), and C-A (image upload) landed on branch `claude/clever-mayer-09af19`. C-B (free draw canvas) and C-C (student-selectable response mode) landed on branch `claude/musing-hamilton-ca5b08`. All of Track C is complete. Track P (PDF report quality): P-A (font embedding) and P-B (titles/prompts) landed on `claude/musing-hamilton-ca5b08`; P-C (drop theory + compact unanswered), P-D (Process Record densification), and P-E (layout/length) landed on `claude/condescending-mendel-c77cc3`; P-F deferred. All of Track S remains.
 **Created:** 2026-06-19
 **Updated:** 2026-06-24
 **Tracks:** Three parallel feature tracks executed in dependency order within each track. Tracks are independent; they may be handed off to agents concurrently or sequentially.
@@ -581,7 +581,7 @@ Embedded DejaVu Sans (regular/bold/oblique) and set it as the document font so t
 
 Replaced raw schema `kind` strings with human titles, render each section's prompt above its answer, dropped the redundant per-block "Instructions" heading, and routed labels / table headers / prompts through the inline math converter (`mathToInline`). Expanded `latexToUnicode` (commit `37dcc8a`) to strip wrappers and convert super/subscripts before fractions.
 
-### P-C: Drop background theory and compact unanswered responses
+### P-C: Drop background theory and compact unanswered responses (DONE)
 
 **Goal:** stop the PDF from rendering pure background/theory content and a full block per blank response, while keeping the grader aware of what was skipped.
 
@@ -598,7 +598,7 @@ Replaced raw schema `kind` strings with human titles, render each section's prom
 
 **Acceptance:** a draft where the student answered two of ten calculations shows those two in full and a single "Unanswered sections" block listing the other eight; background/theory instructions blocks marked `pdfHidden` do not appear in the PDF; the on-screen worksheet and the signed envelope are unchanged.
 
-### P-D: Process Record densification
+### P-D: Process Record densification (DONE)
 
 **Goal:** replace the one-section-per-block, five-lines-each Process Record (which ran ~6 pages, listing field-less sections as zeros) with a dense, accountable table.
 
@@ -611,7 +611,7 @@ Replaced raw schema `kind` strings with human titles, render each section's prom
 
 **Acceptance:** the Process Record is a single dense table plus a totals row and a "No recorded activity" summary line; active times read as `1h 03m 12s` style; field-less and `pdfHidden` sections are absent; total page count drops substantially.
 
-### P-E: Layout and length
+### P-E: Layout and length (DONE)
 
 **Goal:** cut wasted vertical space and overall page count.
 

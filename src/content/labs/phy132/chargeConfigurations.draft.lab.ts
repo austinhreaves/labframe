@@ -54,6 +54,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: 'Background: Superposition and Electric Dipoles',
       html: `## Background: Superposition and Electric Dipoles
 
@@ -104,6 +105,7 @@ In Part 2A you'll observe a single dipole. In Part 2B you'll stack several dipol
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: 'Background: What Makes a Field Uniform?',
       html: `## Background: What Makes a Field Uniform?
 

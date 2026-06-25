@@ -96,6 +96,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: "Background: Kirchhoff's Voltage and Current Laws",
       html: `## Background: Kirchhoff's Voltage and Current Laws
 
@@ -195,6 +196,7 @@ Pay attention to **signs**: if the meter reads a negative value, that means the 
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: 'Background: Internal Resistance and Maximum Power Transfer',
       html: `## Background: Internal Resistance and Maximum Power Transfer
 

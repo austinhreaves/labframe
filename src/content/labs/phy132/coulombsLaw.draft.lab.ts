@@ -56,6 +56,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: "Background: Coulomb's Law",
       html: `## Background: Coulomb's Law
 
@@ -226,6 +227,7 @@ Add a proportional fit ($y = Ax$), since Coulomb's Law predicts the line passes 
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: 'Background: Inverse-Square Law',
       html: `## Background: The Inverse-Square Framing
 

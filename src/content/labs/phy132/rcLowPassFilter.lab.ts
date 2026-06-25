@@ -59,6 +59,7 @@ export const phy132RcLowPassFilterLab: Lab = {
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       html: [
         '## Background',
         'A **filter** is any two-port circuit whose gain |H(jω)| = |V_out / V_in| depends on frequency. A **low-pass filter** passes low frequencies (gain ≈ 1) and attenuates high frequencies (gain → 0).',

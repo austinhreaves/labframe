@@ -41,6 +41,11 @@ export const StudentInfoOverridesSchema = z
 export const SectionMetadataSchema = z.object({
   tocHidden: z.boolean().optional(),
   tocLabel: z.string().optional(),
+  /** Presentation-only flag (Track P): when true the section is omitted from the
+   *  exported PDF body and Process Record. It still renders in the on-screen
+   *  worksheet and never enters the signed envelope, so hiding background/theory
+   *  blocks is purely a rendering concern. */
+  pdfHidden: z.boolean().optional(),
 });
 
 export const InstructionsSectionSchema = SectionMetadataSchema.extend({

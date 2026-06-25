@@ -63,6 +63,7 @@ export const phy132RlcBandpassFilterLab: Lab = {
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       html: [
         '## Background',
         'You characterized RC and RL circuits as low-pass and high-pass filters in the previous two labs. The series RLC circuit is the simplest **bandpass** filter: it passes a narrow band of frequencies around its **resonance frequency** and attenuates everything else.',

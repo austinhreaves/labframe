@@ -84,6 +84,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: 'Background: Resistance and Conductivity',
       html: `## Background: Resistance and Conductivity
 
@@ -171,6 +172,7 @@ Watch what happens to the current and voltage readings, and to the fuse.
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: "Background: Ohm's Law and Non-Ohmic Materials",
       html: `## Background: Ohm's Law and Non-Ohmic Materials
 

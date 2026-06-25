@@ -71,6 +71,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: 'Background: The Far-Field Bar-Magnet Dipole',
       html: `## Background: The Far-Field Bar-Magnet Dipole
 
@@ -273,6 +274,7 @@ Sanity check: the correlation coefficient $R$ should be greater than 0.98. If it
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       tocLabel: "Background: Magnetic Flux and Faraday's Law",
       html: `## Background: Magnetic Flux and Faraday's Law
 

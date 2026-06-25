@@ -38,6 +38,7 @@ export const phy132TheveninsTheoremLab: Lab = {
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       html: [
         '## Background',
         "Thevenin's Theorem states that any linear two-terminal DC network can be replaced by a single voltage source V_th in series with a single resistance R_th, such that any external load connected across the terminals will draw the same current and develop the same voltage as it would with the original network.",
