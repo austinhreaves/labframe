@@ -248,6 +248,23 @@ describe('EquationEditor', () => {
     expect(preview?.textContent).toContain('θ');
   });
 
+  it('honors a single newline as a hard line break in the latex preview', async () => {
+    const { container, getByRole } = render(<StatefulEditor />);
+    await waitForMathField(container);
+
+    fireEvent.click(getByRole('button', { name: 'Type text and equations' }));
+    const sourceInput = container.querySelector('textarea') as HTMLTextAreaElement;
+    sourceInput.value = 'line one\nline two';
+    sourceInput.selectionStart = sourceInput.value.length;
+    sourceInput.selectionEnd = sourceInput.value.length;
+    fireEvent.input(sourceInput, { inputType: 'insertText', data: 'o', isComposing: false });
+
+    const preview = container.querySelector('.equation-editor-preview');
+    // remark-breaks turns the lone newline into a <br>; both lines share one paragraph.
+    expect(preview?.querySelector('br')).toBeTruthy();
+    expect(preview?.querySelectorAll('p')).toHaveLength(1);
+  });
+
   it('keeps field activity capture working across both modes', async () => {
     let latest: FieldValue | undefined;
     const { container, getByRole } = render(
