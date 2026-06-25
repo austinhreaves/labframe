@@ -36,6 +36,11 @@ making non-trivial product changes. Architecture overview: `docs/ARCHITECTURE.md
 Run `npm run ci` before opening or updating a PR. Add `npm run test:e2e` for any UI,
 accessibility, or routing/layout change. Lint warnings fail CI (`--max-warnings 0`).
 
+**E2e test authoring note:** navigate directly to a lab route (`page.goto('/c/:courseId/:labId')`)
+rather than clicking catalog links. Catalog visibility (`enabled`, `group`) is independent of lab
+functionality; a lab can be disabled in the manifest while the route still resolves, so catalog-link
+selectors break silently when a lab is hidden.
+
 ## Where things live
 
 - `src/content/labs/<course>/` - lab definitions (`*.lab.ts` enabled, `*.draft.lab.ts`
@@ -55,6 +60,11 @@ Full steps: `docs/AUTHORING_A_LAB.md`. In short: copy a nearby `*.lab.ts`, updat
 `src/content/labs/index.ts`, enable it in the course manifest with `enabled: true`, then
 verify in the browser that sections render, inputs save, plot/table labels are right, and
 **PDF export works** for the affected lab.
+
+**Catalog rendering by manifest flags:**
+- `enabled: false` - lab is completely hidden from the catalog grid (route still resolves for graders)
+- `enabled: true, group: 'core'` - full clickable card in the catalog
+- `enabled: true, group: 'enrichment'` - visible but grayed-out "Coming soon" card (not navigable from catalog)
 
 To review an existing lab for defects, use the `verify-lab` skill (deterministic checks
 plus a theory/physics/clarity review) or run `npm run verify:lab -- <labId>` for the

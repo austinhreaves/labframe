@@ -1,15 +1,10 @@
 import { test, expect } from '@playwright/test';
 
 test('phase1 snell flow: fill table derived updates and tab switch', async ({ page }) => {
-  await page.goto('/');
-  await expect(
-    page.getByRole('heading', { name: /interactive physics labs/i }).first(),
-  ).toBeVisible();
-
-  await page
-    .getByRole('link', { name: /lab 5: snell's law/i })
-    .first()
-    .click();
+  // snellsLaw is enabled:false in the phy132 manifest, so it renders as a
+  // "Coming soon" card with no catalog link. The lab is still reachable
+  // directly at its route, so navigate there to exercise the table/sim flow.
+  await page.goto('/c/phy132/snellsLaw');
   await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();
 
   await page
