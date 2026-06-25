@@ -1,6 +1,6 @@
 # Tablet Layout, Rich Calculations, and PhET-iO Integration Spec
 
-**Status:** In progress. T-A (tablet layout), T-B (touch keyboard), and C-A (image upload) landed on branch `claude/clever-mayer-09af19`. C-B (free draw canvas) and C-C (student-selectable response mode) landed on branch `claude/musing-hamilton-ca5b08`. All of Track C is complete. Track P (PDF report quality): P-A (font embedding) and P-B (titles/prompts) landed on `claude/musing-hamilton-ca5b08`; P-C (drop theory + compact unanswered), P-D (Process Record densification), and P-E (layout/length) landed on `claude/condescending-mendel-c77cc3`; P-F deferred. All of Track S remains.
+**Status:** In progress. T-A (tablet layout), T-B (touch keyboard), and C-A (image upload) landed on branch `claude/clever-mayer-09af19`. C-B (free draw canvas) and C-C (student-selectable response mode) landed on branch `claude/musing-hamilton-ca5b08`. All of Track C is complete. Track P (PDF report quality): P-A (font embedding) and P-B (titles/prompts) landed on `claude/musing-hamilton-ca5b08`; P-C (drop theory + compact unanswered), P-D (Process Record densification), P-E (layout/length), and P-G (procedure trimming + per-page identity watermark) landed on `claude/condescending-mendel-c77cc3`; P-F deferred. All of Track S remains.
 **Created:** 2026-06-19
 **Updated:** 2026-06-24
 **Tracks:** Three parallel feature tracks executed in dependency order within each track. Tracks are independent; they may be handed off to agents concurrently or sequentially.
@@ -626,6 +626,14 @@ Replaced raw schema `kind` strings with human titles, render each section's prom
 ### P-F: True typeset math (DEFERRED)
 
 The current converter produces a unicode approximation (`(|Q₁ Q₂|)/(d²)`), not real 2D math (stacked fractions, radicals, integrals). Rendering genuine typeset math in the PDF would require running the existing on-screen KaTeX path to MathML/SVG (or an image) and embedding that per math span. This is a separate, larger project; deferred until prioritized. Until then, the unicode approximation is the accepted output.
+
+### P-G: Procedure trimming and per-page identity watermark (DONE)
+
+Two follow-on changes to the grading artifact, both presentation only.
+
+**Instructions trimming.** The PDF body keeps only a non-`pdfHidden` `instructions` block's leading markdown heading (a short part/section label such as `Part 2A` or `Concept Check Questions`) and drops the rest of the block. Procedure steps, Givens callouts, and notes therefore no longer appear in the PDF; the headings remain so answers stay grouped and labeled. This supersedes the earlier P-C guidance to keep `Step N` procedure text in the PDF (it is still shown on screen). It is a renderer rule (`firstMarkdownHeading` in `Document.tsx`), so no per-lab edits are needed; `pdfHidden` background blocks are still dropped entirely.
+
+**Per-page identity watermark.** Because the Process Record is its own page, a bad-faith student could drop or swap a page and rely on graders not noticing before the envelope-hash mismatch is caught. Every page now carries persistent identity marks (`fixed` in react-pdf): a faint diagonal watermark behind the body and a footer line with the student name, signing timestamp, and signature/hash (signed) or a `DRAFT - not for submission` stamp (draft). Removing or replacing any page loses the marks, and the name/hash/timestamp make a page hard to replicate or quietly edit. The marks read from the existing props only and do not touch the signed envelope.
 
 ---
 

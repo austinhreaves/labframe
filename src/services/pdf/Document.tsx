@@ -49,7 +49,19 @@ type PDFProps = {
 } & ({ mode: 'signed'; signature: string; signedAt: number } | { mode: 'draft' });
 
 const styles = StyleSheet.create({
-  page: { padding: 24, fontSize: 10, lineHeight: 1.35, fontFamily: 'DejaVu Sans' },
+  // Extra bottom padding leaves room for the fixed per-page identity footer.
+  page: {
+    paddingTop: 24,
+    paddingLeft: 24,
+    paddingRight: 24,
+    paddingBottom: 44,
+    fontSize: 10,
+    lineHeight: 1.35,
+    fontFamily: 'DejaVu Sans',
+  },
+  // A non-pdfHidden instructions block keeps only its leading heading as an
+  // answer-group label; procedure steps and Givens callouts are dropped.
+  partHeading: { marginTop: 8, marginBottom: 2 },
   title: { fontSize: 18, marginBottom: 8 },
   subtitle: { fontSize: 12, marginBottom: 12 },
   section: {
@@ -97,6 +109,35 @@ const styles = StyleSheet.create({
     borderTopColor: '#777',
     fontWeight: 700,
   },
+  // Persistent per-page tamper marks (repeat via `fixed` on every page). The
+  // faint diagonal sits behind the body; the footer carries the full identity.
+  watermarkLayer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  watermarkText: {
+    fontSize: 60,
+    fontWeight: 700,
+    color: '#f0f0f0',
+    transform: 'rotate(-45deg)',
+  },
+  footer: {
+    position: 'absolute',
+    left: 24,
+    right: 24,
+    bottom: 16,
+    fontSize: 7,
+    color: '#888',
+    textAlign: 'center',
+    borderTopWidth: 0.5,
+    borderTopColor: '#ccc',
+    paddingTop: 3,
+  },
 });
 
 function formatSignedAt(signedAt: number): string {
@@ -108,6 +149,42 @@ function pdfPointsSuffix(points: number | undefined): string {
     return '';
   }
   return ` (${formatPointsLabel(points)} pts)`;
+}
+
+// The PDF keeps a non-hidden instructions block's leading heading (a short part
+// label) but drops its body so procedure steps and Givens callouts do not bloat
+// the report. Returns the first ATX heading line when the block *leads* with one,
+// otherwise null (the block is body-only and is omitted entirely).
+function firstMarkdownHeading(html: string): string | null {
+  for (const rawLine of html.split('\n')) {
+    const line = rawLine.trim();
+    const match = line.match(/^(#{1,6})\s+(.+?)\s*#*$/);
+    if (match) {
+      return `${match[1]} ${match[2]}`;
+    }
+    if (line.length > 0) {
+      // Body text before any heading means this block is a procedure step or
+      // note, not a labeled part, so it carries no heading to keep.
+      return null;
+    }
+  }
+  return null;
+}
+
+// Persistent identity marks repeated on every page (`fixed`). A swapped or
+// removed page loses these, and the hash/timestamp/name make the document hard
+// to replicate or quietly edit. Present on drafts and signed reports alike.
+// Returned as plain elements (not a component) so they sit directly in the page
+// tree and stay visible to the text-form render tests.
+function pageMarks(marks: { diagonal: string; footer: string }): React.ReactNode[] {
+  return [
+    <View key="watermark" fixed style={styles.watermarkLayer}>
+      <Text style={styles.watermarkText}>{marks.diagonal}</Text>
+    </View>,
+    <Text key="footer" fixed style={styles.footer}>
+      {marks.footer}
+    </Text>,
+  ];
 }
 
 // Render a section prompt (markdown, may contain inline math) above its answer.
@@ -311,13 +388,15 @@ function sectionView(
   imageData: Record<string, string> = {},
 ): React.ReactNode {
   if (section.kind === 'instructions') {
-    // No generic "Instructions" heading: the markdown carries its own headings.
+    // Keep only the block's leading heading as an answer-group label; the body
+    // (procedure steps, Givens callouts, notes) is dropped from the PDF.
+    const heading = firstMarkdownHeading(section.html);
+    if (!heading) {
+      return null;
+    }
     return (
-      <View key={`section-${index}`} style={styles.section}>
-        {section.points !== undefined ? (
-          <Text style={styles.note}>{formatPointsLabel(section.points)} pts</Text>
-        ) : null}
-        <View>{renderMarkdownToPdf(section.html)}</View>
+      <View key={`section-${index}`} style={styles.partHeading}>
+        {renderMarkdownToPdf(heading)}
       </View>
     );
   }
@@ -624,6 +703,21 @@ export function LabReportDocument(props: PDFProps) {
     answers.integrity.agreementAccepted && agreementAcceptedAt > 0
       ? `Agreement accepted: ${new Date(agreementAcceptedAt).toISOString()}`
       : 'Agreement accepted: not recorded';
+
+  // Per-page identity marks. Signed reports carry the signature and signing
+  // time; drafts carry a DRAFT stamp (no envelope hash exists yet).
+  const studentName = answers.meta.studentName || 'Unknown student';
+  const marks =
+    props.mode === 'signed'
+      ? {
+          diagonal: `${studentName} · SIGNED`,
+          footer: `${studentName} · signed ${formatSignedAt(props.signedAt)} · ${props.signature.slice(0, 16)}`,
+        }
+      : {
+          diagonal: `${studentName} · DRAFT`,
+          footer: `${studentName} · DRAFT - not for submission`,
+        };
+
   return (
     <Document
       title={`${lab.title} Report`}
@@ -633,6 +727,7 @@ export function LabReportDocument(props: PDFProps) {
       creator="LabFrame"
     >
       <Page size="A4" style={styles.page}>
+        {pageMarks(marks)}
         <Text style={styles.title}>{lab.title}</Text>
         <Text style={styles.subtitle}>{course.title}</Text>
         {totalPoints > 0 ? (
@@ -652,6 +747,7 @@ export function LabReportDocument(props: PDFProps) {
         {aiLinks ? <Text style={styles.row}>AI shared links: {aiLinks}</Text> : null}
       </Page>
       <Page size="A4" style={styles.page}>
+        {pageMarks(marks)}
         {bodyNodes}
         {unansweredTitles.length > 0 ? (
           <View style={styles.summaryBlock}>
@@ -662,6 +758,7 @@ export function LabReportDocument(props: PDFProps) {
         ) : null}
       </Page>
       <Page size="A4" style={styles.page}>
+        {pageMarks(marks)}
         <Text style={styles.title}>Process Record</Text>
         <View style={styles.table}>
           <View style={styles.recordHeaderRow}>

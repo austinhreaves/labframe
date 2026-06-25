@@ -221,7 +221,39 @@ describe('renderPDF', () => {
     expect(linearLine).toEqual({ x1: 20, y1: 65, x2: 100, y2: 20 });
   });
 
-  it('keeps markdown instruction structure in text-form snapshot', () => {
+  it('stamps a signed identity watermark and footer on every page', () => {
+    const tree = LabReportDocument({
+      lab: labFixture,
+      answers: answersFixture,
+      course: courseFixture,
+      mode: 'signed',
+      signature: '0123456789abcdef0123456789abcdef',
+      signedAt: 1714450000000,
+    });
+    const textDump = collectText(tree);
+
+    // Three pages (cover, body, process record) each carry the marks.
+    expect((textDump.match(/Student · SIGNED/g) ?? []).length).toBe(3);
+    expect((textDump.match(/Student · signed 2024-04-30T04:06:40\.000Z · 0123456789abcdef/g) ?? [])
+      .length).toBe(3);
+  });
+
+  it('stamps a DRAFT watermark and footer when unsigned', () => {
+    const tree = LabReportDocument({
+      lab: labFixture,
+      answers: answersFixture,
+      course: courseFixture,
+      mode: 'draft',
+    });
+    const textDump = collectText(tree);
+
+    // Diagonal watermark (3 pages) plus the footer line (3 pages).
+    expect((textDump.match(/Student · DRAFT(?! -)/g) ?? []).length).toBe(3);
+    expect((textDump.match(/Student · DRAFT - not for submission/g) ?? []).length).toBe(3);
+    expect(textDump).not.toContain('SIGNED');
+  });
+
+  it('keeps only the leading heading of an instructions block and drops the body', () => {
     const markdownLabFixture: Lab = {
       ...labFixture,
       sections: [
@@ -248,13 +280,13 @@ describe('renderPDF', () => {
     });
     const textDump = collectText(tree).replace(/\s+/g, ' ').trim();
 
+    // The part heading survives as an answer-group label.
     expect(textDump).toContain('Part 1');
-    expect(textDump).toContain('• Item one');
-    expect(textDump).toContain('• Item two');
-    expect(textDump).toContain('sinθᵢ');
-    expect(textDump).toMatchInlineSnapshot(
-      `"Test LabTest CourseStudent: StudentSigned: 2024-04-30T04:06:40.000Z - 01234567Integrity statement: I affirm this submission reflects my own work. If AI or LLM tools — chatbots, large language models, or generative AI assistants such as ChatGPT, Claude, Gemini, Copilot, or any similar tool — were used in any part of this lab, the chats are disclosed and share links are provided below (required by course policy).Agreement accepted: 2024-04-30T04:06:40.000ZAI/LLM tools used: NoPart 1Important:• Item one• Item two Inline math sinθᵢProcess RecordSectionActive timeKeystrokesDeletesPastes (clip / auto / IME)Total0s000 / 0 / 0"`,
-    );
+    // The procedure body (bold note, list items, inline math) is dropped.
+    expect(textDump).not.toContain('Item one');
+    expect(textDump).not.toContain('Important');
+    expect(textDump).not.toContain('sinθᵢ');
+    expect(textDump).toMatchInlineSnapshot(`"Student · SIGNEDStudent · signed 2024-04-30T04:06:40.000Z · 0123456789abcdefTest LabTest CourseStudent: StudentSigned: 2024-04-30T04:06:40.000Z - 01234567Integrity statement: I affirm this submission reflects my own work. If AI or LLM tools — chatbots, large language models, or generative AI assistants such as ChatGPT, Claude, Gemini, Copilot, or any similar tool — were used in any part of this lab, the chats are disclosed and share links are provided below (required by course policy).Agreement accepted: 2024-04-30T04:06:40.000ZAI/LLM tools used: NoStudent · SIGNEDStudent · signed 2024-04-30T04:06:40.000Z · 0123456789abcdefPart 1Student · SIGNEDStudent · signed 2024-04-30T04:06:40.000Z · 0123456789abcdefProcess RecordSectionActive timeKeystrokesDeletesPastes (clip / auto / IME)Total0s000 / 0 / 0"`);
   });
 
   it('includes Snell derived-column formula labels in table text snapshot', () => {
