@@ -527,7 +527,7 @@ export function EquationEditor({
             </>
           ) : (
             <div className="equation-editor-katex">
-              <MarkdownBlock markdown={effective.text} />
+              <MarkdownBlock markdown={effective.text} breaks />
             </div>
           )}
         </div>

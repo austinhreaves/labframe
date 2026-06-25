@@ -2,12 +2,20 @@ import ReactMarkdown from 'react-markdown';
 import type { ReactNode } from 'react';
 import rehypeKatex from 'rehype-katex';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
+import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import type { Components } from 'react-markdown';
 
 type MarkdownBlockProps = {
   markdown: string;
+  /**
+   * Render a single newline as a hard line break (remark-breaks) instead of the
+   * markdown default where a lone newline collapses to a space. Used for
+   * free-form student answers (the equation editor); lab instructions keep the
+   * default soft-wrap behaviour so authored markdown renders conventionally.
+   */
+  breaks?: boolean;
 };
 
 const instructionSchema = {
@@ -96,10 +104,11 @@ const markdownComponents: Components = {
   },
 };
 
-export function MarkdownBlock({ markdown }: MarkdownBlockProps) {
+export function MarkdownBlock({ markdown, breaks = false }: MarkdownBlockProps) {
+  const remarkPlugins = breaks ? [remarkGfm, remarkMath, remarkBreaks] : [remarkGfm, remarkMath];
   return (
     <ReactMarkdown
-      remarkPlugins={[remarkGfm, remarkMath]}
+      remarkPlugins={remarkPlugins}
       rehypePlugins={[[rehypeSanitize, instructionSchema], rehypeKatex]}
       components={markdownComponents}
     >
