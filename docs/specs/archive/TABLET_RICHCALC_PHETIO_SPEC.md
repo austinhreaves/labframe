@@ -1,5 +1,13 @@
 # Tablet Layout, Rich Calculations, and PhET-iO Integration Spec
 
+> **ARCHIVED 2026-06-25.** Kept as the record of shipped work (all of Track T-A
+> and Track C, plus P-A / P-B) and of the license-blocked PhET-iO phases
+> (S-B / S-C), which are on the back burner until an evaluative license is in
+> hand. The phases that were still open and are NOT PhET-iO (the remainder of
+> T-B, and P-C / P-D / P-E) are carried forward into the active spec
+> `docs/specs/ONBOARDING_COURSE_SCOPING_SPEC.md`. The old S-A guided-screenshot
+> popover is superseded there by the onboarding tour (it becomes one tour step).
+
 **Status:** In progress. T-A (tablet layout), T-B (touch keyboard), and C-A (image upload) landed on branch `claude/clever-mayer-09af19`. C-B (free draw canvas) and C-C (student-selectable response mode) landed on branch `claude/musing-hamilton-ca5b08`. All of Track C is complete. Track P (PDF report quality): P-A (font embedding) and P-B (titles/prompts) landed on `claude/musing-hamilton-ca5b08`; P-C / P-D / P-E pending; P-F deferred. All of Track S remains.
 **Created:** 2026-06-19
 **Updated:** 2026-06-24
