@@ -14,13 +14,13 @@ independent of each other and of S / O / D.
 This spec covers a first-run experience for LabFrame plus two pieces of polish
 that were left open when the previous spec was archived.
 
-| Track                  | Goal                                                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------- |
-| S: Onboarding Tour     | A driver.js spotlight tour that teaches the LabFrame workflow on first visit, staged on a demo showcase lab    |
-| O: Course Scoping      | A student in one course never sees another course's materials (obfuscation, not security)                     |
-| D: Demo Showcase Lab   | A purpose-built lab with "one of everything" that stages the tour and guarantees every spotlight anchor exists |
-| T-B: Finish Touch Audit| Complete the touch-interaction audit begun in the archived spec (the `?forceTextCalc` fallback already shipped) |
-| P: PDF Compaction      | Finish Track P from the archived spec: P-C (drop theory + compact unanswered), P-D (Process Record), P-E (layout) |
+| Track                   | Goal                                                                                                              |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| S: Onboarding Tour      | A driver.js spotlight tour that teaches the LabFrame workflow on first visit, staged on a demo showcase lab       |
+| O: Course Scoping       | A student in one course never sees another course's materials (obfuscation, not security)                         |
+| D: Demo Showcase Lab    | A purpose-built lab with "one of everything" that stages the tour and guarantees every spotlight anchor exists    |
+| T-B: Finish Touch Audit | Complete the touch-interaction audit begun in the archived spec (the `?forceTextCalc` fallback already shipped)   |
+| P: PDF Compaction       | Finish Track P from the archived spec: P-C (drop theory + compact unanswered), P-D (Process Record), P-E (layout) |
 
 S, O, and D are one feature: the tour (S) is staged on the demo lab (D), and the
 course pin that scoping (O) depends on is set during the tour's first phase. They
@@ -201,26 +201,26 @@ lives in one browser) and is accepted, not a bug.
 
 **Phase A (splash driver, on `/`):** starts when **Get Started** is clicked.
 
-| Step | Anchor                | Teaches                                              |
-| ---- | --------------------- | --------------------------------------------------- |
-| A1   | centered, no element  | Welcome; "about a minute, skip anytime"             |
-| A2   | course chooser        | "Pick your course." Selecting pins `labframe:course` (Track O) and advances |
-| A3   | name field            | "Your name, as it appears on your report. Stays in this browser." Writes `labframe:student-name` |
-| A4   | centered, no element  | Handoff; on finish navigate to `/welcome?tour=1`    |
+| Step | Anchor               | Teaches                                                                                          |
+| ---- | -------------------- | ------------------------------------------------------------------------------------------------ |
+| A1   | centered, no element | Welcome; "about a minute, skip anytime"                                                          |
+| A2   | course chooser       | "Pick your course." Selecting pins `labframe:course` (Track O) and advances                      |
+| A3   | name field           | "Your name, as it appears on your report. Stays in this browser." Writes `labframe:student-name` |
+| A4   | centered, no element | Handoff; on finish navigate to `/welcome?tour=1`                                                 |
 
 **Phase B (lab driver, on `/welcome` when `?tour=1`):** all anchors are real DOM
 in `LabPage.tsx` and are guaranteed present because the demo lab (Track D)
 contains them.
 
-| Step | Anchor (CSS / element)             | Teaches                                                                 |
-| ---- | ---------------------------------- | ----------------------------------------------------------------------- |
-| B1   | `.lab-shell`                       | "Everything is on one page: the simulation and your worksheet."         |
-| B2   | `.simulation-pane`                 | "Run the simulation here. Drag sliders, take measurements."             |
-| B3   | `.worksheet-pane` (or `#section-0`)| "Answer the prompts. Type, sketch, or attach a photo depending on the question." |
+| Step | Anchor (CSS / element)                        | Teaches                                                                                                                                                                                                             |
+| ---- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B1   | `.lab-shell`                                  | "Everything is on one page: the simulation and your worksheet."                                                                                                                                                     |
+| B2   | `.simulation-pane`                            | "Run the simulation here. Drag sliders, take measurements."                                                                                                                                                         |
+| B3   | `.worksheet-pane` (or `#section-0`)           | "Answer the prompts. Type, sketch, or attach a photo depending on the question."                                                                                                                                    |
 | B4   | `.simulation-pane` + the image-upload section | "When a question asks for a screenshot of the sim, capture it and upload it below." Platform hints: Windows `Win + Shift + S`, Mac `Cmd + Shift + 4`, iPad side button + volume up. **(This is the absorbed S-A.)** |
-| B5   | `.lab-save-status`                 | "Your work saves automatically in this browser. No account. Use Save draft for a backup PDF." |
-| B6   | the Export PDF button (`IntegrityAgreement`) | "When you are done, accept the integrity agreement and Export PDF."     |
-| B7   | centered, no element               | "Last step: upload that PDF to the matching Canvas assignment. LabFrame does not submit for you." |
+| B5   | `.lab-save-status`                            | "Your work saves automatically in this browser. No account. Use Save draft for a backup PDF."                                                                                                                       |
+| B6   | the Export PDF button (`IntegrityAgreement`)  | "When you are done, accept the integrity agreement and Export PDF."                                                                                                                                                 |
+| B7   | centered, no element                          | "Last step: upload that PDF to the matching Canvas assignment. LabFrame does not submit for you."                                                                                                                   |
 
 All 11 steps (4 Phase A + 7 Phase B) are included; no trimming. B4 (screenshot)
 and B7 (Canvas submission) are the non-negotiable payload; all other steps are
@@ -370,13 +370,13 @@ and P are independent backlog and can be picked up any time.
 
 ## Open decisions
 
-| #   | Decision                                | Notes                                                                                                                                                                  |
-| --- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Tour length                             | RESOLVED: all 11 steps (4 Phase A + 7 Phase B). No trimming. Layout/progress controls are visible during the tour but not dedicated steps. |
-| 2   | Demo lab route name                     | RESOLVED: `/welcome` (a friendly alias for `/c/welcome/intro?tour=1`).                                                                     |
-| 3   | The "Getting Started" course            | RESOLVED: a real `role: 'resources'` course (id `welcome`), one lab card today, room for more tutorials/resources later. Exempt from scoping and never pinnable (Track O). |
-| 4   | Course switch escape hatch              | RESOLVED: no student-facing switch. Instructors hand a fresh `/c/:courseId` link (or student clears storage) for section changes.          |
-| 5   | Per-browser onboarded flag              | RESOLVED: per-browser is accepted, consistent with the existing per-browser storage model. A new device or incognito resurfaces the splash; that is a feature, not a bug. |
-| 6   | Demo lab draw step                      | RESOLVED: include the `responseMode: 'draw'` section with prompt "Draw a force diagram (free-body diagram) for an object on the surface below." Tour step B3 spotlights it under "sketch." |
-| 7   | T-B table drag                          | RESOLVED: no data-table drag-to-reorder exists in the codebase. Item dropped from T-B scope.                                               |
-| 8   | P-C "background theory" judgement       | RESOLVED: per-lab judgement call confirmed. Agent marks an initial pass; author re-tunes flags afterward.                                   |
+| #   | Decision                          | Notes                                                                                                                                                                                      |
+| --- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Tour length                       | RESOLVED: all 11 steps (4 Phase A + 7 Phase B). No trimming. Layout/progress controls are visible during the tour but not dedicated steps.                                                 |
+| 2   | Demo lab route name               | RESOLVED: `/welcome` (a friendly alias for `/c/welcome/intro?tour=1`).                                                                                                                     |
+| 3   | The "Getting Started" course      | RESOLVED: a real `role: 'resources'` course (id `welcome`), one lab card today, room for more tutorials/resources later. Exempt from scoping and never pinnable (Track O).                 |
+| 4   | Course switch escape hatch        | RESOLVED: no student-facing switch. Instructors hand a fresh `/c/:courseId` link (or student clears storage) for section changes.                                                          |
+| 5   | Per-browser onboarded flag        | RESOLVED: per-browser is accepted, consistent with the existing per-browser storage model. A new device or incognito resurfaces the splash; that is a feature, not a bug.                  |
+| 6   | Demo lab draw step                | RESOLVED: include the `responseMode: 'draw'` section with prompt "Draw a force diagram (free-body diagram) for an object on the surface below." Tour step B3 spotlights it under "sketch." |
+| 7   | T-B table drag                    | RESOLVED: no data-table drag-to-reorder exists in the codebase. Item dropped from T-B scope.                                                                                               |
+| 8   | P-C "background theory" judgement | RESOLVED: per-lab judgement call confirmed. Agent marks an initial pass; author re-tunes flags afterward.                                                                                  |
