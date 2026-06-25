@@ -1,6 +1,6 @@
 # Tablet Layout, Rich Calculations, and PhET-iO Integration Spec
 
-**Status:** In progress. T-A (tablet layout), T-B (touch keyboard), and C-A (image upload) landed on branch `claude/clever-mayer-09af19`. C-B (free draw canvas) and C-C (student-selectable response mode) landed on branch `claude/musing-hamilton-ca5b08`. All of Track C is now complete; all of Track S remains.
+**Status:** In progress. T-A (tablet layout), T-B (touch keyboard), and C-A (image upload) landed on branch `claude/clever-mayer-09af19`. C-B (free draw canvas) and C-C (student-selectable response mode) landed on branch `claude/musing-hamilton-ca5b08`. All of Track C is complete. Track P (PDF report quality): P-A (font embedding) and P-B (titles/prompts) landed on `claude/musing-hamilton-ca5b08`; P-C / P-D / P-E pending; P-F deferred. All of Track S remains.
 **Created:** 2026-06-19
 **Updated:** 2026-06-24
 **Tracks:** Three parallel feature tracks executed in dependency order within each track. Tracks are independent; they may be handed off to agents concurrently or sequentially.
@@ -539,6 +539,102 @@ Rules:
 
 ---
 
+## Track P: PDF Report Quality
+
+A review of an exported draft (Coulomb's Law) surfaced rendering and density problems in the signed PDF. This track collects the fixes. It is presentation only: **none of these phases may change the canonical signed envelope** (`buildAnswers`) or the HMAC payload. The envelope binds answers (fields, tables, images, draw strokes, selections); it does not include instructions content or PDF layout, so hiding or compacting sections in the PDF is purely a rendering concern and must leave `buildAnswers` / `canonicalize` / `sign` untouched.
+
+### P-A: Math glyph rendering (DONE, commit `3d03d21`)
+
+Embedded DejaVu Sans (regular/bold/oblique) and set it as the document font so the unicode the math converter emits (subscripts, superscripts, operators, Greek) renders instead of showing missing/wrong glyphs from the standard-14 fonts. Math spans inherit the document font instead of Courier.
+
+### P-B: Section titles and prompts (DONE, commit `b76bf2e`)
+
+Replaced raw schema `kind` strings with human titles, render each section's prompt above its answer, dropped the redundant per-block "Instructions" heading, and routed labels / table headers / prompts through the inline math converter (`mathToInline`). Expanded `latexToUnicode` (commit `37dcc8a`) to strip wrappers and convert super/subscripts before fractions.
+
+### P-C: Drop background theory and compact unanswered responses
+
+**Goal:** stop the PDF from rendering pure background/theory content and a full block per blank response, while keeping the grader aware of what was skipped.
+
+**Schema (`src/domain/schema/lab.ts`, `SectionMetadataSchema`):**
+- Add `pdfHidden: z.boolean().optional()`. A section with `pdfHidden: true` is omitted from the PDF body and the Process Record. It still renders in the on-screen worksheet and does not affect the envelope.
+
+**Mark the content:** set `pdfHidden: true` on instructions sections that are purely expository background / theory / reference and are not needed to interpret a student's answer: headings like "Background ...", "A note on ...", standalone derivations, and reference-only tables. **Keep** the integrity agreement, procedural "Step N" instructions, and concept-check framing that gives context to an adjacent response. Apply across the enabled labs; authors can re-tune the flags later.
+
+**Response compaction (`src/services/pdf/Document.tsx`):** classify each field-owning section (objective, measurement, multiMeasurement, calculation, concept, image, dataTable) as **answered** (has any student content: non-empty field text, an uploaded image, a non-empty drawing page, or any filled table cell) or **unanswered**.
+- Answered sections render fully (title, prompt, answer) as today.
+- Unanswered field-owning sections are **not** rendered individually. Instead render one prominent block, e.g. "Unanswered sections (N): <human titles>", so the grader sees exactly what was left blank without paging through empty `-` blocks. Instructions and plots are not student-answerable and never appear in this list.
+
+**Acceptance:** a draft where the student answered two of ten calculations shows those two in full and a single "Unanswered sections" block listing the other eight; background/theory instructions blocks marked `pdfHidden` do not appear in the PDF; the on-screen worksheet and the signed envelope are unchanged.
+
+### P-D: Process Record densification
+
+**Goal:** replace the one-section-per-block, five-lines-each Process Record (which ran ~6 pages, listing field-less sections as zeros) with a dense, accountable table.
+
+**Scope (`src/services/pdf/Document.tsx`, plus a duration helper):**
+- Render a **compact table**: one row per field-owning section that has **recorded activity** (active time, keystrokes, or pastes > 0). Columns: Section (human title) | Active time | Keystrokes | Deletes | Pastes (clipboard / autocomplete / IME, e.g. `2 / 0 / 1`). Include a **totals row**.
+- Sections with **no recorded activity** are collapsed into a single prominent line: "No recorded activity: <human titles>", so nothing is silently dropped. (A draw- or image-answered section legitimately has zero typing activity and will appear here; that is correct.)
+- Field-less sections (instructions, plot) and `pdfHidden` sections do not appear in the Process Record at all.
+- **Active time is formatted as H/M/S**, not milliseconds: `45s`, `2m 05s`, `1h 03m 12s` (omit higher zero units, zero-pad lower ones). Add a `formatDuration(ms)` helper (e.g. `src/services/pdf/formatDuration.ts` or alongside `pointsFormatting`) with unit tests.
+
+**Acceptance:** the Process Record is a single dense table plus a totals row and a "No recorded activity" summary line; active times read as `1h 03m 12s` style; field-less and `pdfHidden` sections are absent; total page count drops substantially.
+
+### P-E: Layout and length
+
+**Goal:** cut wasted vertical space and overall page count.
+
+**Scope (`src/services/pdf/Document.tsx`):**
+- **Empty plots:** when a plot has no data points, render a compact one-line placeholder ("<plot title>: no data plotted") instead of the full empty SVG axes box.
+- **Drawings:** shrink the embedded drawing image (a dedicated `drawImage` style, max height roughly half a page) and keep each page block whole (`wrap={false}`) with its "Page N of M" label and SHA caption grouped with the image, so about two drawing pages fit on one PDF page. Uploaded photos may keep a larger cap.
+- General: verify the combined effect of P-C / P-D / P-E meaningfully reduces page count on the Coulomb draft (the review sample was 15-16 pages mostly empty).
+
+**Acceptance:** an all-empty draft renders in far fewer pages; empty plots are one line each; two drawing pages share a PDF page; plots with data and answered drawings are unaffected.
+
+### P-F: True typeset math (DEFERRED)
+
+The current converter produces a unicode approximation (`(|Q₁ Q₂|)/(d²)`), not real 2D math (stacked fractions, radicals, integrals). Rendering genuine typeset math in the PDF would require running the existing on-screen KaTeX path to MathML/SVG (or an image) and embedding that per math span. This is a separate, larger project; deferred until prioritized. Until then, the unicode approximation is the accepted output.
+
+---
+
+**Agent handoff -- P-C / P-D / P-E:**
+
+```
+You are implementing Phases P-C, P-D, and P-E of Track P (PDF Report Quality) in docs/specs/TABLET_RICHCALC_PHETIO_SPEC.md. P-A (font embedding) and P-B (titles/prompts) are already done.
+
+HARD CONSTRAINT: this is presentation only. Do NOT change the signed envelope. Do not touch src/services/integrity/buildAnswers.ts, canonicalize.ts, or sign.ts, and do not change what goes into the canonical payload. All changes are in the PDF renderer and the lab content flags.
+
+Read first:
+1. src/services/pdf/Document.tsx -- the section renderer, calculation/draw/image branches, and the Process Record page
+2. src/domain/schema/lab.ts -- SectionMetadataSchema (shared optional fields) and the section variants
+3. src/domain/pointsFormatting.ts -- pattern for a small formatting helper + its tests
+4. The exported review notes in this spec's Track P section
+
+P-C (drop theory + compact unanswered):
+- Add pdfHidden?: z.boolean().optional() to SectionMetadataSchema. Skip pdfHidden sections in the PDF body and Process Record. They still render on screen and must not affect the envelope.
+- In the labs (src/content/labs/**), set pdfHidden: true on instructions blocks that are purely background/theory/reference (headings like "Background ...", "A note on ...", derivations, reference-only tables). KEEP the integrity agreement, "Step N" procedural instructions, and concept-check framing.
+- Classify field-owning sections (objective, measurement, multiMeasurement, calculation, concept, image, dataTable) as answered (non-empty field text / uploaded image / non-empty drawing page / any filled table cell) vs unanswered. Render answered sections fully; collapse all unanswered field-owning sections into ONE prominent block "Unanswered sections (N): <human titles>". Instructions and plots never appear in that list.
+
+P-D (Process Record):
+- Replace the per-section blocks with a dense table: one row per field-owning section WITH recorded activity (activeMs, keystrokes, or any paste > 0). Columns: Section | Active time | Keystrokes | Deletes | Pastes (clipboard / autocomplete / IME). Add a totals row.
+- Collapse zero-activity field-owning sections into one line: "No recorded activity: <human titles>". Omit field-less (instructions, plot) and pdfHidden sections entirely.
+- Format active time as H/M/S via a new formatDuration(ms) helper with unit tests: 45s, 2m 05s, 1h 03m 12s (omit higher zero units, zero-pad lower ones).
+- Reuse the human section titles from P-B (factor the SECTION_TITLES map / a sectionTitle(section) helper so the body and the record share it).
+
+P-E (layout/length):
+- Empty plot (no data points): render a one-line placeholder instead of the empty SVG axes.
+- Drawings: add a drawImage style capped near half a page; keep each drawing page block whole (wrap={false}) with its "Page N of M" label and SHA caption grouped with the image so ~2 pages fit per PDF page. Photos may keep a larger cap.
+
+Verify:
+- npm run typecheck (tsc -b), npm run lint, npm test all green. Update the renderPdf text-form snapshot tests as needed.
+- react-pdf does not fully rasterize under jsdom; the existing render tests assert at the React-tree/text level. To eyeball real output, node-render a lab with @react-pdf/renderer (tsx, register the DejaVu fonts from src/services/pdf/fonts by absolute path) and rasterize with a PDF tool.
+
+Rules:
+- No em dashes in prose or comments.
+- Do not change the on-screen worksheet behavior or the signed envelope.
+- Keep section-title and duration formatting in small, unit-tested helpers.
+```
+
+---
+
 ## Phase dependency map
 
 ```
@@ -553,10 +649,14 @@ S-B (PhET-iO native capture)  <-- requires C-A (blob storage)
     |
     v
 S-C (engagement metrics)
+
+P-A (font embed) --> P-B (titles/prompts) --> P-C (drop theory + compact) / P-D (process record) / P-E (layout)
+P-F (true typeset math) deferred
 ```
 
 Track T and Track C are fully independent of each other and of Track S.
 Track S phases must execute in order. S-B requires the blob storage helpers from C-A.
+Track P is independent of T / C / S. P-C, P-D, and P-E build on P-A/P-B (done) and may be implemented together.
 
 ---
 
@@ -570,3 +670,6 @@ Track S phases must execute in order. S-B requires the blob storage helpers from
 | 4 | phETioMeta in PDF appendix | Decide with course instructors whether graders want this data visible or only in the embedded JSON. The spec defaults to a human-readable summary; make it opt-in per lab if instructors prefer. |
 | 5 | Retaining non-active answers (C-C) | C-C keeps every mode's entered answer in the envelope even after the student switches modes; only the active mode renders in the PDF body. Confirm graders want inactive answers retained for process tracking rather than cleared on switch. |
 | 6 | Default response mode (C-C) | C-C defaults a selectable section to the first `responseModes` entry. Confirm authors order the array intentionally (e.g. put `text` first so typed answers are the default). |
+| 7 | Which instructions are "background theory" (P-C) | The agent marks `pdfHidden: true` on expository background/theory/reference instructions, keeping integrity + procedural steps. The author reviews the resulting flags per lab and re-tunes; the rule is a judgment call, not exhaustive. |
+| 8 | Compacting data tables (P-C) | An empty data table is a field-owning section and would land in the "Unanswered sections" summary. Confirm graders are fine with an unfilled table collapsing into that summary rather than printing an empty grid. |
+| 9 | True typeset math (P-F) | The unicode approximation is the accepted PDF math output for now. Revisit P-F (KaTeX to SVG/image) only when typeset-quality fractions/radicals are worth the added renderer complexity. |
