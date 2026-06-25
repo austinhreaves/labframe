@@ -27,6 +27,7 @@ import { computeClippedFitLineInPdfSvg } from '@/services/pdf/fitLine';
 import { formatDuration } from '@/services/pdf/formatDuration';
 import { renderMarkdownToPdf } from '@/services/pdf/markdown/renderMarkdownToPdf';
 import { SECTION_TITLES, sectionTitle } from '@/services/pdf/sectionTitle';
+import { truncateName, watermarkFontSize } from '@/services/pdf/watermark';
 import {
   calcImageId,
   drawPageKey,
@@ -179,7 +180,9 @@ function firstMarkdownHeading(html: string): string | null {
 function pageMarks(marks: { diagonal: string; footer: string }): React.ReactNode[] {
   return [
     <View key="watermark" fixed style={styles.watermarkLayer}>
-      <Text style={styles.watermarkText}>{marks.diagonal}</Text>
+      <Text style={[styles.watermarkText, { fontSize: watermarkFontSize(marks.diagonal) }]}>
+        {marks.diagonal}
+      </Text>
     </View>,
     <Text key="footer" fixed style={styles.footer}>
       {marks.footer}
@@ -707,14 +710,17 @@ export function LabReportDocument(props: PDFProps) {
   // Per-page identity marks. Signed reports carry the signature and signing
   // time; drafts carry a DRAFT stamp (no envelope hash exists yet).
   const studentName = answers.meta.studentName || 'Unknown student';
+  // The diagonal caps the name so it stays on one rotated line; the footer keeps
+  // the full name alongside the timestamp and hash.
+  const diagonalName = truncateName(studentName);
   const marks =
     props.mode === 'signed'
       ? {
-          diagonal: `${studentName} · SIGNED`,
+          diagonal: `${diagonalName} · SIGNED`,
           footer: `${studentName} · signed ${formatSignedAt(props.signedAt)} · ${props.signature.slice(0, 16)}`,
         }
       : {
-          diagonal: `${studentName} · DRAFT`,
+          diagonal: `${diagonalName} · DRAFT`,
           footer: `${studentName} · DRAFT - not for submission`,
         };
 
