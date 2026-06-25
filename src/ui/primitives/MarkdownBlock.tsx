@@ -15,7 +15,10 @@ const instructionSchema = {
   tagNames: [...(defaultSchema.tagNames ?? []), 'sub', 'sup'],
   attributes: {
     ...(defaultSchema.attributes ?? {}),
-    code: [...(defaultSchema.attributes?.code ?? []), ['className', 'language-math', 'math-inline', 'math-display']],
+    code: [
+      ...(defaultSchema.attributes?.code ?? []),
+      ['className', 'language-math', 'math-inline', 'math-display'],
+    ],
   },
 };
 
@@ -40,7 +43,10 @@ const markdownComponents: Components = {
   blockquote({ children }) {
     const flat = Array.isArray(children) ? children : [children];
     const firstChild = flat[0];
-    const firstParagraph = firstChild && typeof firstChild === 'object' && 'props' in firstChild ? (firstChild.props as { children?: ReactNode }).children : null;
+    const firstParagraph =
+      firstChild && typeof firstChild === 'object' && 'props' in firstChild
+        ? (firstChild.props as { children?: ReactNode }).children
+        : null;
     const firstText =
       typeof firstParagraph === 'string'
         ? firstParagraph
@@ -54,7 +60,12 @@ const markdownComponents: Components = {
     const label = (match[1] ?? 'NOTE').toUpperCase();
     const nextFirstText = firstText?.replace(CALLOUT_PATTERN, '').trimStart() ?? '';
     let normalizedChildren = children;
-    if (nextFirstText !== firstText && firstChild && typeof firstChild === 'object' && 'props' in firstChild) {
+    if (
+      nextFirstText !== firstText &&
+      firstChild &&
+      typeof firstChild === 'object' &&
+      'props' in firstChild
+    ) {
       const patchedFirst = {
         ...firstChild,
         props: {

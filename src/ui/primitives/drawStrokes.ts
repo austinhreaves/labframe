@@ -140,7 +140,13 @@ export function drawStrokesToContext(ctx: StrokeContext, strokes: DrawStroke[]):
       const point = points[0]!;
       ctx.beginPath();
       ctx.fillStyle = stroke.color;
-      ctx.arc(point.x, point.y, effectiveLineWidth(stroke.width, point.pressure) / 2, 0, Math.PI * 2);
+      ctx.arc(
+        point.x,
+        point.y,
+        effectiveLineWidth(stroke.width, point.pressure) / 2,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       continue;
     }

@@ -13,7 +13,7 @@ PHY 132 currently has seven core labs, all wired and `enabled`: `chargeBuildup` 
 
 ## Goal of this round
 
-Wire up *every* lab and leave everything **enabled**, so the whole course can be reviewed by clicking through the running app. There is no launch deadline — nothing is gated, everything is visible. After walking the app, Austin will document the next phase of changes separately.
+Wire up _every_ lab and leave everything **enabled**, so the whole course can be reviewed by clicking through the running app. There is no launch deadline — nothing is gated, everything is visible. After walking the app, Austin will document the next phase of changes separately.
 
 ---
 

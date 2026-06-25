@@ -66,7 +66,11 @@ export function attributePastes(
   if (!text) {
     return {
       spans: [],
-      removedPastes: pastes.map((paste) => ({ at: paste.at, preview: toPreview(paste.text), source: paste.source })),
+      removedPastes: pastes.map((paste) => ({
+        at: paste.at,
+        preview: toPreview(paste.text),
+        source: paste.source,
+      })),
     };
   }
 
@@ -96,7 +100,8 @@ export function attributePastes(
       removedPastes.push({ at: paste.at, preview: toPreview(paste.text), source: paste.source });
       continue;
     }
-    const spanKind: SpanKind = paste.source === 'autocomplete' ? 'pasted-autocomplete' : 'pasted-clipboard';
+    const spanKind: SpanKind =
+      paste.source === 'autocomplete' ? 'pasted-autocomplete' : 'pasted-clipboard';
     for (let i = start; i <= end; i += 1) {
       if (marks[i] === 'typed') {
         marks[i] = spanKind;

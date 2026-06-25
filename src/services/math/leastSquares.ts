@@ -67,8 +67,9 @@ export function linearLeastSquares(points: XYPoint[]): FitResult | null {
     return acc + residual * residual;
   }, 0);
 
-  const slopeStdErr = n > 2 ? Math.sqrt((residualSS / (n - 2)) / sxx) : Number.NaN;
-  const interceptStdErr = n > 2 ? Math.sqrt((residualSS / (n - 2)) * (1 / n + (meanX * meanX) / sxx)) : Number.NaN;
+  const slopeStdErr = n > 2 ? Math.sqrt(residualSS / (n - 2) / sxx) : Number.NaN;
+  const interceptStdErr =
+    n > 2 ? Math.sqrt((residualSS / (n - 2)) * (1 / n + (meanX * meanX) / sxx)) : Number.NaN;
   const rSquared = syy === 0 ? 1 : 1 - residualSS / syy;
 
   return {

@@ -26,9 +26,10 @@ Done well, this closes the largest remaining gap between "looks like a 2009 util
 
 ## 1. Why this matters now
 
-Path 1 made the app *coherent* — every neutral, spacing, and shadow comes from the token system. But the eye is still drawn to the four places where the token system *can't reach*: form controls that the browser renders directly.
+Path 1 made the app _coherent_ — every neutral, spacing, and shadow comes from the token system. But the eye is still drawn to the four places where the token system _can't reach_: form controls that the browser renders directly.
 
 Concretely, every PHY 132 lab page renders:
+
 - A `<select>` for the theme picker ([LabPage.tsx:427](src/ui/LabPage.tsx:427))
 - A `<select>` for the simulation picker if there's more than one ([LabPage.tsx:366](src/ui/LabPage.tsx:366))
 - A native `<progress>` bar ([ProgressBar.tsx:81](src/ui/ProgressBar.tsx:81))
@@ -58,7 +59,7 @@ That's six native-chrome moments on a typical lab page, including the very last 
 - **No motion beyond Path 1's transition tokens.** Checkbox check-icon entrance is allowed (it's a state transition, not choreography).
 - **No CSS-in-JS, no Tailwind, no Radix Primitives wrappers.** Keep the stack flat: React component + companion class names in `main.css`.
 
-### 2.3 What this *won't* fix
+### 2.3 What this _won't_ fix
 
 Native popup chrome on `<select>` (the dropdown menu itself, once opened) is still browser-controlled. We're styling the closed trigger to look like our app; the open menu still looks like Chrome's. That's an acceptable tradeoff — students see the closed state 99% of the time and the trigger is what reads as "designed."
 
@@ -69,6 +70,7 @@ If we ever need to ship a true listbox (typeahead, multi-select, rich options), 
 ## 3. Primitives
 
 All primitives live in `src/ui/primitives/`. Each one:
+
 - Exports a single React component plus its prop types.
 - Has a companion class block in `src/main.css` consuming only tokens.
 - Accepts `id`, `aria-label` / `aria-labelledby`, and `disabled` as standard props.
@@ -88,9 +90,9 @@ type SelectProps = {
   value: string;
   onChange: (next: string) => void;
   options: SelectOption[];
-  placeholder?: string;           // renders as a disabled first option
+  placeholder?: string; // renders as a disabled first option
   disabled?: boolean;
-  size?: 'sm' | 'md';             // 'md' default; 'sm' for inline / table use
+  size?: 'sm' | 'md'; // 'md' default; 'sm' for inline / table use
   invalid?: boolean;
   'aria-label'?: string;
   'aria-labelledby'?: string;
@@ -134,7 +136,9 @@ type SelectProps = {
     border-color var(--duration-fast) var(--ease-out),
     box-shadow var(--duration-fast) var(--ease-out);
 }
-.select > select:hover { border-color: var(--border-strong); }
+.select > select:hover {
+  border-color: var(--border-strong);
+}
 .select > select:focus-visible {
   outline: none;
   border-color: var(--accent-600);
@@ -149,7 +153,9 @@ type SelectProps = {
   padding: var(--space-1) calc(var(--space-6) - var(--space-1)) var(--space-1) var(--space-2);
   font-size: var(--text-sm);
 }
-.select[data-invalid='true'] > select { border-color: var(--danger-border); }
+.select[data-invalid='true'] > select {
+  border-color: var(--danger-border);
+}
 
 .select-chevron {
   position: absolute;
@@ -167,6 +173,7 @@ type SelectProps = {
 **Dark mode:** no extra rules required — every value is a token.
 
 **Caveats / known quirks:**
+
 - Firefox respects `appearance: none` differently on `<select>` — the option list still uses native chrome, which is fine.
 - Don't set `background-image` for the chevron; use a real SVG component for theming.
 - Don't break form submission — keep the `<select>` named when used inside a `<form>` (none of our current call sites do, but the option should remain).
@@ -184,7 +191,7 @@ type CheckboxProps = {
   onChange: (next: boolean) => void;
   disabled?: boolean;
   invalid?: boolean;
-  children: ReactNode;            // the label content (required)
+  children: ReactNode; // the label content (required)
 };
 ```
 
@@ -259,7 +266,9 @@ type CheckboxProps = {
   opacity: 1;
   transform: scale(1);
 }
-.checkbox:hover .checkbox-box { border-color: var(--border-strong); }
+.checkbox:hover .checkbox-box {
+  border-color: var(--border-strong);
+}
 .checkbox > input:focus-visible ~ .checkbox-box {
   box-shadow: 0 0 0 3px var(--accent-100);
   border-color: var(--accent-600);
@@ -273,11 +282,14 @@ type CheckboxProps = {
   color: var(--text-disabled);
   cursor: not-allowed;
 }
-.checkbox[data-invalid='true'] .checkbox-box { border-color: var(--danger-border); }
+.checkbox[data-invalid='true'] .checkbox-box {
+  border-color: var(--danger-border);
+}
 ```
 
 **Notes:**
-- The check icon fades in on state change. This is a state transition (allowed by Path 1) — *not* general motion choreography (which is Path 2 motion spec).
+
+- The check icon fades in on state change. This is a state transition (allowed by Path 1) — _not_ general motion choreography (which is Path 2 motion spec).
 - `prefers-reduced-motion` is already handled by `base.css`.
 
 ### 3.3 `Progress`
@@ -288,9 +300,9 @@ type CheckboxProps = {
 
 ```ts
 type ProgressProps = {
-  value: number;      // 0..max
+  value: number; // 0..max
   max: number;
-  label?: string;     // visually rendered above bar; also aria-label fallback
+  label?: string; // visually rendered above bar; also aria-label fallback
   size?: 'sm' | 'md'; // 'sm' default for header chrome
 };
 ```
@@ -335,7 +347,9 @@ type ProgressProps = {
   overflow: hidden;
   border: 1px solid var(--border-subtle);
 }
-.progress[data-size='sm'] .progress-track { height: 4px; }
+.progress[data-size='sm'] .progress-track {
+  height: 4px;
+}
 .progress-fill {
   height: 100%;
   background: var(--accent-bg);
@@ -345,12 +359,14 @@ type ProgressProps = {
 ```
 
 **Notes:**
-- This is one of the few places in the app where accent color shows up in the chrome. That's intentional — the progress bar should *feel* like progress.
+
+- This is one of the few places in the app where accent color shows up in the chrome. That's intentional — the progress bar should _feel_ like progress.
 - The width transition is animated (duration-medium) so completing a section gives subtle satisfying motion.
 
 ### 3.4 `FileDropzone`
 
 **Approach:** wrapper around `<input type="file">` that adds:
+
 - A click-or-drop target with dashed border in idle state, accent border on hover/drag, danger border on rejected drops.
 - Thumbnail preview (image only) when a file is loaded, with a small "Remove" button (ghost variant, see Spec B).
 - Filename + size text under the thumbnail.
@@ -362,11 +378,11 @@ type ProgressProps = {
 type FileDropzoneProps = {
   id?: string;
   value: { fileName: string; objectUrl: string; sizeBytes?: number } | undefined;
-  accept?: string;             // 'image/*' for current usage
-  maxBytes?: number;           // optional client-side size guard
+  accept?: string; // 'image/*' for current usage
+  maxBytes?: number; // optional client-side size guard
   onFileChange: (file: File | null) => void;
   disabled?: boolean;
-  label?: string;              // visible heading; default 'Upload image'
+  label?: string; // visible heading; default 'Upload image'
 };
 ```
 
@@ -387,14 +403,18 @@ type FileDropzoneProps = {
         <img src={value.objectUrl} alt={value.fileName} />
         <figcaption>
           <span className="file-dropzone-filename">{value.fileName}</span>
-          {value.sizeBytes ? <span className="file-dropzone-meta">{formatBytes(value.sizeBytes)}</span> : null}
+          {value.sizeBytes ? (
+            <span className="file-dropzone-meta">{formatBytes(value.sizeBytes)}</span>
+          ) : null}
         </figcaption>
       </figure>
     ) : (
       <div className="file-dropzone-empty">
         <ImagePlus aria-hidden="true" className="file-dropzone-icon" />
         <p className="file-dropzone-primary">Drop an image here or click to choose</p>
-        <p className="file-dropzone-secondary">PNG, JPG, or HEIC up to {maxBytes ? formatBytes(maxBytes) : '5 MB'}</p>
+        <p className="file-dropzone-secondary">
+          PNG, JPG, or HEIC up to {maxBytes ? formatBytes(maxBytes) : '5 MB'}
+        </p>
       </div>
     )}
   </label>
@@ -437,7 +457,9 @@ type FileDropzoneProps = {
   border-color: var(--accent-600);
   background: var(--accent-soft);
 }
-.file-dropzone-target > input { /* visually hidden; same pattern as Checkbox */ }
+.file-dropzone-target > input {
+  /* visually hidden; same pattern as Checkbox */
+}
 .file-dropzone-empty {
   display: flex;
   flex-direction: column;
@@ -445,9 +467,19 @@ type FileDropzoneProps = {
   gap: var(--space-2);
   color: var(--text-secondary);
 }
-.file-dropzone-icon { color: var(--text-tertiary); width: 32px; height: 32px; }
-.file-dropzone-primary { color: var(--text-primary); font-weight: var(--weight-medium); }
-.file-dropzone-secondary { color: var(--text-tertiary); font-size: var(--text-sm); }
+.file-dropzone-icon {
+  color: var(--text-tertiary);
+  width: 32px;
+  height: 32px;
+}
+.file-dropzone-primary {
+  color: var(--text-primary);
+  font-weight: var(--weight-medium);
+}
+.file-dropzone-secondary {
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
 .file-dropzone-preview img {
   max-width: 100%;
   max-height: 240px;
@@ -464,10 +496,11 @@ type FileDropzoneProps = {
 ```
 
 **Notes:**
+
 - `ImagePlus` is a Lucide icon. For non-image accepts in the future, swap to `FilePlus`.
 - The `Remove` button reuses Spec B's ghost variant. If Spec B hasn't shipped yet, use a plain `<button>` with `.file-dropzone-remove` class and a one-off rule consuming tokens.
 - The `Choose File` browser button is now invisible. The clickable target is the whole dashed area.
-- This component does *not* validate file size or type beyond what the native `accept` attribute does. `maxBytes` is a UI hint only. Server-side / store-side limits remain unchanged.
+- This component does _not_ validate file size or type beyond what the native `accept` attribute does. `maxBytes` is a UI hint only. Server-side / store-side limits remain unchanged.
 
 ---
 
@@ -475,14 +508,14 @@ type FileDropzoneProps = {
 
 Six existing usages to migrate. Each gets one focused commit.
 
-| # | File | Line | Today | Replace with |
-|---|------|------|-------|--------------|
-| 1 | [src/ui/LabPage.tsx](src/ui/LabPage.tsx) | ~366 | `<select>` simulation picker | `<Select>` (size `md`) |
-| 2 | [src/ui/LabPage.tsx](src/ui/LabPage.tsx) | ~427 | `<select>` theme picker | `<Select>` (size `sm`)¹ |
-| 3 | [src/ui/sections/PlotSectionView.tsx](src/ui/sections/PlotSectionView.tsx) | ~25 | `<select>` fit picker | `<Select>` (size `md`)² |
-| 4 | [src/ui/ProgressBar.tsx](src/ui/ProgressBar.tsx) | ~81 | `<progress>` | `<Progress>` |
-| 5 | [src/ui/IntegrityAgreement.tsx](src/ui/IntegrityAgreement.tsx) | ~39, ~50 | two `<input type="checkbox">` | `<Checkbox>` ×2 |
-| 6 | [src/ui/primitives/ImageUploader.tsx](src/ui/primitives/ImageUploader.tsx) | whole file | `<input type="file">` + `<img>` | `<FileDropzone>` |
+| #   | File                                                                       | Line       | Today                           | Replace with            |
+| --- | -------------------------------------------------------------------------- | ---------- | ------------------------------- | ----------------------- |
+| 1   | [src/ui/LabPage.tsx](src/ui/LabPage.tsx)                                   | ~366       | `<select>` simulation picker    | `<Select>` (size `md`)  |
+| 2   | [src/ui/LabPage.tsx](src/ui/LabPage.tsx)                                   | ~427       | `<select>` theme picker         | `<Select>` (size `sm`)¹ |
+| 3   | [src/ui/sections/PlotSectionView.tsx](src/ui/sections/PlotSectionView.tsx) | ~25        | `<select>` fit picker           | `<Select>` (size `md`)² |
+| 4   | [src/ui/ProgressBar.tsx](src/ui/ProgressBar.tsx)                           | ~81        | `<progress>`                    | `<Progress>`            |
+| 5   | [src/ui/IntegrityAgreement.tsx](src/ui/IntegrityAgreement.tsx)             | ~39, ~50   | two `<input type="checkbox">`   | `<Checkbox>` ×2         |
+| 6   | [src/ui/primitives/ImageUploader.tsx](src/ui/primitives/ImageUploader.tsx) | whole file | `<input type="file">` + `<img>` | `<FileDropzone>`        |
 
 ¹ The theme picker may be superseded by Spec B's icon-segmented control. Land `Select` here anyway — it's the right interim state, and the swap to a segmented control in Spec B will be a clean replacement.
 
@@ -525,7 +558,7 @@ Each step leaves the app working. Commit per step so regressions are bisectable.
 
 ## 7. Decisions to make
 
-1. **Should `Select` be a styled native or a real listbox?** Styled native. The visual gap is in the *closed* trigger, not the open menu. Building a real listbox is a separate, larger commit and not needed here. Documented in §2.2.
+1. **Should `Select` be a styled native or a real listbox?** Styled native. The visual gap is in the _closed_ trigger, not the open menu. Building a real listbox is a separate, larger commit and not needed here. Documented in §2.2.
 2. **Should `Checkbox` use `accent-color`?** No. `accent-color` only retints the native checkbox; it doesn't fix sizing, border radius, or the focus ring. Custom rendering is cleaner.
 3. **Should `FileDropzone` allow multiple files?** No, not in v1. Every current call site is single-file. If multi-file becomes a need, add a `multiple` prop later.
 4. **Should `FileDropzone` show upload progress?** No, not in v1. Uploads in this app are synchronous (`URL.createObjectURL` + IndexedDB write) and complete in <100ms even for large images. If we ever ship server uploads, add a progress indicator then.

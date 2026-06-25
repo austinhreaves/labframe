@@ -70,7 +70,11 @@ describe('TableOfContents', () => {
       <div>
         <TableOfContents sections={tocFixtureLab.sections} />
         {tocFixtureLab.sections.map((section, index) => (
-          <div key={`${section.kind}-${index}`} id={`section-${index}`} data-testid={`anchor-${index}`}>
+          <div
+            key={`${section.kind}-${index}`}
+            id={`section-${index}`}
+            data-testid={`anchor-${index}`}
+          >
             {section.kind}
           </div>
         ))}
@@ -116,7 +120,9 @@ describe('TableOfContents', () => {
     fireEvent.click(screen.getByText('Sections'));
     expect(details).toHaveAttribute('open');
 
-    await waitFor(() => expect(details!.querySelector('nav.table-of-contents-popover-panel')).toBeTruthy());
+    await waitFor(() =>
+      expect(details!.querySelector('nav.table-of-contents-popover-panel')).toBeTruthy(),
+    );
     fireEvent.pointerDown(screen.getByTestId('outside'));
     await waitFor(() => expect(details).not.toHaveAttribute('open'));
   });

@@ -64,7 +64,7 @@ Each phase is independent and can be implemented in isolation. Implement only th
 **Uncertainty propagation under log transform:**
 
 - σ_b (the exponent or rate) is just the slope std err in log space. Same number, same units.
-- σ_a is _not_ directly the intercept std err in log space, because a = exp(intercept). By first-order error propagation, σ_a ≈ a · σ_intercept. The fit function must do this conversion before returning — callers should never see log-space uncertainties leak through.
+- σ*a is \_not* directly the intercept std err in log space, because a = exp(intercept). By first-order error propagation, σ_a ≈ a · σ_intercept. The fit function must do this conversion before returning — callers should never see log-space uncertainties leak through.
 
 **Edge cases the fit function must handle:**
 

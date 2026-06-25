@@ -346,7 +346,7 @@ Three knobs change $\\Phi_B$ (or scale the EMF response): the field strength $B$
       kind: 'concept',
       fieldId: 'discussionConclusion',
       prompt:
-        "Write your discussion and conclusion below according to the guidelines given in the Lab Report Rubric, found in the Course Information module on Canvas. (e.g., summarize how your Part 1 data confirm or refute the $1/d^{3}$ scaling of $B$ in the far-field region; report your extracted dipole moment $m$ and what it implies about the magnet; describe your Part 2 qualitative observations of how speed, turn count, and coil area each affect induced EMF; note sources of uncertainty in both parts.)",
+        'Write your discussion and conclusion below according to the guidelines given in the Lab Report Rubric, found in the Course Information module on Canvas. (e.g., summarize how your Part 1 data confirm or refute the $1/d^{3}$ scaling of $B$ in the far-field region; report your extracted dipole moment $m$ and what it implies about the magnet; describe your Part 2 qualitative observations of how speed, turn count, and coil area each affect induced EMF; note sources of uncertainty in both parts.)',
       rows: 12,
       points: 6,
     },

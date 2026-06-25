@@ -22,7 +22,10 @@ describe('parent postMessage service', () => {
   it('does not post when referrer is not allow-listed', () => {
     const postMessage = vi.fn();
     Object.defineProperty(window, 'parent', { value: { postMessage }, configurable: true });
-    Object.defineProperty(document, 'referrer', { value: 'https://evil.example.com/embed', configurable: true });
+    Object.defineProperty(document, 'referrer', {
+      value: 'https://evil.example.com/embed',
+      configurable: true,
+    });
 
     configureParentMessaging({
       parentOriginAllowList: ['https://canvas.asu.edu'],
@@ -37,7 +40,10 @@ describe('parent postMessage service', () => {
   it('posts with explicit targetOrigin when referrer origin is allow-listed', () => {
     const postMessage = vi.fn();
     Object.defineProperty(window, 'parent', { value: { postMessage }, configurable: true });
-    Object.defineProperty(document, 'referrer', { value: 'https://canvas.asu.edu/courses/123', configurable: true });
+    Object.defineProperty(document, 'referrer', {
+      value: 'https://canvas.asu.edu/courses/123',
+      configurable: true,
+    });
 
     configureParentMessaging({
       parentOriginAllowList: ['https://canvas.asu.edu'],

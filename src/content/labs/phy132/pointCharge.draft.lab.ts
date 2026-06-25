@@ -404,7 +404,7 @@ In Part 1B you'll measure $V$ at five equipotential rings around a single point 
       kind: 'concept',
       fieldId: 'discussionConclusion',
       prompt:
-        "Write your discussion and conclusion below according to the guidelines given in the Lab Report Rubric, found in the Course Information module on Canvas. (e.g., summarize how your data from Part 1A confirm or refute the $1/r^{2}$ scaling of $E$; how your data from Part 1B confirm or refute the $1/r$ scaling of $V$; how well your experimental $kq$ agrees with the expected value; sources of uncertainty.)",
+        'Write your discussion and conclusion below according to the guidelines given in the Lab Report Rubric, found in the Course Information module on Canvas. (e.g., summarize how your data from Part 1A confirm or refute the $1/r^{2}$ scaling of $E$; how your data from Part 1B confirm or refute the $1/r$ scaling of $V$; how well your experimental $kq$ agrees with the expected value; sources of uncertainty.)',
       rows: 12,
       points: 6,
     },

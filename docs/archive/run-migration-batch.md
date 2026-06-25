@@ -104,6 +104,7 @@ npm run typecheck 2>&1 | head -30
 ```
 
 Also visually skim each draft for:
+
 - Sections that became `'⚠️ TODO(human): legacy used <Foo>. Port manually.'` (means the script saw a component it doesn't know how to handle — list the components by name)
 - `'⚠️ TODO(human): missing prompt'` markers (means a ConfigurableQuestion had an unrecognized shape)
 - `kind: 'derived'` columns where the formula stayed as `(_row) => 0, // TODO(human)` (means the formula didn't match the auto-translation pattern)
@@ -116,24 +117,28 @@ Produce a single markdown report in your final response (under 600 words total, 
 ## Migration batch results
 
 ### Smoke test (snellsLaw 132 vs. hand-migrated reference)
+
 [your diff summary; answer the 5 questions from Step 1]
 
 ### Per-lab results
 
-| Lab | Course | Sections | Warnings | TODO count | Typecheck | Cleanup judgment |
-|---|---|---|---|---|---|---|
-| ... | ... | ... | ... | ... | ✓/✗ | light/medium/heavy |
+| Lab | Course | Sections | Warnings | TODO count | Typecheck | Cleanup judgment   |
+| --- | ------ | -------- | -------- | ---------- | --------- | ------------------ |
+| ... | ...    | ...      | ...      | ...        | ✓/✗       | light/medium/heavy |
 
 ### Script bugs found
+
 [any place the script crashed, produced obviously-wrong output, or where the legacy
 input has a pattern the script could handle better but currently doesn't.]
 
 ### Recommended script improvements
+
 [ranked by impact: which patterns would benefit most from being added to the
 script's handler set or formula auto-translator? Brief, specific. The script
 maintainer wants concrete patches, not vibes.]
 
 ### Files written
+
 [List of all draft files written and their sizes.]
 ```
 

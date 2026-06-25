@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { clearTelemetryContext, configureTelemetry, reportError } from '@/services/telemetry/errorReporter';
+import {
+  clearTelemetryContext,
+  configureTelemetry,
+  reportError,
+} from '@/services/telemetry/errorReporter';
 
 describe('telemetry errorReporter', () => {
   beforeEach(() => {
@@ -17,7 +21,9 @@ describe('telemetry errorReporter', () => {
   });
 
   it('sends the allowed payload when telemetry is enabled', async () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 204 }));
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response(null, { status: 204 }));
 
     configureTelemetry({
       telemetryEndpoint: 'https://telemetry.example.com/ingest',

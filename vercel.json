@@ -5,7 +5,10 @@
   "framework": "vite",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/((?!api/|@vite|@react-refresh|@id|@fs|src/|node_modules/|.+\\..+).*)", "destination": "/index.html" }
+    {
+      "source": "/((?!api/|@vite|@react-refresh|@id|@fs|src/|node_modules/|.+\\..+).*)",
+      "destination": "/index.html"
+    }
   ],
   "functions": {
     "api/sign.ts": {

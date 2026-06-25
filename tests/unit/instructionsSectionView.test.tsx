@@ -9,7 +9,13 @@ describe('InstructionsSectionView', () => {
   it('renders markdown blocks including inline math', async () => {
     const section: InstructionsSection = {
       kind: 'instructions',
-      html: ['## Header', '**bold** text', '- item one', '- item two', 'inline math: $x^2 + 1$'].join('\n\n'),
+      html: [
+        '## Header',
+        '**bold** text',
+        '- item one',
+        '- item two',
+        'inline math: $x^2 + 1$',
+      ].join('\n\n'),
     };
 
     const { container } = render(

@@ -13,15 +13,27 @@ export function TabsView({ activeTab, onTabChange, simulationSlot, worksheet }: 
   return (
     <div className="tabs-view">
       <div className="tabs">
-        <button type="button" onClick={() => onTabChange('simulation')} aria-pressed={activeTab === 'simulation'}>
+        <button
+          type="button"
+          onClick={() => onTabChange('simulation')}
+          aria-pressed={activeTab === 'simulation'}
+        >
           Simulation
         </button>
-        <button type="button" onClick={() => onTabChange('worksheet')} aria-pressed={activeTab === 'worksheet'}>
+        <button
+          type="button"
+          onClick={() => onTabChange('worksheet')}
+          aria-pressed={activeTab === 'worksheet'}
+        >
           Worksheet
         </button>
       </div>
-      <section style={{ display: activeTab === 'simulation' ? 'block' : 'none' }}>{simulationSlot}</section>
-      <section style={{ display: activeTab === 'worksheet' ? 'block' : 'none' }}>{worksheet}</section>
+      <section style={{ display: activeTab === 'simulation' ? 'block' : 'none' }}>
+        {simulationSlot}
+      </section>
+      <section style={{ display: activeTab === 'worksheet' ? 'block' : 'none' }}>
+        {worksheet}
+      </section>
     </div>
   );
 }

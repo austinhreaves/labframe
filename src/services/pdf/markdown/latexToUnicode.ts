@@ -190,10 +190,16 @@ function warnOnceUnsupportedSuperSub(): void {
     return;
   }
   warnedUnsupportedSuperSub = true;
-  console.warn('[pdf-markdown] Unsupported superscript/subscript characters; leaving literal fallback.');
+  console.warn(
+    '[pdf-markdown] Unsupported superscript/subscript characters; leaving literal fallback.',
+  );
 }
 
-function convertSuperSubContent(content: string, map: Record<string, string>, fallbackPrefix: '_' | '^'): string {
+function convertSuperSubContent(
+  content: string,
+  map: Record<string, string>,
+  fallbackPrefix: '_' | '^',
+): string {
   let converted = '';
   for (const char of content) {
     const mapped = map[char];
@@ -208,9 +214,15 @@ function convertSuperSubContent(content: string, map: Record<string, string>, fa
 
 function convertSimpleSuperSub(input: string): string {
   let output = input;
-  output = output.replace(/_\{([^{}]+)\}/g, (_full, content: string) => convertSuperSubContent(content, SUBSCRIPT_MAP, '_'));
-  output = output.replace(/\^\{([^{}]+)\}/g, (_full, content: string) => convertSuperSubContent(content, SUPERSCRIPT_MAP, '^'));
-  output = output.replace(/_([A-Za-z0-9+\-=()])/g, (_full, content: string) => convertSuperSubContent(content, SUBSCRIPT_MAP, '_'));
+  output = output.replace(/_\{([^{}]+)\}/g, (_full, content: string) =>
+    convertSuperSubContent(content, SUBSCRIPT_MAP, '_'),
+  );
+  output = output.replace(/\^\{([^{}]+)\}/g, (_full, content: string) =>
+    convertSuperSubContent(content, SUPERSCRIPT_MAP, '^'),
+  );
+  output = output.replace(/_([A-Za-z0-9+\-=()])/g, (_full, content: string) =>
+    convertSuperSubContent(content, SUBSCRIPT_MAP, '_'),
+  );
   output = output.replace(/\^([A-Za-z0-9+\-=()])/g, (_full, content: string) =>
     convertSuperSubContent(content, SUPERSCRIPT_MAP, '^'),
   );
@@ -218,9 +230,12 @@ function convertSimpleSuperSub(input: string): string {
 }
 
 function replaceFractions(input: string): string {
-  return input.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, (_full, numerator: string, denominator: string) => {
-    return `(${numerator})/(${denominator})`;
-  });
+  return input.replace(
+    /\\frac\{([^{}]+)\}\{([^{}]+)\}/g,
+    (_full, numerator: string, denominator: string) => {
+      return `(${numerator})/(${denominator})`;
+    },
+  );
 }
 
 function replaceSquareRoots(input: string): string {
@@ -239,7 +254,10 @@ const MAPPED_COMMAND_PATTERN = new RegExp(
 );
 
 function replaceMappedCommands(input: string): string {
-  const output = input.replace(MAPPED_COMMAND_PATTERN, (command) => COMMAND_MAP[command] ?? command);
+  const output = input.replace(
+    MAPPED_COMMAND_PATTERN,
+    (command) => COMMAND_MAP[command] ?? command,
+  );
   if (/\\[A-Za-z]+/.test(output)) {
     // Something command-shaped is left over: leave it verbatim.
     warnOnceUnknownCommand();

@@ -392,7 +392,7 @@ Pull the blue hose knob to the right to release water; the magnet will begin rot
       kind: 'concept',
       fieldId: 'discussionConclusion',
       prompt:
-        "Write your discussion and conclusion below according to the guidelines given in the Lab Report Rubric, found in the Course Information module on Canvas. (e.g., summarize how your three sweeps from Parts 3A, 3B, and 3C confirm or refute the linear dependence of $\\mathcal{E}_{\\max}$ on $\\omega$, $N$, and $A$ predicted by Eq. (7); compare the quality of the three proportional fits; note sources of uncertainty including RPM drift between trials.)",
+        'Write your discussion and conclusion below according to the guidelines given in the Lab Report Rubric, found in the Course Information module on Canvas. (e.g., summarize how your three sweeps from Parts 3A, 3B, and 3C confirm or refute the linear dependence of $\\mathcal{E}_{\\max}$ on $\\omega$, $N$, and $A$ predicted by Eq. (7); compare the quality of the three proportional fits; note sources of uncertainty including RPM drift between trials.)',
       rows: 12,
       points: 4,
     },

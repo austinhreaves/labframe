@@ -3,7 +3,10 @@ import { describe, expect, it } from 'vitest';
 
 import { renderMarkdownToPdf } from '@/services/pdf/markdown/renderMarkdownToPdf';
 
-function collectElements(node: unknown, bag: Array<{ props: Record<string, unknown> }> = []): Array<{ props: Record<string, unknown> }> {
+function collectElements(
+  node: unknown,
+  bag: Array<{ props: Record<string, unknown> }> = [],
+): Array<{ props: Record<string, unknown> }> {
   if (Array.isArray(node)) {
     for (const child of node) {
       collectElements(child, bag);
@@ -38,7 +41,11 @@ describe('renderMarkdownToPdf', () => {
     const elements = collectElements(nodes);
     const heading = elements.find((element) => {
       const style = element.props.style;
-      return typeof style === 'object' && style !== null && (style as { fontSize?: number }).fontSize === 14;
+      return (
+        typeof style === 'object' &&
+        style !== null &&
+        (style as { fontSize?: number }).fontSize === 14
+      );
     });
     expect(heading).toBeDefined();
     expect(collectText(heading)).toContain('Part 1');
@@ -51,7 +58,11 @@ describe('renderMarkdownToPdf', () => {
 
     const hasBold = elements.some((element) => {
       const style = element.props.style;
-      return typeof style === 'object' && style !== null && (style as { fontWeight?: number }).fontWeight === 700;
+      return (
+        typeof style === 'object' &&
+        style !== null &&
+        (style as { fontWeight?: number }).fontWeight === 700
+      );
     });
 
     expect(hasBold).toBe(true);

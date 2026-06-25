@@ -26,7 +26,7 @@ What follows is the case for that, and the phased blueprint to do it.
 
 ### 1.1 What this system actually does
 
-This is a frontend for **fully online lab courses**. There is no in-person component, no printing, and no physical lab artifact — the deliverable lives entirely on a screen. That framing matters because it pushes the artifact design toward something that's both a record *and* a self-contained submission, not a printable handout.
+This is a frontend for **fully online lab courses**. There is no in-person component, no printing, and no physical lab artifact — the deliverable lives entirely on a screen. That framing matters because it pushes the artifact design toward something that's both a record _and_ a self-contained submission, not a printable handout.
 
 A **per-student, per-lab worksheet** that:
 
@@ -152,7 +152,7 @@ State is owned by `useLabState`. `LabReportForm` receives prop drillers (`answer
 
 ### 2.4 Data flow
 
-It is *nominally* unidirectional (handler → setAnswers → re-render), but in practice has these complications:
+It is _nominally_ unidirectional (handler → setAnswers → re-render), but in practice has these complications:
 
 - **Auto-save side effect inside the setter** — `setAnswers(prev => { const next = updater(prev); save(next); return next; })`. Async storage writes are racing every keystroke. There is no debounce.
 - **Image storage** writes File objects via FileReader in the same path → multiple inflight FileReaders during typing → unpredictable order of writes.
@@ -163,15 +163,15 @@ It is *nominally* unidirectional (handler → setAnswers → re-render), but in 
 
 ### 2.5 External dependencies (inferred)
 
-| Dep | Used for | Replaceable? |
-|---|---|---|
-| `react`, `react-dom`, `react-router-dom` v6 | shell, routing | keep, but upgrade to v18+ and use React Router data APIs |
-| `prop-types` | component contracts | replace with TypeScript |
-| `chart.js` + `react-chartjs-2` | charts | keep |
-| `mathjs` | equation parsing for custom fits | keep, but isolate |
-| `ml-levenberg-marquardt` | nonlinear fit | keep |
-| `mathlive` | inline equation editor | keep, but lazy-load |
-| `html2canvas` + `jspdf` | DOM-to-PDF | **replace** with `@react-pdf/renderer` or `pdfmake` (declarative, no DOM screenshot) |
+| Dep                                         | Used for                         | Replaceable?                                                                         |
+| ------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------ |
+| `react`, `react-dom`, `react-router-dom` v6 | shell, routing                   | keep, but upgrade to v18+ and use React Router data APIs                             |
+| `prop-types`                                | component contracts              | replace with TypeScript                                                              |
+| `chart.js` + `react-chartjs-2`              | charts                           | keep                                                                                 |
+| `mathjs`                                    | equation parsing for custom fits | keep, but isolate                                                                    |
+| `ml-levenberg-marquardt`                    | nonlinear fit                    | keep                                                                                 |
+| `mathlive`                                  | inline equation editor           | keep, but lazy-load                                                                  |
+| `html2canvas` + `jspdf`                     | DOM-to-PDF                       | **replace** with `@react-pdf/renderer` or `pdfmake` (declarative, no DOM screenshot) |
 
 ---
 
@@ -181,7 +181,7 @@ These are systemic, not nit-picks. Each one will hit students in the field.
 
 ### 3.1 Broken state ownership masked by full-page reloads
 
-The three `<a href>` comment blocks confess it: switching labs via `<Link>` caused Lab A's data to leak into Lab B. The "fix" was to nuke client-side routing. The actual root cause is in `useLabState.loadLabData` and the dependency array `[selectedLab?.id]` — when the effect runs, the closed-over `STORAGE_KEY` is stale because it was computed at the top of the hook from the *previous* `selectedLab`. The effect tries to compensate by reading `selectedLab?.config` directly, but the *security* code paths still use the captured constants. Result: race conditions where the wrong tamper key is checked against the right storage blob.
+The three `<a href>` comment blocks confess it: switching labs via `<Link>` caused Lab A's data to leak into Lab B. The "fix" was to nuke client-side routing. The actual root cause is in `useLabState.loadLabData` and the dependency array `[selectedLab?.id]` — when the effect runs, the closed-over `STORAGE_KEY` is stale because it was computed at the top of the hook from the _previous_ `selectedLab`. The effect tries to compensate by reading `selectedLab?.config` directly, but the _security_ code paths still use the captured constants. Result: race conditions where the wrong tamper key is checked against the right storage blob.
 
 The honest fix is to key the hook on `(courseId, labId)` and let React unmount/remount the lab tree on `labId` change via a `key` prop on the route element. Five lines of code instead of three copies of a 30-line apology comment.
 
@@ -271,7 +271,7 @@ Conservative estimate: react + react-router + chart.js + mathjs (huge) + ml-leve
 
 ### 3.11 Code duplication
 
-`labs/` and `phy_114/` are almost the same. Every lab config and form is duplicated, with drift. Adding a lab requires editing both `labs/index.js` and `phy_114/index.js` import lists by hand. Per-lab forms are 500–820 LOC of declarative JSX that *should* be a JSON schema.
+`labs/` and `phy_114/` are almost the same. Every lab config and form is duplicated, with drift. Adding a lab requires editing both `labs/index.js` and `phy_114/index.js` import lists by hand. Per-lab forms are 500–820 LOC of declarative JSX that _should_ be a JSON schema.
 
 ### 3.12 No error boundaries except inside Graph
 
@@ -285,46 +285,46 @@ A single render error in any lab section blanks the entire page. `Graph.js` has 
 
 These are the durable instructional artifacts. Extract into JSON-like schemas before touching anything else.
 
-| Asset | Where | Restructure into |
-|---|---|---|
-| Lab metadata (title, category, description, lab number) | `labs/<n>/labConfig.js` `metadata` | `labs/<n>.lab.json` `meta` |
-| Initial answer shape per lab | `initialAnswersState` | `lab.dataModel` (declarative — describe field shapes; the runtime computes initial empty state) |
-| Image config keys | `imageConfigsForStorage` | `lab.dataModel` (image fields self-declare) |
-| PDF report sections (chart + image embeds with axis labels, fit-type keys) | `labPdfConfig.reportSections` | `lab.report` (renderer-agnostic) |
-| Student info config | `labPdfConfig.studentInfoConfig` | `lab.studentInfo` (shared across labs by default) |
-| PhET simulation URL + title | `simulations` | `lab.simulations` |
-| Question prose, instructions, point values, table column configs, fit config keys | per-lab `LabReportForm.js` JSX | `lab.sections[]` (declarative section schema — see §5.4) |
+| Asset                                                                             | Where                              | Restructure into                                                                                |
+| --------------------------------------------------------------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Lab metadata (title, category, description, lab number)                           | `labs/<n>/labConfig.js` `metadata` | `labs/<n>.lab.json` `meta`                                                                      |
+| Initial answer shape per lab                                                      | `initialAnswersState`              | `lab.dataModel` (declarative — describe field shapes; the runtime computes initial empty state) |
+| Image config keys                                                                 | `imageConfigsForStorage`           | `lab.dataModel` (image fields self-declare)                                                     |
+| PDF report sections (chart + image embeds with axis labels, fit-type keys)        | `labPdfConfig.reportSections`      | `lab.report` (renderer-agnostic)                                                                |
+| Student info config                                                               | `labPdfConfig.studentInfoConfig`   | `lab.studentInfo` (shared across labs by default)                                               |
+| PhET simulation URL + title                                                       | `simulations`                      | `lab.simulations`                                                                               |
+| Question prose, instructions, point values, table column configs, fit config keys | per-lab `LabReportForm.js` JSX     | `lab.sections[]` (declarative section schema — see §5.4)                                        |
 
 This is the only thing worth weeks of careful migration work.
 
 ### 4.2 Salvage as code (medium value, restructure required)
 
-| Asset | Notes |
-|---|---|
-| `utils/fitCalculations.js` | Keep the algorithms. Refactor into a typed module with a clean function signature `fit(data, model, options) → result`. Audit custom-equation parser for sandbox escapes. Unit tests for each fit type. |
-| `constants/index.js` `UNITS`, `FIT_EXAMPLES`, `COIL_CONFIG` | Direct port. Drop `SECURITY` and `LEGACY_KEYS`. |
-| `components/base/ChartBase.js` | Concept good; reimplement as thin wrapper that takes `{type, data, options}` and renders chart.js. Remove the `console.error` fallback path. |
-| `GenericImageUploader.js` | Object URL handling is correct. Keep the lifecycle pattern; rewrite the component to use IndexedDB-backed blobs instead of base64 in JSON. |
-| MathLive integration | Lazy-load. Keep the per-row `value+isMath` schema; it's actually a nice toggle. |
-| `LayoutSelector` / tab navigation | Trivial; rebuild fresh in <100 lines. |
-| PDF report **layout intent** (sections, embedded charts, student info header) | Reimplement in `@react-pdf/renderer` from the same schema in §4.1. Throw away the html2canvas pipeline. |
+| Asset                                                                         | Notes                                                                                                                                                                                                   |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `utils/fitCalculations.js`                                                    | Keep the algorithms. Refactor into a typed module with a clean function signature `fit(data, model, options) → result`. Audit custom-equation parser for sandbox escapes. Unit tests for each fit type. |
+| `constants/index.js` `UNITS`, `FIT_EXAMPLES`, `COIL_CONFIG`                   | Direct port. Drop `SECURITY` and `LEGACY_KEYS`.                                                                                                                                                         |
+| `components/base/ChartBase.js`                                                | Concept good; reimplement as thin wrapper that takes `{type, data, options}` and renders chart.js. Remove the `console.error` fallback path.                                                            |
+| `GenericImageUploader.js`                                                     | Object URL handling is correct. Keep the lifecycle pattern; rewrite the component to use IndexedDB-backed blobs instead of base64 in JSON.                                                              |
+| MathLive integration                                                          | Lazy-load. Keep the per-row `value+isMath` schema; it's actually a nice toggle.                                                                                                                         |
+| `LayoutSelector` / tab navigation                                             | Trivial; rebuild fresh in <100 lines.                                                                                                                                                                   |
+| PDF report **layout intent** (sections, embedded charts, student info header) | Reimplement in `@react-pdf/renderer` from the same schema in §4.1. Throw away the html2canvas pipeline.                                                                                                 |
 
 ### 4.3 Discard outright
 
-| Item | Reason |
-|---|---|
-| `useLabState.js` | God-hook, racey, security theater. |
-| Anti-tamper subsystem | Doesn't work, destroys data. |
-| `onPaste`/`oncopy`/`oncontextmenu`/`onmousedown` blockers | A11y violation, useless. |
-| `<a href>` reload-based navigation | Symptom; fixing state ownership obviates it. |
-| `labs/index.js` + `phy_114/index.js` hand-imports | Replace with filesystem or manifest. |
-| Per-lab `LabReportForm.js` files | Replace with a single schema-driven `<LabReport>` renderer. |
-| `phy_114/` duplicated tree | Replace with course manifest that selects from a single `labs/` tree. |
-| `utils/pdfGenerator.js` (1531 LOC) | Replace with declarative PDF renderer. |
-| `prepareAnswersForStorage` localStorage path for images | Replace with IndexedDB blob store. |
-| `postMessage(... '*')` | Replace with explicit `parentOrigin` prop, validated. |
-| `window[sessionTamperKey]` globals | Delete. |
-| `dangerouslySetInnerHTML` HTML-sniff in titles | Replace with explicit MDX or sanitized rich-text section type. |
+| Item                                                      | Reason                                                                |
+| --------------------------------------------------------- | --------------------------------------------------------------------- |
+| `useLabState.js`                                          | God-hook, racey, security theater.                                    |
+| Anti-tamper subsystem                                     | Doesn't work, destroys data.                                          |
+| `onPaste`/`oncopy`/`oncontextmenu`/`onmousedown` blockers | A11y violation, useless.                                              |
+| `<a href>` reload-based navigation                        | Symptom; fixing state ownership obviates it.                          |
+| `labs/index.js` + `phy_114/index.js` hand-imports         | Replace with filesystem or manifest.                                  |
+| Per-lab `LabReportForm.js` files                          | Replace with a single schema-driven `<LabReport>` renderer.           |
+| `phy_114/` duplicated tree                                | Replace with course manifest that selects from a single `labs/` tree. |
+| `utils/pdfGenerator.js` (1531 LOC)                        | Replace with declarative PDF renderer.                                |
+| `prepareAnswersForStorage` localStorage path for images   | Replace with IndexedDB blob store.                                    |
+| `postMessage(... '*')`                                    | Replace with explicit `parentOrigin` prop, validated.                 |
+| `window[sessionTamperKey]` globals                        | Delete.                                                               |
+| `dangerouslySetInnerHTML` HTML-sniff in titles            | Replace with explicit MDX or sanitized rich-text section type.        |
 
 ### 4.4 Net salvageability
 
@@ -376,33 +376,39 @@ src/
 ```ts
 type LabAnswers = {
   schemaVersion: 1;
-  meta: { studentName: string; semester: 'Spring'|'Summer'|'Fall'; session: 'A'|'B'|'C'; year: string; taName: string };
+  meta: {
+    studentName: string;
+    semester: 'Spring' | 'Summer' | 'Fall';
+    session: 'A' | 'B' | 'C';
+    year: string;
+    taName: string;
+  };
   integrity: { signedAs: string };
-  fields: Record<FieldId, FieldValue>;     // flat scalar fields by ID
-  tables: Record<TableId, TableData>;      // 2D arrays keyed by table ID; cells are FieldValue
-  images: Record<ImageId, BlobRef>;        // BlobRef = { idbKey: string; mime: string; bytes: number }
-  fits:   Record<PlotId, FitResult>;
+  fields: Record<FieldId, FieldValue>; // flat scalar fields by ID
+  tables: Record<TableId, TableData>; // 2D arrays keyed by table ID; cells are FieldValue
+  images: Record<ImageId, BlobRef>; // BlobRef = { idbKey: string; mime: string; bytes: number }
+  fits: Record<PlotId, FitResult>;
   status: { submitted: boolean; lastSavedAt: number };
 };
 
 // Every text input — single fields and table cells — carries its construction history.
 type FieldValue = {
-  text: string;                            // final state (what's in the input now)
-  pastes: PasteEvent[];                    // every paste-style insertion, in temporal order
+  text: string; // final state (what's in the input now)
+  pastes: PasteEvent[]; // every paste-style insertion, in temporal order
   meta: {
-    activeMs: number;                      // total focus time
-    keystrokes: number;                    // count of insertText events
-    deletes: number;                       // count of deleteContent* events
-    firstFocusAt?: number;                 // ms epoch
-    lastEditAt?: number;                   // ms epoch
+    activeMs: number; // total focus time
+    keystrokes: number; // count of insertText events
+    deletes: number; // count of deleteContent* events
+    firstFocusAt?: number; // ms epoch
+    lastEditAt?: number; // ms epoch
   };
 };
 
 type PasteEvent = {
-  text: string;                            // exact pasted content
-  at: number;                              // ms epoch
-  offset: number;                          // best-effort insertion offset at time of paste
-  source: 'clipboard' | 'autocomplete' | 'ime';  // from InputEvent.inputType
+  text: string; // exact pasted content
+  at: number; // ms epoch
+  offset: number; // best-effort insertion offset at time of paste
+  source: 'clipboard' | 'autocomplete' | 'ime'; // from InputEvent.inputType
 };
 
 type Store = {
@@ -422,27 +428,55 @@ type Lab = {
   description: string;
   category: 'Physics' | string;
   simulations: Record<SimId, { url: string; title: string; allow?: string }>;
-  studentInfo?: StudentInfoOverrides;       // optional per-lab override
+  studentInfo?: StudentInfoOverrides; // optional per-lab override
   sections: Section[];
 };
 
 type Section =
-  | { kind: 'instructions'; html: string; points?: number }   // markdown/MDX, sanitized
+  | { kind: 'instructions'; html: string; points?: number } // markdown/MDX, sanitized
   | { kind: 'objective'; fieldId: FieldId; rows?: number; points?: number }
   | { kind: 'measurement'; fieldId: FieldId; label: string; unit?: string; points?: number }
-  | { kind: 'multiMeasurement'; rows: { id: FieldId; label: string; unit?: string }[]; points?: number }
+  | {
+      kind: 'multiMeasurement';
+      rows: { id: FieldId; label: string; unit?: string }[];
+      points?: number;
+    }
   | { kind: 'dataTable'; tableId: TableId; columns: Column[]; rowCount: number; points?: number }
-  | { kind: 'plot'; plotId: PlotId; sourceTableId: TableId; xCol: string; yCol: string; xLabel: string; yLabel: string; fits?: FitOption[]; points?: number }
+  | {
+      kind: 'plot';
+      plotId: PlotId;
+      sourceTableId: TableId;
+      xCol: string;
+      yCol: string;
+      xLabel: string;
+      yLabel: string;
+      fits?: FitOption[];
+      points?: number;
+    }
   | { kind: 'image'; imageId: ImageId; captionFieldId: FieldId; maxMB?: number; points?: number }
-  | { kind: 'calculation'; fieldId: FieldId; prompt: string; equationEditor?: boolean; points?: number }
+  | {
+      kind: 'calculation';
+      fieldId: FieldId;
+      prompt: string;
+      equationEditor?: boolean;
+      points?: number;
+    }
   | { kind: 'concept'; fieldId: FieldId; prompt: string; rows?: number; points?: number };
 
 type Column =
   | { id: string; label: string; kind: 'input'; unit?: string }
-  | { id: string; label: string; kind: 'derived'; deps: string[]; formula: (row: Record<string, number>) => number; precision?: number };
+  | {
+      id: string;
+      label: string;
+      kind: 'derived';
+      deps: string[];
+      formula: (row: Record<string, number>) => number;
+      precision?: number;
+    };
 ```
 
 Notes:
+
 - Every section is data. No JSX in lab files. `instructions` carries sanitized MDX so prose can include `<sub>`, `<sup>`, formatted lists, and inline math (rendered via KaTeX) without a `dangerouslySetInnerHTML` escape hatch.
 - `derived` columns describe their dependencies so the table renderer can recompute deterministically and the PDF renderer can reproduce the values without the React tree.
 - `points` is uniform; the schema defines total points per section, summed at runtime for the PDF cover sheet.
@@ -510,8 +544,8 @@ Overrides apply structured patches to the canonical lab schema (replace section 
 
 ```ts
 interface PersistenceAdapter {
-  saveJSON(key: string, payload: unknown): Promise<void>;     // localStorage
-  saveBlob(key: string, blob: Blob): Promise<void>;           // IndexedDB
+  saveJSON(key: string, payload: unknown): Promise<void>; // localStorage
+  saveBlob(key: string, blob: Blob): Promise<void>; // IndexedDB
   loadJSON<T>(key: string): Promise<T | null>;
   loadBlob(key: string): Promise<Blob | null>;
   listKeys(prefix: string): Promise<string[]>;
@@ -532,7 +566,7 @@ JSON keys: `lab:${courseId}:${labId}:${studentId}`. Blob keys: `img:${courseId}:
 
 **Pasted content rendering.** Each `FieldValue.text` is rendered with inline visual differentiation:
 
-- For each `PasteEvent` in `pastes`, do a substring match against `text` (with light fuzz tolerance for whitespace and punctuation). Hits get italicized inline. Misses (paste was deleted or heavily edited) are summarized in a one-line note beneath the field: *"Pasted then edited (47 chars at 14:32): The capacitance of the parallel plate capacitor is C = ε₀A/d…"*
+- For each `PasteEvent` in `pastes`, do a substring match against `text` (with light fuzz tolerance for whitespace and punctuation). Hits get italicized inline. Misses (paste was deleted or heavily edited) are summarized in a one-line note beneath the field: _"Pasted then edited (47 chars at 14:32): The capacitance of the parallel plate capacitor is C = ε₀A/d…"_
 - Autocomplete-source pastes (Grammarly, iOS predictive) get a different marker than clipboard pastes — a small dotted underline rather than italics — so graders can distinguish "iOS finished my sentence" from "Cmd-V from ChatGPT."
 - Process metadata (active time, keystrokes, paste counts) goes into a "Process Record" appendix at the end of the document, plus a one-line summary under each field that had measurable activity. The integrity agreement (§5.13) discloses all of this.
 
@@ -595,7 +629,7 @@ ipl-frontend/
 
 The integrity story is **disclosure plus visibility**, not prevention. Concretely:
 
-- The integrity agreement (rendered on the StudentInfo section of every lab) reads, in part: *"Your report includes a process record. You may use any tools you wish, but pastes, autocomplete suggestions, and edit timing are logged with timestamps and rendered in the final PDF."*
+- The integrity agreement (rendered on the StudentInfo section of every lab) reads, in part: _"Your report includes a process record. You may use any tools you wish, but pastes, autocomplete suggestions, and edit timing are logged with timestamps and rendered in the final PDF."_
 - Every `FieldValue` (single fields and individual table cells) records the construction history defined in §5.4: paste events with full content, keystroke counts, active time, focus timing.
 - Capture is implemented at the `<TextInput>` primitive layer using `InputEvent.inputType`:
   - `insertText` → keystroke
@@ -607,6 +641,7 @@ The integrity story is **disclosure plus visibility**, not prevention. Concretel
 - All telemetry is local-only by default. No external endpoints. The signing function (§5.14) only sees the canonical JSON bytes; it doesn't store anything.
 
 **Anti-patterns explicitly rejected:**
+
 - Character-level edit history (CRDT-style). Surveillance creep, no marginal grading signal.
 - Webcam or screen recording. Different threat model entirely.
 - Hidden capture without disclosure. If students don't know it's there, it's a trap, not pedagogy.
@@ -624,6 +659,7 @@ A single Vercel serverless function at `api/sign.ts`:
 ```
 
 Implementation:
+
 - HMAC-SHA256 over `canonical || String(signedAt)`, secret from `LAB_SIGNING_SECRET` env var.
 - `signedAt` is set server-side (`Date.now()`), not client-supplied.
 - 5 MB hard cap on `canonical` length.
@@ -631,6 +667,7 @@ Implementation:
 - Same-origin by default on Vercel; no CORS config needed if the frontend and function deploy together.
 
 **Canonicalization.** The frontend serializes `LabAnswers` deterministically before sending:
+
 - Keys sorted alphabetically at every object level.
 - No whitespace.
 - Numbers in shortest round-trippable form.
@@ -653,6 +690,7 @@ Each phase is sized to one focused agent run (1–3 days of agent work, dependin
 **Goal:** New repo skeleton; `Lab` and `Course` schemas typed; one lab (Snell's Law) hand-migrated to the schema; legacy app untouched.
 
 **Deliverables:**
+
 - `package.json`, `vite.config.ts`, `tsconfig.json`, ESLint, Prettier, Vitest config, Playwright config.
 - `src/domain/schema/lab.ts` and `course.ts` with Zod schemas.
 - `src/content/labs/snellsLaw.lab.ts` — full migration of Snell's Law content from `labs/snellsLaw/`.
@@ -718,10 +756,11 @@ all pass, with one fully migrated Snell's Law schema.
 **Goal:** `<LabPage>` that mounts Snell's Law from the schema, renders all section kinds, lets the user fill out the form in-memory. No save, no PDF, no security yet.
 
 **Deliverables:**
+
 - `src/ui/sections/*` — one component per Section kind from §5.4.
 - `src/ui/primitives/*` — Field, Table, Chart, ImageUploader, EquationEditor (mathlive lazy-loaded).
 - `src/ui/layout/*` — TabsView, SideBySideView, LayoutToggle.
-- `src/state/labStore.ts` — Zustand store holding the *current* lab's answers in-memory only.
+- `src/state/labStore.ts` — Zustand store holding the _current_ lab's answers in-memory only.
 - `src/app/Routes.tsx` — `/c/:courseId/:labId` mounts `<LabPage key={...} />`.
 - `<Catalog>` page rendering the manifest with proper `<Link>` (no full-page reload).
 - E2E test: open Snell's Law, fill name, fill table row 0, see `sin(θ)` derived column auto-update, switch tabs.
@@ -788,20 +827,20 @@ single-lab experience.
 
 **Why this phase exists.** Phase 1 shipped working scaffolding and a green CI, but six primitives were stubbed in ways that will mislead downstream phases:
 
-- `markFieldActivity` records the *entire post-paste field text* as `PasteEvent.text` instead of the inserted substring, with `offset = text.length` instead of the insertion point. Phase 3's `attributePastes(text, pastes)` will either italicize the entire field or fail to match anything. This is the highest-priority fix because Phase 2 will start persisting these wrong records.
+- `markFieldActivity` records the _entire post-paste field text_ as `PasteEvent.text` instead of the inserted substring, with `offset = text.length` instead of the insertion point. Phase 3's `attributePastes(text, pastes)` will either italicize the entire field or fail to match anything. This is the highest-priority fix because Phase 2 will start persisting these wrong records.
 - IME `compositionstart`/`compositionend` are not handled, so CJK/IME users will record one paste event per logical character.
 - `keystrokes` increments on every non-delete `inputType`, including pastes and replacements. Spec §5.4 defines `keystrokes` as the count of `insertText` events.
 - `InstructionsSectionView` splits on `\n` and emits `<p>` tags. Snell's Law contains `## Headers`, `**bold**`, and equation references that render as literal source. The Phase 1 prompt explicitly required `react-markdown + rehype-sanitize + KaTeX`.
 - `Chart` renders points as an `<li>` list. Schema declares `fits: [...]` overlays that have nowhere to live.
 - `EquationEditor` is a `<Field multiline>` rename — `mathlive` is not in `package.json`.
-- `LabPage` builds the simulation iframe inline and passes it as a `ReactNode` prop into either `<TabsView>` or `<SideBySideView>`. Toggling `layout` unmounts one wrapper and mounts the other, taking the iframe with it. Spec: *"Iframe should not re-mount on layout change."*
+- `LabPage` builds the simulation iframe inline and passes it as a `ReactNode` prop into either `<TabsView>` or `<SideBySideView>`. Toggling `layout` unmounts one wrapper and mounts the other, taking the iframe with it. Spec: _"Iframe should not re-mount on layout change."_
 
 **Deliverables:**
 
 1. **Field-value capture correctness.**
    - `markFieldActivity(previous, target, event)` (signature change) computes the inserted substring from `target.value`, `previous.text`, and the InputEvent's `data` plus `target.selectionStart`. Records `{text: <substring>, at, offset, source}` with the actual insertion offset.
    - `keystrokes` increments only on `inputType === 'insertText'`. `deletes` continues to increment on any `inputType.startsWith('delete')`. Paste/composition/replacement events do not bump either counter.
-   - `Field.tsx` registers `compositionstart` / `compositionend` handlers; during composition, `insertCompositionText` events do *not* push paste events. On `compositionend`, a single `PasteEvent {source: 'ime'}` is pushed with the composed text and the offset where composition began.
+   - `Field.tsx` registers `compositionstart` / `compositionend` handlers; during composition, `insertCompositionText` events do _not_ push paste events. On `compositionend`, a single `PasteEvent {source: 'ime'}` is pushed with the composed text and the offset where composition began.
    - Drop and autocomplete events are mapped per spec: `insertFromDrop` → `clipboard`, `insertFromPaste` → `clipboard`, `insertReplacementText` → `autocomplete`.
    - `meta.activeMs` continues to accumulate from focus/blur as today.
 
@@ -928,13 +967,13 @@ FieldValue.
 
 ### Phase 1.6 — Baseline legibility (color scheme, form-control contrast, toggle button hierarchy)
 
-**Goal:** Make the app legible *right now* in both light and dark OS preferences, without trying to be Phase 5's full design system. This phase is the bridge between Phase 1's minimal CSS and Phase 5's WCAG-AA + axe-core polish, scoped narrowly enough to ship in one sitting.
+**Goal:** Make the app legible _right now_ in both light and dark OS preferences, without trying to be Phase 5's full design system. This phase is the bridge between Phase 1's minimal CSS and Phase 5's WCAG-AA + axe-core polish, scoped narrowly enough to ship in one sitting.
 
 **Why this phase exists.** Phase 1's `main.css` declares `background: #fff` on form controls (`input`, `textarea`, `button`, `math-field`) but never declares an explicit `color`. The `index.html` `<meta name="color-scheme" content="light dark">` tells the browser the page supports both schemes; in OS dark mode, the browser applies its dark UA stylesheet to form controls — the white background stays, but text inherits the UA's near-white color. Result: white text on white background inside every input, textarea, and button. Body prose is fine because `body { color: #111 }` is explicit.
 
-The same root cause makes toggle buttons appear "switched": `button[aria-pressed='true']` declares `color: #1558d6` (blue), so the *selected* state is visible. The unpressed state has no explicit `color`, so it inherits the UA's white in dark mode — invisible. Austin sees the highlighted button and a blank space where the off-state button should be, which reads as the toggle being inverted.
+The same root cause makes toggle buttons appear "switched": `button[aria-pressed='true']` declares `color: #1558d6` (blue), so the _selected_ state is visible. The unpressed state has no explicit `color`, so it inherits the UA's white in dark mode — invisible. Austin sees the highlighted button and a blank space where the off-state button should be, which reads as the toggle being inverted.
 
-Phase 5 (§5.10, §5.11) explicitly plans WCAG-AA contrast in both modes plus axe-core in CI. That work stays scoped to Phase 5. This phase is *not* a substitute — no design tokens, no theme toggle, no component variants, no typography pass. It is one targeted CSS fix plus a regression guard.
+Phase 5 (§5.10, §5.11) explicitly plans WCAG-AA contrast in both modes plus axe-core in CI. That work stays scoped to Phase 5. This phase is _not_ a substitute — no design tokens, no theme toggle, no component variants, no typography pass. It is one targeted CSS fix plus a regression guard.
 
 **Deliverables:**
 
@@ -964,12 +1003,13 @@ Phase 5 (§5.10, §5.11) explicitly plans WCAG-AA contrast in both modes plus ax
    - Active lab links keep the existing `a { color: #1558d6 }`. Add `:hover { text-decoration: underline; }` for a touch of feedback.
 
 6. **Regression guard.**
-   - Vitest unit (jsdom-based): mount `<LayoutToggle layout='side' onChange={noop} />`, read computed styles, and assert that both buttons have a non-transparent foreground color and that the pressed/unpressed pair have *different* visible backgrounds. This catches "buttons disappear in dark mode" specifically. (jsdom doesn't apply UA dark-mode styles by default, but the test pins the explicit values, which is what we care about.)
-   - Playwright E2E (extension to `smoke.spec.ts` or a new `tests/e2e/legibility.spec.ts`): launch with `colorScheme: 'dark'` in the browser context, navigate to Snell's Law, screenshot, and assert via DOM inspection that an unpressed `<button>` has a foreground color whose computed value is *not* white-ish (rule out `rgb(255, 255, 255)` and the four nearest near-whites). Add a second case with `colorScheme: 'light'` to confirm parity.
+   - Vitest unit (jsdom-based): mount `<LayoutToggle layout='side' onChange={noop} />`, read computed styles, and assert that both buttons have a non-transparent foreground color and that the pressed/unpressed pair have _different_ visible backgrounds. This catches "buttons disappear in dark mode" specifically. (jsdom doesn't apply UA dark-mode styles by default, but the test pins the explicit values, which is what we care about.)
+   - Playwright E2E (extension to `smoke.spec.ts` or a new `tests/e2e/legibility.spec.ts`): launch with `colorScheme: 'dark'` in the browser context, navigate to Snell's Law, screenshot, and assert via DOM inspection that an unpressed `<button>` has a foreground color whose computed value is _not_ white-ish (rule out `rgb(255, 255, 255)` and the four nearest near-whites). Add a second case with `colorScheme: 'light'` to confirm parity.
 
 **Definition of done:** All Phase 1 + Phase 1.5 tests still green; two new tests added (one unit, one E2E) and green in both `light` and `dark` browser color schemes; Austin can read the app on his current setup without changing OS preferences. Lighthouse contrast score not measured here — that's Phase 5.
 
 **Explicit non-goals (deferred to Phase 5):**
+
 - Dark-mode theme. The page is light-only until Phase 5 builds the proper two-theme system.
 - WCAG AA contrast audit across every text/background pair. Phase 1.6 only fixes the legibility cliff.
 - Design tokens / CSS custom properties for color. Phase 5 introduces those alongside the theme system.
@@ -1064,7 +1104,7 @@ Phase 1.7 does not solve mobile (Phase 5), does not persist the split fraction (
    - `.lab-header` becomes `position: sticky; top: 0; z-index: 10;` with the same `#fafafa` background as body and a 1px bottom border to separate it from scrolled content.
    - Header contents become a three-region flex layout: left (`Back to {course.title}` link), center (a `<div className="lab-header-slot">` placeholder for Phases 2/3/5), right (`<LayoutToggle/>`). The center slot renders nothing today — it's deliberately empty so Phase 2's "Saved 14:32" indicator and Phase 3's "Generate PDF" button drop into a stable home without a refactor.
    - Header height stays ≤ 56px to preserve vertical real estate for the lab body.
-   - Document the slot contract in a comment in `src/ui/LabPage.tsx`: *"Phase 2 mounts the save indicator here; Phase 3 mounts the PDF generate button here."*
+   - Document the slot contract in a comment in `src/ui/LabPage.tsx`: _"Phase 2 mounts the save indicator here; Phase 3 mounts the PDF generate button here."_
 
 2. **Default split favors the simulation.**
    - Default split fraction is 60% sim / 40% worksheet, not 50/50.
@@ -1092,12 +1132,13 @@ Phase 1.7 does not solve mobile (Phase 5), does not persist the split fraction (
 **Definition of done:** All previous phase tests still green; four new tests added and green; sticky header doesn't visually overlap the lab body's first section (verify with a Playwright screenshot at scroll depth 1000px); drag splitter feels responsive at 60fps on a typical 2020-era laptop (no formal benchmark — eyeball test). `npm run lint && npm run typecheck && npm test && npx playwright test` all clean.
 
 **Explicit non-goals (deferred):**
-- *Phase 2:* Persisted split fraction. The splitter resets on reload until persistence ships.
-- *Phase 5:* Mobile responsive flow (collapse to single-column with stacked sim/worksheet at narrow viewports). PhET isn't usable below ~768px wide regardless.
-- *Phase 5:* Pop-out simulation into a separate window.
-- *Future, unscheduled:* Multi-sim tab strip when a lab has more than one PhET (currently no lab does).
-- *Future, unscheduled:* Full-screen sim mode beyond what dragging the splitter to its 75% extreme already provides.
-- *Phase 5:* Design tokens / CSS custom properties for the splitter's color/width. Hardcoded hex values for now.
+
+- _Phase 2:_ Persisted split fraction. The splitter resets on reload until persistence ships.
+- _Phase 5:_ Mobile responsive flow (collapse to single-column with stacked sim/worksheet at narrow viewports). PhET isn't usable below ~768px wide regardless.
+- _Phase 5:_ Pop-out simulation into a separate window.
+- _Future, unscheduled:_ Multi-sim tab strip when a lab has more than one PhET (currently no lab does).
+- _Future, unscheduled:_ Full-screen sim mode beyond what dragging the splitter to its 75% extreme already provides.
+- _Phase 5:_ Design tokens / CSS custom properties for the splitter's color/width. Hardcoded hex values for now.
 
 #### Phase 1.7 — Agent prompt
 
@@ -1181,6 +1222,7 @@ green; full suite green; no regressions.
 **Goal:** Students can close the tab and resume. Per-`(course, lab, student)` isolation. Image attachments survive without quota cliffs.
 
 **Deliverables:**
+
 - `src/state/persistence/` — IndexedDB blob store + localStorage JSON store wrapper, exposed as a Zustand middleware.
 - Storage key format `lab:${courseId}:${labId}:${studentName}` with explicit migration if studentName changes.
 - Quota-error UX: a banner with "Free up storage" listing other labs' attachments by size, with delete buttons.
@@ -1242,6 +1284,7 @@ lab; image attachments survive a multi-megabyte payload; tests green.
 **Goal:** Replace the html2canvas + jsPDF + setTimeout pipeline with `@react-pdf/renderer` driven by the same schema, plus `pdf-lib` post-processing to embed signed canonical JSON.
 
 **Deliverables:**
+
 - `src/services/pdf/Document.tsx` — `<LabReportPDF lab answers course />` that produces a `<Document>`.
 - Section-by-section PDF components mirroring Phase 1 UI sections.
 - Charts rendered as `<Svg>` primitives (recompute axes, points, fit overlay from `domain/fit/`). No chart.js in PDF path.
@@ -1484,7 +1527,7 @@ These bundle into one phase because they share the same handler (`generatePdf` i
    - Build via a pure `buildPdfFilename({lab, studentName, signedAt, signature}) → string` utility in `src/services/pdf/filename.ts`.
    - Format: `{LabIdTitleCase}_{StudentNameSanitized}_{YYYY-MM-DD}_{sigPrefix8}.pdf`.
    - **LabIdTitleCase:** derive from `lab.title` (e.g., `"Snell's Law"`) by stripping non-`[A-Za-z0-9]` and concatenating: `SnellsLaw`. Document the choice in a comment. Edge case: if the resulting string is empty (lab.title was all symbols), fall back to `lab.id` verbatim.
-   - **StudentNameSanitized:** ASCII TitleCase, letters and digits only. Algorithm: `String.prototype.normalize('NFKD')` → strip combining marks (`/[̀-ͯ]/g`) → split on whitespace and `[-_'`]` → keep `[A-Za-z0-9]` only per chunk → TitleCase each chunk (first char uppercase, rest lowercase) → join. So `"José Müller-Sánchez"` → `"JoseMullerSanchez"`. CJK and other non-Latin scripts get filtered out entirely; if the result is empty, the preflight (deliverable 2) blocks the path before this is reached.
+   - **StudentNameSanitized:** ASCII TitleCase, letters and digits only. Algorithm: `String.prototype.normalize('NFKD')` → strip combining marks (`/[̀-ͯ]/g`) → split on whitespace and `[-_'`]`→ keep`[A-Za-z0-9]`only per chunk → TitleCase each chunk (first char uppercase, rest lowercase) → join. So`"José Müller-Sánchez"`→`"JoseMullerSanchez"`. CJK and other non-Latin scripts get filtered out entirely; if the result is empty, the preflight (deliverable 2) blocks the path before this is reached.
    - **YYYY-MM-DD:** derived from `signedAt` (server-supplied) in UTC. Use `new Date(signedAt).toISOString().slice(0, 10)`. Do not use the client clock.
    - **sigPrefix8:** `signature.slice(0, 8)`. Existing behavior; preserve.
    - Export the function and unit-test edge cases (see deliverable 4).
@@ -1650,6 +1693,7 @@ A line like `## Part 1: Snell's Law` renders in the UI as a level-2 heading. In 
 **Definition of done:** TA opening the Snell's Law PDF sees `## Part 1: Snell's Law` as a sized header, not source text. Bold is bold, lists have bullets, inline math uses Greek letters where defined. No regex stripping anywhere in the PDF instruction path. Hostile fixture neither crashes nor injects content. New tests green; existing tests still green.
 
 **Explicit non-goals (deferred):**
+
 - Block math (`$$...$$`) visual rendering. Falls back to monospace LaTeX source with a dev warning. Real KaTeX-to-SVG embedding is a future phase if and when a lab actually needs it.
 - Custom @react-pdf fonts beyond the built-ins (Helvetica, Times-Roman, Courier). Phase 5 owns typography.
 - Image rendering inside markdown (`![alt](url)`). Defer until a lab needs it; raise an explicit `not yet supported` warning.
@@ -1733,7 +1777,7 @@ stripping. Tests green. The TA sees structure, not source.
    - In the `Column` discriminated union (likely `src/domain/schema/lab.ts` or similar), add `formulaLabel?: string` to the `derived` variant.
    - Update the Zod schema accordingly: `.optional()`.
    - Update TS types (`z.infer` will pick up the change automatically).
-   - **Not** an envelope bump. This is the *authoring* schema (Lab), not the *answers* schema (LabAnswers). Canonicalization is unaffected.
+   - **Not** an envelope bump. This is the _authoring_ schema (Lab), not the _answers_ schema (LabAnswers). Canonicalization is unaffected.
 
 2. **UI table header rendering.**
    - In the data-table section component (likely `src/ui/sections/DataTableSectionView.tsx` or wherever the table primitive renders headers), under the column label, render the `formulaLabel` as a small caption when present. Use a `<small>` or styled `<span>` with reduced font size and `aria-label` exposing the formula to screen readers (e.g., `aria-label="sin theta_i, derived column"`).
@@ -1758,6 +1802,7 @@ stripping. Tests green. The TA sees structure, not source.
 **Definition of done:** schema accepts `formulaLabel` on derived columns; Snell's Law PDF and UI both show `sin(θᵢ)` (or equivalent) under the column header; unlabeled derived columns continue to render exactly as today; tests green.
 
 **Explicit non-goals:**
+
 - Auto-extracting the formula label from the JS function. That's what we're avoiding.
 - Rendering the formula in math typesetting (KaTeX). Phase 5 / future. The label is a string.
 
@@ -1844,7 +1889,7 @@ There is no branch for `equation`. Equation sections own a math-input field whos
    - If the equation section schema uses a different field-id convention, adapt accordingly. Document the chosen mapping with a comment.
 
 2. **Section-kind exhaustiveness.**
-   - Replace the if/else chain with a `switch` on `section.kind` that includes all current section kinds *and* a `default` clause that triggers a TypeScript exhaustiveness check via `never`: if a future Phase adds a new section kind without updating this switch, the type system flags the omission.
+   - Replace the if/else chain with a `switch` on `section.kind` that includes all current section kinds _and_ a `default` clause that triggers a TypeScript exhaustiveness check via `never`: if a future Phase adds a new section kind without updating this switch, the type system flags the omission.
    - Pattern: `const _exhaustive: never = section;` in the default clause (TS will fail compilation if the discriminated union is incomplete).
 
 3. **Plot section auditing.**
@@ -1906,7 +1951,7 @@ TypeScript prevents future regressions; tests green.
 
 **Goal:** Pin the current `attributePastes` matching behavior with explicit boundary tests, and document the design choice so future contributors know why this implementation was chosen over Levenshtein/LCS upgrades. No behavior change.
 
-**Why this phase exists.** `attributePastes` in `src/services/pdf/attributePastes.ts` normalizes input by stripping whitespace and a defined set of soft punctuation (`/[\s.,;:!?'"`~\-_()[\]{}\\/|<>+=*]/`), lowercases, then does literal `String.prototype.indexOf` substring matching. It's binary: paste either appears as a contiguous normalized substring of the final text, or it doesn't. There is no edit-distance or LCS fallback.
+**Why this phase exists.** `attributePastes` in `src/services/pdf/attributePastes.ts` normalizes input by stripping whitespace and a defined set of soft punctuation (`/[\s.,;:!?'"`~\-\_()[\]{}\\/|<>+=*]/`), lowercases, then does literal `String.prototype.indexOf` substring matching. It's binary: paste either appears as a contiguous normalized substring of the final text, or it doesn't. There is no edit-distance or LCS fallback.
 
 This is the right behavior for v1. False negatives are tolerable (an edited paste loses inline italics but is still summarized in the Process Record appendix). False positives are not (typed text being marked as pasted is a grading integrity reversal). LCS-ratio and Levenshtein matching would catch more edited pastes inline but introduce a real false-positive risk on short pastes — a 5-char paste of `"1.33"` would LCS-match almost any sentence containing those digits.
 
@@ -1928,7 +1973,7 @@ But the design call is undocumented. Exactly one test pins exactly one normaliza
      - **Paste with whitespace edits only:** paste `"sin theta"` matches final `"sin  theta"` (extra space) or `"sin theta."` (trailing punct).
      - **Paste fully deleted:** paste `"the answer is 42"` typed, then deleted (final text contains nothing of it) → no inline match; appears in `removedPastes` summary.
      - **Paste partially edited (word inserted mid-paste):** paste `"the index of refraction"` then student inserts `"approximately"` mid-paste making final text `"the index of approximately refraction"` → no inline match (substring fails), appears in `removedPastes` summary.
-     - **Paste partially deleted (suffix removed):** paste `"the answer is 42 plus seven"`, student deletes `" plus seven"` → final text contains `"the answer is 42"`. Substring match requires the *entire* paste to appear, so this is a no-match → goes to removedPastes. Pin this current behavior.
+     - **Paste partially deleted (suffix removed):** paste `"the answer is 42 plus seven"`, student deletes `" plus seven"` → final text contains `"the answer is 42"`. Substring match requires the _entire_ paste to appear, so this is a no-match → goes to removedPastes. Pin this current behavior.
      - **Multiple pastes in one field:** pastes `"first part"` and `"second part"` both matched in final text containing both.
      - **Pastes overlapping in normalized form:** pastes `"abc def"` and `"def ghi"` — both match if both appear; document the rendering behavior (which span wins on overlap).
      - **Empty paste (zero-length after normalization, e.g., pure punctuation paste):** does not produce a span. Pin this so a `","` paste doesn't claim 100% of the field.
@@ -2108,6 +2153,7 @@ These are real friction points students hit; Phase 4 will dramatically increase 
 **Definition of done:** equation editor has mode toggle + side-by-side preview + symbol palette + copy/paste LaTeX; mathlive still lazy-loads; FieldValue capture continues to work in both modes; the missing paste/IME tests are now in place and green; full suite green.
 
 **Explicit non-goals (deferred):**
+
 - Persisted preference (mode per-user / per-field). Per-session only for v1.
 - Custom symbol palettes per-lab. v1 ships one default palette; per-lab override is post-Phase-4.
 - Equation grading / autograding. Out of scope; the equation field's `value.text` remains a free-form LaTeX string graded manually by TAs.
@@ -2250,6 +2296,7 @@ suite green; Phase 4 labs can now ship real equations.
 **Definition of done:** Enter in math mode produces a multi-line `gathered` block; subsequent Enters add rows; LaTeX-mode preview of multi-line still renders cleanly through KaTeX. Quick row of 10 symbols inserts in one click; "More" popover holds the remaining categories; both paths return focus to the active editor after insert. Field activity capture, paste, IME, copy, and mode toggle all still work. New tests green; full suite green; bundle delta ≤ 1KB.
 
 **Explicit non-goals (deferred):**
+
 - **No `\placeholder{}` in the wrapped output.** It's a MathLive-specific macro: KaTeX renders it as an error span (preview shows red) and `Document.tsx` would print it verbatim into the PDF (it just emits `value.text` as plain text). Empty trailing row is the v1 behavior. If a "click-here-to-type" affordance turns out to be necessary, revisit in a follow-on phase.
 - **Don't intercept Shift+Enter** — leave to MathLive default.
 - **Don't auto-collapse `<details>` after insert.** Staying open across multiple inserts is the point.
@@ -2440,6 +2487,7 @@ new tests in place and green.
 **Definition of done:** scroll feels natural in side-by-side; sim can be on either side; TOC navigates correctly; progress bar reflects filled state; iframe doesn't re-mount on any toggle; all new tests green; Phase 1.5 iframe-stability E2E still green.
 
 **Explicit non-goals (deferred):**
+
 - Persisted `simSide` preference per-user. URL-synced only for v1.
 - TOC fold/collapse on narrow viewports. Hidden in tabs layout, shown in side-by-side. Mobile is Phase 5.
 - Progress bar segmented by Part (visual chunking). Single bar for v1.
@@ -2563,6 +2611,7 @@ navigability; iframe identity preserved through every toggle.
 **Definition of done:** TOC is a header popover; sidebar grid column gone; snellsLaw shows ~6-8 TOC entries with no Integrity Agreement; section anchors and deep links intact; user-facing button label is "Export PDF" everywhere; full suite green.
 
 **Explicit non-goals (deferred):**
+
 - Surfacing the Integrity Agreement as an export-time modal — Phase 5.5+. This phase only hides it from the TOC.
 - Showing the current section name in the popover button label. Variable text length kills header layout; the progress bar already covers location passively.
 - Two-level / collapsible TOC hierarchy. Flat list at this scope.
@@ -2735,6 +2784,7 @@ tests green.
 #### Phase 3.9 — Agent prompt
 
 ```
+
 Pilot integrating the Snell's Law lab manual procedure into the
 worksheet schema. Content + minor schema work. The pilot informs
 whether Phase 4 migrates procedures for all labs.
@@ -2776,6 +2826,7 @@ Tasks:
 5. npm run lint && npm run typecheck && npm test && npx playwright test.
 
 Constraints:
+
 - Do not change Section schema beyond the optional flag.
 - Do not edit existing measurement/dataTable/plot sections.
 - Markdown must work through the Phase 3.5.3 markdown→PDF pipeline. No
@@ -2788,7 +2839,8 @@ Constraints:
 Deliverable: Snell's Law worksheet has integrated procedure; ready for
 pilot rollout; Austin has a clear Yes/No path for Phase 4 based on
 student feedback.
-```
+
+````
 
 ---
 
@@ -2885,7 +2937,8 @@ Unique to one course: magneticFieldFaraday (PHY 132 only), geometricOptics (PHY 
 
 #### Phase 4 — Agent prompt
 
-```
+````
+
 Phase 3 finished the PDF service. Phase 3.5/3.7/3.9 polished it. Now
 migrate the actual lab content for both courses. The PHY 132 and
 PHY 114 trees are NOT duplicates — read REBUILD_SPEC.md section
@@ -2899,10 +2952,11 @@ content. Do not diff them. Do not factor common prose out. Each
 becomes its own .lab.ts file under a course-scoped folder.
 
 Read these files first:
+
 - REBUILD_SPEC.md Phase 4 (this section)
 - REBUILD_SPEC.md §4.1 (salvage-as-content), §5.4 (section schema),
   §5.5 (course manifest)
-- src/domain/schema/* (Lab, Section, Course schemas)
+- src/domain/schema/\* (Lab, Section, Course schemas)
 - src/content/courses/general.course.ts (will be renamed to phy132)
 - src/content/courses/phy114.course.ts
 - src/content/labs/snellsLaw.lab.ts (existing migration; will be
@@ -2920,49 +2974,49 @@ Tasks:
 1. RENAME GENERAL → PHY132. Do this first; everything else depends
    on the new naming.
    a. Rename src/content/courses/general.course.ts → phy132.course.ts.
-      Export phy132Course (drop generalCourse alias).
+   Export phy132Course (drop generalCourse alias).
    b. Set Course.id = 'phy132', storagePrefix = 'phy132',
-      title = 'PHY 132'.
+   title = 'PHY 132'.
    c. Update src/content/courses/index.ts.
    d. Update src/app/Routes.tsx: import phy132Course; drop the
-      'phy_114' → 'phy114' URL alias (confirm with Austin first); the
-      SlugLabRoutePage default course becomes phy132Course.
+   'phy_114' → 'phy114' URL alias (confirm with Austin first); the
+   SlugLabRoutePage default course becomes phy132Course.
    e. Update every test fixture / ref in tests/ that uses 'general'
-      (Grep finds ~14 files). Run npm test and fix breakages.
+   (Grep finds ~14 files). Run npm test and fix breakages.
    f. Storage migration: ask Austin whether existing 'general'
-      localStorage keys should rename or drop. Default to drop
-      (pre-launch).
+   localStorage keys should rename or drop. Default to drop
+   (pre-launch).
 
 2. RESTRUCTURE LABS FOLDER.
    a. Create src/content/labs/phy132/ and src/content/labs/phy114/.
    b. Move src/content/labs/snellsLaw.lab.ts → phy132/snellsLaw.lab.ts.
-      VERIFY first that the existing schema was migrated from
-      physics-labs.up.railway.app/labs/snellsLaw/, not phy_114/. Spot-
-      check section prose against both legacy LabReportForm.js files
-      and pick the matching tree. If it actually matches phy_114's
-      version, move it to phy114/ instead and document the discovery.
+   VERIFY first that the existing schema was migrated from
+   physics-labs.up.railway.app/labs/snellsLaw/, not phy_114/. Spot-
+   check section prose against both legacy LabReportForm.js files
+   and pick the matching tree. If it actually matches phy_114's
+   version, move it to phy114/ instead and document the discovery.
    c. Update src/content/labs/index.ts to re-export from
-      both folders (or split into phy132/index.ts and
-      phy114/index.ts).
+   both folders (or split into phy132/index.ts and
+   phy114/index.ts).
 
 3. REGISTRY: TWO-LEVEL.
    In src/app/Routes.tsx, replace:
-     const labs: Record<string, Lab> = { snellsLaw: snellsLawLab };
+   const labs: Record<string, Lab> = { snellsLaw: snellsLawLab };
    with:
-     const labsByCourse: Record<string, Record<string, Lab>> = {
-       phy132: { snellsLaw: phy132SnellsLawLab, ... },
-       phy114: { snellsLaw: phy114SnellsLawLab, ... },
-     };
+   const labsByCourse: Record<string, Record<string, Lab>> = {
+   phy132: { snellsLaw: phy132SnellsLawLab, ... },
+   phy114: { snellsLaw: phy114SnellsLawLab, ... },
+   };
    Update LabRoutePage and SlugLabRoutePage to do
    labsByCourse[course.id]?.[labId].
 
 4. UPDATE COURSE MANIFESTS to the canonical lab order, all enabled:
    phy132.course.ts: staticElectricity (1), chargesFields (2),
-     capacitors (3), dcCircuits (4), magneticFieldFaraday (5),
-     snellsLaw (6).
+   capacitors (3), dcCircuits (4), magneticFieldFaraday (5),
+   snellsLaw (6).
    phy114.course.ts: staticElectricity (1), chargesFields (2),
-     capacitors (3), dcCircuits (4), snellsLaw (5),
-     geometricOptics (6).
+   capacitors (3), dcCircuits (4), snellsLaw (5),
+   geometricOptics (6).
    Both: enabled: true on every entry. PHY 114 keeps
    parentOriginAllowList = ['https://canvas.asu.edu']. PHY 132
    keeps parentOriginAllowList = [].
@@ -2970,33 +3024,33 @@ Tasks:
 5. MIGRATE 11 NEW LAB SCHEMAS. Recommended order (do snellsLaw for
    PHY 114 early so PHY 114 catalog stops 404ing as soon as the
    rename lands):
-     a. phy114/snellsLaw.lab.ts (from phy_114/snellsLaw/)
-     b. phy132/staticElectricity.lab.ts (from labs/staticElectricity/)
-     c. phy114/staticElectricity.lab.ts (from phy_114/staticElectricity/)
-     d. phy132/chargesFields.lab.ts (from labs/chargesFields/)
-     e. phy114/chargesFields.lab.ts (from phy_114/chargesFields/)
-     f. phy132/capacitors.lab.ts (from labs/capacitors/)
-     g. phy114/capacitors.lab.ts (from phy_114/capacitors/)
-     h. phy132/dcCircuits.lab.ts (from labs/dcCircuits/)
-     i. phy114/dcCircuits.lab.ts (from phy_114/dcCircuits/)
-     j. phy132/magneticFieldFaraday.lab.ts (from labs/magneticFieldFaraday/)
-     k. phy114/geometricOptics.lab.ts (from phy_114/geometricOptics/)
+   a. phy114/snellsLaw.lab.ts (from phy_114/snellsLaw/)
+   b. phy132/staticElectricity.lab.ts (from labs/staticElectricity/)
+   c. phy114/staticElectricity.lab.ts (from phy_114/staticElectricity/)
+   d. phy132/chargesFields.lab.ts (from labs/chargesFields/)
+   e. phy114/chargesFields.lab.ts (from phy_114/chargesFields/)
+   f. phy132/capacitors.lab.ts (from labs/capacitors/)
+   g. phy114/capacitors.lab.ts (from phy_114/capacitors/)
+   h. phy132/dcCircuits.lab.ts (from labs/dcCircuits/)
+   i. phy114/dcCircuits.lab.ts (from phy_114/dcCircuits/)
+   j. phy132/magneticFieldFaraday.lab.ts (from labs/magneticFieldFaraday/)
+   k. phy114/geometricOptics.lab.ts (from phy_114/geometricOptics/)
 
    For each lab:
-     - Read its labConfig.js and LabReportForm.js. Encode sections
-       (instructions, measurement, calculation, dataTable, plot,
-       image, etc.) per the Phase 0 schema. Preserve section prose
-       verbatim, point values exactly, table column configs and
-       derived-formula keys exactly.
-     - Lab.id stays the bare name (e.g., 'staticElectricity'); course
-       context lives in the folder + registry.
-     - Add unit test: schema parses, registry resolves, derived
-       formulas compute on a fixture row.
-     - Add Playwright E2E: open lab in its course, fill deterministic
-       fixture, generate PDF, snapshot text.
-     - Show Austin a screenshot or PDF for visual parity sign-off
-       BEFORE marking the lab done. Pause the queue if a lab needs
-       his eyes — do not batch-merge.
+   - Read its labConfig.js and LabReportForm.js. Encode sections
+     (instructions, measurement, calculation, dataTable, plot,
+     image, etc.) per the Phase 0 schema. Preserve section prose
+     verbatim, point values exactly, table column configs and
+     derived-formula keys exactly.
+   - Lab.id stays the bare name (e.g., 'staticElectricity'); course
+     context lives in the folder + registry.
+   - Add unit test: schema parses, registry resolves, derived
+     formulas compute on a fixture row.
+   - Add Playwright E2E: open lab in its course, fill deterministic
+     fixture, generate PDF, snapshot text.
+   - Show Austin a screenshot or PDF for visual parity sign-off
+     BEFORE marking the lab done. Pause the queue if a lab needs
+     his eyes — do not batch-merge.
 
 6. DO NOT CREATE MIGRATION_NOTES.md. The earlier draft of Phase 4
    asked for a drift-reconciliation document; the labs aren't
@@ -3006,14 +3060,15 @@ Tasks:
 
 7. CLEANUP.
    a. Delete scripts/migrate-from-legacy.ts if no callers (or move
-      to scripts/legacy/ only if cited).
+   to scripts/legacy/ only if cited).
    b. After all 12 labs render and Austin signs off, delete
-      physics-labs.up.railway.app/ from the repo.
+   physics-labs.up.railway.app/ from the repo.
 
 8. npm run lint && npm run typecheck && npm test && npx playwright
    test. All green.
 
 Constraints:
+
 - The two course trees are NOT duplicates. Treat each lab as
   independently authored. Do not diff phy132 vs phy114 versions.
   Do not factor common content out.
@@ -3032,6 +3087,7 @@ Constraints:
 Deliverable: PHY 132 and PHY 114 each have 6 working labs; rename
 clean; per-lab tests green; legacy folder ready to delete; Austin
 has signed off lab-by-lab.
+
 ```
 
 ---
@@ -3051,9 +3107,11 @@ has signed off lab-by-lab.
 #### Phase 5 — Agent prompt
 
 ```
+
 All labs are migrated. Now polish.
 
 Tasks:
+
 1. Run axe-core in Vitest + Playwright. Fix every violation. WCAG 2.1 AA.
 2. Run Lighthouse on the deployed preview. Target 95+ on Performance,
    Accessibility, Best Practices. Code-split mathjs, mathlive, and
@@ -3077,10 +3135,12 @@ Tasks:
    Austin signs off). Bump version to 1.0.0.
 
 Constraints:
+
 - Do not regress test coverage.
 - Telemetry must be opt-in by config and disclosed in the README.
 
 Deliverable: production-ready 1.0.0; legacy code removed; docs in place.
+
 ```
 
 ---
@@ -3157,6 +3217,7 @@ Deliverable: production-ready 1.0.0; legacy code removed; docs in place.
 #### Phase 5.5 — Agent prompt
 
 ```
+
 Cross-cutting polish for 1.0 launch: rebrand, landing wizard, FERPA
 note, dark mode, callouts, localStorage warnings, unsigned drafts, AI
 disclosure agreement, About popover.
@@ -3216,7 +3277,7 @@ disclosure last in case schema migration affects other tests):
    - Skip signing entirely; never fails for network.
    - Watermark "DRAFT" diagonally on every page.
    - Omit signature footer and embedded JSON.
-   - Filename _DRAFT suffix.
+   - Filename \_DRAFT suffix.
    - PDF metadata Subject: "DRAFT — not for submission".
 
 8. AI disclosure on integrity agreement.
@@ -3247,6 +3308,7 @@ disclosure last in case schema migration affects other tests):
     All green.
 
 Constraints:
+
 - AI disclosure is the only schema-change task. Sequence it last so
   other tests stabilize first.
 - Backward compat: v2 persisted blobs must hydrate cleanly to v3.
@@ -3261,6 +3323,7 @@ Constraints:
 Deliverable: 1.0 launch-ready brand and UX; FERPA story documented in
 the app itself; AI disclosure captured and signed; unsigned drafts
 provide backup path when signing endpoint fails.
+
 ```
 
 ---
@@ -3324,6 +3387,7 @@ Pair with Phase 6.4 design pass — both are pedagogical UX.
 #### Phase 6 — Agent prompt (template)
 
 ```
+
 Phase 6 sub-phases run independently. For each, read the relevant
 section above, ask Austin which lab is driving the need (if any), and
 scope accordingly. Each sub-phase should:
@@ -3336,6 +3400,7 @@ scope accordingly. Each sub-phase should:
 
 Don't bundle multiple Phase 6 sub-phases into one agent run. Each is
 its own focused change.
+
 ```
 
 ---
@@ -3420,3 +3485,4 @@ Still open and worth answering before or during Phase 0:
 ---
 
 *End of spec.*
+```

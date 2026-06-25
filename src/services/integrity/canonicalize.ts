@@ -35,10 +35,7 @@ function toCanonicalValue(input: unknown): CanonicalValue {
     return input.map((item) => toCanonicalValue(item));
   }
 
-  if (
-    'toJSON' in input &&
-    typeof (input as { toJSON?: () => unknown }).toJSON === 'function'
-  ) {
+  if ('toJSON' in input && typeof (input as { toJSON?: () => unknown }).toJSON === 'function') {
     return toCanonicalValue((input as { toJSON: () => unknown }).toJSON());
   }
 

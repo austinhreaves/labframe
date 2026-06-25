@@ -22,12 +22,7 @@ export function ImageUploader({
 }: ImageUploaderProps) {
   return (
     <section className="image-uploader">
-      <FileDropzone
-        id={imageId}
-        value={image}
-        accept="image/*"
-        onFileChange={onImageChange}
-      />
+      <FileDropzone id={imageId} value={image} accept="image/*" onFileChange={onImageChange} />
       <Field
         id={captionFieldId}
         label="Caption"

@@ -19,7 +19,9 @@ function normalizeOrigin(value: string): string | null {
 }
 
 function allowedOrigins(): string[] {
-  return allowList.map((entry) => normalizeOrigin(entry)).filter((entry): entry is string => entry !== null);
+  return allowList
+    .map((entry) => normalizeOrigin(entry))
+    .filter((entry): entry is string => entry !== null);
 }
 
 function resolveTargetOrigin(): string | null {

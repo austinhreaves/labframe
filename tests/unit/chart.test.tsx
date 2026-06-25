@@ -8,7 +8,11 @@ import { Chart } from '@/ui/primitives/Chart';
 
 vi.mock('react-chartjs-2', () => ({
   Scatter: (props: { data: unknown; options: unknown }) => (
-    <div data-testid="scatter" data-chart-data={JSON.stringify(props.data)} data-chart-options={JSON.stringify(props.options)} />
+    <div
+      data-testid="scatter"
+      data-chart-data={JSON.stringify(props.data)}
+      data-chart-options={JSON.stringify(props.options)}
+    />
   ),
 }));
 

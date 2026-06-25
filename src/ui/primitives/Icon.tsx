@@ -5,7 +5,12 @@ type IconProps = Omit<LucideProps, 'size' | 'strokeWidth'> & {
   size?: number;
 };
 
-export function Icon({ icon: LucideComponent, size = 18, 'aria-label': ariaLabel, ...rest }: IconProps) {
+export function Icon({
+  icon: LucideComponent,
+  size = 18,
+  'aria-label': ariaLabel,
+  ...rest
+}: IconProps) {
   const decorative = !ariaLabel;
   return (
     <LucideComponent

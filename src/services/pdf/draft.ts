@@ -4,7 +4,10 @@ type PrepareDraftPdfArgs = {
   title: string;
 };
 
-export async function prepareDraftPdf(inputBytes: Uint8Array, args: PrepareDraftPdfArgs): Promise<Uint8Array> {
+export async function prepareDraftPdf(
+  inputBytes: Uint8Array,
+  args: PrepareDraftPdfArgs,
+): Promise<Uint8Array> {
   if (!(inputBytes instanceof Uint8Array)) {
     throw new Error('Could not generate draft PDF (invalid render output). Try again.');
   }

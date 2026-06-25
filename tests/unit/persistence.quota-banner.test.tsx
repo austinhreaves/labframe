@@ -59,7 +59,12 @@ describe('quota recovery banner', () => {
     );
 
     await screen.findByRole('heading', { name: /snell's law/i });
-    useLabStore.getState().setImage('part4Image', new File([new Uint8Array(2048)], 'quota-test.png', { type: 'image/png' }));
+    useLabStore
+      .getState()
+      .setImage(
+        'part4Image',
+        new File([new Uint8Array(2048)], 'quota-test.png', { type: 'image/png' }),
+      );
 
     await waitFor(() => {
       expect(screen.getByRole('status')).toBeInTheDocument();

@@ -6,15 +6,15 @@ Source-of-truth mapping from `physics-labs.up.railway.app/{labs,phy_114}/<lab>/{
 
 Twelve labs total. Five overlapping pairs (same `id`, present in both `labs/` and `phy_114/`), plus two singletons.
 
-| Lab id | PHY 132 (`labs/`) | PHY 114 (`phy_114/`) | Overlap class |
-|---|---|---|---|
-| `snellsLaw` | ✓ | ✓ | Structural divergence |
-| `staticElectricity` | ✓ | ✓ | Uncertainty-only divergence |
-| `chargesFields` | ✓ | ✓ | Uncertainty-only divergence |
-| `capacitors` | ✓ | ✓ | Structural divergence |
-| `dcCircuits` | ✓ | ✓ | Structural divergence |
-| `magneticFieldFaraday` | ✓ | — | Singleton (PHY 132 only) |
-| `geometricOptics` | — | ✓ | Singleton (PHY 114 only) |
+| Lab id                 | PHY 132 (`labs/`) | PHY 114 (`phy_114/`) | Overlap class               |
+| ---------------------- | ----------------- | -------------------- | --------------------------- |
+| `snellsLaw`            | ✓                 | ✓                    | Structural divergence       |
+| `staticElectricity`    | ✓                 | ✓                    | Uncertainty-only divergence |
+| `chargesFields`        | ✓                 | ✓                    | Uncertainty-only divergence |
+| `capacitors`           | ✓                 | ✓                    | Structural divergence       |
+| `dcCircuits`           | ✓                 | ✓                    | Structural divergence       |
+| `magneticFieldFaraday` | ✓                 | —                    | Singleton (PHY 132 only)    |
+| `geometricOptics`      | —                 | ✓                    | Singleton (PHY 114 only)    |
 
 ## The unifying divergence pattern
 
@@ -59,73 +59,73 @@ Twelve `.lab.ts` files total. Course manifests reference them by relative path.
 
 Existing `phy132/snellsLaw.lab.ts` was migrated from `labs/snellsLaw/`. Existing `phy114/snellsLaw.lab.ts` is a structural copy of phy132 with a TODO — must be rewritten from `phy_114/snellsLaw/`.
 
-| Aspect | PHY 132 (`labs/`) | PHY 114 (`phy_114/`) |
-|---|---|---|
-| Part 1 Table 1 points | 1 | 1.5 |
-| Part 1 sample calc points | 1 | 2 |
-| Part 2 slope inputs | A + ΔA + units for both | A only |
-| Part 2 uncertainty calculation question | yes (`part2_n2UncertaintyCalculation`) | absent |
-| Part 3 slope inputs | A + ΔA | A only |
-| Part 3 uncertainty analysis | yes | absent |
-| Part 4 uncertainty range question | yes (`part4UncertaintyRangeQuestion`) | absent |
-| Concept Check #4 ("real-world application") | absent (3 questions, 3 pts total) | present (4 questions, 5 pts total) |
-| Discussion & Conclusion points | 6 | 5 |
-| Notation for refraction medium | `nₐ` / `nᵦ` | `n₂` (no A/B subscript) |
-| Total points | ~24 | ~24 |
+| Aspect                                      | PHY 132 (`labs/`)                      | PHY 114 (`phy_114/`)               |
+| ------------------------------------------- | -------------------------------------- | ---------------------------------- |
+| Part 1 Table 1 points                       | 1                                      | 1.5                                |
+| Part 1 sample calc points                   | 1                                      | 2                                  |
+| Part 2 slope inputs                         | A + ΔA + units for both                | A only                             |
+| Part 2 uncertainty calculation question     | yes (`part2_n2UncertaintyCalculation`) | absent                             |
+| Part 3 slope inputs                         | A + ΔA                                 | A only                             |
+| Part 3 uncertainty analysis                 | yes                                    | absent                             |
+| Part 4 uncertainty range question           | yes (`part4UncertaintyRangeQuestion`)  | absent                             |
+| Concept Check #4 ("real-world application") | absent (3 questions, 3 pts total)      | present (4 questions, 5 pts total) |
+| Discussion & Conclusion points              | 6                                      | 5                                  |
+| Notation for refraction medium              | `nₐ` / `nᵦ`                            | `n₂` (no A/B subscript)            |
+| Total points                                | ~24                                    | ~24                                |
 
 **Lineage decision:** Two schema files. `phy132/snellsLaw.lab.ts` is already correct. `phy114/snellsLaw.lab.ts` must be regenerated — its current content is wrong (it's a copy of PHY 132 prose with PHY 114 metadata bolted on).
 
 ### B. Static Electricity & Coulomb's Law — UNCERTAINTY-ONLY DIVERGENCE
 
-| Aspect | PHY 132 | PHY 114 |
-|---|---|---|
-| Part 2A slope | A + ΔA (with units for both) | A only |
+| Aspect                                 | PHY 132                                              | PHY 114                |
+| -------------------------------------- | ---------------------------------------------------- | ---------------------- |
+| Part 2A slope                          | A + ΔA (with units for both)                         | A only                 |
 | Part 2A "Record the slope" instruction | "Record the slope, A, and its uncertainty, ΔA (σₐ)." | "Record the slope, A." |
-| Part 2B slope | A + ΔA | A only |
-| Part 2B same instruction prose | with uncertainty | without |
-| Everything else | identical prose, identical points, identical tables | — |
+| Part 2B slope                          | A + ΔA                                               | A only                 |
+| Part 2B same instruction prose         | with uncertainty                                     | without                |
+| Everything else                        | identical prose, identical points, identical tables  | —                      |
 
 **Lineage decision:** Two schema files; PHY 114 differs from PHY 132 only in the slope MultiMeasurementField and one prose line each in Parts 2A and 2B.
 
 ### C. Charges & Electric Fields — UNCERTAINTY-ONLY DIVERGENCE
 
-| Aspect | PHY 132 | PHY 114 |
-|---|---|---|
+| Aspect                              | PHY 132                                    | PHY 114           |
+| ----------------------------------- | ------------------------------------------ | ----------------- |
 | Part 1B slope MultiMeasurementField | `slopeValue` + `slopeUncertainty` (m + σₘ) | `slopeValue` only |
-| Everything else | identical | — |
+| Everything else                     | identical                                  | —                 |
 
 **Lineage decision:** Two schema files. The diff is one MultiMeasurementField config and four state keys (`slopeUncertainty`, `slopeUncertaintyUnit`).
 
 ### D. Capacitors — STRUCTURAL DIVERGENCE
 
-| Aspect | PHY 132 | PHY 114 |
-|---|---|---|
-| Parts 1A, 1B, 1C | present (capacitor fundamentals + distance + area) | present, identical prose |
-| Part 2A: Sharing Charges (3 parallel capacitors) | present | **absent** |
-| Part 2B: Sharing Charges (series & parallel) | present | **absent** |
-| `parallelCapacitorsImage`, `seriesParallelCapacitorsImage` | present | absent |
-| `part2A.parallelCapacitors.tableData` (12 voltages × 3 caps × 3 steps) | present | absent |
-| `part2B.seriesParallelCapacitors.tableData` (8 voltages) | present | absent |
-| Imports `DARK_MODE_CLASSES` from `../../constants` | yes | no (literal array) |
-| Point rebalancing in PHY 114 | — | calc 2→3, table 1→1.5, observation 1→2, concept checks 1.5→3 |
-| Discussion points | 6 | 5 |
+| Aspect                                                                 | PHY 132                                            | PHY 114                                                      |
+| ---------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------ |
+| Parts 1A, 1B, 1C                                                       | present (capacitor fundamentals + distance + area) | present, identical prose                                     |
+| Part 2A: Sharing Charges (3 parallel capacitors)                       | present                                            | **absent**                                                   |
+| Part 2B: Sharing Charges (series & parallel)                           | present                                            | **absent**                                                   |
+| `parallelCapacitorsImage`, `seriesParallelCapacitorsImage`             | present                                            | absent                                                       |
+| `part2A.parallelCapacitors.tableData` (12 voltages × 3 caps × 3 steps) | present                                            | absent                                                       |
+| `part2B.seriesParallelCapacitors.tableData` (8 voltages)               | present                                            | absent                                                       |
+| Imports `DARK_MODE_CLASSES` from `../../constants`                     | yes                                                | no (literal array)                                           |
+| Point rebalancing in PHY 114                                           | —                                                  | calc 2→3, table 1→1.5, observation 1→2, concept checks 1.5→3 |
+| Discussion points                                                      | 6                                                  | 5                                                            |
 
 **Lineage decision:** Two schema files. PHY 114 is a strict subset of PHY 132's Parts 1A/1B/1C with point values redistributed across the kept sections.
 
 ### E. DC Circuits — STRUCTURAL DIVERGENCE
 
-| Aspect | PHY 132 | PHY 114 |
-|---|---|---|
-| Part 1A (continuity, eraser/paper-clip/pencil) | present, 1.5 pts | present, 3 pts (rebalanced) |
-| Part 1B Ohm's Law slope | A + ΔA | A only |
-| Part 1B resistance calculation question count | 2 (resistance + uncertainty propagation) | 1 (resistance only, 3 pts) |
-| Part 1C Ohm's Suggestion slope | A + ΔA | A only |
-| Part 1C resistance calculation | yes (`resistanceCalculation1C`) | replaced with note: "No calculations are required for this graph." |
-| Parts 1B & 1C concept checks | 4 questions, 4 pts | identical, 4 pts |
-| Part 2A Kirchhoff (image, parameters table, measurements table, current law, voltage law) | present | present, points rebalanced (image 1→1.5, measurements 1→1.5, laws 1→1.5 each) |
-| Part 2B: Power Delivery with Non-ideal Battery | **present** (image, power table, graph, custom fit A/B, batteryVoltageCalculation, sourceResistanceCalculation, maximumPowerTransferDerivation, Stereo System Problem 4-part) | **absent** |
-| Discussion & Conclusion in LabReportForm | **absent** (bug — `discussionConclusion` is in answers state but no UI question renders it) | **present**, 5 pts |
-| Power data initialization with pre-filled resistance values | yes | no (powerData not initialized in PHY 114 labConfig) |
+| Aspect                                                                                    | PHY 132                                                                                                                                                                       | PHY 114                                                                       |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Part 1A (continuity, eraser/paper-clip/pencil)                                            | present, 1.5 pts                                                                                                                                                              | present, 3 pts (rebalanced)                                                   |
+| Part 1B Ohm's Law slope                                                                   | A + ΔA                                                                                                                                                                        | A only                                                                        |
+| Part 1B resistance calculation question count                                             | 2 (resistance + uncertainty propagation)                                                                                                                                      | 1 (resistance only, 3 pts)                                                    |
+| Part 1C Ohm's Suggestion slope                                                            | A + ΔA                                                                                                                                                                        | A only                                                                        |
+| Part 1C resistance calculation                                                            | yes (`resistanceCalculation1C`)                                                                                                                                               | replaced with note: "No calculations are required for this graph."            |
+| Parts 1B & 1C concept checks                                                              | 4 questions, 4 pts                                                                                                                                                            | identical, 4 pts                                                              |
+| Part 2A Kirchhoff (image, parameters table, measurements table, current law, voltage law) | present                                                                                                                                                                       | present, points rebalanced (image 1→1.5, measurements 1→1.5, laws 1→1.5 each) |
+| Part 2B: Power Delivery with Non-ideal Battery                                            | **present** (image, power table, graph, custom fit A/B, batteryVoltageCalculation, sourceResistanceCalculation, maximumPowerTransferDerivation, Stereo System Problem 4-part) | **absent**                                                                    |
+| Discussion & Conclusion in LabReportForm                                                  | **absent** (bug — `discussionConclusion` is in answers state but no UI question renders it)                                                                                   | **present**, 5 pts                                                            |
+| Power data initialization with pre-filled resistance values                               | yes                                                                                                                                                                           | no (powerData not initialized in PHY 114 labConfig)                           |
 
 **Lineage decision:** Two schema files. PHY 114 drops Part 2B entirely and adds the missing Discussion question. Also: **flag a likely bug in PHY 132** — discussion answer key exists but the LabReportForm doesn't render an input for it. Confirm with Austin whether that's intentional or a regression to fix during migration.
 
@@ -196,14 +196,14 @@ Easiest → hardest, to shake out script bugs on simple labs first:
 
 Each legacy lab declares a `labPdfConfig.storageKey` for `localStorage`. Per spec §5.13 these are slated to be dropped pre-launch. Listed here for completeness in case Austin wants to preserve any:
 
-| Lab | Legacy storageKey |
-|---|---|
-| snellsLaw | `snells_law_answers` |
-| staticElectricity | `static_electricity_coulombs_law_answers` |
-| chargesFields | `charges_fields_answers` |
-| capacitors | `capacitors_answers` |
-| dcCircuits | `dc_circuits_answers` |
-| magneticFieldFaraday | `magnetic_field_faradays_law_answers` |
-| geometricOptics | `geometric_optics_answers` |
+| Lab                  | Legacy storageKey                         |
+| -------------------- | ----------------------------------------- |
+| snellsLaw            | `snells_law_answers`                      |
+| staticElectricity    | `static_electricity_coulombs_law_answers` |
+| chargesFields        | `charges_fields_answers`                  |
+| capacitors           | `capacitors_answers`                      |
+| dcCircuits           | `dc_circuits_answers`                     |
+| magneticFieldFaraday | `magnetic_field_faradays_law_answers`     |
+| geometricOptics      | `geometric_optics_answers`                |
 
 Default action per spec: drop all of these in the new app. Confirm or override.

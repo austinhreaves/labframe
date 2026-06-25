@@ -22,7 +22,9 @@ const drawLab: Lab = {
   description: 'Free-draw calculation lab.',
   category: 'Physics',
   simulations: {},
-  sections: [{ kind: 'calculation', fieldId: 'hand-calc', prompt: 'Show your work', responseMode: 'draw' }],
+  sections: [
+    { kind: 'calculation', fieldId: 'hand-calc', prompt: 'Show your work', responseMode: 'draw' },
+  ],
 };
 
 const oneStrokeDrawing = serializeDrawing({

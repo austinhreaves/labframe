@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { snellsLawLab } from '@/content/labs';
 
-describe("snellsLawLab derived formulas", () => {
+describe('snellsLawLab derived formulas', () => {
   it('evaluates Part 2 sin columns for a known row', () => {
     const dataTableSection = snellsLawLab.sections.find(
       (section) => section.kind === 'dataTable' && section.tableId === 'part2Table',
@@ -13,12 +13,19 @@ describe("snellsLawLab derived formulas", () => {
     }
 
     const sinIncident = dataTableSection.columns.find((column) => column.id === 'sinIncidentAngle');
-    const sinRefracted = dataTableSection.columns.find((column) => column.id === 'sinRefractedAngle');
+    const sinRefracted = dataTableSection.columns.find(
+      (column) => column.id === 'sinRefractedAngle',
+    );
 
     expect(sinIncident?.kind).toBe('derived');
     expect(sinRefracted?.kind).toBe('derived');
 
-    if (!sinIncident || sinIncident.kind !== 'derived' || !sinRefracted || sinRefracted.kind !== 'derived') {
+    if (
+      !sinIncident ||
+      sinIncident.kind !== 'derived' ||
+      !sinRefracted ||
+      sinRefracted.kind !== 'derived'
+    ) {
       throw new Error('Expected derived columns to exist');
     }
 
@@ -45,12 +52,19 @@ describe("snellsLawLab derived formulas", () => {
     }
 
     const sinIncident = dataTableSection.columns.find((column) => column.id === 'sinIncidentAngle');
-    const sinRefracted = dataTableSection.columns.find((column) => column.id === 'sinRefractedAngle');
+    const sinRefracted = dataTableSection.columns.find(
+      (column) => column.id === 'sinRefractedAngle',
+    );
 
     expect(sinIncident?.kind).toBe('derived');
     expect(sinRefracted?.kind).toBe('derived');
 
-    if (!sinIncident || sinIncident.kind !== 'derived' || !sinRefracted || sinRefracted.kind !== 'derived') {
+    if (
+      !sinIncident ||
+      sinIncident.kind !== 'derived' ||
+      !sinRefracted ||
+      sinRefracted.kind !== 'derived'
+    ) {
       throw new Error('Expected derived columns to exist');
     }
 

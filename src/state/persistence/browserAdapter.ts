@@ -1,4 +1,9 @@
-import { deleteBlobFromIdb, listIdbKeys, loadBlobFromIdb, saveBlobToIdb } from '@/state/persistence/idb';
+import {
+  deleteBlobFromIdb,
+  listIdbKeys,
+  loadBlobFromIdb,
+  saveBlobToIdb,
+} from '@/state/persistence/idb';
 import {
   deleteJSONFromLocalStorage,
   listLocalStorageKeys,
@@ -13,7 +18,10 @@ export const browserPersistenceAdapter: PersistenceAdapter = {
   loadJSON: loadJSONFromLocalStorage,
   loadBlob: loadBlobFromIdb,
   listKeys: async (prefix: string) => {
-    const [jsonKeys, blobKeys] = await Promise.all([listLocalStorageKeys(prefix), listIdbKeys(prefix)]);
+    const [jsonKeys, blobKeys] = await Promise.all([
+      listLocalStorageKeys(prefix),
+      listIdbKeys(prefix),
+    ]);
     return Array.from(new Set([...jsonKeys, ...blobKeys]));
   },
   deleteJSON: deleteJSONFromLocalStorage,

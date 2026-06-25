@@ -98,7 +98,8 @@ If the conductor is split apart, or grounded and then disconnected, *while the i
 Drag John's foot back and forth across the carpet repeatedly to accumulate charge.
 
 ---`,
-      prompt: 'Briefly describe what you observed. What happened to John\'s charge as you dragged his foot?',
+      prompt:
+        "Briefly describe what you observed. What happened to John's charge as you dragged his foot?",
       points: 0.5,
     },
     {
@@ -109,7 +110,8 @@ Drag John's foot back and forth across the carpet repeatedly to accumulate charg
 Note John's charge meter (the row of electrons in his body) both **before** and **after** the spark.
 
 ---`,
-      prompt: 'Briefly describe what you observed. Include the state of John\'s charge before and after the spark.',
+      prompt:
+        "Briefly describe what you observed. Include the state of John's charge before and after the spark.",
       points: 0.5,
     },
     {
@@ -118,7 +120,8 @@ Note John's charge meter (the row of electrons in his body) both **before** and 
       preamble: `**Procedure step 3.** Experiment with different arm positions and distances between John's hand and the doorknob.
 
 ---`,
-      prompt: 'Briefly describe what you observed. How did arm position or the distance between hand and doorknob affect when the spark occurred?',
+      prompt:
+        'Briefly describe what you observed. How did arm position or the distance between hand and doorknob affect when the spark occurred?',
       points: 0.5,
     },
     {
@@ -149,7 +152,8 @@ When you charge the balloon by rubbing it on the sweater, watch for this directl
 Rub the balloon on the sweater to transfer charge, then release it and observe its behavior near the sweater.
 
 ---`,
-      prompt: 'Briefly describe what you observed. What did the balloon do after being released near the sweater?',
+      prompt:
+        'Briefly describe what you observed. What did the balloon do after being released near the sweater?',
       points: 0.5,
     },
     {
@@ -160,7 +164,8 @@ Rub the balloon on the sweater to transfer charge, then release it and observe i
 Try varying the distance between the balloon and the wall.
 
 ---`,
-      prompt: 'Briefly describe what you observed. How did the balloon\'s behavior change as you varied its distance from the wall?',
+      prompt:
+        "Briefly describe what you observed. How did the balloon's behavior change as you varied its distance from the wall?",
       points: 0.5,
     },
     {
@@ -169,7 +174,8 @@ Try varying the distance between the balloon and the wall.
       preamble: `**Procedure step 3.** Disable the wall and place the charged balloon in the same location where the wall had been.
 
 ---`,
-      prompt: 'Briefly describe what you observed. How did the balloon behave differently without the wall, and where did it go?',
+      prompt:
+        'Briefly describe what you observed. How did the balloon behave differently without the wall, and where did it go?',
       points: 0.5,
     },
     {
@@ -222,7 +228,8 @@ Start with the cans together and no rod present. Toggle the rod to bring it near
 Note the final charge state of each can.
 
 ---`,
-      prompt: 'Briefly describe what happened at each step: as the rod approached, as the cans separated, and after the rod was removed.',
+      prompt:
+        'Briefly describe what happened at each step: as the rod approached, as the cans separated, and after the rod was removed.',
       points: 0.5,
     },
     {
@@ -235,13 +242,15 @@ Repeat the induction sequence from step 1, but this time **remove the rod first*
 Note the final charge state of each can.
 
 ---`,
-      prompt: 'Briefly describe what happened at each step. What was the final charge state of each can?',
+      prompt:
+        'Briefly describe what happened at each step. What was the final charge state of each can?',
       points: 0.5,
     },
     {
       kind: 'concept',
       fieldId: 'inductionChargeSignQuestion',
-      preamble: 'In step 1, after the rod is removed, the two cans carry opposite net charges from each other.\n\n---',
+      preamble:
+        'In step 1, after the rod is removed, the two cans carry opposite net charges from each other.\n\n---',
       prompt:
         'Which can ends up with the same sign as the rod, and which ends up with the opposite sign? Explain the electron movement that produces this result.',
       points: 1.5,
