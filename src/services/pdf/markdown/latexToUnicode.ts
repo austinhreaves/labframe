@@ -46,6 +46,8 @@ const COMMAND_MAP: Record<string, string> = {
   '\\tan': 'tan',
   '\\log': 'log',
   '\\ln': 'ln',
+  '\\max': 'max',
+  '\\sum': '∑',
   '\\cdot': '·',
   '\\times': '×',
   '\\div': '÷',
@@ -58,6 +60,8 @@ const COMMAND_MAP: Record<string, string> = {
   '\\leq': '≤',
   '\\ge': '≥',
   '\\geq': '≥',
+  '\\ll': '≪',
+  '\\gg': '≫',
   '\\ne': '≠',
   '\\neq': '≠',
   '\\equiv': '≡',
@@ -70,6 +74,7 @@ const COMMAND_MAP: Record<string, string> = {
   '\\leftarrow': '←',
   '\\Rightarrow': '⇒',
   '\\Leftarrow': '⇐',
+  '\\Longrightarrow': '⟹',
   '\\mapsto': '↦',
   '\\infty': '∞',
   '\\partial': '∂',
@@ -229,13 +234,22 @@ function convertSimpleSuperSub(input: string): string {
   return output;
 }
 
+// `\tfrac` and `\dfrac` are the textstyle/displaystyle variants of `\frac`; they
+// differ only in rendered size, so treat them identically here.
 function replaceFractions(input: string): string {
   return input.replace(
-    /\\frac\{([^{}]+)\}\{([^{}]+)\}/g,
+    /\\[tdT]?frac\{([^{}]+)\}\{([^{}]+)\}/g,
     (_full, numerator: string, denominator: string) => {
       return `(${numerator})/(${denominator})`;
     },
   );
+}
+
+// Equation numbers (`\tag{N}`) are referenced from prose elsewhere in lab content
+// (e.g. "see Eq. (2)"), so preserve the number as a trailing ` (N)` rather than
+// dropping it. Collapse any whitespace before the tag into the single space.
+function replaceTags(input: string): string {
+  return input.replace(/\s*\\tag\{([^{}]+)\}/g, (_full, label: string) => ` (${label})`);
 }
 
 function replaceSquareRoots(input: string): string {
@@ -267,11 +281,20 @@ function replaceMappedCommands(input: string): string {
 
 export function latexToUnicode(input: string): string {
   let output = input;
+  output = replaceTags(output);
   output = stripSpacingMacros(output);
-  // Super/subscripts first: this collapses braces like `d^{2}` so they no longer
-  // block fraction matching or wrapper stripping further down.
-  output = convertSimpleSuperSub(output);
-  output = stripWrappers(output);
+  // Wrapper stripping and super/subscript conversion unblock each other, so
+  // alternate them to a fixpoint. Converting `^{2}` removes braces that would
+  // otherwise block an enclosing wrapper (`\mathrm{m^{2}}`), and stripping a
+  // wrapper inside a subscript (`q_{\text{test}}` -> `q_{test}`) removes braces
+  // that would otherwise block the subscript match. Either way both collapse the
+  // braces that `replaceFractions` needs to see flat arguments.
+  let previous: string;
+  do {
+    previous = output;
+    output = stripWrappers(output);
+    output = convertSimpleSuperSub(output);
+  } while (output !== previous);
   // Sizing delimiters carry no meaning once rendered as text.
   output = output.replace(/\\left/g, '').replace(/\\right/g, '');
   output = replaceFractions(output);

@@ -24,6 +24,18 @@ const instructionSchema = {
 
 const CALLOUT_PATTERN = /^\[!(NOTE|TIP|WARNING|IMPORTANT|CAUTION)\]\s*\n?/i;
 
+// remark-math only treats `$$...$$` as *display* math when the delimiters sit on
+// their own lines. Lab content authors display equations on a single line
+// (`$$ ... $$`), which remark-math parses as *inline* math; KaTeX then rejects
+// display-only commands like `\tag`, leaking them as raw red text. Expand any line
+// that is wholly a `$$...$$` block into the multiline form before parsing so it
+// renders as a proper display equation.
+const DISPLAY_MATH_LINE = /^[ \t]*\$\$(.+?)\$\$[ \t]*$/gm;
+
+function normalizeDisplayMath(markdown: string): string {
+  return markdown.replace(DISPLAY_MATH_LINE, (_full, body: string) => `$$\n${body.trim()}\n$$`);
+}
+
 function calloutVariant(label: string): string {
   switch (label.toUpperCase()) {
     case 'TIP':
@@ -91,7 +103,7 @@ export function MarkdownBlock({ markdown }: MarkdownBlockProps) {
       rehypePlugins={[[rehypeSanitize, instructionSchema], rehypeKatex]}
       components={markdownComponents}
     >
-      {markdown}
+      {normalizeDisplayMath(markdown)}
     </ReactMarkdown>
   );
 }
