@@ -176,6 +176,85 @@ wizard course step are gone; the course picker never lists Getting Started;
 
 ---
 
+**Agent handoff -- Pass 1 (D + O):**
+
+```
+You are implementing Pass 1 of the LabFrame onboarding spec
+(docs/specs/ONBOARDING_COURSE_SCOPING_SPEC.md): Track D (demo showcase lab) and
+Track O (course scoping). These are combined because O's `role` filter is
+introduced by D's schema change.
+
+Read first (in this order):
+1. src/domain/schema/course.ts -- CourseSchema; you will add `role` here
+2. src/content/courses/phy132.course.ts -- pattern for welcome.course.ts
+3. src/content/labs/index.ts -- export pattern
+4. src/content/labs/phy132/snellsLaw.lab.ts -- copy its sim URL and structure
+5. src/domain/schema/lab.ts -- section kinds available
+6. src/app/Routes.tsx -- full route table and labsByCourse shape
+7. src/ui/Catalog.tsx -- full file; courses prop, standaloneCourse logic, wizard
+   steps, AboutAndPrivacy, hero chip list
+8. src/ui/LabPage.tsx -- line ~418; the wordmark link
+
+Track D tasks:
+1. Add `role: z.enum(['academic', 'resources']).optional()` to CourseSchema in
+   src/domain/schema/course.ts. Default is 'academic'. This is the only schema
+   change in this pass.
+2. Create src/content/labs/_tour/welcome.lab.ts with id 'welcome-intro', title
+   'Getting Started', and these sections in order:
+   - simulation: reuse the Bending Light sim URL from snellsLaw.lab.ts
+   - instructions: 2-3 sentences of orientation copy (no em dashes)
+   - calculation: equationEditor: true, fieldId: 'eq-demo', prompt: 'Enter the
+     formula for kinetic energy.'
+   - calculation: responseMode: 'image', fieldId: 'screenshot-demo', prompt:
+     'Capture a screenshot of the simulation and upload it here.'
+   - calculation: responseMode: 'draw', fieldId: 'draw-demo', prompt: 'Draw a
+     force diagram (free-body diagram) for an object on the surface below.'
+   - dataTable: one input column, one derived column
+   - plot: referencing the dataTable columns
+3. Create src/content/courses/welcome.course.ts: id 'welcome', title 'Getting
+   Started', role: 'resources', storagePrefix: 'welcome',
+   parentOriginAllowList: [], labs: [{ ref: 'intro', enabled: true }].
+4. Export welcomeIntroLab from src/content/labs/index.ts and welcomeCourse from
+   src/content/courses/index.ts.
+5. In src/app/Routes.tsx:
+   - Add welcomeCourse to the courses array.
+   - Register labsByCourse['welcome'] = { intro: welcomeIntroLab }.
+   - Add route '/welcome' rendering <LabPage course={welcomeCourse}
+     lab={welcomeIntroLab} /> (the tour alias; Pass 2 adds ?tour=1 behavior).
+6. Run `npm run verify:lab -- welcome-intro` and fix any issues.
+
+Track O tasks:
+7. In Catalog.tsx, read labframe:course from localStorage on mount (use the
+   existing safeStorageGet helper). Derive:
+   - pinnedCourse: the Course whose id matches, only if role !== 'resources'
+   - resourcesCourses: all courses where role === 'resources'
+   - academicCourses: all courses where role !== 'resources'
+8. When pinnedCourse exists:
+   - Render only [pinnedCourse, ...resourcesCourses] instead of all courses.
+   - Skip the wizard's course step entirely; wizard becomes name -> lab using
+     pinnedCourse's labs.
+   - Hide the hero chip list (or render only the pinned course chip).
+9. Course picker (wizard course step, shown only when no course is pinned):
+   list academicCourses only. Never list role:'resources' courses.
+10. When a student picks a course in the wizard, or visits /c/:courseId with an
+    academic course id, write it to labframe:course via safeStorageSet. A visit
+    to /c/welcome must never set labframe:course.
+11. AboutAndPrivacy: replace the hardcoded "PHY 132" text with the pinned course
+    title, or "your course" if unpinned.
+12. In LabPage.tsx: when labframe:course is set, repoint the "LabFrame" wordmark
+    link from /labs to /c/:pinnedCourseId.
+
+Rules:
+- No em dashes in prose, comments, or content strings.
+- role: 'academic' is the default; existing courses without role are unchanged.
+- /c/phy114 typed directly still works (obfuscation only, not security).
+- /labs is never linked from student-facing UI.
+- Verify with `npm run typecheck` (tsc -b) and `npm run ci`.
+- Run `npm run test:e2e` -- scoping changes affect routing and catalog layout.
+```
+
+---
+
 ## Track S: Onboarding Tour
 
 ### S-1: First-run splash and the onboarded flag
@@ -277,6 +356,118 @@ deep-link shows the toast once.
 
 ---
 
+**Agent handoff -- Pass 2 (S):**
+
+```
+You are implementing Pass 2 of the LabFrame onboarding spec
+(docs/specs/ONBOARDING_COURSE_SCOPING_SPEC.md): Track S (onboarding tour).
+Pass 1 (D + O) is complete: the /welcome route exists, the Getting Started
+course is wired, and the labframe:course pin works.
+
+Install driver.js first:
+  npm install driver.js
+MIT, ~5kb, no network calls. Supports element-anchored and centered steps.
+
+Read first:
+1. src/ui/Catalog.tsx -- full file; the splash replaces the hero + wizard for
+   not-onboarded users; the wizard name/course steps are reused for A2/A3
+2. src/ui/LabPage.tsx -- full file; header layout for the refresher button,
+   .simulation-pane, .worksheet-pane, .lab-save-status, the IntegrityAgreement
+   export button, and the storage-note-banner pattern (model for the toast)
+3. src/app/Routes.tsx -- the /welcome route from Pass 1
+4. src/ui/tokens.css -- use var(--space-*) for the 44px touch target on the
+   refresher button
+
+localStorage keys (use the existing safeStorageGet/safeStorageSet helpers):
+- labframe:onboarded -- '1' once seen; gate the splash and toast on this
+- labframe:course -- written by Pass 1 (O); Phase A also writes it
+- labframe:student-name -- reused from existing code; Phase A writes it
+- labframe:tour-return -- stash return URL for the refresher; clear on deposit
+
+S-1: First-run splash (Catalog.tsx):
+- When labframe:onboarded !== '1', render a minimal splash instead of the hero
+  + wizard + courses: a one-line intro ("Run your physics lab, fill the
+  worksheet, export a signed report."), a primary "Get Started" button, and a
+  ghost "Skip tutorial" link.
+- "Skip tutorial" sets labframe:onboarded = '1' and re-renders the normal
+  catalog (no navigation needed).
+- "Get Started" starts the Phase A driver (below).
+- When labframe:onboarded === '1', the catalog renders normally; no changes.
+
+S-2 Phase A driver (Catalog.tsx, starts on "Get Started"):
+Steps:
+  A1: no element -- title "Welcome to LabFrame", description "This takes about
+    a minute. You can skip any step."
+  A2: anchor the course picker cards (role:'academic' courses only) -- title
+    "Pick your course", description "Select the course you are enrolled in."
+    On the user clicking a course card (or onNextClick): write labframe:course
+    and advance. Render the course cards visibly on the splash so driver.js
+    has a real DOM anchor.
+  A3: anchor the name input -- title "Your name", description "Enter your name
+    as it should appear on your lab report. It stays in this browser." On
+    Next: write labframe:student-name.
+  A4: no element -- title "Ready?", description "Let's take a look at a lab."
+    Next navigates to /welcome?tour=1.
+
+S-2 Phase B driver (LabPage.tsx, starts when ?tour=1 on /welcome):
+On mount: if location.search includes 'tour=1' AND the lab id is 'welcome-intro',
+start the driver after a 100ms delay (let the DOM settle). Strip ?tour=1 from
+the URL via history.replaceState before starting.
+
+Steps:
+  B1: .lab-shell -- "Everything is on one page: the simulation and your
+    worksheet side by side."
+  B2: .simulation-pane -- "Run the simulation. Drag sliders, adjust
+    parameters, take measurements."
+  B3: .worksheet-pane (or #section-0) -- "Answer the prompts here. Depending
+    on the question, you can type, sketch a diagram, or upload a photo."
+  B4: the image-upload calculation section (use a data-tour="screenshot-demo"
+    attribute or [data-section-id="screenshot-demo"] selector on the
+    section wrapper) -- "When asked for a screenshot, capture the sim and
+    upload it here." Append platform hints from navigator.platform /
+    navigator.userAgent: Windows = Win + Shift + S, Mac = Cmd + Shift + 4,
+    iPad = Side button + Volume Up.
+  B5: .lab-save-status -- "Your answers save automatically in this browser. No
+    account needed. Use Save draft to download a backup."
+  B6: the Export PDF button inside IntegrityAgreement (add data-tour="export-pdf"
+    if needed for a stable selector) -- "Accept the integrity agreement and
+    export your signed PDF when you are done."
+  B7: no element -- "Last step: submit that PDF to the matching Canvas
+    assignment. LabFrame does not submit for you."
+
+On Phase B finish or driver destroy: call setOnboarded() then deposit().
+
+S-3: Deep-link toast and the refresher:
+- Toast (LabPage.tsx): on mount, if labframe:onboarded !== '1' AND lab.id !==
+  'welcome-intro', render a dismissible toast using the storage-note-banner
+  pattern (a <section role="status"> with message and buttons). Message: "New
+  here? Take the tour." Actions: "Take the tour" (navigate to /welcome?tour=1)
+  and "Dismiss" (set labframe:onboarded = '1', hide toast). Toast must not
+  reappear after dismiss.
+- Refresher (LabPage.tsx header): add a "Take the tour" button near the
+  existing "About" button. Always visible. On click: write location.pathname +
+  location.search to labframe:tour-return, then navigate to /welcome?tour=1.
+  Button height must meet the 44px touch target (use var(--space-11) or the
+  same token the other header buttons use).
+
+S-4: Deposit (called after Phase B finishes or driver is destroyed):
+- If labframe:tour-return is set: navigate there and clear labframe:tour-return.
+- Otherwise: navigate to /c/:pinnedCourse (read labframe:course; fall back to /
+  if unset).
+
+Rules:
+- No em dashes in any string, comment, or UI copy.
+- Driver destroy (Esc mid-tour) must set labframe:onboarded and call deposit,
+  same as a normal finish.
+- Do not auto-start the Phase B driver on any real lab page, only on /welcome
+  when ?tour=1 is present.
+- Refresher button meets 44px touch target.
+- Verify with `npm run typecheck` (tsc -b) and `npm run ci`.
+- Run `npm run test:e2e` -- routing and catalog layout are affected.
+```
+
+---
+
 ## Track T-B: Finish the Touch Audit (carried forward)
 
 The archived spec's T-B shipped only the `?forceTextCalc=true` fallback
@@ -299,6 +490,67 @@ tap; the equation editor uses an iOS-safe virtual keyboard mode with the
 `?forceTextCalc` fallback intact on desktop; any table-drag interaction has a
 touch guard (or is documented as nonexistent). Add or extend a Playwright check at
 a tablet viewport.
+
+---
+
+**Agent handoff -- Pass 3 (T-B):**
+
+```
+You are implementing Pass 3 of the LabFrame onboarding spec
+(docs/specs/ONBOARDING_COURSE_SCOPING_SPEC.md): Track T-B (finish the touch
+interaction audit). This pass is independent of all other passes.
+
+Context: the archived spec's T-B shipped the ?forceTextCalc=true URL fallback
+(src/ui/sections/CalculationSectionView.tsx lines 20-25, commit a18737d). The
+remaining items are the hover audit and MathLive virtual keyboard config.
+Table drag-to-reorder was confirmed not to exist; that item is dropped.
+
+Read first:
+1. src/main.css -- find all :hover rules
+2. src/ui/tokens.css -- use only var(--space-*) / var(--text-*) etc.; no
+   numeric literals in new CSS
+3. src/ui/sections/CalculationSectionView.tsx lines 1-50 -- forceTextCalc and
+   the equationEditor branch
+4. Find the EquationEditor component and MathLive config:
+   grep -r "EquationEditor\|MathLive\|mathfield\|virtualKeyboard" src/
+5. src/ui/primitives/mathlive.css -- existing MathLive overrides
+
+Task 1 -- Phantom hover guards:
+There are currently zero @media (hover: hover) guards in src/. Audit every
+:hover rule in src/main.css and component CSS files. For each :hover that
+applies a visible style change (color, background, border, shadow, transform,
+or opacity), wrap it:
+  @media (hover: hover) {
+    .selector:hover { ... }
+  }
+This prevents stuck hover highlights after a tap on iOS/Android.
+Scope: buttons, .lab-card, .catalog-wizard-card, .catalog-hero-course-chip,
+and any other interactive element with hover styles. Use only token values;
+no numeric literals.
+
+Task 2 -- MathLive virtual keyboard:
+Find where MathLive is initialized (likely the EquationEditor component). Set
+virtualKeyboardMode to 'onfocus' (or the equivalent in the installed version --
+check the installed MathLive version in package.json and its API). This prevents
+the native iOS keyboard and the MathLive virtual keyboard from fighting on iPad.
+The ?forceTextCalc fallback must remain intact. Do not remove the equation editor
+on desktop. If the installed MathLive version does not support 'onfocus', document
+the limitation in a short comment with the correct API for the version that does.
+
+Task 3 -- Playwright tablet check:
+Add or extend a Playwright test at 768x1024 viewport that confirms interactive
+elements with hover styles are guarded (e.g. assert that the relevant CSS
+contains @media (hover: hover), or use page.evaluate to check computed styles
+after a touch event if Playwright supports it). Name the test to include the
+viewport size.
+
+Rules:
+- No em dashes in prose or comments.
+- Do not change any layout, component logic, or the equation editor behavior on
+  desktop.
+- Verify with `npm run typecheck` (tsc -b) and `npm run ci`.
+- Run `npm run test:e2e` after adding the Playwright check.
+```
 
 ---
 
@@ -346,6 +598,108 @@ and a "No recorded activity" line with `1h 03m 12s`-style times; empty plots are
 one line; two drawing pages share a PDF page; the on-screen worksheet and the
 signed envelope are unchanged. `npm run typecheck`, `npm run lint`, and `npm test`
 are green (update the `renderPdf` text-form snapshots as needed).
+
+---
+
+**Agent handoff -- Pass 4 (P):**
+
+```
+You are implementing Pass 4 of the LabFrame onboarding spec
+(docs/specs/ONBOARDING_COURSE_SCOPING_SPEC.md): Track P (PDF compaction,
+phases P-C / P-D / P-E). This pass is independent of all other passes.
+
+Context: P-A (font embedding, commit 9239533) and P-B (section titles +
+prompts, commit c0facf6) are done. P-C / P-D / P-E are NOT started -- confirmed:
+no pdfHidden, no formatDuration, no "Unanswered sections" / "No recorded
+activity" / "no data plotted" anywhere in src/. Problem: an all-empty draft ran
+15-16 pages mostly blank.
+
+HARD CONSTRAINT: presentation only. Do NOT change the signed envelope.
+Do not touch src/services/integrity/buildAnswers.ts, canonicalize.ts, or sign.ts.
+All changes are in the PDF renderer and lab content flags.
+
+Read first (in this order):
+1. src/services/pdf/Document.tsx -- full file; section renderer, calc/draw/image
+   branches, and the existing Process Record page
+2. src/domain/schema/lab.ts -- SectionMetadataSchema and each section variant
+3. src/domain/pointsFormatting.ts -- pattern for a small helper with unit tests;
+   follow this for formatDuration
+4. src/content/labs/ -- scan 2-3 enabled labs (e.g. phy132/coulombsLaw.lab.ts,
+   phy114/coulombsLaw.lab.ts) to understand instructions block content before
+   marking pdfHidden
+
+P-C -- Drop theory + compact unanswered:
+
+Step 1: Schema
+Add pdfHidden?: z.boolean().optional() to SectionMetadataSchema in
+src/domain/schema/lab.ts. A pdfHidden: true section is skipped in the PDF body
+and the Process Record; it still renders on-screen and is untouched by the
+envelope.
+
+Step 2: Mark labs
+In src/content/labs/** (enabled labs only), add pdfHidden: true to instructions
+sections that are purely background/theory/reference. Signals: headings like
+"Background", "A note on", "Theory", standalone derivations, reference-only
+tables. KEEP: integrity agreement, "Step N." procedural instructions,
+concept-check framing that gives context to an adjacent response. This is a
+judgement call; the author will re-tune.
+
+Step 3: Compact unanswered
+In Document.tsx, for each field-owning section rendered (objective, measurement,
+multiMeasurement, calculation, concept, image, dataTable), classify as:
+- answered: non-empty field text, an uploaded image blob, a non-empty draw stroke
+  list, or at least one filled table cell
+- unanswered: none of the above
+Render answered sections fully. Collect all unanswered field-owning sections and
+render ONE block: "Unanswered sections (N): Title 1, Title 2, ..." where titles
+come from the sectionTitle() helper (see P-D). Instructions and plots are never
+in this list. pdfHidden sections are never in this list.
+
+P-D -- Process Record densification:
+
+1. Create a formatDuration(ms: number): string helper (new file alongside
+   src/domain/pointsFormatting.ts or in src/services/pdf/). Format: omit higher
+   zero-units, zero-pad lower ones.
+   Examples: 45000 -> "45s", 125000 -> "2m 05s", 3792000 -> "1h 03m 12s".
+   Write unit tests following the pointsFormatting test pattern.
+
+2. Create or factor out a sectionTitle(section: Section): string helper that
+   returns the human title for both the PDF body (P-B already uses some form of
+   this) and the Process Record, so both share one implementation.
+
+3. In Document.tsx, replace the Process Record page with:
+   - A dense table, one row per field-owning section with recorded activity
+     (activeMs > 0 OR keystrokes > 0 OR any paste count > 0). Columns: Section
+     (sectionTitle) | Active time (formatDuration) | Keystrokes | Deletes |
+     Pastes (clipboard / autocomplete / IME formatted as "2 / 0 / 1"). Add a
+     totals row.
+   - One line below the table: "No recorded activity: Title 1, Title 2, ..."
+     listing field-owning sections with zero activity. Omit field-less sections
+     (instructions, plot) and pdfHidden sections entirely.
+
+P-E -- Layout and length:
+
+1. Empty plot: when a plot section has no data points (all column arrays empty),
+   render a single Text element "<plot title>: no data plotted" instead of the
+   full SVG axes box. A plot with any data renders normally.
+
+2. Drawings: add a drawImage style with maxHeight capped near half a page
+   (~380px at A4). Set wrap={false} on each drawing-page block (image + "Page N
+   of M" label + SHA caption) so they stay together and two drawing pages fit on
+   one PDF page. Uploaded photos may keep a larger cap.
+
+Verify:
+- `npm run typecheck` (tsc -b), `npm run lint`, `npm test` all green. Update
+  any renderPdf text-form snapshot tests that change due to the new Process
+  Record format or section compaction.
+- Confirm the combined effect reduces page count on an all-empty draft.
+
+Rules:
+- No em dashes in any string, comment, or lab content.
+- Do not change buildAnswers.ts, canonicalize.ts, or sign.ts.
+- pdfHidden sections must still render on-screen (no change to SectionRenderer).
+- Keep formatDuration and sectionTitle as small, unit-tested helpers.
+```
 
 ---
 
