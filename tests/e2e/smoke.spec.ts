@@ -1,15 +1,9 @@
 import { test, expect } from '@playwright/test';
 
 test('phase1 snell flow: fill table derived updates and tab switch', async ({ page }) => {
-  await page.goto('/');
-  await expect(
-    page.getByRole('heading', { name: /interactive physics labs/i }).first(),
-  ).toBeVisible();
-
-  await page
-    .getByRole('link', { name: /lab 5: snell's law/i })
-    .first()
-    .click();
+  // PHY 132 restructured Snell's Law to enabled:false (lab 11). Use PHY 114
+  // Lab 9 instead — identical columns, same Bending Light simulation.
+  await page.goto('/c/phy114/snellsLaw');
   await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();
 
   await page

@@ -35,7 +35,14 @@ type MathFieldElement = HTMLElement & {
   selectionEnd?: number | null;
   position?: number;
   executeCommand?: (command: unknown) => void;
+  mathVirtualKeyboardPolicy?: string;
 };
+
+/** MathLive's global virtual-keyboard controller, attached to window once mathlive loads. */
+type VirtualKeyboard = { show: () => void; hide: () => void; visible: boolean };
+
+const getVirtualKeyboard = (): VirtualKeyboard | undefined =>
+  (window as unknown as { mathVirtualKeyboard?: VirtualKeyboard }).mathVirtualKeyboard;
 
 export function EquationEditor({
   id,
@@ -48,6 +55,7 @@ export function EquationEditor({
   const effective = value ?? createEmptyFieldValue();
   const [isReady, setIsReady] = useState(false);
   const [mode, setMode] = useState<'math' | 'latex'>('math');
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const focusStartedAt = useRef<number | null>(null);
   const composition = useRef<{ startOffset: number; startText: string } | null>(null);
   const mathFieldRef = useRef<MathFieldElement | null>(null);
@@ -130,12 +138,17 @@ export function EquationEditor({
     return after.slice(offset, end);
   };
 
-  const latexPreview = useMemo(
+  // Render each newline-separated line as its own display block so multi-line
+  // LaTeX source stacks vertically instead of collapsing onto one line (LaTeX
+  // ignores raw newlines). Blank lines render a spacer.
+  const latexPreviewLines = useMemo(
     () =>
-      katex.renderToString(effective.text || '\\text{ }', {
-        throwOnError: false,
-        displayMode: true,
-      }),
+      (effective.text || '\\text{ }').split('\n').map((line) =>
+        katex.renderToString(line.trim() === '' ? '\\text{ }' : line, {
+          throwOnError: false,
+          displayMode: true,
+        }),
+      ),
     [effective.text],
   );
 
@@ -291,6 +304,39 @@ export function EquationEditor({
     await navigator.clipboard.writeText(effective.text);
   };
 
+  // The virtual keyboard is opt-in (policy is "manual"); summon or dismiss it
+  // explicitly so it never steals half the screen on focus.
+  const toggleVirtualKeyboard = () => {
+    const keyboard = getVirtualKeyboard();
+    if (!keyboard) {
+      return;
+    }
+    if (keyboard.visible) {
+      keyboard.hide();
+      setKeyboardVisible(false);
+      return;
+    }
+    mathFieldRef.current?.focus();
+    keyboard.show();
+    setKeyboardVisible(true);
+  };
+
+  // Dismiss the keyboard when leaving math mode and on unmount, so it never
+  // lingers over an input that can no longer drive it.
+  useEffect(() => {
+    if (mode !== 'math') {
+      getVirtualKeyboard()?.hide();
+      setKeyboardVisible(false);
+    }
+  }, [mode]);
+
+  useEffect(
+    () => () => {
+      getVirtualKeyboard()?.hide();
+    },
+    [],
+  );
+
   if (!isReady) {
     return (
       <Field
@@ -312,13 +358,25 @@ export function EquationEditor({
         <span className={hideLabel ? 'field-label visually-hidden' : 'field-label'}>
           {labelDisplay ?? label}
         </span>
-        <button
-          type="button"
-          className="equation-editor-toggle"
-          onClick={() => setMode((previous) => (previous === 'math' ? 'latex' : 'math'))}
-        >
-          {mode === 'math' ? 'View as LaTeX' : 'View as math'}
-        </button>
+        <div className="equation-editor-toolbar-actions">
+          {mode === 'math' ? (
+            <button
+              type="button"
+              className="equation-editor-toggle"
+              aria-pressed={keyboardVisible}
+              onClick={toggleVirtualKeyboard}
+            >
+              {keyboardVisible ? 'Hide keyboard' : 'On-screen keyboard'}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="equation-editor-toggle"
+            onClick={() => setMode((previous) => (previous === 'math' ? 'latex' : 'math'))}
+          >
+            {mode === 'math' ? 'Type with LaTeX' : 'Use equation builder'}
+          </button>
+        </div>
       </div>
       <EquationSymbolPalette onInsert={insertSymbol} onRestoreFocus={focusActiveInput} />
       <div className="equation-editor-body">
@@ -328,6 +386,9 @@ export function EquationEditor({
             title: label,
             ref: (element: MathFieldElement | null): void => {
               mathFieldRef.current = element;
+              if (element) {
+                element.mathVirtualKeyboardPolicy = 'manual';
+              }
             },
             onFocus: handleFocus,
             onBlur: handleBlur,
@@ -464,10 +525,11 @@ export function EquationEditor({
               <pre>{effective.text}</pre>
             </>
           ) : (
-            <div
-              className="equation-editor-katex"
-              dangerouslySetInnerHTML={{ __html: latexPreview }}
-            />
+            <div className="equation-editor-katex">
+              {latexPreviewLines.map((html, index) => (
+                <div key={index} dangerouslySetInnerHTML={{ __html: html }} />
+              ))}
+            </div>
           )}
         </div>
       </div>
