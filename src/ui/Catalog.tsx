@@ -277,9 +277,7 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
   const enabledLabs = useMemo(
     () =>
       selectedCourse
-        ? selectedCourse.labs.filter(
-            (labRef) => labRef.enabled && labRef.group !== 'enrichment',
-          )
+        ? selectedCourse.labs.filter((labRef) => labRef.enabled && labRef.group !== 'enrichment')
         : [],
     [selectedCourse],
   );
