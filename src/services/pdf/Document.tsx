@@ -38,7 +38,7 @@ type PDFProps = {
 type ProcessRecordSection = Section | { kind: 'equation'; fieldId: string };
 
 const styles = StyleSheet.create({
-  page: { padding: 24, fontSize: 10, lineHeight: 1.35 },
+  page: { padding: 24, fontSize: 10, lineHeight: 1.35, fontFamily: 'DejaVu Sans' },
   title: { fontSize: 18, marginBottom: 8 },
   subtitle: { fontSize: 12, marginBottom: 12 },
   section: {

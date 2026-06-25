@@ -56,8 +56,10 @@ const styles = {
   tableRow: { flexDirection: 'row' as const, borderBottomWidth: 0.5, borderBottomColor: '#ddd' },
   tableCell: { flex: 1, padding: 3, borderRightWidth: 0.5, borderRightColor: '#ddd' },
   tableHeaderCell: { fontWeight: 700 as const },
-  inlineMath: { fontFamily: 'Courier', fontSize: 9 },
-  mathBlock: { fontFamily: 'Courier', fontSize: 9, marginBottom: 6 },
+  // Math inherits the document font (DejaVu Sans) so unicode super/subscripts and
+  // operators render; only literal code stays monospace (Courier).
+  inlineMath: { fontSize: 10 },
+  mathBlock: { fontSize: 10, marginBottom: 6 },
 };
 
 let warnedBlockMathFallback = false;
