@@ -62,6 +62,7 @@ verify in the browser that sections render, inputs save, plot/table labels are r
 **PDF export works** for the affected lab.
 
 **Catalog rendering by manifest flags:**
+
 - `enabled: false` - lab is completely hidden from the catalog grid (route still resolves for graders)
 - `enabled: true, group: 'core'` - full clickable card in the catalog
 - `enabled: true, group: 'enrichment'` - visible but grayed-out "Coming soon" card (not navigable from catalog)
