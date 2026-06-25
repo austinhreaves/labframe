@@ -123,7 +123,7 @@ describe('EquationEditor', () => {
     const { container, getByRole } = render(<StatefulEditor initialText="a+b" />);
     await waitForMathField(container);
 
-    fireEvent.click(getByRole('button', { name: 'Type with LaTeX' }));
+    fireEvent.click(getByRole('button', { name: 'Type text and equations' }));
     const sourceInput = container.querySelector('textarea') as HTMLTextAreaElement;
     expect(sourceInput.value).toBe('a+b');
 
@@ -147,7 +147,7 @@ describe('EquationEditor', () => {
     fireEvent.click(getByRole('button', { name: 'Insert \\alpha' }));
     expect(mathField.value).toBe('x\\alpha');
 
-    fireEvent.click(getByRole('button', { name: 'Type with LaTeX' }));
+    fireEvent.click(getByRole('button', { name: 'Type text and equations' }));
     const sourceInput = container.querySelector('textarea') as HTMLTextAreaElement;
     sourceInput.selectionStart = sourceInput.value.length;
     sourceInput.selectionEnd = sourceInput.value.length;
@@ -231,19 +231,20 @@ describe('EquationEditor', () => {
     });
   });
 
-  it('renders katex preview in latex mode', async () => {
+  it('renders a MarkdownBlock math preview in latex mode', async () => {
     const { container, getByRole } = render(<StatefulEditor />);
     await waitForMathField(container);
 
-    fireEvent.click(getByRole('button', { name: 'Type with LaTeX' }));
+    fireEvent.click(getByRole('button', { name: 'Type text and equations' }));
     const sourceInput = container.querySelector('textarea') as HTMLTextAreaElement;
-    sourceInput.value = '\\sin\\theta';
+    sourceInput.value = 'Using $\\sin\\theta$ here';
     sourceInput.selectionStart = sourceInput.value.length;
     sourceInput.selectionEnd = sourceInput.value.length;
-    fireEvent.input(sourceInput, { inputType: 'insertText', data: '\\theta', isComposing: false });
+    fireEvent.input(sourceInput, { inputType: 'insertText', data: 'e', isComposing: false });
 
-    const preview = container.querySelector('.equation-editor-katex');
-    expect(preview?.innerHTML).toContain('sin');
+    const preview = container.querySelector('.equation-editor-preview');
+    expect(preview?.querySelector('.katex')).toBeTruthy();
+    expect(preview?.textContent).toContain('Using');
     expect(preview?.textContent).toContain('θ');
   });
 
@@ -259,7 +260,7 @@ describe('EquationEditor', () => {
     mathField.selectionEnd = 1;
     fireEvent.input(mathField, { inputType: 'insertText', data: 'x', isComposing: false });
 
-    fireEvent.click(getByRole('button', { name: 'Type with LaTeX' }));
+    fireEvent.click(getByRole('button', { name: 'Type text and equations' }));
     const sourceInput = container.querySelector('textarea') as HTMLTextAreaElement;
     sourceInput.value = 'xy';
     sourceInput.selectionStart = 2;
@@ -302,18 +303,25 @@ describe('EquationEditor', () => {
     expect(keyboard.hide).toHaveBeenCalledTimes(1);
   });
 
-  it('renders each newline-separated line as its own preview block', async () => {
-    const { container, getByRole } = render(<StatefulEditor />);
+  it('shows migration hint when stored text has backslashes but no $ delimiters', async () => {
+    const { container, getByRole, queryByText } = render(<StatefulEditor />);
     await waitForMathField(container);
 
-    fireEvent.click(getByRole('button', { name: 'Type with LaTeX' }));
+    fireEvent.click(getByRole('button', { name: 'Type text and equations' }));
     const sourceInput = container.querySelector('textarea') as HTMLTextAreaElement;
-    sourceInput.value = 'a=b\nc=d';
+    sourceInput.value = '\\frac{mc^2}{2}';
     sourceInput.selectionStart = sourceInput.value.length;
     sourceInput.selectionEnd = sourceInput.value.length;
-    fireEvent.input(sourceInput, { inputType: 'insertText', data: 'd', isComposing: false });
+    fireEvent.input(sourceInput, { inputType: 'insertText', data: '}', isComposing: false });
 
-    const preview = container.querySelector('.equation-editor-katex');
-    expect(preview?.children).toHaveLength(2);
+    expect(queryByText(/wrap it in/i)).toBeTruthy();
+
+    const updated = container.querySelector('textarea') as HTMLTextAreaElement;
+    updated.value = '$$\\frac{mc^2}{2}$$';
+    updated.selectionStart = updated.value.length;
+    updated.selectionEnd = updated.value.length;
+    fireEvent.input(updated, { inputType: 'insertText', data: '$', isComposing: false });
+
+    expect(queryByText(/wrap it in/i)).toBeNull();
   });
 });

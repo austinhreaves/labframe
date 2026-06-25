@@ -2212,10 +2212,6 @@ button[aria-pressed='true']:hover {
   overflow-x: auto;
 }
 
-.equation-editor-katex > div + div {
-  margin-top: var(--space-1);
-}
-
 @media (min-width: 720px) {
   .equation-editor-body {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

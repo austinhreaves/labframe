@@ -10,10 +10,10 @@
 
 The equation editor currently has two input modes:
 
-| Mode | How you input | What is stored in `value.text` |
-| --- | --- | --- |
+| Mode                              | How you input                                                        | What is stored in `value.text`           |
+| --------------------------------- | -------------------------------------------------------------------- | ---------------------------------------- |
 | **math** ("Use equation builder") | MathLive WYSIWYG -- click symbols or type LaTeX, see rendered output | Raw LaTeX, no delimiters (`\frac{a}{b}`) |
-| **latex** ("Type with LaTeX") | Plain `<textarea>` -- type raw LaTeX, see per-line KaTeX preview | Same raw LaTeX, no delimiters |
+| **latex** ("Type with LaTeX")     | Plain `<textarea>` -- type raw LaTeX, see per-line KaTeX preview     | Same raw LaTeX, no delimiters            |
 
 Neither mode lets students mix prose with equations. A student writing "Using Snell's Law: n1 sin(theta1) = n2 sin(theta2), we find..." has no way to produce that sentence with rendered inline math short of building it all in the WYSIWYG builder.
 

@@ -1,8 +1,6 @@
-import katex from 'katex';
 import {
   createElement,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type ClipboardEvent,
@@ -16,6 +14,7 @@ import type { FieldValue } from '@/domain/schema';
 import { appendPasteEvent, createEmptyFieldValue, markFieldActivity } from '@/state/labStore';
 import { EquationSymbolPalette } from '@/ui/primitives/EquationSymbolPalette';
 import { Field } from '@/ui/primitives/Field';
+import { MarkdownBlock } from '@/ui/primitives/MarkdownBlock';
 
 type EquationEditorProps = {
   id: string;
@@ -137,20 +136,6 @@ export function EquationEditor({
     const end = Math.max(offset, after.length - suffixLength);
     return after.slice(offset, end);
   };
-
-  // Render each newline-separated line as its own display block so multi-line
-  // LaTeX source stacks vertically instead of collapsing onto one line (LaTeX
-  // ignores raw newlines). Blank lines render a spacer.
-  const latexPreviewLines = useMemo(
-    () =>
-      (effective.text || '\\text{ }').split('\n').map((line) =>
-        katex.renderToString(line.trim() === '' ? '\\text{ }' : line, {
-          throwOnError: false,
-          displayMode: true,
-        }),
-      ),
-    [effective.text],
-  );
 
   const withFocusMeta = (): FieldValue => {
     if (effective.meta.firstFocusAt !== undefined) {
@@ -374,7 +359,7 @@ export function EquationEditor({
             className="equation-editor-toggle"
             onClick={() => setMode((previous) => (previous === 'math' ? 'latex' : 'math'))}
           >
-            {mode === 'math' ? 'Type with LaTeX' : 'Use equation builder'}
+            {mode === 'math' ? 'Type text and equations' : 'Use equation builder'}
           </button>
         </div>
       </div>
@@ -468,50 +453,66 @@ export function EquationEditor({
             },
           })
         ) : (
-          <textarea
-            id={id}
-            ref={latexInputRef}
-            rows={4}
-            value={effective.text}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            onPaste={handlePaste}
-            onCompositionStart={(event) => {
-              composition.current = {
-                startOffset: event.currentTarget.selectionStart ?? effective.text.length,
-                startText: effective.text,
-              };
-            }}
-            onCompositionEnd={(event) => {
-              const snapshot = composition.current;
-              composition.current = null;
-              if (!snapshot) {
-                return;
-              }
-              const target = event.currentTarget;
-              const base = markFieldActivity(
-                effective,
-                { value: target.value, selectionStart: target.selectionStart },
-                {},
-              );
-              const composedText = getComposedSubstring(
-                snapshot.startText,
-                target.value,
-                snapshot.startOffset,
-              );
-              onChange(appendPasteEvent(base, 'ime', composedText, snapshot.startOffset));
-            }}
-            onInput={(event) => {
-              const target = event.currentTarget;
-              const native = event.nativeEvent as InputEvent;
-              const next = markFieldActivity(
-                effective,
-                { value: target.value, selectionStart: target.selectionStart },
-                { inputType: native.inputType, data: native.data, isComposing: native.isComposing },
-              );
-              onChange(next);
-            }}
-          />
+          <>
+            {effective.text.includes('\\') && !effective.text.includes('$') ? (
+              <aside className="markdown-callout markdown-callout-note">
+                <span className="markdown-callout-title">NOTE</span>
+                <div>
+                  Your equation was entered in raw LaTeX mode. To render it as math here, wrap it in
+                  $$...$$.
+                </div>
+              </aside>
+            ) : null}
+            <textarea
+              id={id}
+              ref={latexInputRef}
+              rows={4}
+              value={effective.text}
+              placeholder="Type text normally. Use $...$ for inline math (e.g. $F = ma$) and $$...$$ for display equations."
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              onPaste={handlePaste}
+              onCompositionStart={(event) => {
+                composition.current = {
+                  startOffset: event.currentTarget.selectionStart ?? effective.text.length,
+                  startText: effective.text,
+                };
+              }}
+              onCompositionEnd={(event) => {
+                const snapshot = composition.current;
+                composition.current = null;
+                if (!snapshot) {
+                  return;
+                }
+                const target = event.currentTarget;
+                const base = markFieldActivity(
+                  effective,
+                  { value: target.value, selectionStart: target.selectionStart },
+                  {},
+                );
+                const composedText = getComposedSubstring(
+                  snapshot.startText,
+                  target.value,
+                  snapshot.startOffset,
+                );
+                onChange(appendPasteEvent(base, 'ime', composedText, snapshot.startOffset));
+              }}
+              onInput={(event) => {
+                const target = event.currentTarget;
+                const native = event.nativeEvent as InputEvent;
+                const next = markFieldActivity(
+                  effective,
+                  { value: target.value, selectionStart: target.selectionStart },
+                  {
+                    inputType: native.inputType,
+                    data: native.data,
+                    isComposing: native.isComposing,
+                  },
+                );
+                onChange(next);
+              }}
+            />
+          </>
         )}
         <div className="equation-editor-preview">
           {mode === 'math' ? (
@@ -526,9 +527,7 @@ export function EquationEditor({
             </>
           ) : (
             <div className="equation-editor-katex">
-              {latexPreviewLines.map((html, index) => (
-                <div key={index} dangerouslySetInnerHTML={{ __html: html }} />
-              ))}
+              <MarkdownBlock markdown={effective.text} />
             </div>
           )}
         </div>
