@@ -35,6 +35,13 @@ type MathFieldElement = HTMLElement & {
   selectionEnd?: number | null;
   position?: number;
   executeCommand?: (command: unknown) => void;
+  // MathLive 0.109 replaced the old `virtualKeyboardMode` ('onfocus' etc.) with
+  // `mathVirtualKeyboardPolicy`. 'auto' is the iOS-safe equivalent: on a touch
+  // device focusing the field shows MathLive's own keyboard and suppresses the
+  // native one, so the two do not fight on iPad. There is no literal 'onfocus'
+  // policy in this version; 'auto' is the closest and also happens to be the
+  // current default, so we set it explicitly to pin the intended behavior.
+  mathVirtualKeyboardPolicy?: 'auto' | 'manual' | 'sandboxed';
 };
 
 export function EquationEditor({
@@ -328,6 +335,10 @@ export function EquationEditor({
             title: label,
             ref: (element: MathFieldElement | null): void => {
               mathFieldRef.current = element;
+              if (element) {
+                // Pin the iOS-safe virtual-keyboard policy (see the type above).
+                element.mathVirtualKeyboardPolicy = 'auto';
+              }
             },
             onFocus: handleFocus,
             onBlur: handleBlur,
