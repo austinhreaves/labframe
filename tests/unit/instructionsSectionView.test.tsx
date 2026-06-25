@@ -31,6 +31,29 @@ describe('InstructionsSectionView', () => {
     });
   });
 
+  it('renders a single-line $$ block as display math so \\tag does not leak', async () => {
+    const section: InstructionsSection = {
+      kind: 'instructions',
+      html: [
+        'The capacitance is:',
+        '$$C = \\frac{\\varepsilon_{0} A}{d} \\tag{2}$$',
+        'where things follow.',
+      ].join('\n\n'),
+    };
+
+    const { container } = render(
+      <Suspense fallback={null}>
+        <InstructionsSectionView section={section} />
+      </Suspense>,
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector('.katex-display')).toBeTruthy();
+    });
+    // KaTeX renders \tag only in display mode; an inline parse leaves a red error node.
+    expect(container.querySelector('.katex-error')).toBeNull();
+  });
+
   it('sanitizes hostile html fixture content', async () => {
     const section: InstructionsSection = {
       kind: 'instructions',
