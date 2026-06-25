@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 
 test('phase1 snell flow: fill table derived updates and tab switch', async ({ page }) => {
-  // snellsLaw is enabled:false in the phy132 manifest, so it renders as a
-  // "Coming soon" card with no catalog link. The lab is still reachable
-  // directly at its route, so navigate there to exercise the table/sim flow.
-  await page.goto('/c/phy132/snellsLaw');
+  // PHY 132 restructured Snell's Law to enabled:false (lab 11). Use PHY 114
+  // Lab 9 instead: it is enabled, with identical columns and the same Bending
+  // Light simulation, so the smoke test runs against a live catalog lab.
+  await page.goto('/c/phy114/snellsLaw');
   await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();
 
   await page

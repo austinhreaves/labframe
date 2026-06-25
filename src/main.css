@@ -2103,6 +2103,12 @@ button[aria-pressed='true']:hover {
   gap: var(--space-2);
 }
 
+.equation-editor-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .equation-editor-toggle {
   white-space: nowrap;
 }
@@ -2204,6 +2210,10 @@ button[aria-pressed='true']:hover {
 
 .equation-editor-katex {
   overflow-x: auto;
+}
+
+.equation-editor-katex > div + div {
+  margin-top: var(--space-1);
 }
 
 @media (min-width: 720px) {
