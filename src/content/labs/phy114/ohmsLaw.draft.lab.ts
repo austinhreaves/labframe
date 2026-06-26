@@ -190,8 +190,8 @@ In Part 1B you will collect $I$-vs-$V$ data for a graphite pencil lead in series
       tableId: 'ohmsLawTable',
       rowCount: 10,
       columns: [
-        { id: 'voltage', label: 'Voltage V (V)', kind: 'input', unit: 'Symbol(unevaluable)' },
-        { id: 'current', label: 'Current I (A)', kind: 'input', unit: 'Symbol(unevaluable)' },
+        { id: 'voltage', label: 'Voltage V (V)', kind: 'input' },
+        { id: 'current', label: 'Current I (A)', kind: 'input' },
       ],
       points: 1,
     },
@@ -274,8 +274,8 @@ In Part 1B you will collect $I$-vs-$V$ data for a graphite pencil lead in series
       tableId: 'ohmsLawData1C',
       rowCount: 10,
       columns: [
-        { id: 'voltage', label: 'Voltage V (V)', kind: 'input', unit: 'Symbol(unevaluable)' },
-        { id: 'current', label: 'Current I (A)', kind: 'input', unit: 'Symbol(unevaluable)' },
+        { id: 'voltage', label: 'Voltage V (V)', kind: 'input' },
+        { id: 'current', label: 'Current I (A)', kind: 'input' },
       ],
       points: 1,
     },
