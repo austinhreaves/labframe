@@ -31,7 +31,7 @@ making non-trivial product changes. Architecture overview: `docs/ARCHITECTURE.md
 | Unit tests                  | `npm test` (Vitest)                                   |
 | E2E tests                   | `npm run test:e2e` (Playwright)                       |
 | Full local CI               | `npm run ci` (typecheck + lint + format:check + test) |
-| Verify a lab                | `npm run verify:lab -- <labId>` (mechanical checks)   |
+| Verify a lab                | `npm run verify:lab -- <labId>` or `-- <path/to/lab.lab.ts>` (use `--all` to list IDs) |
 
 Run `npm run ci` before opening or updating a PR. Add `npm run test:e2e` for any UI,
 accessibility, or routing/layout change. Lint warnings fail CI (`--max-warnings 0`).
@@ -43,8 +43,13 @@ selectors break silently when a lab is hidden.
 
 ## Where things live
 
-- `src/content/labs/<course>/` - lab definitions (`*.lab.ts` enabled, `*.draft.lab.ts`
-  not yet exported). Courses: `phy114`, `phy132`, with `phy112` in progress.
+- `src/content/labs/<course>/` - lab definitions. The filename suffix is not the enable
+  signal: the **course manifest** (`enabled: true`) is the source of truth, and many shipping
+  labs are `*.draft.lab.ts`. A course can also reuse another course's lab object (the enabled
+  PHY 114 sequence pulls several labs straight from `phy132/`), and some `phy114/*.draft.lab.ts`
+  combined labs are `enabled: false` retired source drafts (split into the granular enabled labs,
+  kept for grader record access). When auditing "the PHY 114 labs," start from the manifest, not
+  the directory. Courses: `phy114`, `phy132`, with `phy112` in progress.
 - `src/content/courses/` - course manifests (which labs are enabled, lab numbers).
 - `src/domain/schema/` - Zod schemas; `lab.ts` validates every lab definition.
 - `src/services/integrity/` - canonicalization + signing of the answer envelope.
@@ -71,7 +76,9 @@ To review an existing lab for defects, use the `verify-lab` skill (deterministic
 plus a theory/physics/clarity review) or run `npm run verify:lab -- <labId>` for the
 mechanical checks alone. The checker flags LaTeX that leaks as raw text in the PDF (e.g.
 `\tag`, `\tfrac` are not handled by the unicode converter in
-`src/services/pdf/markdown/latexToUnicode.ts`).
+`src/services/pdf/markdown/latexToUnicode.ts`). The checker does NOT catch
+`unit: 'Symbol(unevaluable)'`, a legacy-migration artifact that is a valid string but renders as
+the literal column unit; grep for it and drop the field or set a real unit.
 
 ### Lab content style conventions
 

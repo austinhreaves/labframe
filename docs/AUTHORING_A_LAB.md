@@ -73,6 +73,25 @@ If your change affects layout or interaction behavior, also run:
 npm run test:e2e
 ```
 
+## Lab content conventions
+
+### Background / theory placement (JIT pattern)
+
+Do not front-load all theory at the top of a lab. Place a `## Background:` instructions
+block immediately before the procedural section that first uses the equations it covers.
+If Parts 1-3 use Snell's Law and Part 4 uses the critical-angle formula, use two separate
+Background blocks: one before Part 1 and one before Part 4. The `verify-lab` skill
+penalizes missing theory and flags theory that is placed too far from where it is used.
+
+### Sin-sin plot slope convention
+
+When a lab plots `sin(theta_1)` on the x-axis and `sin(theta_r)` on the y-axis (as
+LabFrame does by default), the proportional slope equals `n_1 / n_r`, so the derived
+index is `n_r = n_1 / A`. Legacy PDF lab manuals using LoggerPro had the axes
+**reversed** (sin(theta_r) on x, sin(theta_1) on y), giving slope = `n_r / n_1` and
+`n_r = A * n_1`. Always write calculation prompts and Background equations to match the
+LabFrame axis convention, not the legacy convention.
+
 ## 7) Open a PR
 
 In the PR description, include:
