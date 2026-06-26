@@ -11,10 +11,6 @@ function sinFromDegrees(fieldName: string) {
   };
 }
 
-// TODO(austin): Migrate verbatim from physics-labs.up.railway.app/phy_114/snellsLaw/ (LabReportForm +
-// labConfig). Prose must be PHY-114-specific; this file is a structural copy of the PHY 132 worksheet
-// until legacy sources are available in-repo (Phase 4 task 5a).
-
 export const phy114SnellsLawLab: Lab = {
   id: 'snellsLaw',
   title: "Snell's Law",
@@ -41,19 +37,33 @@ export const phy114SnellsLawLab: Lab = {
       kind: 'objective',
       fieldId: 'objective',
       prompt:
-        'Objective — Explain the goal of the experiment in your own words. Two or three sentences are sufficient.',
+        'Objective: Explain the goal of the experiment in your own words. Two or three sentences are sufficient.',
       rows: 4,
       points: 3,
     },
     {
       kind: 'instructions',
       html: [
+        '## Background:',
+        'When light crosses the boundary between two materials it is partially reflected and partially refracted (bent). How much the beam bends depends on each material\'s **index of refraction**, defined as:',
+        '**n = c / v** (Eq. 1)',
+        'where c is the speed of light in vacuum and v is the speed of light in the material. Because v is always less than or equal to c, the index of refraction is always greater than or equal to 1.',
+        '**Law of Reflection.** The angle of incidence always equals the angle of reflection, where both angles are measured from the normal (perpendicular to the boundary):',
+        "**theta_1 = theta_1'** (Eq. 2)",
+        "**Snell's Law.** The refracted angle theta_2 is related to the incident angle theta_1 by:",
+        '**n_1 sin(theta_1) = n_2 sin(theta_2)** (Eq. 3)',
+        'When n_2 > n_1, the refracted beam bends toward the normal; when n_2 < n_1, it bends away.',
+      ].join('\n\n'),
+    },
+    {
+      kind: 'instructions',
+      html: [
         '## Part 1: Reflection and Refraction for Known Media',
-        '1. Launch the simulation and select the Intro view.',
-        '2. Turn on the laser by clicking the red button. The laser angle can be adjusted by clicking and dragging it.',
-        '3. Leave the upper medium as air and set the lower medium to refractive index n2 from your parameter set. Record n2 below.',
-        '4. Drag the protractor and align its center with the vertical dotted line where the laser crosses the boundary.',
-        '5. For each incident angle theta_1 in your parameter set, record incident, refracted, and reflected angles in Table 1.',
+        '**Step 1.** Launch the simulation and select the Intro view.',
+        '**Step 2.** Turn on the laser by clicking the red button. The laser angle can be adjusted by clicking and dragging it.',
+        '**Step 3.** Leave the upper medium as air and set the lower medium to refractive index n2 from your parameter set. Record n2 below.',
+        '**Step 4.** Drag the protractor and align its center with the vertical dotted line where the laser crosses the boundary.',
+        '**Step 5.** For each incident angle theta_1 in your parameter set, record incident, refracted, and reflected angles in Table 1.',
       ].join('\n\n'),
     },
     {
@@ -93,8 +103,8 @@ export const phy114SnellsLawLab: Lab = {
       kind: 'instructions',
       html: [
         '## Part 2 - Refraction for Unknown Media (Mystery Material A)',
-        '1. Replace the lower medium with Mystery Material A and set the upper medium to refractive index n1 from your parameter set. Record n1 below.',
-        '2. Use incident angles 10, 20, 30, 40, and 50 degrees from vertical. Measure refracted angles and complete Table 2. Reflected angles are not needed.',
+        '**Step 1.** Replace the lower medium with Mystery Material A and set the upper medium to refractive index n1 from your parameter set. Record n1 below.',
+        '**Step 2.** Use incident angles 10, 20, 30, 40, and 50 degrees from vertical. Measure refracted angles and complete Table 2. Reflected angles are not needed.',
       ].join('\n\n'),
     },
     {
@@ -146,21 +156,19 @@ export const phy114SnellsLawLab: Lab = {
     },
     {
       kind: 'instructions',
-      html: '3. On the graph, fit the data with a proportional model. Record the slope below.',
+      html: '**Step 3.** On the graph, fit the data with a proportional model. Record the slope below.',
     },
     {
       kind: 'multiMeasurement',
-      rows: [
-        { id: 'part2SlopeA', label: 'A (slope)' },
-        { id: 'part2SlopeUnit', label: 'Slope unit' },
-      ],
+      rows: [{ id: 'part2SlopeA', label: 'A (slope)' }],
       points: 0.5,
     },
     {
       kind: 'calculation',
       responseModes: ['text', 'draw', 'image'],
       fieldId: 'part2_n2Calculation',
-      prompt: 'Step 1: Calculate n2 using the slope value.',
+      prompt:
+        "Calculate n_A from the slope A and the value of n_1. (From Snell's Law, the slope of the sin-sin graph equals n_1 / n_A.)",
       equationEditor: true,
       points: 1,
     },
@@ -168,8 +176,8 @@ export const phy114SnellsLawLab: Lab = {
       kind: 'instructions',
       html: [
         '## Part 3 - Refraction for Unknown Media (Mystery Material B)',
-        '1. Keep n1 unchanged and switch the lower medium to Mystery Material B.',
-        '2. Use incident angles 10, 20, 30, 40, and 50 degrees from vertical. Measure refracted angles and complete Table 3. Reflected angles are not needed.',
+        '**Step 1.** Keep n1 unchanged and switch the lower medium to Mystery Material B.',
+        '**Step 2.** Use incident angles 10, 20, 30, 40, and 50 degrees from vertical. Measure refracted angles and complete Table 3. Reflected angles are not needed.',
       ].join('\n\n'),
     },
     {
@@ -221,30 +229,36 @@ export const phy114SnellsLawLab: Lab = {
     },
     {
       kind: 'instructions',
-      html: '3. On the graph, fit the data with a proportional model. Record the slope below.',
+      html: '**Step 3.** On the graph, fit the data with a proportional model. Record the slope below.',
     },
     {
       kind: 'multiMeasurement',
-      rows: [
-        { id: 'part3SlopeA', label: 'A (slope)' },
-        { id: 'part3SlopeUnit', label: 'Slope unit' },
-      ],
+      rows: [{ id: 'part3SlopeA', label: 'A (slope)' }],
       points: 0.5,
     },
     {
       kind: 'calculation',
       responseModes: ['text', 'draw', 'image'],
       fieldId: 'part3_n2Calculation',
-      prompt: 'Step 1: Calculate n2 using the slope value.',
+      prompt:
+        "Calculate n_B from the slope A and the value of n_1. (From Snell's Law, the slope of the sin-sin graph equals n_1 / n_B.)",
       equationEditor: true,
       points: 1,
     },
     {
       kind: 'instructions',
       html: [
+        '## Background: Total Internal Reflection',
+        'When light travels from a denser medium into a less dense one (n_1 > n_2), there is a maximum angle of incidence called the **critical angle** theta_c. At this angle, the refracted beam grazes along the boundary (theta_2 = 90 degrees). For any angle of incidence at or above theta_c, no light is transmitted and all light is reflected. This is **total internal reflection**. Setting theta_2 = 90 degrees in Eq. (3):',
+        '**theta_c = arcsin(n_2 / n_1)** (Eq. 4)',
+      ].join('\n\n'),
+    },
+    {
+      kind: 'instructions',
+      html: [
         '## Part 4 - Measurement of the Critical Angle and Consistency Check',
-        '1. Change the upper medium to Mystery A and leave the lower medium as Mystery B.',
-        '2. Starting at 0 degrees from vertical, increase the incident angle until the refracted beam vanishes and all light is reflected. Record this critical angle below.',
+        '**Step 1.** Change the upper medium to Mystery A and leave the lower medium as Mystery B.',
+        '**Step 2.** Starting at 0 degrees from vertical, increase the incident angle until the refracted beam vanishes and all light is reflected. Capture a screenshot of the simulation at the moment the refracted beam vanishes and attach it below. Record this critical angle below.',
       ].join('\n\n'),
     },
     {
@@ -263,13 +277,13 @@ export const phy114SnellsLawLab: Lab = {
     },
     {
       kind: 'instructions',
-      html: '3. Use n_B from Part 3 and your measured critical angle theta_c to compute n_A. Compare this result to n_A from Part 2.',
+      html: '**Step 3.** Use n_B from Part 3 and your measured critical angle theta_c to compute n_A. Compare this result to n_A from Part 2.',
     },
     {
       kind: 'calculation',
       responseModes: ['text', 'draw', 'image'],
       fieldId: 'part4_n2Calculation',
-      prompt: 'Calculate n2 using the critical angle formula.',
+      prompt: 'Calculate n_A using the critical angle formula (Eq. 4).',
       equationEditor: true,
       points: 1,
     },
@@ -277,7 +291,7 @@ export const phy114SnellsLawLab: Lab = {
       kind: 'calculation',
       responseModes: ['text', 'draw', 'image'],
       fieldId: 'part4PercentDifferenceCalculation',
-      prompt: 'Calculate the percent difference between n2 values from Part 2 and Part 4.',
+      prompt: 'Calculate the percent difference between your two n_A values (from Part 2 and Part 4).',
       equationEditor: true,
       points: 0.5,
     },
