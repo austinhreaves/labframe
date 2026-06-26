@@ -49,11 +49,7 @@ export function Table({ section, data, onCellChange }: TableProps) {
                   <Field
                     id={`${section.tableId}-${column.id}-${rowIndex}`}
                     label={`${column.label} row ${rowIndex + 1}`}
-                    labelDisplay={
-                      <>
-                        <MarkdownInline markdown={column.label} /> row {rowIndex + 1}
-                      </>
-                    }
+                    hideLabel
                     value={row[column.id]}
                     onChange={(value) => onCellChange(rowIndex, column.id, value)}
                     readOnly={column.kind === 'derived'}
