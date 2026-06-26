@@ -183,6 +183,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     {
       kind: 'instructions',
       tocHidden: true,
+      pdfHidden: true,
       html: `## PDF Report Notes
 
 The generated PDF should include Student Info, worksheet responses, table and derived values, fit summaries, and a Process Record appendix.

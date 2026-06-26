@@ -72,6 +72,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     {
       kind: 'instructions',
       tocLabel: 'Background: The Far-Field Bar-Magnet Dipole',
+      pdfHidden: true,
       html: `## Background: The Far-Field Bar-Magnet Dipole
 
 A bar magnet has a north pole and a south pole separated by a small distance. At distances much larger than the magnet's length (the *far-field* regime), the magnetic field along the magnet's axis falls off as the inverse cube of the distance:
@@ -274,6 +275,7 @@ Sanity check: the correlation coefficient $R$ should be greater than 0.98. If it
     {
       kind: 'instructions',
       tocLabel: "Background: Magnetic Flux and Faraday's Law",
+      pdfHidden: true,
       html: `## Background: Magnetic Flux and Faraday's Law
 
 The *magnetic flux* through a flat loop of area $A$ in a uniform magnetic field $\\vec{B}$ is
@@ -353,6 +355,7 @@ Three knobs change $\\Phi_B$ (or scale the EMF response): the field strength $B$
     {
       kind: 'instructions',
       tocHidden: true,
+      pdfHidden: true,
       html: `## PDF Report Notes
 
 The generated PDF should include Student Info, worksheet responses, table and derived values, fit summaries, and a Process Record appendix.

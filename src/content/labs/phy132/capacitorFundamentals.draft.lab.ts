@@ -73,6 +73,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     {
       kind: 'instructions',
       tocLabel: 'Background: Parallel-Plate Capacitance and Energy',
+      pdfHidden: true,
       html: `## Background: Parallel-Plate Capacitance and Energy
 
 A **capacitor** is a pair of conductors held a fixed distance apart that stores energy in the electric field between them. The simplest case is two flat parallel plates of area $A$ separated by a distance $d$, with vacuum (or air) between them.
@@ -170,6 +171,7 @@ Record the three input values you used below. These will be your reference (init
     {
       kind: 'instructions',
       tocLabel: 'Background: Varying the Plate Separation',
+      pdfHidden: true,
       html: `## Background: How Plate Separation Affects Capacitance
 
 Equation (2) says capacitance is *inversely proportional* to plate separation: pull the plates apart and $C$ drops; push them closer and $C$ rises.
@@ -268,6 +270,7 @@ Now change the plate separation $d$ to the new value given in your Set of Parame
     {
       kind: 'instructions',
       tocLabel: 'Background: Varying the Plate Area',
+      pdfHidden: true,
       html: `## Background: How Plate Area Affects Capacitance
 
 Equation (2) also says capacitance is *directly proportional* to plate area: make the plates bigger and $C$ goes up; shrink them and $C$ goes down.
@@ -379,6 +382,7 @@ Now change the plate area $A$ to the new value given in your Set of Parameters b
     {
       kind: 'instructions',
       tocHidden: true,
+      pdfHidden: true,
       html: `## PDF Report Notes
 
 The generated PDF should include Student Info, worksheet responses, table and derived values, fit summaries, and a Process Record appendix.

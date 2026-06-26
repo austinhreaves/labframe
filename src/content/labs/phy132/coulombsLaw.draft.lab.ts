@@ -57,6 +57,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     {
       kind: 'instructions',
       tocLabel: "Background: Coulomb's Law",
+      pdfHidden: true,
       html: `## Background: Coulomb's Law
 
 The electrostatic force between two point charges is a non-contact force. Its magnitude depends on the product of the charges and the inverse square of the distance between them:
@@ -227,6 +228,7 @@ Add a proportional fit ($y = Ax$), since Coulomb's Law predicts the line passes 
     {
       kind: 'instructions',
       tocLabel: 'Background: Inverse-Square Law',
+      pdfHidden: true,
       html: `## Background: The Inverse-Square Framing
 
 Coulomb's Law predicts that force scales as $1/d^2$ when the charges are held constant. A direct $F$-vs-$d$ plot will be a curve: useful for visual comparison, but not linear.
@@ -423,6 +425,7 @@ Then add a proportional fit ($y = Ax$) to the $F$ vs $1/d^2$ plot.`,
     {
       kind: 'instructions',
       tocHidden: true,
+      pdfHidden: true,
       html: `## PDF Report Notes
 
 The generated PDF should include Student Info, worksheet responses, table and derived values, fit summaries, and a Process Record appendix.

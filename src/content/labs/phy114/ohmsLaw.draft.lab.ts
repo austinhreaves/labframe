@@ -48,6 +48,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     {
       kind: 'instructions',
       tocLabel: 'Background: Resistance and Conductivity',
+      pdfHidden: true,
       html: `## Background: Resistance and Conductivity
 
 An *electric current* is a flow of charge driven by a potential difference. The ease with which charge flows through a given material is captured by its **conductivity**; the inverse property, **resistance**, captures how much that material opposes the flow.
@@ -135,6 +136,7 @@ Watch what happens to the current and voltage readings, and to the fuse.
     {
       kind: 'instructions',
       tocLabel: "Background: Ohm's Law and Non-Ohmic Materials",
+      pdfHidden: true,
       html: `## Background: Ohm's Law and Non-Ohmic Materials
 
 For many materials and over moderate ranges of current, the voltage $V$ across an object and the current $I$ through it are directly proportional:
@@ -358,6 +360,7 @@ In Part 1B you will collect $I$-vs-$V$ data for a graphite pencil lead in series
     {
       kind: 'instructions',
       tocHidden: true,
+      pdfHidden: true,
       html: `## PDF Report Notes
 
 The generated PDF should include Student Info, worksheet responses, table and derived values, fit summaries, and a Process Record appendix.

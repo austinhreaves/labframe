@@ -80,6 +80,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     {
       kind: 'instructions',
       tocLabel: 'Background: Generator EMF',
+      pdfHidden: true,
       html: `## Background: Generator EMF
 
 A simple AC generator is a coil that spins inside a steady magnetic field (or, equivalently, a magnet that spins inside a stationary coil, which is what this sim does). As the coil rotates, the angle $\\theta$ between $\\vec{B}$ and the coil's area vector $\\vec{A}$ changes with time as $\\theta = \\omega t$, and the flux through one turn is
@@ -399,6 +400,7 @@ Pull the blue hose knob to the right to release water; the magnet will begin rot
     {
       kind: 'instructions',
       tocHidden: true,
+      pdfHidden: true,
       html: `## PDF Report Notes
 
 The generated PDF should include Student Info, worksheet responses, table and derived values, fit summaries, and a Process Record appendix.

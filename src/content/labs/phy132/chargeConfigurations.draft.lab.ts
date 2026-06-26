@@ -55,6 +55,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     {
       kind: 'instructions',
       tocLabel: 'Background: Superposition and Electric Dipoles',
+      pdfHidden: true,
       html: `## Background: Superposition and Electric Dipoles
 
 When more than one charge is present, the total electric field at any point is the *vector sum* of the fields produced by each charge individually. This is the **superposition principle**.
@@ -105,6 +106,7 @@ In Part 2A you'll observe a single dipole. In Part 2B you'll stack several dipol
     {
       kind: 'instructions',
       tocLabel: 'Background: What Makes a Field Uniform?',
+      pdfHidden: true,
       html: `## Background: What Makes a Field Uniform?
 
 A vector field is **uniform** in a region if the vectors at every point in that region have the same magnitude *and* the same direction. Visually, a uniform field looks like a regular grid of identical arrows.
@@ -181,6 +183,7 @@ Watch for two effects: (a) how the equipotential ring spacing in the central reg
     {
       kind: 'instructions',
       tocHidden: true,
+      pdfHidden: true,
       html: `## PDF Report Notes
 
 The generated PDF should include Student Info, worksheet responses, table and derived values, fit summaries, and a Process Record appendix.

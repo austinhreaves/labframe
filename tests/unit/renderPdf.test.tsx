@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { isValidElement } from 'react';
 
-import { snellsLawLab } from '@/content/labs';
+import { phy132CoulombsLawLab, snellsLawLab } from '@/content/labs';
 import type { Course, Lab, LabAnswers, TableData } from '@/domain/schema';
 import { LabReportDocument } from '@/services/pdf/Document';
 import { computeClippedFitLineInPdfSvg } from '@/services/pdf/fitLine';
@@ -135,6 +135,62 @@ describe('renderPDF', () => {
     expect(collectText(tree)).toContain('Image attached: 68 bytes');
   });
 
+  it('omits pdfHidden sections from the body and Process Record', () => {
+    const lab: Lab = {
+      ...labFixture,
+      sections: [
+        { kind: 'instructions', html: '## Background theory\nReference only.', pdfHidden: true },
+        { kind: 'objective', fieldId: 'obj', prompt: 'State the goal.' },
+      ],
+    };
+    const answers: LabAnswers = {
+      ...answersFixture,
+      fields: {
+        obj: { text: 'My goal', pastes: [], meta: { activeMs: 5000, keystrokes: 3, deletes: 0 } },
+      },
+    };
+
+    const tree = LabReportDocument({
+      lab,
+      answers,
+      course: courseFixture,
+      mode: 'signed',
+      signature: '0123456789abcdef0123456789abcdef',
+      signedAt: 1714450000000,
+    });
+    const textDump = collectText(tree).replace(/\s+/g, ' ').trim();
+
+    // The background block is gone; the answered objective still renders.
+    expect(textDump).not.toContain('Background theory');
+    expect(textDump).not.toContain('Reference only.');
+    expect(textDump).toContain('My goal');
+    // Process Record still records the visible objective's activity.
+    expect(textDump).toContain('Objective');
+    expect(textDump).toContain('5s');
+  });
+
+  it('compacts an all-empty Coulomb draft (P-C/P-D/P-E)', () => {
+    // The pre-compaction renderer produced 15-16 mostly-empty pages for this
+    // draft. Confirm the structural drivers of that reduction on the real lab:
+    // every empty field section collapses into one block, the Process Record is
+    // the empty-state line, and pdfHidden theory never appears.
+    const tree = LabReportDocument({
+      lab: phy132CoulombsLawLab,
+      answers: answersFixture,
+      course: courseFixture,
+      mode: 'signed',
+      signature: '0123456789abcdef0123456789abcdef',
+      signedAt: 1714450000000,
+    });
+    const textDump = collectText(tree).replace(/\s+/g, ' ').trim();
+
+    expect(textDump).toContain('Unanswered sections (');
+    expect(textDump).toContain('No recorded activity on any section.');
+    // pdfHidden background/reference blocks are dropped from the report.
+    expect(textDump).not.toContain('PDF Report Notes');
+    expect(textDump).not.toContain('Background: Coulomb');
+  });
+
   it('renders a calculation-image PDF to bytes with the embedded image', async () => {
     const bytes = await renderPDF({
       mode: 'signed',
@@ -253,7 +309,7 @@ describe('renderPDF', () => {
     expect(textDump).toContain('• Item two');
     expect(textDump).toContain('sinθᵢ');
     expect(textDump).toMatchInlineSnapshot(
-      `"Test LabTest CourseStudent: StudentSigned: 2024-04-30T04:06:40.000Z - 01234567Integrity statement: I affirm this submission reflects my own work. If AI or LLM tools — chatbots, large language models, or generative AI assistants such as ChatGPT, Claude, Gemini, Copilot, or any similar tool — were used in any part of this lab, the chats are disclosed and share links are provided below (required by course policy).Agreement accepted: 2024-04-30T04:06:40.000ZAI/LLM tools used: NoPart 1Important:• Item one• Item two Inline math sinθᵢProcess RecordSection 1: instructionsActive time (ms): 0Keystrokes: 0Pastes clipboard: 0Pastes autocomplete: 0Pastes IME: 0"`,
+      `"Test LabTest CourseStudent: StudentSigned: 2024-04-30T04:06:40.000Z - 01234567Integrity statement: I affirm this submission reflects my own work. If AI or LLM tools — chatbots, large language models, or generative AI assistants such as ChatGPT, Claude, Gemini, Copilot, or any similar tool — were used in any part of this lab, the chats are disclosed and share links are provided below (required by course policy).Agreement accepted: 2024-04-30T04:06:40.000ZAI/LLM tools used: NoPart 1Important:• Item one• Item two Inline math sinθᵢProcess RecordNo recorded activity on any section."`,
     );
   });
 
@@ -313,11 +369,13 @@ describe('renderPDF', () => {
     expect(tableExcerpt).toContain('sin(theta_i)');
     expect(tableExcerpt).toContain('sin(theta_r)');
     expect(tableExcerpt).toMatchInlineSnapshot(
-      `"Data Table (1.5 pts)Incident angle (deg)Refracted angle (deg)Reflected angle (deg)Response (1 pts)How do the angles of incidence compare to the angles of reflection? Is this what you expected?-Calculation (2 pts)For one of the incident angles (it does not matter which), show a sample calculation of the corresponding refracted angle using Snell's Law. Show all intermediate steps. Does your calculated value agree with your measured value?-Part 2 - Refraction for Unknown Media (Mystery Material A)1. Replace the lower medium with Mystery Material A and set the upper medium to refractive index n1 from your parameter set. Record n1 below.2. Use incident angles 10, 20, 30, 40, and 50 degrees from vertical. Measure refracted angles and complete Table 2. Reflected angles are not needed.Measurementn1-Data Table (2 pts)Incident angle (deg)Refracted angle (deg)sin(theta_1)sin(theta_i)sin(theta_A)sin(theta_r)1070.17360.1219"`,
+      `"Data Table (2 pts)Incident angle (deg)Refracted angle (deg)sin(theta_1)sin(theta_i)sin(theta_A)sin(theta_r)1070.17360.1219"`,
     );
 
     expect(textDump).toContain('Total: 29 points');
-    expect(textDump).toContain('Objective (3 pts)');
+    // Only the filled data table renders; the empty Objective (and the other
+    // empty field sections) collapse into the unanswered block (P-C).
+    expect(textDump).toContain('Unanswered sections (');
     expect(textDump).toContain('sin(theta_A) vs. sin(theta_1) (1 pts)');
   });
 });

@@ -97,6 +97,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     {
       kind: 'instructions',
       tocLabel: "Background: Kirchhoff's Voltage and Current Laws",
+      pdfHidden: true,
       html: `## Background: Kirchhoff's Voltage and Current Laws
 
 Two conservation laws govern every DC circuit, no matter how tangled. Together they are called **Kirchhoff's rules**.
@@ -196,6 +197,7 @@ Pay attention to **signs**: if the meter reads a negative value, that means the 
     {
       kind: 'instructions',
       tocLabel: 'Background: Internal Resistance and Maximum Power Transfer',
+      pdfHidden: true,
       html: `## Background: Internal Resistance and Maximum Power Transfer
 
 An ideal battery maintains a fixed terminal voltage no matter how much current you draw from it. Real batteries do not. Every real source can be modeled as an ideal EMF $\\varepsilon$ in series with a small **internal resistance** $r$ that lives inside the battery itself.
@@ -390,6 +392,7 @@ Suppose you're building a custom stereo system and you decide to use an amplifie
     {
       kind: 'instructions',
       tocHidden: true,
+      pdfHidden: true,
       html: `## PDF Report Notes
 
 The generated PDF should include Student Info, worksheet responses, table and derived values, fit summaries, and a Process Record appendix.

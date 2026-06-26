@@ -41,6 +41,10 @@ export const StudentInfoOverridesSchema = z
 export const SectionMetadataSchema = z.object({
   tocHidden: z.boolean().optional(),
   tocLabel: z.string().optional(),
+  /** Omit this section from the PDF body and Process Record (presentation only).
+   *  It still renders on screen and never affects the signed envelope. Used to
+   *  drop background/theory/reference blocks from the report (Track P, P-C). */
+  pdfHidden: z.boolean().optional(),
 });
 
 export const InstructionsSectionSchema = SectionMetadataSchema.extend({
