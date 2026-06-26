@@ -499,6 +499,7 @@ Suppose you're building a custom stereo system and you decide to use an amplifie
     {
       kind: 'instructions',
       tocHidden: true,
+      pdfHidden: true,
       html: `## PDF Report Notes
 
 The generated PDF should include Student Info, worksheet responses, table and derived values, fit summaries, and a Process Record appendix.

@@ -13,6 +13,9 @@ describe('A11y axe smoke checks', () => {
   beforeEach(() => {
     document.documentElement.lang = 'en';
     document.title = 'LabFrame';
+    // Render the normal catalog / lab, not the first-run onboarding splash or
+    // its deep-link toast.
+    localStorage.setItem('labframe:onboarded', '1');
   });
 
   it('has no axe violations on catalog route', async () => {

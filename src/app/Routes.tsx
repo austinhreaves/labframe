@@ -1,6 +1,7 @@
+import { useEffect } from 'react';
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 
-import { phy112Course, phy114Course, phy132Course } from '@/content/courses';
+import { phy112Course, phy114Course, phy132Course, welcomeCourse } from '@/content/courses';
 import {
   phy112CapacitorsSeriesParallelLab,
   phy112KirchhoffsRulesLab,
@@ -36,13 +37,14 @@ import {
   phy132RlHighPassFilterLab,
   phy132SnellsLawLab,
   phy132TheveninsTheoremLab,
+  welcomeIntroLab,
 } from '@/content/labs';
 import type { Course, Lab } from '@/domain/schema';
 import { Catalog } from '@/ui/Catalog';
 import { LabPage } from '@/ui/LabPage';
 import { PrimitivesShowcase } from '@/ui/visual/PrimitivesShowcase';
 
-const courses: Course[] = [phy132Course, phy114Course, phy112Course];
+const courses: Course[] = [phy132Course, phy114Course, phy112Course, welcomeCourse];
 
 const labsByCourse: Record<string, Record<string, Lab>> = {
   phy132: {
@@ -95,11 +97,38 @@ const labsByCourse: Record<string, Record<string, Lab>> = {
     resistorsSeriesParallel: phy112ResistorsSeriesParallelLab,
     kirchhoffsRules: phy112KirchhoffsRulesLab,
   },
+  welcome: {
+    intro: welcomeIntroLab,
+  },
 };
+
+const COURSE_STORAGE_KEY = 'labframe:course';
+
+/**
+ * Track O: pin a course for this browser when the student enters through an
+ * academic course-scoped path. A `role: 'resources'` course (Getting Started)
+ * never pins, so a `/c/welcome` visit leaves any existing pin untouched.
+ */
+function pinAcademicCourse(course: Course | undefined): void {
+  if (!course || course.role === 'resources') {
+    return;
+  }
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(COURSE_STORAGE_KEY, course.id);
+    }
+  } catch {
+    // Ignore quota/private-mode write errors; scoping is best-effort obfuscation.
+  }
+}
 
 function CoursePage() {
   const params = useParams();
   const course = courses.find((candidate) => candidate.id === (params.courseId ?? ''));
+
+  useEffect(() => {
+    pinAcademicCourse(course);
+  }, [course]);
 
   if (!course) {
     return <Navigate to="/" replace />;
@@ -112,6 +141,10 @@ function LabRoutePage() {
   const params = useParams();
   const course = courses.find((candidate) => candidate.id === (params.courseId ?? ''));
   const lab = labsByCourse[course?.id ?? '']?.[params.labId ?? ''];
+
+  useEffect(() => {
+    pinAcademicCourse(course);
+  }, [course]);
 
   if (!course || !lab) {
     return <Navigate to="/" replace />;
@@ -143,6 +176,17 @@ export function AppRoutes() {
         element={<Catalog courses={courses} labsByCourse={labsByCourse} showWizard={false} />}
       />
       <Route path="/phy_114" element={<Navigate to="/c/phy114" replace />} />
+      {/* Friendly alias for the onboarding demo lab. Pass 2 adds ?tour=1 behavior. */}
+      <Route
+        path="/welcome"
+        element={
+          <LabPage
+            key={`${welcomeCourse.id}-${welcomeIntroLab.id}`}
+            course={welcomeCourse}
+            lab={welcomeIntroLab}
+          />
+        }
+      />
       <Route path="/c/:courseId" element={<CoursePage />} />
       <Route path="/c/:courseId/:labId" element={<LabRoutePage />} />
       <Route path="/lab/:slug" element={<SlugLabRoutePage />} />

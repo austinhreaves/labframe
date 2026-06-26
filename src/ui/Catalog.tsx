@@ -1,12 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import type { Driver } from 'driver.js';
 
 import type { Course, CourseLabRef, Lab } from '@/domain/schema';
 import { HeroIllustration, LogoMark } from '@/ui/catalog/HeroIllustration';
 import { Button } from '@/ui/primitives/Button';
 import { Icon } from '@/ui/primitives/Icon';
 import { ThemeToggle } from '@/ui/ThemeToggle';
+import { driver, isOnboarded, setOnboarded } from '@/ui/tour/welcomeTour';
 
 type CatalogProps = {
   courses: Course[];
@@ -17,6 +19,7 @@ type CatalogProps = {
 type WizardStep = 'name' | 'course' | 'lab';
 
 const STUDENT_NAME_STORAGE_KEY = 'labframe:student-name';
+const COURSE_STORAGE_KEY = 'labframe:course';
 
 function safeStorageGet(key: string): string | null {
   try {
@@ -176,16 +179,16 @@ function Disclosure({ title, children }: { title: string; children: React.ReactN
   );
 }
 
-function AboutAndPrivacy() {
+function AboutAndPrivacy({ courseTitle }: { courseTitle: string }) {
   return (
     <section className="catalog-disclosures" aria-label="About and privacy">
       <Disclosure title="About LabFrame">
         <p>
-          LabFrame is the browser-based lab environment for PHY 132 at Arizona State University.
-          There is no account to create and nothing to install. You follow a link from Canvas,
-          select your lab, and work through it on a single page that holds the simulation, the
-          prompts, the data tables, and the plots together. When you are done, you export a PDF and
-          submit that PDF to the corresponding Canvas assignment.
+          LabFrame is the browser-based lab environment for {courseTitle} at Arizona State
+          University. There is no account to create and nothing to install. You follow a link from
+          Canvas, select your lab, and work through it on a single page that holds the simulation,
+          the prompts, the data tables, and the plots together. When you are done, you export a PDF
+          and submit that PDF to the corresponding Canvas assignment.
         </p>
         <p>
           Every simulation in the course is openly-licensed and open-source. Most come from the{' '}
@@ -240,10 +243,10 @@ function AboutAndPrivacy() {
   );
 }
 
-function WizardSteps({ step }: { step: WizardStep }) {
+function WizardSteps({ step, hideCourseStep }: { step: WizardStep; hideCourseStep: boolean }) {
   const steps: { id: WizardStep; label: string }[] = [
     { id: 'name', label: 'Name' },
-    { id: 'course', label: 'Course' },
+    ...(hideCourseStep ? [] : [{ id: 'course' as WizardStep, label: 'Course' }]),
     { id: 'lab', label: 'Lab' },
   ];
   const activeIndex = steps.findIndex((entry) => entry.id === step);
@@ -265,15 +268,57 @@ function WizardSteps({ step }: { step: WizardStep }) {
 }
 
 export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [nameDraft, setNameDraft] = useState('');
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [pinnedCourseId, setPinnedCourseId] = useState<string | null>(null);
 
-  const step = showWizard ? normalizeStep(searchParams.get('step')) : 'name';
-  const selectedCourse = useMemo(
-    () => courses.find((course) => course.id === selectedCourseId) ?? null,
-    [courses, selectedCourseId],
+  // Track S: first-run splash + Phase A tour driver. The splash only appears on
+  // the student root (`/`, where the wizard shows) for a not-yet-onboarded
+  // student; it replaces the hero + wizard + catalog until they start or skip.
+  const [onboarded, setOnboardedState] = useState<boolean>(() => isOnboarded());
+  const [tourActive, setTourActive] = useState(false);
+  const phaseADriverRef = useRef<Driver | null>(null);
+  const phaseACompletingRef = useRef(false);
+  const phaseAUnmountedRef = useRef(false);
+  const nameDraftRef = useRef(nameDraft);
+  nameDraftRef.current = nameDraft;
+  const showSplash = showWizard && !onboarded;
+
+  // Track O: scoping operates on academic courses only. A `role: 'resources'`
+  // course (Getting Started) is never pinned, never offered in the picker, and
+  // always shows alongside the pinned course.
+  const academicCourses = useMemo(
+    () => courses.filter((course) => course.role !== 'resources'),
+    [courses],
   );
+  const resourcesCourses = useMemo(
+    () => courses.filter((course) => course.role === 'resources'),
+    [courses],
+  );
+
+  const pinnedCourse = useMemo(
+    () => academicCourses.find((course) => course.id === pinnedCourseId) ?? null,
+    [academicCourses, pinnedCourseId],
+  );
+
+  // Scoping only applies to the student root (`/`, which renders the wizard).
+  // The unlinked `/labs` staff index and single-course `/c/:courseId` pages are
+  // left untouched.
+  const scoped = showWizard && pinnedCourse !== null;
+  const displayCourses = scoped ? [pinnedCourse, ...resourcesCourses] : courses;
+
+  const rawStep = showWizard ? normalizeStep(searchParams.get('step')) : 'name';
+  // When scoped, the wizard collapses to name -> lab; coerce a stale course step.
+  const step: WizardStep = scoped && rawStep === 'course' ? 'lab' : rawStep;
+
+  const selectedCourse = useMemo(() => {
+    if (scoped) {
+      return pinnedCourse;
+    }
+    return academicCourses.find((course) => course.id === selectedCourseId) ?? null;
+  }, [scoped, pinnedCourse, academicCourses, selectedCourseId]);
   const enabledLabs = useMemo(
     () =>
       selectedCourse
@@ -283,10 +328,31 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
   );
 
   const standaloneCourse = !showWizard && courses.length === 1 ? courses[0] : null;
+  const aboutCourseTitle = standaloneCourse?.title ?? pinnedCourse?.title ?? 'your course';
 
   useEffect(() => {
     document.title = standaloneCourse ? `LabFrame - ${standaloneCourse.title}` : 'LabFrame';
   }, [standaloneCourse]);
+
+  useEffect(() => {
+    // Resolve the pinned course: a `?course=` param naming an academic course
+    // wins and is persisted; otherwise fall back to the stored pin. Only
+    // academic course ids are honored (a stale or resources id is ignored).
+    const stored = safeStorageGet(COURSE_STORAGE_KEY);
+    const param = searchParams.get('course');
+    const paramAcademic =
+      param && academicCourses.some((course) => course.id === param) ? param : null;
+    if (paramAcademic) {
+      if (paramAcademic !== stored) {
+        safeStorageSet(COURSE_STORAGE_KEY, paramAcademic);
+      }
+      setPinnedCourseId(paramAcademic);
+      return;
+    }
+    setPinnedCourseId(
+      stored && academicCourses.some((course) => course.id === stored) ? stored : null,
+    );
+  }, [searchParams, academicCourses]);
 
   useEffect(() => {
     const storedName = safeStorageGet(STUDENT_NAME_STORAGE_KEY)?.trim() ?? '';
@@ -317,6 +383,92 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
     setSearchParams(next);
   };
 
+  const skipTutorial = () => {
+    setOnboarded();
+    setOnboardedState(true);
+  };
+
+  const pickTourCourse = (courseId: string) => {
+    safeStorageSet(COURSE_STORAGE_KEY, courseId);
+    setPinnedCourseId(courseId);
+    setSelectedCourseId(courseId);
+    phaseADriverRef.current?.moveNext();
+  };
+
+  // Phase A driver: starts when the tour panel is revealed (Get Started). The
+  // course-picker and name anchors must exist first, so we start after the
+  // panel mounts. On normal finish it navigates to the demo lab with ?tour=1;
+  // an Esc / overlay dismiss instead marks the student onboarded and drops them
+  // into the scoped catalog.
+  useEffect(() => {
+    if (!tourActive) {
+      return;
+    }
+    phaseACompletingRef.current = false;
+    phaseAUnmountedRef.current = false;
+    const tourDriver = driver({
+      showProgress: true,
+      steps: [
+        {
+          popover: {
+            title: 'Welcome to LabFrame',
+            description: 'This takes about a minute. You can skip any step.',
+          },
+        },
+        {
+          element: '.tour-course-picker',
+          popover: {
+            title: 'Pick your course',
+            description: 'Select the course you are enrolled in.',
+          },
+        },
+        {
+          element: '.tour-name-field',
+          popover: {
+            title: 'Your name',
+            description:
+              'Enter your name as it should appear on your lab report. It stays in this browser.',
+            onNextClick: () => {
+              const value = nameDraftRef.current.trim();
+              if (value) {
+                safeStorageSet(STUDENT_NAME_STORAGE_KEY, value);
+              }
+              tourDriver.moveNext();
+            },
+          },
+        },
+        {
+          popover: {
+            title: 'Ready?',
+            description: "Let's take a look at a lab.",
+            doneBtnText: 'Show me',
+            onNextClick: () => {
+              phaseACompletingRef.current = true;
+              tourDriver.destroy();
+              navigate('/welcome?tour=1');
+            },
+          },
+        },
+      ],
+      onDestroyed: () => {
+        if (phaseACompletingRef.current || phaseAUnmountedRef.current) {
+          return;
+        }
+        // Esc / overlay dismiss mid-tour: count it as seen and stop nagging.
+        setOnboarded();
+        setOnboardedState(true);
+        setTourActive(false);
+      },
+    });
+    phaseADriverRef.current = tourDriver;
+    const timer = window.setTimeout(() => tourDriver.drive(), 100);
+    return () => {
+      window.clearTimeout(timer);
+      phaseAUnmountedRef.current = true;
+      tourDriver.destroy();
+    };
+  }, [tourActive, navigate]);
+
   return (
     <div className="catalog-page">
       <header className="catalog-header">
@@ -327,50 +479,53 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
         <ThemeToggle />
       </header>
       <main className="catalog">
-        {standaloneCourse ? (
-          <section className="catalog-hero catalog-hero-compact">
-            <div className="catalog-hero-copy">
-              <p className="catalog-hero-eyebrow">
-                <Link to="/labs">All courses</Link>
-              </p>
-              <h1 className="catalog-hero-title">{standaloneCourse.title}</h1>
-              <p className="catalog-hero-description">{courseMetaLabel(standaloneCourse)}</p>
-            </div>
-          </section>
-        ) : (
-          <section className="catalog-hero">
-            <div className="catalog-hero-copy">
-              <h1 className="catalog-hero-title">Interactive physics labs</h1>
-              <p className="catalog-hero-description">
-                Run the simulation, record your data, and export a signed report. Built for ASU
-                online physics. No account, no install, no textbook.
-              </p>
-              <ul className="catalog-hero-courses" aria-label="Courses">
-                {courses.map((course) => (
-                  <li key={course.id}>
-                    <Link className="catalog-hero-course-chip" to={`/c/${course.id}`}>
-                      {course.title}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="catalog-hero-figure">
-              <HeroIllustration />
-            </div>
-          </section>
-        )}
-
-        {showWizard ? (
-          <section className="catalog-wizard" aria-labelledby="catalog-wizard-heading">
-            <div className="catalog-wizard-head">
-              <h2 id="catalog-wizard-heading">Start a lab</h2>
-              <WizardSteps step={step} />
-            </div>
-            {step === 'name' ? (
-              <div className="catalog-wizard-step">
-                <label className="field">
-                  <span className="field-label">Enter your name</span>
+        {showSplash ? (
+          <section className="catalog-splash" aria-labelledby="catalog-splash-title">
+            <h1 id="catalog-splash-title" className="catalog-splash-title">
+              Welcome to LabFrame
+            </h1>
+            <p className="catalog-splash-lead">
+              Run your physics lab, fill the worksheet, export a signed report.
+            </p>
+            {!tourActive ? (
+              <div className="catalog-splash-actions">
+                <Button variant="primary" size="lg" onClick={() => setTourActive(true)}>
+                  Get Started
+                </Button>
+                <Button variant="ghost" size="md" onClick={skipTutorial}>
+                  Skip tutorial
+                </Button>
+              </div>
+            ) : (
+              <div className="catalog-splash-tour">
+                <div className="tour-course-picker">
+                  <h2>Pick your course</h2>
+                  <ul className="catalog-wizard-cards">
+                    {academicCourses.map((course) => (
+                      <li key={course.id}>
+                        <button
+                          type="button"
+                          className="catalog-wizard-card"
+                          onClick={() => pickTourCourse(course.id)}
+                        >
+                          <span className="catalog-wizard-card-text">
+                            <span className="catalog-wizard-card-title">{course.title}</span>
+                            <span className="catalog-wizard-card-meta">
+                              {courseMetaLabel(course)}
+                            </span>
+                          </span>
+                          <Icon
+                            icon={ChevronRight}
+                            size={16}
+                            className="catalog-wizard-card-chevron"
+                          />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <label className="field tour-name-field">
+                  <span className="field-label">Your name</span>
                   <input
                     value={nameDraft}
                     onChange={(event) => setNameDraft(event.currentTarget.value)}
@@ -379,128 +534,195 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
                     placeholder="Full name, as it should appear on your report"
                   />
                 </label>
-                <p className="catalog-ferpa-note">
-                  Your name is saved only in this browser. See the privacy section below for
-                  details.
-                </p>
-                <div className="catalog-wizard-actions">
-                  <Button
-                    variant="primary"
-                    size="md"
-                    disabled={!nameDraft.trim()}
-                    onClick={() => {
-                      if (saveName()) {
-                        goToStep('course');
-                      }
-                    }}
-                    trailingIcon={<Icon icon={ChevronRight} size={16} />}
-                  >
-                    Continue
-                  </Button>
-                </div>
               </div>
-            ) : null}
-            {step === 'course' ? (
-              <div className="catalog-wizard-step">
-                <h3>Select a course</h3>
-                <ul className="catalog-wizard-cards">
-                  {courses.map((course) => (
-                    <li key={course.id}>
-                      <button
-                        type="button"
-                        className="catalog-wizard-card"
-                        onClick={() => {
-                          setSelectedCourseId(course.id);
-                          goToStep('lab');
-                        }}
-                      >
-                        <span className="catalog-wizard-card-text">
-                          <span className="catalog-wizard-card-title">{course.title}</span>
-                          <span className="catalog-wizard-card-meta">
-                            {courseMetaLabel(course)}
-                          </span>
-                        </span>
-                        <Icon
-                          icon={ChevronRight}
-                          size={16}
-                          className="catalog-wizard-card-chevron"
-                        />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                <div className="catalog-wizard-actions">
-                  <Button variant="ghost" size="md" onClick={() => goToStep('name')}>
-                    Back
-                  </Button>
-                </div>
-              </div>
-            ) : null}
-            {step === 'lab' ? (
-              <div className="catalog-wizard-step">
-                <h3>Select a lab</h3>
-                {selectedCourse ? (
-                  enabledLabs.length > 0 ? (
-                    <ul className="catalog-wizard-cards">
-                      {enabledLabs.map((labRef) => {
-                        const lab = labsByCourse[selectedCourse.id]?.[labRef.ref];
-                        const cachedName = safeStorageGet(STUDENT_NAME_STORAGE_KEY)?.trim() ?? '';
-                        const studentToken = cachedName || nameDraft.trim();
-                        return (
-                          <li key={`${selectedCourse.id}-${labRef.ref}`}>
-                            <Link
-                              className="catalog-wizard-card"
-                              aria-label={labDisplayLabel(labRef, lab)}
-                              to={`/c/${selectedCourse.id}/${labRef.ref}?student=${encodeURIComponent(studentToken)}`}
-                            >
-                              <span className="catalog-wizard-card-text">
-                                {labRef.labNumber !== undefined ? (
-                                  <span className="lab-card-pill">Lab {labRef.labNumber}</span>
-                                ) : labRef.group === 'enrichment' ? (
-                                  <span className="lab-card-pill">Enrichment</span>
-                                ) : null}
-                                <span className="catalog-wizard-card-title">
-                                  {lab?.title ?? labRef.ref}
-                                </span>
-                              </span>
-                              <Icon
-                                icon={ChevronRight}
-                                size={16}
-                                className="catalog-wizard-card-chevron"
-                              />
-                            </Link>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  ) : (
-                    <p className="catalog-empty">No labs available yet for this course.</p>
-                  )
-                ) : (
-                  <p className="catalog-empty">Select a course first.</p>
-                )}
-                <div className="catalog-wizard-actions">
-                  <Button variant="ghost" size="md" onClick={() => goToStep('course')}>
-                    Back
-                  </Button>
-                </div>
-              </div>
-            ) : null}
+            )}
           </section>
-        ) : null}
+        ) : (
+          <>
+            {standaloneCourse ? (
+              <section className="catalog-hero catalog-hero-compact">
+                <div className="catalog-hero-copy">
+                  <p className="catalog-hero-eyebrow">
+                    <Link to="/labs">All courses</Link>
+                  </p>
+                  <h1 className="catalog-hero-title">{standaloneCourse.title}</h1>
+                  <p className="catalog-hero-description">{courseMetaLabel(standaloneCourse)}</p>
+                </div>
+              </section>
+            ) : (
+              <section className="catalog-hero">
+                <div className="catalog-hero-copy">
+                  <h1 className="catalog-hero-title">Interactive physics labs</h1>
+                  <p className="catalog-hero-description">
+                    Run the simulation, record your data, and export a signed report. Built for ASU
+                    online physics. No account, no install, no textbook.
+                  </p>
+                  <ul className="catalog-hero-courses" aria-label="Courses">
+                    {(scoped ? [pinnedCourse] : academicCourses).map((course) => (
+                      <li key={course.id}>
+                        <Link className="catalog-hero-course-chip" to={`/c/${course.id}`}>
+                          {course.title}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="catalog-hero-figure">
+                  <HeroIllustration />
+                </div>
+              </section>
+            )}
 
-        <div className="catalog-courses">
-          {courses.map((course) => (
-            <CourseSection
-              key={course.id}
-              course={course}
-              labsByCourse={labsByCourse}
-              standalone={standaloneCourse?.id === course.id}
-            />
-          ))}
-        </div>
+            {showWizard ? (
+              <section className="catalog-wizard" aria-labelledby="catalog-wizard-heading">
+                <div className="catalog-wizard-head">
+                  <h2 id="catalog-wizard-heading">Start a lab</h2>
+                  <WizardSteps step={step} hideCourseStep={scoped} />
+                </div>
+                {step === 'name' ? (
+                  <div className="catalog-wizard-step">
+                    <label className="field">
+                      <span className="field-label">Enter your name</span>
+                      <input
+                        value={nameDraft}
+                        onChange={(event) => setNameDraft(event.currentTarget.value)}
+                        aria-label="Student name"
+                        autoComplete="name"
+                        placeholder="Full name, as it should appear on your report"
+                      />
+                    </label>
+                    <p className="catalog-ferpa-note">
+                      Your name is saved only in this browser. See the privacy section below for
+                      details.
+                    </p>
+                    <div className="catalog-wizard-actions">
+                      <Button
+                        variant="primary"
+                        size="md"
+                        disabled={!nameDraft.trim()}
+                        onClick={() => {
+                          if (saveName()) {
+                            goToStep(scoped ? 'lab' : 'course');
+                          }
+                        }}
+                        trailingIcon={<Icon icon={ChevronRight} size={16} />}
+                      >
+                        Continue
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
+                {step === 'course' && !scoped ? (
+                  <div className="catalog-wizard-step">
+                    <h3>Select a course</h3>
+                    <ul className="catalog-wizard-cards">
+                      {academicCourses.map((course) => (
+                        <li key={course.id}>
+                          <button
+                            type="button"
+                            className="catalog-wizard-card"
+                            onClick={() => {
+                              setSelectedCourseId(course.id);
+                              // Track O: picking a course pins it for this browser.
+                              safeStorageSet(COURSE_STORAGE_KEY, course.id);
+                              setPinnedCourseId(course.id);
+                              goToStep('lab');
+                            }}
+                          >
+                            <span className="catalog-wizard-card-text">
+                              <span className="catalog-wizard-card-title">{course.title}</span>
+                              <span className="catalog-wizard-card-meta">
+                                {courseMetaLabel(course)}
+                              </span>
+                            </span>
+                            <Icon
+                              icon={ChevronRight}
+                              size={16}
+                              className="catalog-wizard-card-chevron"
+                            />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="catalog-wizard-actions">
+                      <Button variant="ghost" size="md" onClick={() => goToStep('name')}>
+                        Back
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
+                {step === 'lab' ? (
+                  <div className="catalog-wizard-step">
+                    <h3>Select a lab</h3>
+                    {selectedCourse ? (
+                      enabledLabs.length > 0 ? (
+                        <ul className="catalog-wizard-cards">
+                          {enabledLabs.map((labRef) => {
+                            const lab = labsByCourse[selectedCourse.id]?.[labRef.ref];
+                            const cachedName =
+                              safeStorageGet(STUDENT_NAME_STORAGE_KEY)?.trim() ?? '';
+                            const studentToken = cachedName || nameDraft.trim();
+                            return (
+                              <li key={`${selectedCourse.id}-${labRef.ref}`}>
+                                <Link
+                                  className="catalog-wizard-card"
+                                  aria-label={labDisplayLabel(labRef, lab)}
+                                  to={`/c/${selectedCourse.id}/${labRef.ref}?student=${encodeURIComponent(studentToken)}`}
+                                >
+                                  <span className="catalog-wizard-card-text">
+                                    {labRef.labNumber !== undefined ? (
+                                      <span className="lab-card-pill">Lab {labRef.labNumber}</span>
+                                    ) : labRef.group === 'enrichment' ? (
+                                      <span className="lab-card-pill">Enrichment</span>
+                                    ) : null}
+                                    <span className="catalog-wizard-card-title">
+                                      {lab?.title ?? labRef.ref}
+                                    </span>
+                                  </span>
+                                  <Icon
+                                    icon={ChevronRight}
+                                    size={16}
+                                    className="catalog-wizard-card-chevron"
+                                  />
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : (
+                        <p className="catalog-empty">No labs available yet for this course.</p>
+                      )
+                    ) : (
+                      <p className="catalog-empty">Select a course first.</p>
+                    )}
+                    <div className="catalog-wizard-actions">
+                      <Button
+                        variant="ghost"
+                        size="md"
+                        onClick={() => goToStep(scoped ? 'name' : 'course')}
+                      >
+                        Back
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
 
-        <AboutAndPrivacy />
+            <div className="catalog-courses">
+              {displayCourses.map((course) => (
+                <CourseSection
+                  key={course.id}
+                  course={course}
+                  labsByCourse={labsByCourse}
+                  standalone={standaloneCourse?.id === course.id}
+                />
+              ))}
+            </div>
+
+            <AboutAndPrivacy courseTitle={aboutCourseTitle} />
+          </>
+        )}
       </main>
     </div>
   );

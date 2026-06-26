@@ -333,6 +333,7 @@ export const phy132SnellsLawLab: Lab = {
     {
       kind: 'instructions',
       tocHidden: true,
+      pdfHidden: true,
       html: [
         '## PDF Report Notes',
         'The generated PDF should include Student Info, worksheet responses, table and derived values, fit summaries, and a Process Record appendix.',

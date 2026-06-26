@@ -59,6 +59,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     {
       kind: 'instructions',
       tocLabel: 'Background: Charge Imbalance',
+      pdfHidden: true,
       html: `## Background: How Charge Imbalances Form
 
 Atoms prefer to be electrically neutral: equal numbers of protons and electrons. A net charge on an object means an imbalance.
@@ -134,6 +135,7 @@ Note John's charge meter (the row of electrons in his body) both **before** and 
     {
       kind: 'instructions',
       tocLabel: 'Background: Conservation of Charge',
+      pdfHidden: true,
       html: `## Background: Conservation of Charge
 
 The **Law of Conservation of Charge** states that the net charge of an isolated system stays constant unless charge is exchanged with the outside.
@@ -202,6 +204,7 @@ Try varying the distance between the balloon and the wall.
     {
       kind: 'instructions',
       tocLabel: 'Background: Polarization vs. Induction',
+      pdfHidden: true,
       html: `## Background: Polarization vs. Induction
 
 In Part 1B you saw the balloon attract to a *neutral wall*. The wall is an insulator, so its electrons can't migrate across the surface; they only shift slightly within each molecule. That's **polarization**: as soon as the balloon leaves, the polarization vanishes and the wall returns to its original state. No net charge is left behind.

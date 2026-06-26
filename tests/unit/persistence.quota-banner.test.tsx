@@ -48,6 +48,9 @@ describe('quota recovery banner', () => {
   });
 
   it('shows quota banner while blob attachment write still succeeds', async () => {
+    // Mark onboarded before the setItem mock so the deep-link tour toast (also a
+    // role="status" region) does not appear alongside the quota banner.
+    localStorage.setItem('labframe:onboarded', '1');
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('Quota exceeded', 'QuotaExceededError');
     });

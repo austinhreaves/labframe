@@ -70,6 +70,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     {
       kind: 'instructions',
       tocLabel: 'Background: Capacitor Networks and Charge Sharing',
+      pdfHidden: true,
       html: `## Background: Capacitor Networks and Charge Sharing
 
 When two or more capacitors are wired together, they behave like a single **equivalent capacitor** whose value depends on how they are combined.
@@ -173,6 +174,7 @@ Enter the nine voltage readings (3 capacitors × 3 steps) in the table below.`,
     {
       kind: 'instructions',
       tocLabel: 'Background: Mixed Series and Parallel Networks',
+      pdfHidden: true,
       html: `## Background: Mixing Series with Parallel
 
 Most real capacitor networks combine series and parallel sub-blocks. The recipe is the same as for resistors: collapse the network inward, one sub-block at a time, replacing each series or parallel cluster with its equivalent capacitance until a single equivalent remains.
@@ -282,6 +284,7 @@ For each step, measure the voltage across each of the four labeled elements (the
     {
       kind: 'instructions',
       tocHidden: true,
+      pdfHidden: true,
       html: `## PDF Report Notes
 
 The generated PDF should include Student Info, worksheet responses, table and derived values, fit summaries, and a Process Record appendix.

@@ -696,8 +696,10 @@ a.lab-card:hover {
   transition: background var(--duration-fast) var(--ease-out);
 }
 
-.catalog-disclosure > summary:hover {
-  background: var(--surface-sunken);
+@media (hover: hover) {
+  .catalog-disclosure > summary:hover {
+    background: var(--surface-sunken);
+  }
 }
 
 .catalog-disclosure > summary::-webkit-details-marker {
@@ -875,6 +877,69 @@ a.lab-card:hover {
   margin: 0;
   display: flex;
   align-items: center;
+  gap: var(--space-2);
+}
+
+/* Track S: onboarding tour. First-run splash, deep-link toast, refresher. */
+.catalog-splash {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-4);
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.catalog-splash-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  letter-spacing: var(--tracking-tight);
+}
+
+.catalog-splash-lead {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-md);
+}
+
+.catalog-splash-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.catalog-splash-tour {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-5);
+  width: 100%;
+  text-align: left;
+}
+
+.tour-course-picker h2 {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-lg);
+}
+
+.lab-tour-button {
+  white-space: nowrap;
+}
+
+@media (pointer: coarse) {
+  .lab-tour-button {
+    min-height: var(--space-7);
+  }
+}
+
+.lab-tour-toast-actions {
+  display: flex;
   gap: var(--space-2);
 }
 
@@ -1061,8 +1126,10 @@ a.lab-card:hover {
   transform: scale(1);
 }
 
-.checkbox:hover .checkbox-box {
-  border-color: var(--border-strong);
+@media (hover: hover) {
+  .checkbox:hover .checkbox-box {
+    border-color: var(--border-strong);
+  }
 }
 
 .checkbox > input:focus-visible ~ .checkbox-box {
@@ -1107,8 +1174,10 @@ a.lab-card:hover {
     box-shadow var(--duration-fast) var(--ease-out);
 }
 
-.select > select:hover {
-  border-color: var(--border-strong);
+@media (hover: hover) {
+  .select > select:hover {
+    border-color: var(--border-strong);
+  }
 }
 
 .select > select:focus-visible {
@@ -1172,9 +1241,11 @@ a.lab-card:hover {
     background var(--duration-fast) var(--ease-out);
 }
 
-.file-dropzone-target:hover {
-  border-color: var(--border-accent);
-  background: var(--accent-soft);
+@media (hover: hover) {
+  .file-dropzone-target:hover {
+    border-color: var(--border-accent);
+    background: var(--accent-soft);
+  }
 }
 
 .file-dropzone[data-dragging='true'] .file-dropzone-target {
@@ -1280,10 +1351,12 @@ a.lab-card:hover {
     background var(--duration-fast) var(--ease-out);
 }
 
-.file-dropzone-remove:hover {
-  border-color: var(--border-strong);
-  color: var(--text-primary);
-  background: var(--surface-sunken);
+@media (hover: hover) {
+  .file-dropzone-remove:hover {
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+    background: var(--surface-sunken);
+  }
 }
 
 .file-dropzone-remove:focus-visible {
@@ -1324,8 +1397,10 @@ a.lab-card:hover {
     background var(--duration-fast) var(--ease-out);
 }
 
-.calc-mode-tab:hover {
-  color: var(--text-primary);
+@media (hover: hover) {
+  .calc-mode-tab:hover {
+    color: var(--text-primary);
+  }
 }
 
 .calc-mode-tab:focus-visible {
@@ -1381,9 +1456,11 @@ a.lab-card:hover {
     background var(--duration-fast) var(--ease-out);
 }
 
-.draw-canvas-tools button:hover {
-  border-color: var(--border-strong);
-  color: var(--text-primary);
+@media (hover: hover) {
+  .draw-canvas-tools button:hover {
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+  }
 }
 
 .draw-canvas-tools button:focus-visible,
@@ -1420,9 +1497,11 @@ a.lab-card:hover {
   padding: var(--space-1) var(--space-3);
 }
 
-.draw-canvas-pages button:hover:not(:disabled) {
-  border-color: var(--border-strong);
-  color: var(--text-primary);
+@media (hover: hover) {
+  .draw-canvas-pages button:hover:not(:disabled) {
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+  }
 }
 
 .draw-canvas-pages button:focus-visible {
@@ -1601,8 +1680,10 @@ a.lab-card:hover {
     color var(--duration-fast) var(--ease-out);
 }
 
-.table-of-contents-popover > summary:hover {
-  border-color: var(--border-strong);
+@media (hover: hover) {
+  .table-of-contents-popover > summary:hover {
+    border-color: var(--border-strong);
+  }
 }
 
 .table-of-contents-popover > summary .icon-chevron {
@@ -1929,8 +2010,10 @@ button {
     color var(--duration-fast) var(--ease-out);
 }
 
-button:hover {
-  border-color: var(--border-strong);
+@media (hover: hover) {
+  button:hover {
+    border-color: var(--border-strong);
+  }
 }
 
 button[aria-pressed='true'] {
@@ -1939,9 +2022,11 @@ button[aria-pressed='true'] {
   color: var(--accent-text-on);
 }
 
-button[aria-pressed='true']:hover {
-  background: var(--accent-bg-hover);
-  border-color: var(--accent-bg-hover);
+@media (hover: hover) {
+  button[aria-pressed='true']:hover {
+    background: var(--accent-bg-hover);
+    border-color: var(--accent-bg-hover);
+  }
 }
 
 /* ============================================================
@@ -2011,10 +2096,12 @@ button[aria-pressed='true']:hover {
   box-shadow: var(--shadow-1);
 }
 
-.btn-primary:hover {
-  background: var(--accent-bg-hover);
-  border-color: var(--accent-bg-hover);
-  box-shadow: var(--shadow-accent);
+@media (hover: hover) {
+  .btn-primary:hover {
+    background: var(--accent-bg-hover);
+    border-color: var(--accent-bg-hover);
+    box-shadow: var(--shadow-accent);
+  }
 }
 
 .btn-primary:disabled {
@@ -2029,18 +2116,22 @@ button[aria-pressed='true']:hover {
   color: var(--text-primary);
 }
 
-.btn-secondary:hover {
-  border-color: var(--border-strong);
-  background: var(--surface-sunken);
+@media (hover: hover) {
+  .btn-secondary:hover {
+    border-color: var(--border-strong);
+    background: var(--surface-sunken);
+  }
 }
 
 .btn-ghost {
   color: var(--text-secondary);
 }
 
-.btn-ghost:hover {
-  background: var(--surface-sunken);
-  color: var(--text-primary);
+@media (hover: hover) {
+  .btn-ghost:hover {
+    background: var(--surface-sunken);
+    color: var(--text-primary);
+  }
 }
 
 .btn-danger {
@@ -2049,8 +2140,10 @@ button[aria-pressed='true']:hover {
   color: var(--danger-text);
 }
 
-.btn-danger:hover {
-  background: var(--danger-bg);
+@media (hover: hover) {
+  .btn-danger:hover {
+    background: var(--danger-bg);
+  }
 }
 
 .btn-subtle {
@@ -2058,8 +2151,10 @@ button[aria-pressed='true']:hover {
   padding-inline: var(--space-2);
 }
 
-.btn-subtle:hover {
-  background: var(--surface-sunken);
+@media (hover: hover) {
+  .btn-subtle:hover {
+    background: var(--surface-sunken);
+  }
 }
 
 .btn:focus-visible {
@@ -2243,8 +2338,10 @@ th {
   z-index: 1;
 }
 
-tr:hover td {
-  background: var(--surface-sunken);
+@media (hover: hover) {
+  tr:hover td {
+    background: var(--surface-sunken);
+  }
 }
 
 .table-column-header {
@@ -2453,8 +2550,12 @@ code {
    Transform-based hover states (translateY, box-shadow lifts)
    persist as phantom states after a tap. Reset them here so
    tapping a card doesn't leave it "stuck" in hover position.
-   Simple color transitions on inputs are left as-is since
-   they are overridden by focus state immediately on tap.
+   The interactive controls (buttons, .btn variants, tabs, the
+   dropzone, summaries, table rows) instead gate their own
+   :hover rules with @media (hover: hover) at the point of
+   definition, so the highlight never applies on touch in the
+   first place. Text inputs are left ungated since their focus
+   state overrides any hover border the moment they are tapped.
    ============================================================ */
 
 @media (hover: none) {

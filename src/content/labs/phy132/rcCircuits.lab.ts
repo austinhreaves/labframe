@@ -46,6 +46,7 @@ export const phy132RcCircuitsLab: Lab = {
     },
     {
       kind: 'instructions',
+      pdfHidden: true,
       html: [
         '## Background',
         'When a charged capacitor C discharges through a resistor R, the voltage across the capacitor decays exponentially:',
@@ -321,6 +322,7 @@ export const phy132RcCircuitsLab: Lab = {
     {
       kind: 'instructions',
       tocHidden: true,
+      pdfHidden: true,
       html: [
         '## PDF Report Notes',
         'The generated PDF should include Student Info, all worksheet responses, the circuit screenshot, the three discharge data tables, all decay plots (including log-linearized fits), and a Process Record appendix.',

@@ -45,6 +45,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     {
       kind: 'instructions',
       tocLabel: "Background: Coulomb's Law and the Electric Field",
+      pdfHidden: true,
       html: `## Background: Coulomb's Law and the Electric Field
 
 A charged particle produces an *electric field* in the space around it. The field at a point in space is defined as the electric force exerted on an infinitesimally small positive test charge placed at that point:
@@ -228,6 +229,7 @@ Record the (held-constant) charge $q$ here, then enter the two measurements in t
     {
       kind: 'instructions',
       tocLabel: 'Background: Electric Potential of a Point Charge',
+      pdfHidden: true,
       html: `## Background: Electric Potential of a Point Charge
 
 The *electric potential* $V$ at a point in space is the electric potential energy per unit charge that a small test charge would have at that location. Its unit is the volt (V), equivalent to a joule per coulomb (J/C).
@@ -379,6 +381,7 @@ In Part 1B you'll measure $V$ at five equipotential rings around a single point 
     {
       kind: 'instructions',
       tocHidden: true,
+      pdfHidden: true,
       html: `## PDF Report Notes
 
 The generated PDF should include Student Info, worksheet responses, table and derived values, fit summaries, and a Process Record appendix.
