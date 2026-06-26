@@ -1,8 +1,6 @@
-import katex from 'katex';
 import {
   createElement,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type ClipboardEvent,
@@ -16,6 +14,7 @@ import type { FieldValue } from '@/domain/schema';
 import { appendPasteEvent, createEmptyFieldValue, markFieldActivity } from '@/state/labStore';
 import { EquationSymbolPalette } from '@/ui/primitives/EquationSymbolPalette';
 import { Field } from '@/ui/primitives/Field';
+import { MarkdownBlock } from '@/ui/primitives/MarkdownBlock';
 
 type EquationEditorProps = {
   id: string;
@@ -35,14 +34,14 @@ type MathFieldElement = HTMLElement & {
   selectionEnd?: number | null;
   position?: number;
   executeCommand?: (command: unknown) => void;
-  // MathLive 0.109 replaced the old `virtualKeyboardMode` ('onfocus' etc.) with
-  // `mathVirtualKeyboardPolicy`. 'auto' is the iOS-safe equivalent: on a touch
-  // device focusing the field shows MathLive's own keyboard and suppresses the
-  // native one, so the two do not fight on iPad. There is no literal 'onfocus'
-  // policy in this version; 'auto' is the closest and also happens to be the
-  // current default, so we set it explicitly to pin the intended behavior.
-  mathVirtualKeyboardPolicy?: 'auto' | 'manual' | 'sandboxed';
+  mathVirtualKeyboardPolicy?: string;
 };
+
+/** MathLive's global virtual-keyboard controller, attached to window once mathlive loads. */
+type VirtualKeyboard = { show: () => void; hide: () => void; visible: boolean };
+
+const getVirtualKeyboard = (): VirtualKeyboard | undefined =>
+  (window as unknown as { mathVirtualKeyboard?: VirtualKeyboard }).mathVirtualKeyboard;
 
 export function EquationEditor({
   id,
@@ -55,6 +54,7 @@ export function EquationEditor({
   const effective = value ?? createEmptyFieldValue();
   const [isReady, setIsReady] = useState(false);
   const [mode, setMode] = useState<'math' | 'latex'>('math');
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const focusStartedAt = useRef<number | null>(null);
   const composition = useRef<{ startOffset: number; startText: string } | null>(null);
   const mathFieldRef = useRef<MathFieldElement | null>(null);
@@ -136,15 +136,6 @@ export function EquationEditor({
     const end = Math.max(offset, after.length - suffixLength);
     return after.slice(offset, end);
   };
-
-  const latexPreview = useMemo(
-    () =>
-      katex.renderToString(effective.text || '\\text{ }', {
-        throwOnError: false,
-        displayMode: true,
-      }),
-    [effective.text],
-  );
 
   const withFocusMeta = (): FieldValue => {
     if (effective.meta.firstFocusAt !== undefined) {
@@ -298,6 +289,39 @@ export function EquationEditor({
     await navigator.clipboard.writeText(effective.text);
   };
 
+  // The virtual keyboard is opt-in (policy is "manual"); summon or dismiss it
+  // explicitly so it never steals half the screen on focus.
+  const toggleVirtualKeyboard = () => {
+    const keyboard = getVirtualKeyboard();
+    if (!keyboard) {
+      return;
+    }
+    if (keyboard.visible) {
+      keyboard.hide();
+      setKeyboardVisible(false);
+      return;
+    }
+    mathFieldRef.current?.focus();
+    keyboard.show();
+    setKeyboardVisible(true);
+  };
+
+  // Dismiss the keyboard when leaving math mode and on unmount, so it never
+  // lingers over an input that can no longer drive it.
+  useEffect(() => {
+    if (mode !== 'math') {
+      getVirtualKeyboard()?.hide();
+      setKeyboardVisible(false);
+    }
+  }, [mode]);
+
+  useEffect(
+    () => () => {
+      getVirtualKeyboard()?.hide();
+    },
+    [],
+  );
+
   if (!isReady) {
     return (
       <Field
@@ -319,13 +343,25 @@ export function EquationEditor({
         <span className={hideLabel ? 'field-label visually-hidden' : 'field-label'}>
           {labelDisplay ?? label}
         </span>
-        <button
-          type="button"
-          className="equation-editor-toggle"
-          onClick={() => setMode((previous) => (previous === 'math' ? 'latex' : 'math'))}
-        >
-          {mode === 'math' ? 'View as LaTeX' : 'View as math'}
-        </button>
+        <div className="equation-editor-toolbar-actions">
+          {mode === 'math' ? (
+            <button
+              type="button"
+              className="equation-editor-toggle"
+              aria-pressed={keyboardVisible}
+              onClick={toggleVirtualKeyboard}
+            >
+              {keyboardVisible ? 'Hide keyboard' : 'On-screen keyboard'}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="equation-editor-toggle"
+            onClick={() => setMode((previous) => (previous === 'math' ? 'latex' : 'math'))}
+          >
+            {mode === 'math' ? 'Type text and equations' : 'Use equation builder'}
+          </button>
+        </div>
       </div>
       <EquationSymbolPalette onInsert={insertSymbol} onRestoreFocus={focusActiveInput} />
       <div className="equation-editor-body">
@@ -336,8 +372,7 @@ export function EquationEditor({
             ref: (element: MathFieldElement | null): void => {
               mathFieldRef.current = element;
               if (element) {
-                // Pin the iOS-safe virtual-keyboard policy (see the type above).
-                element.mathVirtualKeyboardPolicy = 'auto';
+                element.mathVirtualKeyboardPolicy = 'manual';
               }
             },
             onFocus: handleFocus,
@@ -418,50 +453,66 @@ export function EquationEditor({
             },
           })
         ) : (
-          <textarea
-            id={id}
-            ref={latexInputRef}
-            rows={4}
-            value={effective.text}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            onPaste={handlePaste}
-            onCompositionStart={(event) => {
-              composition.current = {
-                startOffset: event.currentTarget.selectionStart ?? effective.text.length,
-                startText: effective.text,
-              };
-            }}
-            onCompositionEnd={(event) => {
-              const snapshot = composition.current;
-              composition.current = null;
-              if (!snapshot) {
-                return;
-              }
-              const target = event.currentTarget;
-              const base = markFieldActivity(
-                effective,
-                { value: target.value, selectionStart: target.selectionStart },
-                {},
-              );
-              const composedText = getComposedSubstring(
-                snapshot.startText,
-                target.value,
-                snapshot.startOffset,
-              );
-              onChange(appendPasteEvent(base, 'ime', composedText, snapshot.startOffset));
-            }}
-            onInput={(event) => {
-              const target = event.currentTarget;
-              const native = event.nativeEvent as InputEvent;
-              const next = markFieldActivity(
-                effective,
-                { value: target.value, selectionStart: target.selectionStart },
-                { inputType: native.inputType, data: native.data, isComposing: native.isComposing },
-              );
-              onChange(next);
-            }}
-          />
+          <>
+            {effective.text.includes('\\') && !effective.text.includes('$') ? (
+              <aside className="markdown-callout markdown-callout-note">
+                <span className="markdown-callout-title">NOTE</span>
+                <div>
+                  Your equation was entered in raw LaTeX mode. To render it as math here, wrap it in
+                  $$...$$.
+                </div>
+              </aside>
+            ) : null}
+            <textarea
+              id={id}
+              ref={latexInputRef}
+              rows={4}
+              value={effective.text}
+              placeholder="Type text normally. Use $...$ for inline math (e.g. $F = ma$) and $$...$$ for display equations."
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              onPaste={handlePaste}
+              onCompositionStart={(event) => {
+                composition.current = {
+                  startOffset: event.currentTarget.selectionStart ?? effective.text.length,
+                  startText: effective.text,
+                };
+              }}
+              onCompositionEnd={(event) => {
+                const snapshot = composition.current;
+                composition.current = null;
+                if (!snapshot) {
+                  return;
+                }
+                const target = event.currentTarget;
+                const base = markFieldActivity(
+                  effective,
+                  { value: target.value, selectionStart: target.selectionStart },
+                  {},
+                );
+                const composedText = getComposedSubstring(
+                  snapshot.startText,
+                  target.value,
+                  snapshot.startOffset,
+                );
+                onChange(appendPasteEvent(base, 'ime', composedText, snapshot.startOffset));
+              }}
+              onInput={(event) => {
+                const target = event.currentTarget;
+                const native = event.nativeEvent as InputEvent;
+                const next = markFieldActivity(
+                  effective,
+                  { value: target.value, selectionStart: target.selectionStart },
+                  {
+                    inputType: native.inputType,
+                    data: native.data,
+                    isComposing: native.isComposing,
+                  },
+                );
+                onChange(next);
+              }}
+            />
+          </>
         )}
         <div className="equation-editor-preview">
           {mode === 'math' ? (
@@ -475,10 +526,9 @@ export function EquationEditor({
               <pre>{effective.text}</pre>
             </>
           ) : (
-            <div
-              className="equation-editor-katex"
-              dangerouslySetInnerHTML={{ __html: latexPreview }}
-            />
+            <div className="equation-editor-katex">
+              <MarkdownBlock markdown={effective.text} breaks />
+            </div>
           )}
         </div>
       </div>

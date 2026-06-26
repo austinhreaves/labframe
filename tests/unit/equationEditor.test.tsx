@@ -123,7 +123,7 @@ describe('EquationEditor', () => {
     const { container, getByRole } = render(<StatefulEditor initialText="a+b" />);
     await waitForMathField(container);
 
-    fireEvent.click(getByRole('button', { name: 'View as LaTeX' }));
+    fireEvent.click(getByRole('button', { name: 'Type text and equations' }));
     const sourceInput = container.querySelector('textarea') as HTMLTextAreaElement;
     expect(sourceInput.value).toBe('a+b');
 
@@ -132,7 +132,7 @@ describe('EquationEditor', () => {
     sourceInput.selectionEnd = sourceInput.value.length;
     fireEvent.input(sourceInput, { inputType: 'insertText', data: 'c', isComposing: false });
 
-    fireEvent.click(getByRole('button', { name: 'View as math' }));
+    fireEvent.click(getByRole('button', { name: 'Use equation builder' }));
     await waitForMathField(container);
     expect(container.querySelector('pre')?.textContent).toBe('a+b+c');
   });
@@ -147,7 +147,7 @@ describe('EquationEditor', () => {
     fireEvent.click(getByRole('button', { name: 'Insert \\alpha' }));
     expect(mathField.value).toBe('x\\alpha');
 
-    fireEvent.click(getByRole('button', { name: 'View as LaTeX' }));
+    fireEvent.click(getByRole('button', { name: 'Type text and equations' }));
     const sourceInput = container.querySelector('textarea') as HTMLTextAreaElement;
     sourceInput.selectionStart = sourceInput.value.length;
     sourceInput.selectionEnd = sourceInput.value.length;
@@ -231,20 +231,38 @@ describe('EquationEditor', () => {
     });
   });
 
-  it('renders katex preview in latex mode', async () => {
+  it('renders a MarkdownBlock math preview in latex mode', async () => {
     const { container, getByRole } = render(<StatefulEditor />);
     await waitForMathField(container);
 
-    fireEvent.click(getByRole('button', { name: 'View as LaTeX' }));
+    fireEvent.click(getByRole('button', { name: 'Type text and equations' }));
     const sourceInput = container.querySelector('textarea') as HTMLTextAreaElement;
-    sourceInput.value = '\\sin\\theta';
+    sourceInput.value = 'Using $\\sin\\theta$ here';
     sourceInput.selectionStart = sourceInput.value.length;
     sourceInput.selectionEnd = sourceInput.value.length;
-    fireEvent.input(sourceInput, { inputType: 'insertText', data: '\\theta', isComposing: false });
+    fireEvent.input(sourceInput, { inputType: 'insertText', data: 'e', isComposing: false });
 
-    const preview = container.querySelector('.equation-editor-katex');
-    expect(preview?.innerHTML).toContain('sin');
+    const preview = container.querySelector('.equation-editor-preview');
+    expect(preview?.querySelector('.katex')).toBeTruthy();
+    expect(preview?.textContent).toContain('Using');
     expect(preview?.textContent).toContain('θ');
+  });
+
+  it('honors a single newline as a hard line break in the latex preview', async () => {
+    const { container, getByRole } = render(<StatefulEditor />);
+    await waitForMathField(container);
+
+    fireEvent.click(getByRole('button', { name: 'Type text and equations' }));
+    const sourceInput = container.querySelector('textarea') as HTMLTextAreaElement;
+    sourceInput.value = 'line one\nline two';
+    sourceInput.selectionStart = sourceInput.value.length;
+    sourceInput.selectionEnd = sourceInput.value.length;
+    fireEvent.input(sourceInput, { inputType: 'insertText', data: 'o', isComposing: false });
+
+    const preview = container.querySelector('.equation-editor-preview');
+    // remark-breaks turns the lone newline into a <br>; both lines share one paragraph.
+    expect(preview?.querySelector('br')).toBeTruthy();
+    expect(preview?.querySelectorAll('p')).toHaveLength(1);
   });
 
   it('keeps field activity capture working across both modes', async () => {
@@ -259,7 +277,7 @@ describe('EquationEditor', () => {
     mathField.selectionEnd = 1;
     fireEvent.input(mathField, { inputType: 'insertText', data: 'x', isComposing: false });
 
-    fireEvent.click(getByRole('button', { name: 'View as LaTeX' }));
+    fireEvent.click(getByRole('button', { name: 'Type text and equations' }));
     const sourceInput = container.querySelector('textarea') as HTMLTextAreaElement;
     sourceInput.value = 'xy';
     sourceInput.selectionStart = 2;
@@ -268,5 +286,59 @@ describe('EquationEditor', () => {
 
     expect(latest?.meta.keystrokes).toBe(2);
     expect(latest?.text).toBe('xy');
+  });
+
+  it('keeps the virtual keyboard manual and toggles it on demand', async () => {
+    const keyboard: {
+      visible: boolean;
+      show: ReturnType<typeof vi.fn>;
+      hide: ReturnType<typeof vi.fn>;
+    } = {
+      visible: false,
+      show: vi.fn(() => {
+        keyboard.visible = true;
+      }),
+      hide: vi.fn(() => {
+        keyboard.visible = false;
+      }),
+    };
+    Object.defineProperty(window, 'mathVirtualKeyboard', {
+      configurable: true,
+      value: keyboard,
+    });
+
+    const { container, getByRole } = render(<StatefulEditor />);
+    const mathField = await waitForMathField(container);
+    expect(
+      (mathField as unknown as { mathVirtualKeyboardPolicy?: string }).mathVirtualKeyboardPolicy,
+    ).toBe('manual');
+
+    fireEvent.click(getByRole('button', { name: 'On-screen keyboard' }));
+    expect(keyboard.show).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(getByRole('button', { name: 'Hide keyboard' }));
+    expect(keyboard.hide).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows migration hint when stored text has backslashes but no $ delimiters', async () => {
+    const { container, getByRole, queryByText } = render(<StatefulEditor />);
+    await waitForMathField(container);
+
+    fireEvent.click(getByRole('button', { name: 'Type text and equations' }));
+    const sourceInput = container.querySelector('textarea') as HTMLTextAreaElement;
+    sourceInput.value = '\\frac{mc^2}{2}';
+    sourceInput.selectionStart = sourceInput.value.length;
+    sourceInput.selectionEnd = sourceInput.value.length;
+    fireEvent.input(sourceInput, { inputType: 'insertText', data: '}', isComposing: false });
+
+    expect(queryByText(/wrap it in/i)).toBeTruthy();
+
+    const updated = container.querySelector('textarea') as HTMLTextAreaElement;
+    updated.value = '$$\\frac{mc^2}{2}$$';
+    updated.selectionStart = updated.value.length;
+    updated.selectionEnd = updated.value.length;
+    fireEvent.input(updated, { inputType: 'insertText', data: '$', isComposing: false });
+
+    expect(queryByText(/wrap it in/i)).toBeNull();
   });
 });

@@ -52,19 +52,15 @@ function labDisplayLabel(labRef: CourseLabRef, lab: Lab | undefined): string {
 }
 
 function courseMetaLabel(course: Course): string {
-  const enabled = course.labs.filter((labRef) => labRef.enabled);
-  const core = enabled.filter((labRef) => (labRef.group ?? 'core') === 'core').length;
-  const enrichment = enabled.filter((labRef) => labRef.group === 'enrichment').length;
-  const comingSoon = course.labs.length - enabled.length;
+  const visible = course.labs.filter((labRef) => labRef.enabled);
+  const core = visible.filter((labRef) => (labRef.group ?? 'core') === 'core').length;
+  const enrichment = visible.filter((labRef) => labRef.group === 'enrichment').length;
   const parts: string[] = [];
   if (core > 0) {
     parts.push(enrichment > 0 ? `${core} core` : `${core} ${core === 1 ? 'lab' : 'labs'}`);
   }
   if (enrichment > 0) {
-    parts.push(`${enrichment} enrichment`);
-  }
-  if (comingSoon > 0) {
-    parts.push(`${comingSoon} coming soon`);
+    parts.push(`${enrichment} coming soon`);
   }
   return parts.join(' · ');
 }
@@ -86,7 +82,7 @@ function LabCard({
         ? 'Enrichment'
         : null;
 
-  if (!labRef.enabled) {
+  if (!labRef.enabled || labRef.group === 'enrichment') {
     return (
       <div className="lab-card" data-disabled="true" aria-disabled="true">
         <span className="lab-card-top">
@@ -122,8 +118,12 @@ function CourseSection({
   labsByCourse: Record<string, Record<string, Lab>>;
   standalone: boolean;
 }) {
-  const coreLabs = course.labs.filter((labRef) => (labRef.group ?? 'core') === 'core');
-  const enrichmentLabs = course.labs.filter((labRef) => labRef.group === 'enrichment');
+  const coreLabs = course.labs.filter(
+    (labRef) => labRef.enabled && (labRef.group ?? 'core') === 'core',
+  );
+  const enrichmentLabs = course.labs.filter(
+    (labRef) => labRef.enabled && labRef.group === 'enrichment',
+  );
   const hasEnrichment = enrichmentLabs.length > 0;
   // Keep heading order intact: standalone course pages have no h2 course
   // header, so the group subheads step up a level.
@@ -320,7 +320,10 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
     return academicCourses.find((course) => course.id === selectedCourseId) ?? null;
   }, [scoped, pinnedCourse, academicCourses, selectedCourseId]);
   const enabledLabs = useMemo(
-    () => (selectedCourse ? selectedCourse.labs.filter((labRef) => labRef.enabled) : []),
+    () =>
+      selectedCourse
+        ? selectedCourse.labs.filter((labRef) => labRef.enabled && labRef.group !== 'enrichment')
+        : [],
     [selectedCourse],
   );
 

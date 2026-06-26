@@ -416,10 +416,25 @@ function sectionView(
         </View>
       );
     }
+    const answer = answers.fields[section.fieldId];
+    if (section.equationEditor) {
+      // Equation-editor answers are mixed text + math markdown, so render them
+      // through the same markdown pipeline as the prompts. This deliberately
+      // drops the fieldView paste-attribution coloring (italic/blue spans) in
+      // favour of readable rendered math; renderMarkdownToPdf has no concept of
+      // paste attribution.
+      const text = answer?.text?.trim() ?? '';
+      return (
+        <View key={`section-${index}`} style={styles.section}>
+          {header}
+          {text ? <View>{renderMarkdownToPdf(text)}</View> : <Text style={styles.row}>-</Text>}
+        </View>
+      );
+    }
     return (
       <View key={`section-${index}`} style={styles.section}>
         {header}
-        {fieldView(answers.fields[section.fieldId])}
+        {fieldView(answer)}
       </View>
     );
   }

@@ -220,6 +220,45 @@ describe('renderPDF', () => {
     expect(bytes.byteLength).toBeGreaterThan(0);
   });
 
+  it('renders an equationEditor calculation answer through the markdown pipeline', () => {
+    const equationLab: Lab = {
+      ...labFixture,
+      sections: [
+        {
+          kind: 'calculation',
+          fieldId: 'calc-eq',
+          prompt: 'Show your work',
+          equationEditor: true,
+        },
+      ],
+    };
+    const equationAnswers: LabAnswers = {
+      ...answersFixture,
+      fields: {
+        'calc-eq': {
+          text: 'n_2 = $\\frac{n_1 \\sin\\theta_1}{\\sin\\theta_2}$',
+          pastes: [],
+          meta: { activeMs: 0, keystrokes: 0, deletes: 0 },
+        },
+      },
+    };
+
+    const tree = LabReportDocument({
+      lab: equationLab,
+      answers: equationAnswers,
+      course: courseFixture,
+      mode: 'signed',
+      signature: '0123456789abcdef0123456789abcdef',
+      signedAt: 1714450000000,
+    });
+    const textDump = collectText(tree);
+
+    // The inline-math span renders through latexToUnicode; the prose around it
+    // ("n_2 = ") stays literal because it is outside the $...$ delimiters.
+    expect(textDump).toContain('n₁');
+    expect(textDump).toContain('sinθ');
+  });
+
   it('keeps golden fit-line coordinates for proportional and linear fixtures', () => {
     const width = 360;
     const height = 220;

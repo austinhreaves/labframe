@@ -14,11 +14,7 @@ test('gates PDF generation on integrity agreement and student info', async ({ pa
     });
   });
 
-  await page.goto('/');
-  await page
-    .getByRole('link', { name: /lab 5: snell's law/i })
-    .first()
-    .click();
+  await page.goto('/c/phy132/snellsLaw');
   await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();
 
   const exportButton = page.getByRole('button', { name: /^export pdf$/i });
@@ -55,11 +51,7 @@ test('blocks export when AI is reported without share links', async ({ page }) =
     });
   });
 
-  await page.goto('/');
-  await page
-    .getByRole('link', { name: /lab 5: snell's law/i })
-    .first()
-    .click();
+  await page.goto('/c/phy132/snellsLaw');
   // Commit the name first and let the lab re-initialize: renaming clears
   // transient integrity state, so affirm only after it settles.
   await page.getByLabel(/student name/i).fill('Austin Reaves');
