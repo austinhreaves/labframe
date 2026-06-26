@@ -145,8 +145,8 @@ Record the force $F$ shown by the sim at each value of $Q_2$. The sim will displ
       tableId: 'forceChargeTable',
       rowCount: 5,
       columns: [
-        { id: 'charge', label: 'Charge $Q_2$ (e)', kind: 'input', unit: 'Symbol(unevaluable)' },
-        { id: 'force', label: 'Force $F$', kind: 'input', unit: 'Symbol(unevaluable)' },
+        { id: 'charge', label: 'Charge $Q_2$ (e)', kind: 'input' },
+        { id: 'force', label: 'Force $F$', kind: 'input' },
       ],
       points: 2,
     },
@@ -270,7 +270,7 @@ Set $Q_1$ and $Q_2$ to the values given above, then transcribe them into the fie
       tableId: 'forceDistanceTable',
       rowCount: 5,
       columns: [
-        { id: 'distance', label: 'Distance $d$ (pm)', kind: 'input', unit: 'Symbol(unevaluable)' },
+        { id: 'distance', label: 'Distance $d$ (pm)', kind: 'input' },
         {
           id: 'inverseDistance',
           label: 'Inverse Distance $(1/d)$',
@@ -295,7 +295,7 @@ Set $Q_1$ and $Q_2$ to the values given above, then transcribe them into the fie
             return 1 / (d * d);
           },
         },
-        { id: 'force', label: 'Force $(F)$', kind: 'input', unit: 'Symbol(unevaluable)' },
+        { id: 'force', label: 'Force $(F)$', kind: 'input' },
       ],
       points: 2,
     },

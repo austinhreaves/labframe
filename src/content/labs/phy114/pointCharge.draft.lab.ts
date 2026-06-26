@@ -107,13 +107,12 @@ Record the values of $q$ and $r$ you used below. These same values will be used 
       tableId: 'fieldDirectionTable',
       rowCount: 4,
       columns: [
-        { id: 'direction', label: 'Sensor position', kind: 'input', unit: 'Symbol(unevaluable)' },
-        { id: 'measuredField', label: 'Measured E', kind: 'input', unit: 'Symbol(unevaluable)' },
+        { id: 'direction', label: 'Sensor position', kind: 'input' },
+        { id: 'measuredField', label: 'Measured E', kind: 'input' },
         {
           id: 'calculatedField',
           label: 'Calculated E',
           kind: 'input',
-          unit: 'Symbol(unevaluable)',
         },
       ],
       points: 1.5,
@@ -167,12 +166,11 @@ Record the (held-constant) distance $r$ here, then enter the two measurements in
       tableId: 'fieldVsChargeTable',
       rowCount: 2,
       columns: [
-        { id: 'charge', label: 'Charge', kind: 'input', unit: 'Symbol(unevaluable)' },
+        { id: 'charge', label: 'Charge', kind: 'input' },
         {
           id: 'fieldStrength',
           label: 'Field strength E',
           kind: 'input',
-          unit: 'Symbol(unevaluable)',
         },
       ],
       points: 1,
@@ -208,12 +206,11 @@ Record the (held-constant) charge $q$ here, then enter the two measurements in t
       tableId: 'fieldVsDistanceTable',
       rowCount: 2,
       columns: [
-        { id: 'distance', label: 'Distance', kind: 'input', unit: 'Symbol(unevaluable)' },
+        { id: 'distance', label: 'Distance', kind: 'input' },
         {
           id: 'fieldStrength',
           label: 'Field strength E',
           kind: 'input',
-          unit: 'Symbol(unevaluable)',
         },
       ],
       points: 1,
@@ -282,7 +279,7 @@ In Part 1B you'll measure $V$ at five equipotential rings around a single point 
       tableId: 'potentialDistanceTable',
       rowCount: 5,
       columns: [
-        { id: 'distance', label: 'Distance r (m)', kind: 'input', unit: 'Symbol(unevaluable)' },
+        { id: 'distance', label: 'Distance r (m)', kind: 'input' },
         {
           id: 'inverseDistance',
           label: 'Inverse Distance (1/r)',
@@ -299,7 +296,6 @@ In Part 1B you'll measure $V$ at five equipotential rings around a single point 
           id: 'potential',
           label: 'Electric Potential V',
           kind: 'input',
-          unit: 'Symbol(unevaluable)',
         },
       ],
       points: 2,
