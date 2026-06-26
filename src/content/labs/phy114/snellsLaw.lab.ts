@@ -45,7 +45,7 @@ export const phy114SnellsLawLab: Lab = {
       kind: 'instructions',
       html: [
         '## Background:',
-        'When light crosses the boundary between two materials it is partially reflected and partially refracted (bent). How much the beam bends depends on each material\'s **index of refraction**, defined as:',
+        "When light crosses the boundary between two materials it is partially reflected and partially refracted (bent). How much the beam bends depends on each material's **index of refraction**, defined as:",
         '**n = c / v** (Eq. 1)',
         'where c is the speed of light in vacuum and v is the speed of light in the material. Because v is always less than or equal to c, the index of refraction is always greater than or equal to 1.',
         '**Law of Reflection.** The angle of incidence always equals the angle of reflection, where both angles are measured from the normal (perpendicular to the boundary):',
@@ -291,7 +291,8 @@ export const phy114SnellsLawLab: Lab = {
       kind: 'calculation',
       responseModes: ['text', 'draw', 'image'],
       fieldId: 'part4PercentDifferenceCalculation',
-      prompt: 'Calculate the percent difference between your two n_A values (from Part 2 and Part 4).',
+      prompt:
+        'Calculate the percent difference between your two n_A values (from Part 2 and Part 4).',
       equationEditor: true,
       points: 0.5,
     },

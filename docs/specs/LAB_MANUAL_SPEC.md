@@ -36,7 +36,7 @@ inside LabFrame would duplicate the thing Atlas exists to be.
 
 ### 1.1 What lives where (decided)
 
-A JIT background block is an authored *story*, not a sequence of concept nodes. The story braids
+A JIT background block is an authored _story_, not a sequence of concept nodes. The story braids
 three kinds of content, which split cleanly by coupling:
 
 - **Canonical physics** (a law, its formula, applicability, a definition) is general and reusable.
@@ -49,7 +49,7 @@ three kinds of content, which split cleanly by coupling:
   coupled to the live simulation and the worksheet flow. They stay in **LabFrame**
   (`instructions` / `concept.preamble`), where they already live.
 
-So a LabFrame JIT block remains LabFrame-authored connective prose that *embeds and links* Atlas
+So a LabFrame JIT block remains LabFrame-authored connective prose that _embeds and links_ Atlas
 concept fragments. Deduping applies only to the canonical-physics layer: fix "polarization" once
 in Atlas and every lab that links it updates. This is the minimal-Atlas-change boundary
 (decided 2026-06-26); reusable cross-lab narrative threads and procedure steps are explicitly NOT
@@ -65,7 +65,7 @@ moved into Atlas.
   only. We do not host LabFrame questions as Atlas nodes, and we do not render Atlas
   `lab-question` nodes inside LabFrame. This keeps one source of truth per artifact.
 - **Importing Atlas React components.** Atlas is React 19 + JavaScript + reactflow; LabFrame
-  is React 18 + TypeScript. We consume Atlas *data*, not its components. (See §7.)
+  is React 18 + TypeScript. We consume Atlas _data_, not its components. (See §7.)
 - **Manual content in the answer PDF.** The signed answer PDF is the student's work. The
   manual is reference and stays out of it (decided; see §9).
 - **Ingesting the legacy `.docx` manuals into LabFrame.** The `.docx` manuals are **hydration
@@ -81,16 +81,16 @@ moved into Atlas.
 
 Honest inventory, from a full read of the Atlas source on 2026-06-26.
 
-| Capability | Atlas today | LabFrame must build |
-| --- | --- | --- |
-| Concept content model | Typed `concept` nodes: `id` (kebab), `title`, `formula`, `principle`, `applicability_conditions`, `limiting_cases`, `misconceptions`, `variables`, `prerequisites`, `blocks`. Schema-validated. | Nothing. Consume as-is. |
-| Block types | `markdown-katex`, `image`, `table`, `embed-iframe`, `file-attachment`, `checklist`, `prompt-and-response`. | Render the subset the manual uses (markdown-katex, image, table, embed-iframe). |
-| Math rendering | KaTeX at runtime via a hand-rolled minimal markdown parser (`MarkdownKatexBlock` + `KatexDelimitedText`). Handles `#`/`##` headings, `-` lists, `$...$`/`$$...$$`. | A richer reading renderer (see §8). Atlas's parser has **no link support and no inline emphasis** - insufficient for cross-references. |
-| Ordered composition | `containers` exist but are **spatial** React Flow overlays; the schema **forbids** a `sequence` field. Not a linear reading order. | A linear per-lab composition (the manual order file, §6). |
-| Stable anchors | `conceptId` (node) and `block_id` (within node). No equation-level labels, no resolver. | A reference/anchor registry and build-time resolver (§5). |
-| Deep linking | `/?container=<slug>&node=<id>&focus=1` in the Atlas app. | LabFrame routes/popover (§4); optional deep-link out to Atlas for graph exploration. |
-| Persistence | localStorage; `.atlas-container.json` export with corpus hash + checksum. | Not needed for a read-only manual. |
-| Corpus provenance | `review_state` per entity, `computeCorpusHash`, `VITE_ATLAS_CORPUS_VERSION`. | Pin a corpus version per LabFrame build (§7). |
+| Capability            | Atlas today                                                                                                                                                                                     | LabFrame must build                                                                                                                    |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Concept content model | Typed `concept` nodes: `id` (kebab), `title`, `formula`, `principle`, `applicability_conditions`, `limiting_cases`, `misconceptions`, `variables`, `prerequisites`, `blocks`. Schema-validated. | Nothing. Consume as-is.                                                                                                                |
+| Block types           | `markdown-katex`, `image`, `table`, `embed-iframe`, `file-attachment`, `checklist`, `prompt-and-response`.                                                                                      | Render the subset the manual uses (markdown-katex, image, table, embed-iframe).                                                        |
+| Math rendering        | KaTeX at runtime via a hand-rolled minimal markdown parser (`MarkdownKatexBlock` + `KatexDelimitedText`). Handles `#`/`##` headings, `-` lists, `$...$`/`$$...$$`.                              | A richer reading renderer (see §8). Atlas's parser has **no link support and no inline emphasis** - insufficient for cross-references. |
+| Ordered composition   | `containers` exist but are **spatial** React Flow overlays; the schema **forbids** a `sequence` field. Not a linear reading order.                                                              | A linear per-lab composition (the manual order file, §6).                                                                              |
+| Stable anchors        | `conceptId` (node) and `block_id` (within node). No equation-level labels, no resolver.                                                                                                         | A reference/anchor registry and build-time resolver (§5).                                                                              |
+| Deep linking          | `/?container=<slug>&node=<id>&focus=1` in the Atlas app.                                                                                                                                        | LabFrame routes/popover (§4); optional deep-link out to Atlas for graph exploration.                                                   |
+| Persistence           | localStorage; `.atlas-container.json` export with corpus hash + checksum.                                                                                                                       | Not needed for a read-only manual.                                                                                                     |
+| Corpus provenance     | `review_state` per entity, `computeCorpusHash`, `VITE_ATLAS_CORPUS_VERSION`.                                                                                                                    | Pin a corpus version per LabFrame build (§7).                                                                                          |
 
 ## 4. Reading surface (decided)
 
@@ -236,7 +236,7 @@ The manual is HTML, not `@react-pdf`, so it can use a real math engine. Decided:
 - **Accepted tradeoff:** LabFrame will have two math paths - the worksheet/PDF
   `latexToUnicode` subset and the manual's KaTeX. They serve different surfaces (embedded
   worksheet + printable PDF vs. rich HTML reference) and need not converge. The manual KaTeX
-  path is a *superset*, so it also fixes the `\tag` / `\tfrac` leak class at the source for any
+  path is a _superset_, so it also fixes the `\tag` / `\tfrac` leak class at the source for any
   content that lives in the manual.
 - **Tables and embeds:** render Atlas `table` blocks as HTML tables and `embed-iframe` blocks
   via LabFrame's existing PhET allowlist posture (never widen the allowlist for the manual).
@@ -298,6 +298,7 @@ green.
 ## 13. Decisions
 
 **Locked (2026-06-26):**
+
 - **Content boundary (§1.1):** concepts in Atlas; connective prose + procedure in LabFrame.
 - **Transport (§7):** option A, published `@atlas/corpus` package, exact-pinned.
 - **Isolation (§7):** `review_state` + version pin + a LabFrame namespace in Atlas; no fork.
@@ -307,6 +308,7 @@ green.
 - **Standalone library (§11):** in scope, phased after per-lab manuals.
 
 **Remaining (mostly Atlas-side detail):**
+
 1. **Atlas labeled-equation mechanism (§5.3).** `ref_label` on a block vs. inline
    `$$...$$ {#eq-...}`. An Atlas-side call; LabFrame consumes either.
 2. **Pilot lab for Phase 4 (§12).** Recommendation: `snellsLaw` (its concept checks already
