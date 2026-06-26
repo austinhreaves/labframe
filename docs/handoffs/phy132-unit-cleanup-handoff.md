@@ -23,13 +23,13 @@ scope here (`phy114/coulombsLaw.draft.lab.ts`, `phy114/pointCharge.draft.lab.ts`
 All are `enabled: true` in `src/content/courses/phy132.course.ts`. Counts are occurrences of the
 artifact as of this writing:
 
-| File | occurrences |
-| --- | --- |
-| `src/content/labs/phy132/pointCharge.draft.lab.ts` | 9 |
-| `src/content/labs/phy132/coulombsLaw.draft.lab.ts` | 4 |
-| `src/content/labs/phy132/ohmsLaw.draft.lab.ts` | 4 |
-| `src/content/labs/phy132/generator.draft.lab.ts` | 6 |
-| `src/content/labs/phy132/faradayInduction.draft.lab.ts` | 2 |
+| File                                                    | occurrences |
+| ------------------------------------------------------- | ----------- |
+| `src/content/labs/phy132/pointCharge.draft.lab.ts`      | 9           |
+| `src/content/labs/phy132/coulombsLaw.draft.lab.ts`      | 4           |
+| `src/content/labs/phy132/ohmsLaw.draft.lab.ts`          | 4           |
+| `src/content/labs/phy132/generator.draft.lab.ts`        | 6           |
+| `src/content/labs/phy132/faradayInduction.draft.lab.ts` | 2           |
 
 `capacitorFundamentals`, `capacitorNetworks`, and `kirchhoffsLaws` (also `phy132/` files, enabled in
 both courses) were already cleaned in the prior session. `chargeBuildup` and `chargeConfigurations`
@@ -41,7 +41,7 @@ never had the artifact.
   grader record access: `phy132/staticElectricity.draft.lab.ts`, `phy132/chargesFields.draft.lab.ts`,
   `phy132/dcCircuits.draft.lab.ts`, `phy132/magneticFieldFaraday.draft.lab.ts`, `phy132/capacitors.draft.lab.ts`,
   and the `phy114/*` combined drafts. Their `Symbol(unevaluable)` does not ship. Leave them as-is.
-- **Uncertainty content.** PHY 132 is calculus-based and *does* use uncertainty / error propagation
+- **Uncertainty content.** PHY 132 is calculus-based and _does_ use uncertainty / error propagation
   (unlike PHY 114). Do not strip uncertainty columns or language from these labs. This task is units
   only.
 

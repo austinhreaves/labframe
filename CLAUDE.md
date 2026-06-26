@@ -21,16 +21,16 @@ making non-trivial product changes. Architecture overview: `docs/ARCHITECTURE.md
 
 ## Commands
 
-| Task                        | Command                                               |
-| --------------------------- | ----------------------------------------------------- |
-| Dev server (frontend)       | `npm run dev`                                         |
-| Dev server with `/api/sign` | `npm run dev:vercel`                                  |
-| Typecheck                   | `npm run typecheck`                                   |
-| Lint (warnings fail)        | `npm run lint`                                        |
-| Format check / write        | `npm run format:check` / `npm run format`             |
-| Unit tests                  | `npm test` (Vitest)                                   |
-| E2E tests                   | `npm run test:e2e` (Playwright)                       |
-| Full local CI               | `npm run ci` (typecheck + lint + format:check + test) |
+| Task                        | Command                                                                                |
+| --------------------------- | -------------------------------------------------------------------------------------- |
+| Dev server (frontend)       | `npm run dev`                                                                          |
+| Dev server with `/api/sign` | `npm run dev:vercel`                                                                   |
+| Typecheck                   | `npm run typecheck`                                                                    |
+| Lint (warnings fail)        | `npm run lint`                                                                         |
+| Format check / write        | `npm run format:check` / `npm run format`                                              |
+| Unit tests                  | `npm test` (Vitest)                                                                    |
+| E2E tests                   | `npm run test:e2e` (Playwright)                                                        |
+| Full local CI               | `npm run ci` (typecheck + lint + format:check + test)                                  |
 | Verify a lab                | `npm run verify:lab -- <labId>` or `-- <path/to/lab.lab.ts>` (use `--all` to list IDs) |
 
 Run `npm run ci` before opening or updating a PR. Add `npm run test:e2e` for any UI,
