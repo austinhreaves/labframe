@@ -115,7 +115,7 @@ In Part 1 you'll measure $B(d)$ at 12 distances using the PhET *Faraday's Electr
       tableId: 'magneticFieldTable',
       rowCount: 12,
       columns: [
-        { id: 'distance', label: 'Distance d (cm)', kind: 'input', unit: 'Symbol(unevaluable)' },
+        { id: 'distance', label: 'Distance d (cm)', kind: 'input' },
         {
           id: 'inverseDistanceCubed',
           label: '1/d^3',
@@ -132,7 +132,6 @@ In Part 1 you'll measure $B(d)$ at 12 distances using the PhET *Faraday's Electr
           id: 'fieldStrength',
           label: 'Field Strength B',
           kind: 'input',
-          unit: 'Symbol(unevaluable)',
         },
       ],
       points: 2,
