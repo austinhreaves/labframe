@@ -1,0 +1,94 @@
+# Theory Reference: Charge Buildup (Lab 1)
+
+**PHY 114 | Lab 1**
+
+Background reading for the Charge Buildup lab. Covers charge quantization, the three
+mechanisms of charge transfer, conservation of charge, and the distinction between
+polarization and induction.
+
+---
+
+## How Charge Imbalances Form
+
+Atoms are built from a positively charged nucleus (containing protons) surrounded by
+negatively charged electrons. The charge carried by a single proton or electron is the
+smallest unit of electric charge that exists -- it is called the **elementary charge**,
+*e*. Every net charge is a whole-number multiple of *e*: an object can have 0, 1, 2, or a
+trillion extra electrons, but never half an electron's worth of charge.
+
+Atoms prefer to be electrically neutral: equal numbers of protons and electrons. A net
+charge on an object means an imbalance -- an excess or shortage of electrons.
+
+There are three common ways to produce such an imbalance.
+
+---
+
+**1. Charging by friction (triboelectric).** Different materials hold onto electrons with
+different strengths. When two materials rub together, electrons transfer from the one that
+holds them loosely to the one that holds them tightly. The two surfaces end up with
+charges of opposite signs.
+
+Wool, hair, and human skin tend to give up electrons; rubber, vinyl, and Teflon tend to
+take them. This ranking is called the *triboelectric series*.
+
+---
+
+**2. Charging by conduction.** Conductors are materials -- mostly metals -- whose
+electrons are free to move throughout the whole object. When a charged conductor touches
+another conductor, charge flows between them until both carry the same sign of charge.
+
+A spark is a fast version of conduction: the voltage difference grows large enough to
+briefly turn the air between the objects into a channel for charge to jump across.
+
+---
+
+**3. Charging by induction.** A charged object brought *near* (without contact) a neutral
+conductor pushes or pulls the conductor's free electrons to one side. If the conductor is
+then separated into two pieces while the charged object is still nearby -- or briefly
+connected to the ground (a large neutral object, like the Earth, that can absorb or supply
+charge) and then disconnected -- the rearranged charges get locked in place. The conductor
+ends up with a net charge **opposite** to the inducing object, even after the inducing
+object is removed.
+
+---
+
+> **Note:** An *insulator* near a charged object experiences a similar shift, but only
+> within each individual molecule -- electrons in an insulator cannot travel across the
+> surface. That is called **polarization**. It produces an attractive force just like
+> induction does, but as soon as the charged object is removed the molecules snap back and
+> no lasting net charge remains.
+
+---
+
+## Conservation of Charge
+
+The **Law of Conservation of Charge** states that the net charge of an isolated system
+stays constant unless charge is exchanged with the outside.
+
+Charge is not created or destroyed in everyday interactions. It is transferred.
+
+For example, when a balloon is charged by rubbing it on a sweater, whatever charge the
+balloon gains the sweater loses -- the total charge of the balloon-sweater system stays
+the same.
+
+---
+
+## Polarization vs. Induction
+
+When a charged balloon is brought near a neutral wall, the wall is attracted to it even
+though the wall has no net charge. The wall is an insulator, so its electrons cannot
+travel across the surface -- they can only shift slightly within each individual molecule.
+That is **polarization**. Because all those molecules shift in the same direction, the
+side of the wall nearest the balloon becomes slightly oppositely charged, and that small
+imbalance is what creates the attraction. As soon as the balloon moves away the molecules
+snap back, and the wall returns to neutral. No net charge is left behind.
+
+The same idea applies to conductors, but the effect is stronger. In a conductor, electrons
+can travel freely across the whole object -- not just within one molecule. When a charged
+object is brought nearby, the free electrons shift across the entire conductor. This is
+**induction**.
+
+If part of that conductor is then separated while the charged object is still nearby -- or
+the conductor is briefly grounded (connected to the Earth so charge can flow in or out)
+and then disconnected -- the shifted electrons are locked in place. The conductor keeps a
+real net charge even after the inducing object is removed.
