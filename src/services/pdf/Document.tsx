@@ -706,6 +706,7 @@ export function LabReportDocument(props: PDFProps) {
           <Text style={styles.subtitle}>Total: {formatPointsLabel(totalPoints)} points</Text>
         ) : null}
         <Text>Student: {answers.meta.studentName}</Text>
+        {answers.meta.taName ? <Text>TA(s): {answers.meta.taName}</Text> : null}
         {props.mode === 'signed' ? (
           <Text>
             Signed: {formatSignedAt(props.signedAt)} - {props.signature.slice(0, 8)}

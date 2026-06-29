@@ -51,6 +51,7 @@ type Props = {
 };
 
 const STUDENT_NAME_STORAGE_KEY = 'labframe:student-name';
+const TA_NAME_STORAGE_KEY = 'labframe:ta-name';
 const STORAGE_NOTE_DISMISSED_KEY = 'labframe:storage-note-dismissed';
 const COURSE_STORAGE_KEY = 'labframe:course';
 
@@ -107,6 +108,8 @@ export function LabPage({ course, lab }: Props) {
   const status = useLabStore((state) => state.status);
   const studentName = useLabStore((state) => state.studentName);
   const setStudentName = useLabStore((state) => state.setStudentName);
+  const taName = useLabStore((state) => state.taName);
+  const setTaName = useLabStore((state) => state.setTaName);
   const setSubmitted = useLabStore((state) => state.setSubmitted);
   const integrityAgreementAccepted = useLabStore((state) => state.integrityAgreementAccepted);
   const aiUsed = useLabStore((state) => state.aiUsed);
@@ -127,6 +130,7 @@ export function LabPage({ course, lab }: Props) {
   );
   const phaseBFinalizingRef = useRef(false);
   const [studentNameDraft, setStudentNameDraft] = useState(studentName);
+  const [taNameDraft, setTaNameDraft] = useState(taName);
   const [recoverable, setRecoverable] = useState<RecoverableAttachment[]>([]);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [isExportingDraft, setIsExportingDraft] = useState(false);
@@ -164,15 +168,19 @@ export function LabPage({ course, lab }: Props) {
     }
   }, [searchParams, setStudentName, studentName]);
 
+  useEffect(() => {
+    const storedTa = safeStorageGet(TA_NAME_STORAGE_KEY)?.trim() ?? '';
+    if (storedTa && storedTa !== taName) {
+      setTaName(storedTa);
+    }
+  }, [setTaName, taName]);
+
   // Track S, Phase B: the lab-side tour. Auto-starts only on the demo lab when
   // ?tour=1 is present (set by Phase A finish, the deep-link toast, or the
   // refresher). Strips the flag, lets the DOM settle, then drives. On finish or
   // Esc-dismiss it marks the student onboarded and deposits them per S-4.
   useEffect(() => {
     if (lab.id !== WELCOME_LAB_ID) {
-      return;
-    }
-    if (new URLSearchParams(window.location.search).get('tour') !== '1') {
       return;
     }
 
@@ -259,6 +267,10 @@ export function LabPage({ course, lab }: Props) {
   }, [studentName]);
 
   useEffect(() => {
+    setTaNameDraft(taName);
+  }, [taName]);
+
+  useEffect(() => {
     if (!status.lastError) {
       setRecoverable([]);
       return;
@@ -282,6 +294,16 @@ export function LabPage({ course, lab }: Props) {
     }
     safeStorageSet(STUDENT_NAME_STORAGE_KEY, nextName);
     void setStudentName(nextName);
+  };
+
+  const commitTaName = () => {
+    const nextName = taNameDraft.trim();
+    if (nextName === taName) {
+      setTaNameDraft(taName);
+      return;
+    }
+    safeStorageSet(TA_NAME_STORAGE_KEY, nextName);
+    setTaName(nextName);
   };
 
   const formatBytes = (bytes: number): string => {
@@ -575,6 +597,21 @@ export function LabPage({ course, lab }: Props) {
                   }
                 }}
                 aria-label="Student name"
+              />
+            </label>
+            <label className="lab-ta-name">
+              TA(s)
+              <input
+                value={taNameDraft}
+                onChange={(event) => setTaNameDraft(event.currentTarget.value)}
+                onBlur={commitTaName}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    commitTaName();
+                  }
+                }}
+                aria-label="TA name(s)"
               />
             </label>
             <p className="lab-save-status" aria-live="polite">

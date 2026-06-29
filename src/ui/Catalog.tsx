@@ -19,6 +19,7 @@ type CatalogProps = {
 type WizardStep = 'name' | 'course' | 'lab';
 
 const STUDENT_NAME_STORAGE_KEY = 'labframe:student-name';
+const TA_NAME_STORAGE_KEY = 'labframe:ta-name';
 const COURSE_STORAGE_KEY = 'labframe:course';
 
 function safeStorageGet(key: string): string | null {
@@ -265,6 +266,7 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [nameDraft, setNameDraft] = useState('');
+  const [taNameDraft, setTaNameDraft] = useState('');
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [pinnedCourseId, setPinnedCourseId] = useState<string | null>(null);
 
@@ -360,6 +362,10 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
         }
       }
     }
+    const storedTaName = safeStorageGet(TA_NAME_STORAGE_KEY)?.trim() ?? '';
+    if (storedTaName) {
+      setTaNameDraft(storedTaName);
+    }
   }, [searchParams, setSearchParams, showWizard]);
 
   const saveName = () => {
@@ -368,6 +374,10 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
       return false;
     }
     safeStorageSet(STUDENT_NAME_STORAGE_KEY, value);
+    const taValue = taNameDraft.trim();
+    if (taValue) {
+      safeStorageSet(TA_NAME_STORAGE_KEY, taValue);
+    }
     return true;
   };
 
@@ -528,6 +538,21 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
                     placeholder="Full name, as it should appear on your report"
                   />
                 </label>
+                <label className="field">
+                  <span className="field-label">TA Name(s) (optional)</span>
+                  <input
+                    value={taNameDraft}
+                    onChange={(event) => setTaNameDraft(event.currentTarget.value)}
+                    onBlur={() => {
+                      const taValue = taNameDraft.trim();
+                      if (taValue) {
+                        safeStorageSet(TA_NAME_STORAGE_KEY, taValue);
+                      }
+                    }}
+                    aria-label="TA name(s)"
+                    placeholder="Your TA's name"
+                  />
+                </label>
               </div>
             )}
           </section>
@@ -583,6 +608,21 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
                         aria-label="Student name"
                         autoComplete="name"
                         placeholder="Full name, as it should appear on your report"
+                      />
+                    </label>
+                    <label className="field">
+                      <span className="field-label">TA Name(s) (optional)</span>
+                      <input
+                        value={taNameDraft}
+                        onChange={(event) => setTaNameDraft(event.currentTarget.value)}
+                        onBlur={() => {
+                          const taValue = taNameDraft.trim();
+                          if (taValue) {
+                            safeStorageSet(TA_NAME_STORAGE_KEY, taValue);
+                          }
+                        }}
+                        aria-label="TA name(s)"
+                        placeholder="Your TA's name"
                       />
                     </label>
                     <p className="catalog-ferpa-note">

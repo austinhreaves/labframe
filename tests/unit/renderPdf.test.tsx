@@ -348,7 +348,7 @@ describe('renderPDF', () => {
     expect(textDump).toContain('• Item two');
     expect(textDump).toContain('sinθᵢ');
     expect(textDump).toMatchInlineSnapshot(
-      `"Test LabTest CourseStudent: StudentSigned: 2024-04-30T04:06:40.000Z - 01234567Integrity statement: I affirm this submission reflects my own work. If AI or LLM tools — chatbots, large language models, or generative AI assistants such as ChatGPT, Claude, Gemini, Copilot, or any similar tool — were used in any part of this lab, the chats are disclosed and share links are provided below (required by course policy).Agreement accepted: 2024-04-30T04:06:40.000ZAI/LLM tools used: NoPart 1Important:• Item one• Item two Inline math sinθᵢProcess RecordNo recorded activity on any section."`,
+      `"Test LabTest CourseStudent: StudentTA(s): TASigned: 2024-04-30T04:06:40.000Z - 01234567Integrity statement: I affirm this submission reflects my own work. If AI or LLM tools — chatbots, large language models, or generative AI assistants such as ChatGPT, Claude, Gemini, Copilot, or any similar tool — were used in any part of this lab, the chats are disclosed and share links are provided below (required by course policy).Agreement accepted: 2024-04-30T04:06:40.000ZAI/LLM tools used: NoPart 1Important:• Item one• Item two Inline math sinθᵢProcess RecordNo recorded activity on any section."`,
     );
   });
 

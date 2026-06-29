@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import { lazy, useEffect, useRef, useState } from 'react';
 import {
   calcImageId,
   drawStorageKey,
@@ -33,6 +33,14 @@ const MODE_LABELS: Record<ResponseMode, string> = {
 type Props = {
   section: CalculationSection;
 };
+
+const LATEX_HELP_EXAMPLES: Array<{ latex: string; description: string }> = [
+  { latex: 'x^2', description: 'Exponent (superscript)' },
+  { latex: 'x_1', description: 'Subscript' },
+  { latex: '\\frac{a}{b}', description: 'Fraction' },
+  { latex: '\\sqrt{x}', description: 'Square root' },
+  { latex: '\\pi \\alpha \\theta', description: 'Greek letters' },
+];
 
 export function CalculationSectionView({ section }: Props) {
   const value = useLabStore((state) => state.fields[section.fieldId]);
@@ -120,11 +128,82 @@ export function CalculationSectionView({ section }: Props) {
   };
 
   const panelId = `${section.fieldId}-panel`;
+  const showLatexHelp = section.equationEditor && !forceTextCalc && activeMode === 'text';
+  const [isLatexHelpOpen, setIsLatexHelpOpen] = useState(false);
+  const latexHelpButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (!isLatexHelpOpen) {
+      return;
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsLatexHelpOpen(false);
+        latexHelpButtonRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [isLatexHelpOpen]);
 
   return (
     <section className="section">
       <SectionPointsCaption points={section.points} />
       <MarkdownBlock markdown={section.prompt} />
+      {showLatexHelp ? (
+        <div className="latex-help">
+          <button
+            ref={latexHelpButtonRef}
+            type="button"
+            className="latex-help-button"
+            aria-expanded={isLatexHelpOpen}
+            aria-controls={`${section.fieldId}-latex-help-popover`}
+            onClick={() => setIsLatexHelpOpen((open) => !open)}
+          >
+            How to type equations
+          </button>
+          {isLatexHelpOpen ? (
+            <div
+              id={`${section.fieldId}-latex-help-popover`}
+              className="latex-help-popover"
+              role="dialog"
+              aria-label="How to type equations using LaTeX"
+            >
+              <p>Type math using LaTeX commands. A few of the basics:</p>
+              <table className="latex-help-table">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Meaning</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {LATEX_HELP_EXAMPLES.map((example) => (
+                    <tr key={example.latex}>
+                      <td>
+                        <code>{example.latex}</code>
+                      </td>
+                      <td>{example.description}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p>
+                <a
+                  href="https://en.wikibooks.org/wiki/LaTeX/Mathematics"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Full LaTeX math reference
+                </a>
+              </p>
+              <button type="button" onClick={() => setIsLatexHelpOpen(false)}>
+                Close
+              </button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       {modes ? (
         <>
           <div className="calc-mode-switcher" role="tablist" aria-label="Response mode">
