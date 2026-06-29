@@ -57,6 +57,10 @@ selectors break silently when a lab is hidden.
 - `src/state/` - Zustand store + persistence (IndexedDB) middleware.
 - `api/sign.ts` - serverless HMAC signing endpoint.
 - `docs/decisions/` - ADRs. `docs/specs/` - feature specs. `docs/handoffs/` - in-flight work.
+- `docs/theory/` - per-lab student-facing theory references. Each lab has a
+  `lab-NN-kebab-name.md` (source of truth) and a matching `.html` (Canvas embed artifact).
+  See `docs/handoffs/theory-references-handoff.md` for the authoring process and the
+  folder-to-lab mapping for the external PHY 114 instructional materials.
 
 ## Authoring or editing a lab
 

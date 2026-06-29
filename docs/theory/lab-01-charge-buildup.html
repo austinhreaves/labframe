@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Theory Reference: Charge Buildup -- PHY 114 Lab 1</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                   "Helvetica Neue", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      color: #1a1a1a;
+      background: #ffffff;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    /* ---- Header ---- */
+    .lab-header {
+      border-bottom: 3px solid #8C1D40;
+      padding-bottom: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .lab-meta {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #8C1D40;
+      margin-bottom: 0.4rem;
+    }
+
+    .lab-header h1 {
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.25;
+    }
+
+    .lab-description {
+      margin-top: 0.5rem;
+      color: #555;
+      font-size: 0.9rem;
+    }
+
+    /* ---- Sections ---- */
+    section {
+      margin-bottom: 2.75rem;
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 1rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1.5px solid #e0e0e0;
+    }
+
+    p {
+      margin-bottom: 0.85rem;
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* ---- Mechanism blocks ---- */
+    .mechanism {
+      margin: 1.1rem 0;
+    }
+
+    /* ---- Horizontal rule ---- */
+    hr {
+      border: none;
+      border-top: 1px solid #ebebeb;
+      margin: 1.25rem 0;
+    }
+
+    /* ---- Note callout ---- */
+    .note {
+      background: #f5f7fb;
+      border-left: 4px solid #4a6fa5;
+      border-radius: 0 5px 5px 0;
+      padding: 0.8rem 1.1rem;
+      margin: 1.25rem 0 0;
+      font-size: 0.92rem;
+      color: #2c3a5e;
+    }
+
+    .note .note-label {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #4a6fa5;
+      margin-bottom: 0.3rem;
+    }
+
+    /* ---- Inline typography ---- */
+    em     { font-style: italic; }
+    strong { font-weight: 700; }
+
+    /* ---- Print ---- */
+    @media print {
+      body { max-width: 100%; padding: 0.5in; }
+      .lab-header { border-bottom-color: #000; }
+      .lab-meta   { color: #000; }
+      .lab-header h1 { color: #000; }
+      h2 { color: #000; border-bottom-color: #bbb; }
+      .note { background: #f5f5f5; border-left-color: #666; color: #000; }
+      .note .note-label { color: #444; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="lab-header">
+  <p class="lab-meta">PHY 114 &nbsp;|&nbsp; Lab 1</p>
+  <h1>Theory Reference: Charge Buildup</h1>
+  <p class="lab-description">
+    Background reading covering charge quantization, the three mechanisms of charge
+    transfer, conservation of charge, and the distinction between polarization and
+    induction.
+  </p>
+</header>
+
+<main>
+
+  <section>
+    <h2>How Charge Imbalances Form</h2>
+
+    <p>Atoms are built from a positively charged nucleus (containing protons) surrounded
+    by negatively charged electrons. The charge carried by a single proton or electron is
+    the smallest unit of electric charge that exists -- it is called the
+    <strong>elementary charge</strong>, <em>e</em>. Every net charge is a whole-number
+    multiple of <em>e</em>: an object can have 0, 1, 2, or a trillion extra electrons, but
+    never half an electron's worth of charge.</p>
+
+    <p>Atoms prefer to be electrically neutral: equal numbers of protons and electrons.
+    A net charge on an object means an imbalance -- an excess or shortage of electrons.</p>
+
+    <p>There are three common ways to produce such an imbalance.</p>
+
+    <hr>
+
+    <div class="mechanism">
+      <p><strong>1. Charging by friction (triboelectric).</strong> Different materials hold
+      onto electrons with different strengths. When two materials rub together, electrons
+      transfer from the one that holds them loosely to the one that holds them tightly. The
+      two surfaces end up with charges of opposite signs.</p>
+      <p>Wool, hair, and human skin tend to give up electrons; rubber, vinyl, and Teflon
+      tend to take them. This ranking is called the <em>triboelectric series</em>.</p>
+    </div>
+
+    <hr>
+
+    <div class="mechanism">
+      <p><strong>2. Charging by conduction.</strong> Conductors are materials -- mostly
+      metals -- whose electrons are free to move throughout the whole object. When a
+      charged conductor touches another conductor, charge flows between them until both
+      carry the same sign of charge.</p>
+      <p>A spark is a fast version of conduction: the voltage difference grows large enough
+      to briefly turn the air between the objects into a channel for charge to jump
+      across.</p>
+    </div>
+
+    <hr>
+
+    <div class="mechanism">
+      <p><strong>3. Charging by induction.</strong> A charged object brought <em>near</em>
+      (without contact) a neutral conductor pushes or pulls the conductor's free electrons
+      to one side. If the conductor is then separated into two pieces while the charged
+      object is still nearby -- or briefly connected to the ground (a large neutral object,
+      like the Earth, that can absorb or supply charge) and then disconnected -- the
+      rearranged charges get locked in place. The conductor ends up with a net charge
+      <strong>opposite</strong> to the inducing object, even after the inducing object is
+      removed.</p>
+    </div>
+
+    <aside class="note">
+      <span class="note-label">Note</span><br>
+      An <em>insulator</em> near a charged object experiences a similar shift, but only
+      within each individual molecule -- electrons in an insulator cannot travel across the
+      surface. That is called <strong>polarization</strong>. It produces an attractive
+      force just like induction does, but as soon as the charged object is removed the
+      molecules snap back and no lasting net charge remains.
+    </aside>
+  </section>
+
+  <section>
+    <h2>Conservation of Charge</h2>
+
+    <p>The <strong>Law of Conservation of Charge</strong> states that the net charge of an
+    isolated system stays constant unless charge is exchanged with the outside.</p>
+
+    <p>Charge is not created or destroyed in everyday interactions. It is transferred.</p>
+
+    <p>For example, when a balloon is charged by rubbing it on a sweater, whatever charge
+    the balloon gains the sweater loses -- the total charge of the balloon-sweater system
+    stays the same.</p>
+  </section>
+
+  <section>
+    <h2>Polarization vs. Induction</h2>
+
+    <p>When a charged balloon is brought near a neutral wall, the wall is attracted to it
+    even though the wall has no net charge. The wall is an insulator, so its electrons
+    cannot travel across the surface -- they can only shift slightly within each individual
+    molecule. That is <strong>polarization</strong>. Because all those molecules shift in
+    the same direction, the side of the wall nearest the balloon becomes slightly
+    oppositely charged, and that small imbalance is what creates the attraction. As soon as
+    the balloon moves away the molecules snap back, and the wall returns to neutral. No net
+    charge is left behind.</p>
+
+    <p>The same idea applies to conductors, but the effect is stronger. In a conductor,
+    electrons can travel freely across the whole object -- not just within one molecule.
+    When a charged object is brought nearby, the free electrons shift across the entire
+    conductor. This is <strong>induction</strong>.</p>
+
+    <p>If part of that conductor is then separated while the charged object is still nearby
+    -- or the conductor is briefly grounded (connected to the Earth so charge can flow in
+    or out) and then disconnected -- the shifted electrons are locked in place. The
+    conductor keeps a real net charge even after the inducing object is removed.</p>
+  </section>
+
+</main>
+
+</body>
+</html>
