@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Theory Reference: Electric Field &amp; Potential of a Point Charge | PHY 114 Lab 3</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        color: #1a1a1a;
+        background: #ffffff;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+      }
+
+      .lab-header {
+        border-bottom: 3px solid #8c1d40;
+        padding-bottom: 1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .lab-meta {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #8c1d40;
+        margin-bottom: 0.4rem;
+      }
+
+      .lab-header h1 {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: #111;
+        line-height: 1.25;
+      }
+
+      .lab-description {
+        margin-top: 0.5rem;
+        color: #555;
+        font-size: 0.9rem;
+      }
+
+      section {
+        margin-bottom: 2.75rem;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 1rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1.5px solid #e0e0e0;
+      }
+
+      p {
+        margin-bottom: 0.85rem;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      .mechanism {
+        margin: 1.1rem 0;
+      }
+
+      hr {
+        border: none;
+        border-top: 1px solid #ebebeb;
+        margin: 1.25rem 0;
+      }
+
+      .note {
+        background: #f5f7fb;
+        border-left: 4px solid #4a6fa5;
+        border-radius: 0 5px 5px 0;
+        padding: 0.8rem 1.1rem;
+        margin: 1.25rem 0 0;
+        font-size: 0.92rem;
+        color: #2c3a5e;
+      }
+
+      .note .note-label {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #4a6fa5;
+        margin-bottom: 0.3rem;
+      }
+
+      em { font-style: italic; }
+      strong { font-weight: 700; }
+
+      @media print {
+        body { max-width: 100%; padding: 0.5in; }
+        .lab-header { border-bottom-color: #000; }
+        .lab-meta { color: #000; }
+        .lab-header h1 { color: #000; }
+        h2 { color: #000; border-bottom-color: #bbb; }
+        .note { background: #f5f5f5; border-left-color: #666; color: #000; }
+        .note .note-label { color: #444; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="lab-header">
+      <p class="lab-meta">PHY 114 &nbsp;|&nbsp; Lab 3</p>
+      <h1>Theory Reference: Electric Field &amp; Potential of a Point Charge</h1>
+      <p class="lab-description">
+        Background reading covering the electric field concept, how field strength falls off with
+        distance from a point charge, equipotential surfaces, and the electric potential of a point
+        charge.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>The Electric Field</h2>
+
+        <p>
+          A charged particle modifies the space around it. Rather than thinking of a force that acts
+          directly between two distant objects, physicists introduce the concept of a
+          <strong>field</strong>: a quantity defined at every point in space that tells you what a
+          test charge placed there would experience.
+        </p>
+
+        <p>
+          The <strong>electric field</strong> <em>E</em> at a point is defined as the electrostatic
+          force <em>F</em> that an infinitesimally small positive test charge <em>q</em><sub>0</sub>
+          would feel at that location, divided by <em>q</em><sub>0</sub>:
+        </p>
+
+        <p><em>E</em> = <em>F</em> / <em>q</em><sub>0</sub></p>
+
+        <p>
+          The SI unit of electric field is newtons per coulomb (N/C), equivalent to volts per meter
+          (V/m).
+        </p>
+
+        <p>
+          For a single point charge <em>q</em>, Coulomb's Law gives the magnitude of the field at
+          distance <em>r</em>:
+        </p>
+
+        <p><em>E</em> = <em>k</em> |<em>q</em>| / <em>r</em><sup>2</sup></p>
+
+        <p>
+          where <em>k</em> ≈ 8.988 × 10<sup>9</sup> N·m<sup>2</sup>/C<sup>2</sup>. The field
+          points <strong>radially outward</strong> from a positive charge and
+          <strong>radially inward</strong> toward a negative charge. Its magnitude falls off as the
+          inverse square of the distance.
+        </p>
+
+        <p>
+          When more than one charge is present, the total field at any point is the
+          <strong>vector sum</strong> of the fields from each charge individually. This is the
+          <strong>superposition principle</strong>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Equipotential Surfaces</h2>
+
+        <p>
+          An <strong>equipotential surface</strong> is the set of all points in space that share the
+          same electric potential. No work is required to move a charge along an equipotential
+          surface, which means the electric force has no component in that direction.
+        </p>
+
+        <p>
+          A direct consequence is that electric field lines are always
+          <strong>perpendicular</strong> to equipotential surfaces. Where equipotential surfaces are
+          closely spaced, the potential changes rapidly and the field is strong; where they are
+          widely spaced, the field is weak.
+        </p>
+
+        <p>
+          For a single positive point charge, the equipotential surfaces are concentric spheres.
+          Field lines radiate outward from the charge and cross each sphere at a right angle.
+        </p>
+      </section>
+
+      <section>
+        <h2>Electric Potential of a Point Charge</h2>
+
+        <p>
+          The <strong>electric potential</strong> <em>V</em> at a point is the electric potential
+          energy that a unit positive charge would have at that location. Its unit is the volt (V),
+          defined as one joule per coulomb (J/C).
+        </p>
+
+        <p>
+          For a single point charge <em>q</em>, the electric potential at distance <em>r</em> is:
+        </p>
+
+        <p><em>V</em>(<em>r</em>) = <em>k q</em> / <em>r</em></p>
+
+        <p>
+          This is a 1/<em>r</em> relationship, not a 1/<em>r</em><sup>2</sup> relationship like the
+          field. A direct <em>V</em>-vs-<em>r</em> plot is therefore a curve.
+        </p>
+
+        <p>
+          To extract <em>k q</em> experimentally from data, the standard approach is to plot
+          <em>V</em> against 1/<em>r</em>. If <em>V</em> = (<em>kq</em>) · (1/<em>r</em>) holds,
+          the plot is a straight line through the origin with slope <em>kq</em>. Comparing this
+          experimental slope to the value computed directly from the known <em>q</em> and
+          <em>k</em> gives a test of the formula.
+        </p>
+
+        <aside class="note">
+          <span class="note-label">Note</span><br />
+          The electric field always points in the direction of decreasing potential: field lines run
+          from high-potential regions toward low-potential regions. Equivalently, a positive charge
+          released from rest will accelerate in the direction the field points, which is downhill in
+          potential.
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>

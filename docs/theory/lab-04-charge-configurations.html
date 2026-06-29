@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Theory Reference: Charge Configurations | PHY 114 Lab 4</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        color: #1a1a1a;
+        background: #ffffff;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+      }
+
+      .lab-header {
+        border-bottom: 3px solid #8c1d40;
+        padding-bottom: 1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .lab-meta {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #8c1d40;
+        margin-bottom: 0.4rem;
+      }
+
+      .lab-header h1 {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: #111;
+        line-height: 1.25;
+      }
+
+      .lab-description {
+        margin-top: 0.5rem;
+        color: #555;
+        font-size: 0.9rem;
+      }
+
+      section {
+        margin-bottom: 2.75rem;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 1rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1.5px solid #e0e0e0;
+      }
+
+      p {
+        margin-bottom: 0.85rem;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      .mechanism {
+        margin: 1.1rem 0;
+      }
+
+      hr {
+        border: none;
+        border-top: 1px solid #ebebeb;
+        margin: 1.25rem 0;
+      }
+
+      .note {
+        background: #f5f7fb;
+        border-left: 4px solid #4a6fa5;
+        border-radius: 0 5px 5px 0;
+        padding: 0.8rem 1.1rem;
+        margin: 1.25rem 0 0;
+        font-size: 0.92rem;
+        color: #2c3a5e;
+      }
+
+      .note .note-label {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #4a6fa5;
+        margin-bottom: 0.3rem;
+      }
+
+      em { font-style: italic; }
+      strong { font-weight: 700; }
+
+      @media print {
+        body { max-width: 100%; padding: 0.5in; }
+        .lab-header { border-bottom-color: #000; }
+        .lab-meta { color: #000; }
+        .lab-header h1 { color: #000; }
+        h2 { color: #000; border-bottom-color: #bbb; }
+        .note { background: #f5f5f5; border-left-color: #666; color: #000; }
+        .note .note-label { color: #444; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="lab-header">
+      <p class="lab-meta">PHY 114 &nbsp;|&nbsp; Lab 4</p>
+      <h1>Theory Reference: Charge Configurations</h1>
+      <p class="lab-description">
+        Background reading covering the superposition principle for electric fields, the electric
+        dipole, what makes a field uniform, and how a parallel-plate geometry produces a nearly
+        uniform field.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>The Superposition Principle</h2>
+
+        <p>
+          When more than one charge is present, the total electric field at any point is the
+          <strong>vector sum</strong> of the fields from each charge individually:
+        </p>
+
+        <p>
+          <em>E</em><sub>total</sub> = <em>E</em><sub>1</sub> + <em>E</em><sub>2</sub> +
+          <em>E</em><sub>3</sub> + &hellip;
+        </p>
+
+        <p>
+          This is the <strong>superposition principle</strong>. It means you can decompose a
+          complicated charge distribution into simple pieces, compute the field of each piece
+          separately using <em>E</em> = <em>k</em>|<em>q</em>|/<em>r</em><sup>2</sup>, and add the
+          results as vectors.
+        </p>
+
+        <p>
+          The same principle applies to electric potential, but potential is a scalar, so you add
+          numbers rather than vectors:
+        </p>
+
+        <p>
+          <em>V</em><sub>total</sub> = <em>V</em><sub>1</sub> + <em>V</em><sub>2</sub> +
+          <em>V</em><sub>3</sub> + &hellip;
+        </p>
+      </section>
+
+      <section>
+        <h2>The Electric Dipole</h2>
+
+        <p>
+          A <strong>dipole</strong> is a pair of equal and opposite charges held a fixed distance
+          apart. The combined field is the vector sum of each individual field.
+        </p>
+
+        <p>
+          In the region between the two charges, both fields point in the same direction (from
+          positive to negative), so they reinforce each other and the total field is stronger there.
+          Far away, the two fields partially cancel, and the total falls off faster than it would
+          from a single charge.
+        </p>
+
+        <p>
+          Equipotential surfaces (surfaces of constant <em>V</em>) are always perpendicular to
+          field lines. For a dipole, the equipotentials are closely spaced near each charge (strong
+          field) and widely spaced far away (weak field).
+        </p>
+      </section>
+
+      <section>
+        <h2>Uniform Fields and the Parallel-Plate Geometry</h2>
+
+        <p>
+          A field is <strong>uniform</strong> in a region if every point in that region has the same
+          magnitude and the same direction. Visually, a uniform field looks like a regular grid of
+          identical arrows.
+        </p>
+
+        <p>
+          A single dipole produces a field that points roughly from positive to negative in the
+          central region, but the magnitude varies: stronger near each charge and weaker in the
+          middle. It is close to uniform but not truly uniform.
+        </p>
+
+        <p>
+          Stacking several dipoles side by side changes this. Arrange a row of positive charges on
+          one side and an equal row of negative charges on the other. In the central region between
+          the two rows, the contributions from all the pairs add together to produce a nearly
+          uniform field: equal magnitude, equal direction, across the whole interior.
+        </p>
+
+        <p>
+          This is the geometry of a <strong>parallel-plate capacitor</strong>. Two effects appear
+          at the boundaries:
+        </p>
+
+        <p>
+          In the central region the field is nearly uniform and the equipotential surfaces are
+          nearly equally spaced.
+        </p>
+
+        <p>
+          At the edges the field curves outward into the surrounding space. This is the
+          <strong>fringing field</strong>: non-uniform and weaker than the central field.
+        </p>
+
+        <p>
+          The more charge is spread along each plate (and the larger and closer together the plates
+          are), the more uniform the central field becomes. This is why real parallel-plate
+          capacitors use large plates to store energy in a controlled, predictable field.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

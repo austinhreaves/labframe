@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Theory Reference: Diverging (Concave) Lens | PHY 114 Lab 11</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        color: #1a1a1a;
+        background: #ffffff;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+      }
+
+      .lab-header {
+        border-bottom: 3px solid #8c1d40;
+        padding-bottom: 1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .lab-meta {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #8c1d40;
+        margin-bottom: 0.4rem;
+      }
+
+      .lab-header h1 {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: #111;
+        line-height: 1.25;
+      }
+
+      .lab-description {
+        margin-top: 0.5rem;
+        color: #555;
+        font-size: 0.9rem;
+      }
+
+      section {
+        margin-bottom: 2.75rem;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 1rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1.5px solid #e0e0e0;
+      }
+
+      p {
+        margin-bottom: 0.85rem;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      ol {
+        margin: 0.5rem 0 0.85rem 1.5rem;
+      }
+
+      li {
+        margin-bottom: 0.5rem;
+      }
+
+      .note {
+        background: #f5f7fb;
+        border-left: 4px solid #4a6fa5;
+        border-radius: 0 5px 5px 0;
+        padding: 0.8rem 1.1rem;
+        margin: 1.25rem 0 0;
+        font-size: 0.92rem;
+        color: #2c3a5e;
+      }
+
+      .note .note-label {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #4a6fa5;
+        margin-bottom: 0.3rem;
+      }
+
+      em { font-style: italic; }
+      strong { font-weight: 700; }
+
+      @media print {
+        body { max-width: 100%; padding: 0.5in; }
+        .lab-header { border-bottom-color: #000; }
+        .lab-meta { color: #000; }
+        .lab-header h1 { color: #000; }
+        h2 { color: #000; border-bottom-color: #bbb; }
+        .note { background: #f5f5f5; border-left-color: #666; color: #000; }
+        .note .note-label { color: #444; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="lab-header">
+      <p class="lab-meta">PHY 114 &nbsp;|&nbsp; Lab 11</p>
+      <h1>Theory Reference: Diverging (Concave) Lens</h1>
+      <p class="lab-description">
+        Background reading covering how a diverging lens always forms a virtual image, the thin lens
+        equation for negative focal lengths, magnification, the distinction between principal and
+        marginal rays, and the lens-maker equation.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>How a Diverging Lens Works</h2>
+
+        <p>
+          A <strong>diverging lens</strong> (also called a concave or negative lens) is thinner at
+          its center than at its edges. When parallel rays of light enter from one side, the lens
+          refracts them so they spread outward, as if they originated from a point on the incoming
+          side. That point is the <strong>focal point</strong> of the diverging lens, and its
+          distance from the lens is the <strong>focal length</strong> <em>f</em>. For a diverging
+          lens, <em>f</em> is <strong>negative</strong> by convention.
+        </p>
+      </section>
+
+      <section>
+        <h2>Images Formed by a Diverging Lens</h2>
+
+        <p>
+          A diverging lens always produces a <strong>virtual, upright, smaller</strong> image,
+          regardless of where the object is placed. The image always appears on the same side of the
+          lens as the object (<em>d</em><sub>i</sub> &lt; 0).
+        </p>
+
+        <p>
+          The thin lens equation applies with the same form used for a converging lens:
+        </p>
+
+        <p>
+          1/<em>f</em> = 1/<em>d</em><sub>0</sub> + 1/<em>d</em><sub>i</sub>
+        </p>
+
+        <p>
+          where <em>f</em> is negative for a diverging lens and <em>d</em><sub>0</sub> is positive.
+          Solving for <em>d</em><sub>i</sub> always yields a negative value, confirming the image is
+          virtual.
+        </p>
+
+        <p>Magnification has the same formulas:</p>
+
+        <p>
+          <em>M</em> = &minus;<em>d</em><sub>i</sub> / <em>d</em><sub>0</sub> =
+          <em>h</em><sub>i</sub> / <em>h</em><sub>0</sub>
+        </p>
+
+        <p>
+          Since <em>d</em><sub>i</sub> &lt; 0 and <em>d</em><sub>0</sub> &gt; 0, the magnification
+          <em>M</em> is always positive (upright image) and |<em>M</em>| &lt; 1 (the image is
+          smaller than the object).
+        </p>
+      </section>
+
+      <section>
+        <h2>Principal and Marginal Rays</h2>
+
+        <p>
+          Ray diagrams provide a visual method for locating images without algebra.
+        </p>
+
+        <p>
+          <strong>Principal rays</strong> are three specific rays that follow simple rules through
+          the lens:
+        </p>
+
+        <ol>
+          <li>
+            A ray parallel to the optical axis diverges after passing through the lens as if it came
+            from the near focal point (on the same side as the incoming light).
+          </li>
+          <li>
+            A ray directed toward the center of the lens passes straight through without bending.
+          </li>
+          <li>
+            A ray aimed at the far focal point emerges parallel to the optical axis on the other
+            side.
+          </li>
+        </ol>
+
+        <p>
+          The backward extensions of any two of these diverging rays intersect at the virtual image
+          location.
+        </p>
+
+        <p>
+          <strong>Marginal rays</strong> are two rays that strike the outer edges of the lens, plus
+          the center ray. They reveal how the finite size of the lens bounds the refracted light and
+          can expose effects such as spherical aberration in real optical systems.
+        </p>
+
+        <p>
+          Either ray set is sufficient to locate the image; principal rays are simpler for quick
+          diagrams, while marginal rays are more useful when studying lens quality.
+        </p>
+      </section>
+
+      <section>
+        <h2>The Lens-Maker Equation (Extra Credit)</h2>
+
+        <p>
+          The focal length of a thin lens can be computed from the refractive index of the lens
+          material and the radii of curvature of its two surfaces:
+        </p>
+
+        <p>
+          1/<em>f</em> = (<em>n</em> &minus; 1) [1/<em>R</em><sub>1</sub> &minus;
+          1/<em>R</em><sub>2</sub>]
+        </p>
+
+        <p>
+          where <em>n</em> is the refractive index of the lens material (surrounding medium is air,
+          <em>n</em><sub>air</sub> = 1), <em>R</em><sub>1</sub> is the radius of curvature of the
+          first surface (positive if that surface bulges toward the incoming light), and
+          <em>R</em><sub>2</sub> is the radius of curvature of the second surface (positive if it
+          bulges away from the incoming light).
+        </p>
+
+        <p>
+          For a symmetric double-concave lens with both surfaces curving inward by the same amount
+          (|<em>R</em><sub>1</sub>| = |<em>R</em><sub>2</sub>| = <em>R</em>),
+          <em>R</em><sub>1</sub> is negative and <em>R</em><sub>2</sub> is positive, so the bracket
+          is negative and <em>f</em> comes out negative, consistent with a diverging lens.
+        </p>
+
+        <aside class="note">
+          <span class="note-label">Note</span><br />
+          The sign convention for the lens-maker equation follows the same rule as the thin lens
+          equation: distances are positive on the transmission side and negative on the incoming
+          side. When in doubt, sketch the lens and label which direction is which before substituting
+          values.
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Theory Reference: Kirchhoff's Laws and Power | PHY 114 Lab 8</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        color: #1a1a1a;
+        background: #ffffff;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+      }
+
+      .lab-header {
+        border-bottom: 3px solid #8c1d40;
+        padding-bottom: 1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .lab-meta {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #8c1d40;
+        margin-bottom: 0.4rem;
+      }
+
+      .lab-header h1 {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: #111;
+        line-height: 1.25;
+      }
+
+      .lab-description {
+        margin-top: 0.5rem;
+        color: #555;
+        font-size: 0.9rem;
+      }
+
+      section {
+        margin-bottom: 2.75rem;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 1rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1.5px solid #e0e0e0;
+      }
+
+      p {
+        margin-bottom: 0.85rem;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      ul {
+        margin: 0.5rem 0 0.85rem 1.5rem;
+      }
+
+      li {
+        margin-bottom: 0.4rem;
+      }
+
+      .note {
+        background: #f5f7fb;
+        border-left: 4px solid #4a6fa5;
+        border-radius: 0 5px 5px 0;
+        padding: 0.8rem 1.1rem;
+        margin: 1.25rem 0 0;
+        font-size: 0.92rem;
+        color: #2c3a5e;
+      }
+
+      .note .note-label {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #4a6fa5;
+        margin-bottom: 0.3rem;
+      }
+
+      em { font-style: italic; }
+      strong { font-weight: 700; }
+
+      @media print {
+        body { max-width: 100%; padding: 0.5in; }
+        .lab-header { border-bottom-color: #000; }
+        .lab-meta { color: #000; }
+        .lab-header h1 { color: #000; }
+        h2 { color: #000; border-bottom-color: #bbb; }
+        .note { background: #f5f5f5; border-left-color: #666; color: #000; }
+        .note .note-label { color: #444; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="lab-header">
+      <p class="lab-meta">PHY 114 &nbsp;|&nbsp; Lab 8</p>
+      <h1>Theory Reference: Kirchhoff's Laws and Power</h1>
+      <p class="lab-description">
+        Background reading covering the two Kirchhoff rules that govern any DC circuit, the sign
+        conventions for applying them, electric power in DC circuits, and the maximum-power-transfer
+        theorem for a non-ideal battery driving a variable load.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>Kirchhoff's Current Law</h2>
+
+        <p>
+          Two conservation laws govern every DC circuit, no matter how complex. The first is
+          <strong>Kirchhoff's Current Law (KCL)</strong>, which follows from conservation of charge.
+        </p>
+
+        <p>
+          At any <strong>junction</strong> (a point where three or more wires meet), the total
+          current flowing into the junction equals the total current flowing out:
+        </p>
+
+        <p>
+          &Sigma; <em>I</em><sub>in</sub> = &Sigma; <em>I</em><sub>out</sub>
+        </p>
+
+        <p>
+          Equivalently, if you assign a reference direction to each branch current, the signed sum of
+          all currents at a junction is zero: currents toward the junction are positive, currents
+          away are negative.
+        </p>
+      </section>
+
+      <section>
+        <h2>Kirchhoff's Voltage Law</h2>
+
+        <p>
+          The second rule is <strong>Kirchhoff's Voltage Law (KVL)</strong>, which follows from
+          conservation of energy.
+        </p>
+
+        <p>
+          The algebraic sum of the potential changes around any closed loop is zero:
+        </p>
+
+        <p>&Sigma; (&Delta;<em>V</em>) = 0 &nbsp; around any closed loop</p>
+
+        <p>Sign convention when traversing a loop in a chosen direction:</p>
+
+        <ul>
+          <li>
+            Crossing a battery from the negative terminal to the positive terminal: potential rises
+            by &epsilon; (the EMF). Contribute +&epsilon;.
+          </li>
+          <li>
+            Crossing a battery from positive to negative: potential drops. Contribute
+            &minus;&epsilon;.
+          </li>
+          <li>
+            Crossing a resistor in the same direction as the branch current <em>I</em>: potential
+            drops. Contribute &minus;<em>IR</em>.
+          </li>
+          <li>
+            Crossing a resistor against the direction of the branch current: potential rises.
+            Contribute +<em>IR</em>.
+          </li>
+        </ul>
+
+        <p>
+          A two-loop circuit yields two independent KVL equations and one independent KCL equation,
+          which together are enough to solve for every unknown current.
+        </p>
+      </section>
+
+      <section>
+        <h2>Power in DC Circuits</h2>
+
+        <p>
+          The <strong>electric power</strong> delivered to a circuit element is the rate at which
+          electrical energy is converted into another form (heat, light, mechanical motion). For any
+          element with voltage <em>V</em> across it and current <em>I</em> through it:
+        </p>
+
+        <p><em>P</em> = <em>V I</em></p>
+
+        <p>
+          For a resistor obeying Ohm's Law (<em>V</em> = <em>IR</em>), two equivalent forms follow:
+        </p>
+
+        <p>
+          <em>P</em> = <em>I</em><sup>2</sup><em>R</em> = <em>V</em><sup>2</sup> / <em>R</em>
+        </p>
+
+        <p>
+          The SI unit of power is the <strong>watt</strong> (W), equal to one joule per second.
+          When current flows through a resistor, all of that power appears as heat in the resistor.
+        </p>
+      </section>
+
+      <section>
+        <h2>Non-Ideal Batteries and Maximum Power Transfer</h2>
+
+        <p>
+          An ideal battery maintains a fixed terminal voltage regardless of the current it supplies.
+          A real battery behaves instead like an ideal EMF &epsilon; in series with a small
+          <strong>internal resistance</strong> <em>r</em> inside the battery casing.
+        </p>
+
+        <p>
+          When a load resistance <em>R</em> is connected across the terminals, Kirchhoff's loop
+          rule gives:
+        </p>
+
+        <p><em>I</em> = &epsilon; / (<em>R</em> + <em>r</em>)</p>
+
+        <p>The power delivered to the load is:</p>
+
+        <p>
+          <em>P</em><sub>R</sub> = <em>I</em><sup>2</sup><em>R</em> =
+          &epsilon;<sup>2</sup> <em>R</em> / (<em>R</em> + <em>r</em>)<sup>2</sup>
+        </p>
+
+        <p>This expression has an interesting shape as <em>R</em> varies:</p>
+
+        <ul>
+          <li>
+            When <em>R</em> is much smaller than <em>r</em>, most of the voltage drops across
+            <em>r</em> and very little reaches the load, so <em>P</em><sub>R</sub> is small.
+          </li>
+          <li>
+            When <em>R</em> is much larger than <em>r</em>, the current is small, so
+            <em>P</em><sub>R</sub> is again small.
+          </li>
+          <li>Somewhere between these extremes is a maximum.</li>
+        </ul>
+
+        <p>
+          The <strong>maximum-power-transfer theorem</strong> states that the load power peaks when
+          <em>R</em> = <em>r</em>: the load resistance equals the source's internal resistance.
+        </p>
+
+        <aside class="note">
+          <span class="note-label">Note</span><br />
+          Maximum power transfer (<em>R</em> = <em>r</em>) is not the same as maximum efficiency.
+          Efficiency is the fraction <em>P</em><sub>R</sub> / <em>P</em><sub>total</sub> of the
+          total source power that reaches the load. At <em>R</em> = <em>r</em>, efficiency is
+          exactly 50%. Efficiency rises toward 100% as <em>R</em> grows much larger than
+          <em>r</em>, but the power delivered to the load falls toward zero. Maximum power and
+          maximum efficiency cannot both be achieved at the same operating point.
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>

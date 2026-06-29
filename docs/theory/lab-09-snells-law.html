@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Theory Reference: Snell's Law | PHY 114 Lab 9</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        color: #1a1a1a;
+        background: #ffffff;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+      }
+
+      .lab-header {
+        border-bottom: 3px solid #8c1d40;
+        padding-bottom: 1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .lab-meta {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #8c1d40;
+        margin-bottom: 0.4rem;
+      }
+
+      .lab-header h1 {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: #111;
+        line-height: 1.25;
+      }
+
+      .lab-description {
+        margin-top: 0.5rem;
+        color: #555;
+        font-size: 0.9rem;
+      }
+
+      section {
+        margin-bottom: 2.75rem;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 1rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1.5px solid #e0e0e0;
+      }
+
+      p {
+        margin-bottom: 0.85rem;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      .note {
+        background: #f5f7fb;
+        border-left: 4px solid #4a6fa5;
+        border-radius: 0 5px 5px 0;
+        padding: 0.8rem 1.1rem;
+        margin: 1.25rem 0 0;
+        font-size: 0.92rem;
+        color: #2c3a5e;
+      }
+
+      .note .note-label {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #4a6fa5;
+        margin-bottom: 0.3rem;
+      }
+
+      em { font-style: italic; }
+      strong { font-weight: 700; }
+
+      @media print {
+        body { max-width: 100%; padding: 0.5in; }
+        .lab-header { border-bottom-color: #000; }
+        .lab-meta { color: #000; }
+        .lab-header h1 { color: #000; }
+        h2 { color: #000; border-bottom-color: #bbb; }
+        .note { background: #f5f5f5; border-left-color: #666; color: #000; }
+        .note .note-label { color: #444; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="lab-header">
+      <p class="lab-meta">PHY 114 &nbsp;|&nbsp; Lab 9</p>
+      <h1>Theory Reference: Snell's Law</h1>
+      <p class="lab-description">
+        Background reading covering the index of refraction, the law of reflection, Snell's Law
+        relating incident and refracted angles, and total internal reflection.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>The Index of Refraction</h2>
+
+        <p>
+          Light travels at its maximum speed <em>c</em> ≈ 3.00 × 10<sup>8</sup> m/s in vacuum.
+          Inside any material, light repeatedly interacts with atoms: each interaction effectively
+          detours the photon, increasing the total path length. At the macroscopic scale this
+          appears as though the light is traveling more slowly through the material.
+        </p>
+
+        <p>The <strong>index of refraction</strong> <em>n</em> quantifies this slowdown:</p>
+
+        <p><em>n</em> = <em>c</em> / <em>v</em></p>
+
+        <p>
+          where <em>v</em> is the effective speed of light in the material. Because <em>v</em> is
+          always less than or equal to <em>c</em>, the index of refraction is always greater than or
+          equal to 1. Air has <em>n</em> ≈ 1.00, water has <em>n</em> ≈ 1.33, and common glass has
+          <em>n</em> ≈ 1.5.
+        </p>
+      </section>
+
+      <section>
+        <h2>Reflection and Refraction</h2>
+
+        <p>
+          When light crosses the boundary between two materials, part is <strong>reflected</strong>
+          and part is <strong>refracted</strong> (bent). All angles are measured from the
+          <strong>normal</strong>: a line perpendicular to the boundary at the point of incidence.
+        </p>
+
+        <p>
+          <strong>Law of Reflection.</strong> The angle of incidence equals the angle of reflection:
+        </p>
+
+        <p>&theta;<sub>1</sub> = &theta;<sub>1</sub>&prime;</p>
+
+        <p><strong>Snell's Law.</strong> The refracted ray obeys:</p>
+
+        <p>
+          <em>n</em><sub>1</sub> sin(&theta;<sub>1</sub>) = <em>n</em><sub>2</sub>
+          sin(&theta;<sub>2</sub>)
+        </p>
+
+        <p>
+          When light travels from a less dense medium (lower <em>n</em>) into a more dense one
+          (higher <em>n</em>), the refracted ray bends <strong>toward</strong> the normal:
+          &theta;<sub>2</sub> &lt; &theta;<sub>1</sub>. When it travels from a more dense medium
+          into a less dense one, the refracted ray bends <strong>away</strong> from the normal:
+          &theta;<sub>2</sub> &gt; &theta;<sub>1</sub>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Total Internal Reflection</h2>
+
+        <p>
+          When light travels from a denser medium (<em>n</em><sub>1</sub>) into a less dense medium
+          (<em>n</em><sub>2</sub> &lt; <em>n</em><sub>1</sub>), there is a maximum angle of
+          incidence beyond which no refracted ray can exist. At this <strong>critical angle</strong>
+          &theta;<sub>c</sub>, the refracted ray grazes along the boundary (&theta;<sub>2</sub> =
+          90&deg;). Setting &theta;<sub>2</sub> = 90&deg; in Snell's Law gives:
+        </p>
+
+        <p>
+          &theta;<sub>c</sub> = arcsin(<em>n</em><sub>2</sub> / <em>n</em><sub>1</sub>)
+        </p>
+
+        <p>
+          At any angle of incidence equal to or greater than &theta;<sub>c</sub>, no light crosses
+          into the second medium: all of it is reflected back into the first medium. This is
+          <strong>total internal reflection</strong>.
+        </p>
+
+        <p>
+          Total internal reflection requires that the light already be in the denser medium
+          (<em>n</em><sub>1</sub> &gt; <em>n</em><sub>2</sub>). It cannot occur when light moves
+          from a less dense medium into a more dense one, because no critical angle exists in that
+          direction.
+        </p>
+
+        <aside class="note">
+          <span class="note-label">Note</span><br />
+          Fiber-optic cables rely on total internal reflection. Light injected into a glass fiber at
+          a shallow angle bounces off the glass-air boundary repeatedly rather than escaping,
+          traveling long distances with very little loss. The same principle allows endoscopes and
+          decorative light guides to bend light around corners.
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>

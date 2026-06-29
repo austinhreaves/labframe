@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Theory Reference: Capacitor Fundamentals | PHY 114 Lab 5</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        color: #1a1a1a;
+        background: #ffffff;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+      }
+
+      .lab-header {
+        border-bottom: 3px solid #8c1d40;
+        padding-bottom: 1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .lab-meta {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #8c1d40;
+        margin-bottom: 0.4rem;
+      }
+
+      .lab-header h1 {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: #111;
+        line-height: 1.25;
+      }
+
+      .lab-description {
+        margin-top: 0.5rem;
+        color: #555;
+        font-size: 0.9rem;
+      }
+
+      section {
+        margin-bottom: 2.75rem;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 1rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1.5px solid #e0e0e0;
+      }
+
+      p {
+        margin-bottom: 0.85rem;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      .mechanism {
+        margin: 1.1rem 0;
+      }
+
+      hr {
+        border: none;
+        border-top: 1px solid #ebebeb;
+        margin: 1.25rem 0;
+      }
+
+      .note {
+        background: #f5f7fb;
+        border-left: 4px solid #4a6fa5;
+        border-radius: 0 5px 5px 0;
+        padding: 0.8rem 1.1rem;
+        margin: 1.25rem 0 0;
+        font-size: 0.92rem;
+        color: #2c3a5e;
+      }
+
+      .note .note-label {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #4a6fa5;
+        margin-bottom: 0.3rem;
+      }
+
+      em { font-style: italic; }
+      strong { font-weight: 700; }
+
+      @media print {
+        body { max-width: 100%; padding: 0.5in; }
+        .lab-header { border-bottom-color: #000; }
+        .lab-meta { color: #000; }
+        .lab-header h1 { color: #000; }
+        h2 { color: #000; border-bottom-color: #bbb; }
+        .note { background: #f5f5f5; border-left-color: #666; color: #000; }
+        .note .note-label { color: #444; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="lab-header">
+      <p class="lab-meta">PHY 114 &nbsp;|&nbsp; Lab 5</p>
+      <h1>Theory Reference: Capacitor Fundamentals</h1>
+      <p class="lab-description">
+        Background reading covering the definition of capacitance, the geometry of a parallel-plate
+        capacitor, the relationships among capacitance, charge, voltage, and stored energy, and what
+        happens when the plate separation or area is changed with the battery disconnected.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>What a Capacitor Does</h2>
+
+        <p>
+          A <strong>capacitor</strong> is a pair of conductors separated by an insulating gap. When
+          connected to a battery, the battery pushes charge onto one plate and pulls an equal amount
+          of charge off the other, creating a positive plate and a negative plate with an electric
+          field in the gap between them.
+        </p>
+
+        <p>
+          The capacitor stores energy in that electric field. When disconnected from the battery and
+          connected to a load (such as a lightbulb), the stored energy is released as charge flows
+          back through the external circuit.
+        </p>
+      </section>
+
+      <section>
+        <h2>Capacitance, Charge, and Stored Energy</h2>
+
+        <p>
+          The <strong>capacitance</strong> <em>C</em> of a capacitor is the ratio of the charge
+          magnitude <em>Q</em> on either plate to the voltage <em>V</em> across the capacitor:
+        </p>
+
+        <p><em>Q</em> = <em>C V</em></p>
+
+        <p>
+          The SI unit of capacitance is the <strong>farad</strong> (F), equal to one coulomb per
+          volt. Because one farad is an extremely large capacitance, real capacitors are typically
+          rated in microfarads (&micro;F = 10<sup>&minus;6</sup> F) or picofarads
+          (pF = 10<sup>&minus;12</sup> F).
+        </p>
+
+        <p>
+          For a parallel-plate capacitor with plate area <em>A</em> and plate separation <em>d</em>
+          in vacuum:
+        </p>
+
+        <p><em>C</em> = &epsilon;<sub>0</sub> <em>A</em> / <em>d</em></p>
+
+        <p>
+          where &epsilon;<sub>0</sub> ≈ 8.854 × 10<sup>&minus;12</sup> F/m is the permittivity of
+          free space. Larger plates increase capacitance; a wider gap decreases it.
+        </p>
+
+        <p>
+          The capacitor also stores electrical potential energy <em>U</em> in the field between its
+          plates. Three equivalent expressions follow from <em>Q</em> = <em>CV</em>:
+        </p>
+
+        <p>
+          <em>U</em> = &frac12; <em>C V</em><sup>2</sup> = &frac12; <em>Q V</em> =
+          &frac12; <em>Q</em><sup>2</sup> / <em>C</em>
+        </p>
+      </section>
+
+      <section>
+        <h2>Fixed Voltage vs. Fixed Charge</h2>
+
+        <p>
+          Two distinct situations arise when the capacitor geometry is changed after charging.
+        </p>
+
+        <p>
+          <strong>Battery still connected (fixed V).</strong> The voltage <em>V</em> is locked at
+          the battery's value. Any change in geometry that alters <em>C</em> causes
+          <em>Q</em> = <em>CV</em> to adjust accordingly: charge flows between the battery and the
+          plates to maintain the fixed voltage.
+        </p>
+
+        <p>
+          <strong>Battery disconnected (fixed Q).</strong> No charge can flow on or off the plates,
+          so <em>Q</em> stays at its initial value. Changing the geometry then affects <em>V</em>
+          and <em>U</em>:
+        </p>
+
+        <p>
+          <em>Plate separation increased.</em> <em>C</em> = &epsilon;<sub>0</sub><em>A</em>/<em>d</em>
+          decreases. Since <em>Q</em> is fixed, <em>V</em> = <em>Q</em>/<em>C</em> rises. The
+          stored energy <em>U</em> = <em>Q</em><sup>2</sup>/(2<em>C</em>) also rises: you did work
+          pulling the plates apart against their mutual attraction.
+        </p>
+
+        <p>
+          <em>Plate area decreased.</em> <em>C</em> decreases. <em>V</em> and <em>U</em> both rise,
+          for the same reason.
+        </p>
+
+        <p>
+          <em>Plate area increased.</em> <em>C</em> increases. <em>V</em> = <em>Q</em>/<em>C</em>
+          falls. <em>U</em> = <em>Q</em><sup>2</sup>/(2<em>C</em>) falls, because the plates
+          attract less strongly when the overlapping area is larger.
+        </p>
+
+        <aside class="note">
+          <span class="note-label">Note</span><br />
+          Always identify which quantity is fixed before reasoning about the others. The fixed-V and
+          fixed-Q cases predict opposite trends for <em>V</em> and <em>U</em> when <em>C</em>
+          changes.
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>

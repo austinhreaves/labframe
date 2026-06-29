@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Theory Reference: Capacitor Networks | PHY 114 Lab 6</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        color: #1a1a1a;
+        background: #ffffff;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+      }
+
+      .lab-header {
+        border-bottom: 3px solid #8c1d40;
+        padding-bottom: 1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .lab-meta {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #8c1d40;
+        margin-bottom: 0.4rem;
+      }
+
+      .lab-header h1 {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: #111;
+        line-height: 1.25;
+      }
+
+      .lab-description {
+        margin-top: 0.5rem;
+        color: #555;
+        font-size: 0.9rem;
+      }
+
+      section {
+        margin-bottom: 2.75rem;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 1rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1.5px solid #e0e0e0;
+      }
+
+      p {
+        margin-bottom: 0.85rem;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      .mechanism {
+        margin: 1.1rem 0;
+      }
+
+      hr {
+        border: none;
+        border-top: 1px solid #ebebeb;
+        margin: 1.25rem 0;
+      }
+
+      .note {
+        background: #f5f7fb;
+        border-left: 4px solid #4a6fa5;
+        border-radius: 0 5px 5px 0;
+        padding: 0.8rem 1.1rem;
+        margin: 1.25rem 0 0;
+        font-size: 0.92rem;
+        color: #2c3a5e;
+      }
+
+      .note .note-label {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #4a6fa5;
+        margin-bottom: 0.3rem;
+      }
+
+      em { font-style: italic; }
+      strong { font-weight: 700; }
+
+      @media print {
+        body { max-width: 100%; padding: 0.5in; }
+        .lab-header { border-bottom-color: #000; }
+        .lab-meta { color: #000; }
+        .lab-header h1 { color: #000; }
+        h2 { color: #000; border-bottom-color: #bbb; }
+        .note { background: #f5f5f5; border-left-color: #666; color: #000; }
+        .note .note-label { color: #444; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="lab-header">
+      <p class="lab-meta">PHY 114 &nbsp;|&nbsp; Lab 6</p>
+      <h1>Theory Reference: Capacitor Networks</h1>
+      <p class="lab-description">
+        Background reading covering equivalent capacitance for parallel and series combinations,
+        charge sharing when a charged capacitor connects to uncharged ones, and how to handle mixed
+        series-and-parallel networks.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>Combining Capacitors in Parallel</h2>
+
+        <p>
+          Capacitors wired in <strong>parallel</strong> all have the same voltage across their
+          terminals. The total charge stored is the sum of the individual charges, so the
+          capacitances add:
+        </p>
+
+        <p>
+          <em>C</em><sub>parallel</sub> = <em>C</em><sub>1</sub> + <em>C</em><sub>2</sub> +
+          <em>C</em><sub>3</sub> + &hellip;
+        </p>
+
+        <p>
+          A parallel combination always has a larger capacitance than any individual member.
+        </p>
+      </section>
+
+      <section>
+        <h2>Combining Capacitors in Series</h2>
+
+        <p>
+          Capacitors wired in <strong>series</strong> carry the same charge on each plate (charge
+          has nowhere else to go in the chain). The voltages across the capacitors add up to the
+          total applied voltage, and the reciprocals of the capacitances add:
+        </p>
+
+        <p>
+          1/<em>C</em><sub>series</sub> = 1/<em>C</em><sub>1</sub> + 1/<em>C</em><sub>2</sub> +
+          1/<em>C</em><sub>3</sub> + &hellip;
+        </p>
+
+        <p>
+          A series combination always has a smaller capacitance than any individual member.
+        </p>
+      </section>
+
+      <section>
+        <h2>Charge Sharing</h2>
+
+        <p>
+          When a charged capacitor <em>C</em><sub>1</sub> is disconnected from the battery and then
+          connected to one or more initially uncharged capacitors, charge redistributes across all
+          connected capacitors until every node reaches a single common voltage.
+        </p>
+
+        <p>
+          <strong>Conservation of charge</strong> governs this process. The total charge in the
+          isolated network is the initial charge on <em>C</em><sub>1</sub>:
+        </p>
+
+        <p><em>Q</em><sub>0</sub> = <em>C</em><sub>1</sub> <em>V</em><sub>0</sub></p>
+
+        <p>
+          For a parallel sharing arrangement (<em>C</em><sub>1</sub> connected in parallel with
+          <em>C</em><sub>2</sub>, <em>C</em><sub>3</sub>, &hellip;), all connected capacitors
+          settle to the same voltage:
+        </p>
+
+        <p>
+          <em>V</em><sub>shared</sub> = <em>Q</em><sub>0</sub> / (<em>C</em><sub>1</sub> +
+          <em>C</em><sub>2</sub> + <em>C</em><sub>3</sub> + &hellip;)
+        </p>
+
+        <p>
+          Each capacitor then holds charge
+          <em>Q<sub>i</sub></em> = <em>C<sub>i</sub></em> &middot; <em>V</em><sub>shared</sub>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Mixed Series-and-Parallel Networks</h2>
+
+        <p>
+          When series and parallel sub-blocks are nested, reduce the network from the inside out:
+        </p>
+
+        <p>
+          1. Find the equivalent capacitance of each series sub-block using the reciprocal rule.
+        </p>
+
+        <p>
+          2. Treat each series sub-block as a single capacitor in the remaining parallel network.
+        </p>
+
+        <p>
+          3. Apply the charge-sharing formula to find the post-sharing voltage.
+        </p>
+
+        <p>
+          4. Recover the voltage across each original series member using <em>V</em> =
+          <em>Q</em>/<em>C</em>, where <em>Q</em> is the charge on the series block and <em>C</em>
+          is the individual capacitor's capacitance.
+        </p>
+
+        <aside class="note">
+          <span class="note-label">Note</span><br />
+          In a series pair, both capacitors carry the same charge <em>Q</em> but not the same
+          voltage. Their voltages split in inverse proportion to their capacitances: the smaller
+          capacitor receives the larger voltage share, since <em>V</em> = <em>Q</em>/<em>C</em>.
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>

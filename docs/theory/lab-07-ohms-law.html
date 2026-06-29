@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Theory Reference: Continuity &amp; Ohm's Law | PHY 114 Lab 7</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        color: #1a1a1a;
+        background: #ffffff;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+      }
+
+      .lab-header {
+        border-bottom: 3px solid #8c1d40;
+        padding-bottom: 1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .lab-meta {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #8c1d40;
+        margin-bottom: 0.4rem;
+      }
+
+      .lab-header h1 {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: #111;
+        line-height: 1.25;
+      }
+
+      .lab-description {
+        margin-top: 0.5rem;
+        color: #555;
+        font-size: 0.9rem;
+      }
+
+      section {
+        margin-bottom: 2.75rem;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 1rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1.5px solid #e0e0e0;
+      }
+
+      p {
+        margin-bottom: 0.85rem;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      .mechanism {
+        margin: 1.1rem 0;
+      }
+
+      hr {
+        border: none;
+        border-top: 1px solid #ebebeb;
+        margin: 1.25rem 0;
+      }
+
+      .note {
+        background: #f5f7fb;
+        border-left: 4px solid #4a6fa5;
+        border-radius: 0 5px 5px 0;
+        padding: 0.8rem 1.1rem;
+        margin: 1.25rem 0 0;
+        font-size: 0.92rem;
+        color: #2c3a5e;
+      }
+
+      .note .note-label {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #4a6fa5;
+        margin-bottom: 0.3rem;
+      }
+
+      em { font-style: italic; }
+      strong { font-weight: 700; }
+
+      @media print {
+        body { max-width: 100%; padding: 0.5in; }
+        .lab-header { border-bottom-color: #000; }
+        .lab-meta { color: #000; }
+        .lab-header h1 { color: #000; }
+        h2 { color: #000; border-bottom-color: #bbb; }
+        .note { background: #f5f5f5; border-left-color: #666; color: #000; }
+        .note .note-label { color: #444; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="lab-header">
+      <p class="lab-meta">PHY 114 &nbsp;|&nbsp; Lab 7</p>
+      <h1>Theory Reference: Continuity and Ohm's Law</h1>
+      <p class="lab-description">
+        Background reading covering the distinction between conductors, insulators, and resistive
+        materials; the definition of resistance; Ohm's Law and the I-V characteristic; and the
+        difference between ohmic and non-ohmic materials.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>Conductors, Insulators, and Resistance</h2>
+
+        <p>
+          An <strong>electric current</strong> is a flow of charge driven by a potential difference.
+          How easily charge flows through a material is captured by its
+          <strong>resistance</strong>: the ratio of the voltage across the material to the current
+          through it.
+        </p>
+
+        <p>
+          Three broad categories cover most everyday materials.
+        </p>
+
+        <div class="mechanism">
+          <p>
+            <strong>Conductors</strong> (mostly metals) have very low resistance. Their electrons are
+            free to move throughout the entire object, so current flows with very little opposition.
+            When a conductor is connected across a circuit, it provides an easy path for charge and
+            can draw more current than the rest of the circuit was designed to handle.
+          </p>
+        </div>
+
+        <hr />
+
+        <div class="mechanism">
+          <p>
+            <strong>Insulators</strong> (rubber, dry wood, most plastics) have extremely high
+            resistance. Electrons in an insulator are tightly bound and cannot travel through the
+            bulk of the material; current is effectively blocked.
+          </p>
+        </div>
+
+        <hr />
+
+        <div class="mechanism">
+          <p>
+            <strong>Resistive materials</strong> sit between these extremes. Graphite (pencil lead)
+            is a classic example: it conducts, but with measurable resistance.
+          </p>
+        </div>
+
+        <hr />
+
+        <p>
+          A <strong>fuse</strong> is a deliberately weak link placed in series with a circuit. When
+          the current exceeds the fuse's rated value, the fuse element overheats and breaks the
+          circuit, protecting other components downstream.
+        </p>
+      </section>
+
+      <section>
+        <h2>Ohm's Law</h2>
+
+        <p>
+          For many materials over a moderate range of conditions, the voltage <em>V</em> across an
+          object and the current <em>I</em> through it are directly proportional:
+        </p>
+
+        <p><em>V</em> = <em>I R</em></p>
+
+        <p>
+          where the constant of proportionality <em>R</em> is the object's
+          <strong>resistance</strong>. The SI unit of resistance is the <strong>ohm</strong>
+          (&Omega;), defined as one volt per ampere. Equivalent forms:
+        </p>
+
+        <p>
+          <em>I</em> = <em>V</em> / <em>R</em> &nbsp;&nbsp;&nbsp; <em>R</em> = <em>V</em> /
+          <em>I</em>
+        </p>
+
+        <p>
+          Plotting <em>I</em> on the vertical axis against <em>V</em> on the horizontal axis for an
+          object that obeys this law gives a straight line through the origin. The slope of that
+          line is 1/<em>R</em>; the reciprocal of the slope gives the resistance.
+        </p>
+      </section>
+
+      <section>
+        <h2>Ohmic vs. Non-Ohmic Materials</h2>
+
+        <p>
+          A material is <strong>ohmic</strong> if its resistance stays constant over its working
+          range: the I-V curve is a straight line through the origin. A graphite pencil lead behaves
+          this way over a wide range of voltages.
+        </p>
+
+        <p>
+          A material is <strong>non-ohmic</strong> if its resistance changes with current or
+          voltage: the I-V curve bends. The most familiar example is an incandescent lightbulb. As
+          current increases, the tungsten filament heats up. Hotter metal resists current more
+          strongly. The slope of the I-V curve therefore decreases at higher currents, bending the
+          curve away from a straight line.
+        </p>
+
+        <p>
+          As a consequence, a non-ohmic device does not have a single fixed resistance. The slope of
+          the I-V curve at a specific operating point gives the resistance only near that point; the
+          slope of the entire curve gives an average over the full range, which is dominated by the
+          high-current end where the filament is hottest.
+        </p>
+
+        <aside class="note">
+          <span class="note-label">Note</span><br />
+          Two fits appear on the Ohm's Law graph: a proportional fit (<em>y</em> = <em>mx</em>,
+          passing through the origin) and a linear fit (<em>y</em> = <em>mx</em> + <em>b</em>,
+          with a free intercept). For a truly ohmic device the two fits should be nearly identical.
+          A large difference between them suggests the data do not pass through the origin, which
+          can indicate non-ohmic behavior or a systematic offset in the measurement.
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>
