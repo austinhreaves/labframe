@@ -201,22 +201,16 @@ function AboutAndPrivacy({ courseTitle }: { courseTitle: string }) {
           </a>{' '}
           community and other openly-licensed projects. All lab manuals are written for this course
           or adapted from openly-licensed material. You will not be asked to buy a textbook, an
-          access code, or a lab kit. I chose to build LabFrame on open simulations and an in-house
-          platform for a reason: commercial lab platforms tend to gate basic functionality behind
-          paywalls, send student interaction data to third-party vendors, and constrain courses to
-          whatever pedagogy fits a publisher&apos;s product. Working with open tools lets the course
-          evolve in response to what is actually working for the students taking it.
-        </p>
-        <p>
-          I currently develop and maintain LabFrame on my own, which has one nice side effect: bug
-          fixes and improvements can ship the same week they are reported. If something in LabFrame
-          is buggy, confusing, or getting in the way of the physics, please let me know so I can fix
-          it. Instructor contact information is in the course syllabus.
+          access code, or a lab kit. LabFrame is built on open simulations and an in-house platform:
+          commercial lab platforms tend to gate basic functionality behind paywalls, send student
+          interaction data to third-party vendors, and constrain courses to whatever pedagogy fits a
+          publisher&apos;s product. Working with open tools lets the course evolve in response to
+          what is actually working for the students taking it.
         </p>
       </Disclosure>
       <Disclosure title="Your data and FERPA">
         <p>
-          I designed LabFrame to keep your work on your device while you do it. Your name, your
+          LabFrame is designed to keep your work on your device while you do it. Your name, your
           in-progress lab responses, your data tables, your fit selections, and any images you
           attach are stored in this browser&apos;s local storage. While you are working through a
           lab, nothing is transmitted to a LabFrame server, and no third-party analytics or vendor
