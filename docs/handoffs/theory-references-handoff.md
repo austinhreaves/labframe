@@ -14,19 +14,19 @@ Each lab gets two files:
 
 ## Lab-to-file mapping
 
-| # | Lab ref | Theory file (to create) | Old materials folder |
-|---|---------|--------------------------|---------------------|
-| 1 | chargeBuildup | `lab-01-charge-buildup` | 1. Electrostatics and Coulomb's Law |
-| 2 | coulombsLaw | `lab-02-coulombs-law` | 1. Electrostatics and Coulomb's Law |
-| 3 | pointCharge | `lab-03-point-charge` | 2. Electric Fields and Electric Potential |
-| 4 | chargeConfigurations | `lab-04-charge-configurations` | 2. Electric Fields and Electric Potential |
-| 5 | capacitorFundamentals | `lab-05-capacitor-fundamentals` | 3. Capacitors |
-| 6 | capacitorNetworks | `lab-06-capacitor-networks` | 3. Capacitors |
-| 7 | ohmsLaw | `lab-07-ohms-law` | 4. DC Circuits - Ohm's Law and Kirchhoff's Rules |
-| 8 | kirchhoffsLaws | `lab-08-kirchhoffs-laws` | 4. DC Circuits - Ohm's Law and Kirchhoff's Rules |
-| 9 | snellsLaw | `lab-09-snells-law` | 7. Snell's Law |
-| 10 | convergingLens | `lab-10-converging-lens` | Geometric Optics |
-| 11 | divergingLens | `lab-11-diverging-lens` | Geometric Optics |
+| #   | Lab ref               | Theory file (to create)         | Old materials folder                             |
+| --- | --------------------- | ------------------------------- | ------------------------------------------------ |
+| 1   | chargeBuildup         | `lab-01-charge-buildup`         | 1. Electrostatics and Coulomb's Law              |
+| 2   | coulombsLaw           | `lab-02-coulombs-law`           | 1. Electrostatics and Coulomb's Law              |
+| 3   | pointCharge           | `lab-03-point-charge`           | 2. Electric Fields and Electric Potential        |
+| 4   | chargeConfigurations  | `lab-04-charge-configurations`  | 2. Electric Fields and Electric Potential        |
+| 5   | capacitorFundamentals | `lab-05-capacitor-fundamentals` | 3. Capacitors                                    |
+| 6   | capacitorNetworks     | `lab-06-capacitor-networks`     | 3. Capacitors                                    |
+| 7   | ohmsLaw               | `lab-07-ohms-law`               | 4. DC Circuits - Ohm's Law and Kirchhoff's Rules |
+| 8   | kirchhoffsLaws        | `lab-08-kirchhoffs-laws`        | 4. DC Circuits - Ohm's Law and Kirchhoff's Rules |
+| 9   | snellsLaw             | `lab-09-snells-law`             | 7. Snell's Law                                   |
+| 10  | convergingLens        | `lab-10-converging-lens`        | Geometric Optics                                 |
+| 11  | divergingLens         | `lab-11-diverging-lens`         | Geometric Optics                                 |
 
 Old materials root: `C:\Users\ahreaves\Documents\Instructional Materials\PHY 114 Online (ASUPIRT)\`
 
@@ -58,6 +58,7 @@ sections (those are student prompts, not theory).
 
 The sections will contain HTML strings with Markdown-style formatting (bold, italics,
 GFM callouts). Note any phrases that reference the lab context directly, such as:
+
 - "In Part X you saw..."
 - "The next simulation..."
 - "watch for this directly:"
@@ -116,7 +117,8 @@ Flag anything present in the old materials but absent from LabFrame. Do NOT sile
 insert missing topics -- note the gap and decide with the user.
 
 Standard content to include in every theory reference (established by Lab 1):
-- **Charge quantization** (Q = n * e) belongs in the first background section of any E+M
+
+- **Charge quantization** (Q = n \* e) belongs in the first background section of any E+M
   lab that hasn't already established it. For Labs 2-8, include it only if the lab is the
   first one a student might read. For the optics labs (9-11), omit it.
 - All topics covered by the lab's own background sections.
@@ -146,6 +148,7 @@ Create `docs/theory/lab-NN-<name>.md`. Structure:
 ```
 
 **Content guidelines:**
+
 - No em dashes (`-`) anywhere. Use hyphens or rewrite.
 - No chemistry-discipline jargon (electronegativity, electron affinity, electron donor/acceptor).
   Replace with plain-physics language: "holds electrons loosely / tightly," etc.
@@ -181,16 +184,16 @@ Preview via the theory-preview server in `.claude/launch.json`:
 
 These were deliberated with the user and should carry forward:
 
-| Topic | Decision |
-|-------|----------|
-| Charge quantization placement | Opening paragraph of the first E+M section |
-| Triboelectric series | State tendency directly ("tend to give up / take") rather than "sit high / sit low" |
-| "Conductor" first use | Define inline: "materials -- mostly metals -- whose electrons are free to move" |
-| "Grounding" first use | Define inline: "connected to a large neutral object, like the Earth, that can absorb or supply charge" |
-| Polarization attraction | Explain the mechanism: shifted molecules create a slight opposite charge facing the charged object |
-| Spark (conduction) | Keep as "a fast version of conduction: the voltage difference grows large enough to briefly turn the air...into a channel" |
-| Induction: two-piece scenario | "separated into two pieces while the charged object is still nearby" (not "split apart") |
-| "Analogous" / "macroscopically" | Avoid; say "The same idea applies" and "freely across the whole object" |
+| Topic                           | Decision                                                                                                                   |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Charge quantization placement   | Opening paragraph of the first E+M section                                                                                 |
+| Triboelectric series            | State tendency directly ("tend to give up / take") rather than "sit high / sit low"                                        |
+| "Conductor" first use           | Define inline: "materials -- mostly metals -- whose electrons are free to move"                                            |
+| "Grounding" first use           | Define inline: "connected to a large neutral object, like the Earth, that can absorb or supply charge"                     |
+| Polarization attraction         | Explain the mechanism: shifted molecules create a slight opposite charge facing the charged object                         |
+| Spark (conduction)              | Keep as "a fast version of conduction: the voltage difference grows large enough to briefly turn the air...into a channel" |
+| Induction: two-piece scenario   | "separated into two pieces while the charged object is still nearby" (not "split apart")                                   |
+| "Analogous" / "macroscopically" | Avoid; say "The same idea applies" and "freely across the whole object"                                                    |
 
 ---
 

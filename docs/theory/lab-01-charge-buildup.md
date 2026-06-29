@@ -13,7 +13,7 @@ polarization and induction.
 Atoms are built from a positively charged nucleus (containing protons) surrounded by
 negatively charged electrons. The charge carried by a single proton or electron is the
 smallest unit of electric charge that exists -- it is called the **elementary charge**,
-*e*. Every net charge is a whole-number multiple of *e*: an object can have 0, 1, 2, or a
+_e_. Every net charge is a whole-number multiple of _e_: an object can have 0, 1, 2, or a
 trillion extra electrons, but never half an electron's worth of charge.
 
 Atoms prefer to be electrically neutral: equal numbers of protons and electrons. A net
@@ -29,7 +29,7 @@ holds them loosely to the one that holds them tightly. The two surfaces end up w
 charges of opposite signs.
 
 Wool, hair, and human skin tend to give up electrons; rubber, vinyl, and Teflon tend to
-take them. This ranking is called the *triboelectric series*.
+take them. This ranking is called the _triboelectric series_.
 
 ---
 
@@ -42,7 +42,7 @@ briefly turn the air between the objects into a channel for charge to jump acros
 
 ---
 
-**3. Charging by induction.** A charged object brought *near* (without contact) a neutral
+**3. Charging by induction.** A charged object brought _near_ (without contact) a neutral
 conductor pushes or pulls the conductor's free electrons to one side. If the conductor is
 then separated into two pieces while the charged object is still nearby -- or briefly
 connected to the ground (a large neutral object, like the Earth, that can absorb or supply
@@ -52,7 +52,7 @@ object is removed.
 
 ---
 
-> **Note:** An *insulator* near a charged object experiences a similar shift, but only
+> **Note:** An _insulator_ near a charged object experiences a similar shift, but only
 > within each individual molecule -- electrons in an insulator cannot travel across the
 > surface. That is called **polarization**. It produces an attractive force just like
 > induction does, but as soon as the charged object is removed the molecules snap back and
