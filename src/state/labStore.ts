@@ -43,6 +43,7 @@ export type LabStoreState = {
   courseId: string;
   labId: string;
   studentName: string;
+  taName: string;
   aiUsed: boolean;
   aiSharedLinks: string;
   integrityAgreementAccepted: boolean;
@@ -59,6 +60,7 @@ export type LabStoreState = {
   status: LabStoreStatus;
   initLab: (courseId: string, labId: string, lab: Lab) => Promise<void>;
   setStudentName: (studentName: string) => Promise<void>;
+  setTaName: (value: string) => void;
   setAiUsed: (value: boolean) => void;
   setAiSharedLinks: (value: string) => void;
   setIntegrityAgreementAccepted: (value: boolean) => void;
@@ -343,6 +345,7 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
     courseId: '',
     labId: '',
     studentName: DEFAULT_STUDENT_NAME,
+    taName: '',
     aiUsed: false,
     aiSharedLinks: '',
     integrityAgreementAccepted: false,
@@ -487,6 +490,10 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
         await get().initLab(current.courseId, current.labId, current.lab);
       }
     },
+    setTaName: (value) =>
+      set({
+        taName: value,
+      }),
     setAiUsed: (value) =>
       set({
         aiUsed: value,

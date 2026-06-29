@@ -1,0 +1,1364 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="PHY 114 University Physics II Laboratory: online course syllabus, Arizona State University."
+    />
+    <title>PHY 114 Syllabus · University Physics II Laboratory · ASU Online</title>
+    <style>
+      /* ---------- Reset & base ---------- */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 1.0625rem;
+        line-height: 1.65;
+        color: #1f1f1f;
+        background: #ffffff;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      /* ---------- Skip link ---------- */
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        background: #8c1d40;
+        color: #fff;
+        padding: 0.75rem 1rem;
+        z-index: 1000;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .skip-link:focus {
+        left: 0;
+        outline: 3px solid #ffc627;
+        outline-offset: 2px;
+      }
+
+      /* ---------- Focus indicator (global) ---------- */
+      :focus-visible {
+        outline: 3px solid #8c1d40;
+        outline-offset: 2px;
+        border-radius: 2px;
+      }
+
+      /* ---------- Header / banner ---------- */
+      .banner {
+        position: relative;
+        background: #8c1d40;
+        color: #ffffff;
+        overflow: hidden;
+      }
+      .banner-inner {
+        max-width: 78rem;
+        margin: 0 auto;
+        padding: 3rem 1.5rem 3.25rem;
+        position: relative;
+        z-index: 2;
+      }
+      .eyebrow {
+        font-size: 0.8125rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #ffc627;
+        margin: 0 0 0.75rem;
+        font-weight: 600;
+      }
+      .banner h1 {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: clamp(2rem, 5vw, 3.25rem);
+        margin: 0;
+        line-height: 1.1;
+        font-weight: 700;
+      }
+      .banner .subtitle {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+        margin: 0.5rem 0 1.25rem;
+        font-weight: 400;
+        opacity: 0.95;
+      }
+      .banner .rule {
+        width: 4rem;
+        height: 4px;
+        background: #ffc627;
+        margin: 0;
+        border: 0;
+      }
+      .banner .meta {
+        margin-top: 1rem;
+        font-size: 0.95rem;
+        opacity: 0.92;
+      }
+      .banner-decoration {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 100%;
+        width: 55%;
+        max-width: 700px;
+        z-index: 1;
+        pointer-events: none;
+        opacity: 0.22;
+      }
+      @media (max-width: 720px) {
+        .banner-decoration {
+          opacity: 0.12;
+        }
+      }
+
+      /* ---------- Two-column layout (sidebar + main) ---------- */
+      .layout {
+        display: grid;
+        grid-template-columns: 17rem 1fr;
+        gap: 2.5rem;
+        max-width: 80rem;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+        align-items: start;
+      }
+
+      /* ---------- Sticky sidebar TOC ---------- */
+      .toc-sidebar {
+        position: sticky;
+        top: 1.5rem;
+        max-height: calc(100vh - 3rem);
+        overflow-y: auto;
+        padding: 1.25rem 1rem 1.5rem;
+        margin-top: 2.5rem;
+        background: #f7f5f6;
+        border: 1px solid #e3dee0;
+        border-radius: 6px;
+        font-size: 0.93rem;
+        line-height: 1.45;
+      }
+      .toc-sidebar h2 {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 0.85rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #8c1d40;
+        margin: 0 0 0.75rem;
+        padding: 0 0 0.5rem;
+        border-bottom: 1px solid #e3dee0;
+        border-top: 0;
+      }
+      .toc-sidebar ol {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        counter-reset: toc;
+      }
+      .toc-sidebar li {
+        counter-increment: toc;
+        margin: 0;
+      }
+      .toc-sidebar a {
+        display: block;
+        padding: 0.35rem 0.5rem 0.35rem 1.85rem;
+        color: #1f1f1f;
+        text-decoration: none;
+        border-radius: 4px;
+        position: relative;
+      }
+      .toc-sidebar a::before {
+        content: counter(toc) '.';
+        position: absolute;
+        left: 0.5rem;
+        color: #888;
+        font-variant-numeric: tabular-nums;
+      }
+      .toc-sidebar a:hover {
+        background: #f0e6ea;
+        color: #8c1d40;
+      }
+      .toc-sidebar a:focus-visible {
+        outline-offset: 0;
+      }
+      .toc-sidebar a[aria-current='location'] {
+        background: #8c1d40;
+        color: #ffffff;
+        font-weight: 600;
+      }
+      .toc-sidebar a[aria-current='location']::before {
+        color: #ffc627;
+      }
+
+      /* Mobile: sidebar becomes a normal block at the top */
+      @media (max-width: 900px) {
+        .layout {
+          grid-template-columns: 1fr;
+          gap: 0;
+          padding: 0 1rem;
+        }
+        .toc-sidebar {
+          position: static;
+          max-height: none;
+          overflow: visible;
+          margin: 1.5rem 0 0;
+        }
+        .toc-sidebar ol {
+          columns: 2;
+          column-gap: 1.5rem;
+        }
+        .toc-sidebar a {
+          padding-left: 1.5rem;
+        }
+      }
+      @media (max-width: 540px) {
+        .toc-sidebar ol {
+          columns: 1;
+        }
+      }
+
+      /* ---------- Main column ---------- */
+      main {
+        max-width: 48rem;
+        margin: 0 auto;
+        padding: 2.5rem 0 4rem;
+        min-width: 0;
+      }
+      section {
+        margin: 2.5rem 0;
+        scroll-margin-top: 1rem;
+      }
+
+      /* ---------- Headings ---------- */
+      h2 {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 1.625rem;
+        color: #8c1d40;
+        margin: 2.5rem 0 0.75rem;
+        padding-bottom: 0.4rem;
+        border-bottom: 2px solid #ffc627;
+        line-height: 1.3;
+      }
+      h3 {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 1.25rem;
+        color: #1f1f1f;
+        margin: 1.75rem 0 0.5rem;
+        line-height: 1.3;
+      }
+      h4 {
+        font-size: 1.0625rem;
+        color: #1f1f1f;
+        margin: 1.25rem 0 0.4rem;
+        text-transform: none;
+        font-weight: 700;
+      }
+
+      /* ---------- Body content ---------- */
+      p {
+        margin: 0.6rem 0 1rem;
+      }
+      ul,
+      ol {
+        margin: 0.6rem 0 1rem;
+        padding-left: 1.5rem;
+      }
+      li {
+        margin: 0.3rem 0;
+      }
+      strong {
+        color: #1f1f1f;
+      }
+
+      /* ---------- Links ---------- */
+      a {
+        color: #8c1d40;
+        text-decoration: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 2px;
+      }
+      a:hover {
+        text-decoration-thickness: 2px;
+      }
+
+      /* ---------- Definition-style blocks ---------- */
+      .key-pair {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 0.4rem 1rem;
+        margin: 1rem 0 1.25rem;
+        font-size: 0.98rem;
+      }
+      .key-pair dt {
+        font-weight: 700;
+        color: #1f1f1f;
+      }
+      .key-pair dd {
+        margin: 0;
+        color: #333;
+      }
+      @media (max-width: 480px) {
+        .key-pair {
+          grid-template-columns: 1fr;
+          gap: 0 0;
+        }
+        .key-pair dd {
+          margin: 0 0 0.6rem;
+        }
+      }
+
+      /* ---------- Callouts ---------- */
+      .callout {
+        border-left: 4px solid #ffc627;
+        background: #fdf7e3;
+        padding: 0.9rem 1.1rem;
+        margin: 1.25rem 0;
+        border-radius: 0 4px 4px 0;
+      }
+      .callout p:first-child {
+        margin-top: 0;
+      }
+      .callout p:last-child {
+        margin-bottom: 0;
+      }
+      .callout-warn {
+        border-left-color: #8c1d40;
+        background: #faeef2;
+      }
+
+      /* ---------- Tables ---------- */
+      .table-wrap {
+        overflow-x: auto;
+        margin: 1rem 0 1.5rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.98rem;
+      }
+      caption {
+        text-align: left;
+        font-weight: 700;
+        margin-bottom: 0.4rem;
+        color: #1f1f1f;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 0.55rem 0.75rem;
+        border-bottom: 1px solid #d8d8d8;
+        vertical-align: top;
+      }
+      th {
+        background: #f4ecef;
+        color: #8c1d40;
+        font-weight: 700;
+        border-bottom: 2px solid #8c1d40;
+      }
+      tbody tr:hover {
+        background: #fafafa;
+      }
+
+      /* ---------- Topic list ---------- */
+      .topic-list {
+        columns: 2;
+        column-gap: 2rem;
+      }
+      @media (max-width: 640px) {
+        .topic-list {
+          columns: 1;
+        }
+      }
+
+      /* ---------- Footer ---------- */
+      footer {
+        border-top: 1px solid #e3dee0;
+        margin-top: 3rem;
+        padding: 1.5rem 0 0;
+        font-size: 0.9rem;
+        color: #555;
+      }
+
+      /* ---------- Print ---------- */
+      @media print {
+        .banner {
+          background: #fff;
+          color: #1f1f1f;
+        }
+        .banner h1,
+        .banner .subtitle,
+        .banner .eyebrow,
+        .banner .meta {
+          color: #1f1f1f !important;
+        }
+        .banner-decoration {
+          display: none;
+        }
+        .toc-sidebar {
+          display: none;
+        }
+        a {
+          color: #1f1f1f;
+          text-decoration: underline;
+        }
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        main {
+          max-width: none;
+        }
+        h2 {
+          color: #1f1f1f;
+          border-bottom: 2px solid #1f1f1f;
+          page-break-after: avoid;
+        }
+        section {
+          page-break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <header class="banner" role="banner">
+      <!-- Optics decoration: parallel rays refracted through a lens -->
+      <svg
+        class="banner-decoration"
+        viewBox="0 0 700 400"
+        aria-hidden="true"
+        focusable="false"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <marker
+            id="arrow"
+            viewBox="0 0 10 10"
+            refX="8"
+            refY="5"
+            markerWidth="6"
+            markerHeight="6"
+            orient="auto-start-reverse"
+          >
+            <path d="M0,0 L10,5 L0,10 z" fill="#FFC627" />
+          </marker>
+        </defs>
+        <g fill="none" stroke="#FFC627" stroke-width="2.2">
+          <!-- Incident rays (left of lens) -->
+          <line x1="80" y1="120" x2="340" y2="120" />
+          <line x1="80" y1="160" x2="340" y2="160" />
+          <line x1="80" y1="200" x2="340" y2="200" />
+          <line x1="80" y1="240" x2="340" y2="240" />
+          <line x1="80" y1="280" x2="340" y2="280" />
+          <!-- Refracted rays converging to focal point -->
+          <line x1="340" y1="120" x2="600" y2="200" marker-end="url(#arrow)" />
+          <line x1="340" y1="160" x2="600" y2="200" marker-end="url(#arrow)" />
+          <line x1="340" y1="200" x2="600" y2="200" marker-end="url(#arrow)" />
+          <line x1="340" y1="240" x2="600" y2="200" marker-end="url(#arrow)" />
+          <line x1="340" y1="280" x2="600" y2="200" marker-end="url(#arrow)" />
+        </g>
+        <!-- Lens shape -->
+        <ellipse cx="340" cy="200" rx="14" ry="95" fill="#FFC627" opacity="0.55" />
+        <!-- Focal point dot -->
+        <circle cx="600" cy="200" r="7" fill="#FFC627" />
+        <!-- Optical axis (dashed) -->
+        <line
+          x1="60"
+          y1="200"
+          x2="640"
+          y2="200"
+          stroke="#FFC627"
+          stroke-width="1.2"
+          stroke-dasharray="8 5"
+          opacity="0.5"
+        />
+      </svg>
+
+      <div class="banner-inner">
+        <p class="eyebrow">Arizona State University · Department of Physics</p>
+        <h1>PHY 114</h1>
+        <p class="subtitle">University Physics II Laboratory · Online</p>
+        <hr class="rule" aria-hidden="true" />
+        <p class="meta">Syllabus &middot; Updated 29 June 2026</p>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="toc-sidebar" aria-label="Syllabus contents">
+        <h2>Contents</h2>
+        <ol>
+          <li><a href="#instructor">Instructor &amp; contact</a></li>
+          <li><a href="#about">About this course</a></li>
+          <li><a href="#how-it-works">How the course works</a></li>
+          <li><a href="#topics">Topics covered</a></li>
+          <li><a href="#labframe">Lab software: LabFrame</a></li>
+          <li><a href="#parameters">Set of Parameters</a></li>
+          <li><a href="#syllabus-quiz">Syllabus Quiz</a></li>
+          <li><a href="#grading">Grading</a></li>
+          <li><a href="#extensions">Extensions &amp; late policy</a></li>
+          <li><a href="#regrades">Re-grade requests</a></li>
+          <li><a href="#report-guidelines">Lab report quality</a></li>
+          <li><a href="#errors">Sources of error</a></li>
+          <li><a href="#integrity">Academic integrity</a></li>
+          <li><a href="#ai">Use of generative AI</a></li>
+          <li><a href="#communication">Email &amp; time zones</a></li>
+          <li><a href="#admin">Drop, add, appeals</a></li>
+          <li><a href="#accessibility">Accessibility</a></li>
+          <li><a href="#title-ix">Title IX</a></li>
+          <li><a href="#copyright">Copyright</a></li>
+          <li><a href="#disclaimer">Disclaimer</a></li>
+        </ol>
+      </aside>
+
+      <main id="main-content" tabindex="-1">
+        <!-- ===== Instructor block ===== -->
+        <section id="instructor" aria-labelledby="instructor-heading">
+          <h2 id="instructor-heading">Instructor &amp; Contact</h2>
+          <dl class="key-pair">
+            <dt>Instructor</dt>
+            <dd>Jane Doe</dd>
+            <dt>Email</dt>
+            <dd><a href="mailto:jane@email">jane@email</a> &nbsp;<em>(placeholder)</em></dd>
+            <dt>Office hours</dt>
+            <dd>Posted on Canvas under <em>Modules › Course Information › Office Hours</em>.</dd>
+            <dt>Email subject line</dt>
+            <dd>
+              Include <strong>[PHY 114 Online]</strong> in the subject of every course-related
+              email.
+            </dd>
+            <dt>Prerequisites</dt>
+            <dd>
+              PHY 111 and PHY 113. PHY 112 is a co- or pre-requisite for PHY 114. Withdrawing from
+              the lecture will result in an automatic withdrawal from the lab.
+            </dd>
+          </dl>
+          <p>
+            Email is the preferred channel; messages sent through Canvas Inbox are likely to receive
+            a delayed response. The instructor and TAs aim to reply within 24 hours on weekdays.
+            Please don't expect responses late at night, on weekends, or in the final hours before a
+            deadline.
+          </p>
+        </section>
+
+        <!-- ===== About ===== -->
+        <section id="about" aria-labelledby="about-heading">
+          <h2 id="about-heading">About this course</h2>
+          <p>
+            PHY 114 is the laboratory companion to PHY 112, College Physics II. The two courses are
+            graded separately. The point of this course is not to memorize physics; it is to
+            practice it. By the end of the session you should be able to design a measurement,
+            analyze data carefully, and write a result you would defend to another scientist.
+          </p>
+          <p>
+            Because the course is online, you will not handle apparatus directly. Instead, you will
+            use physics simulations to make indirect measurements of electromagnetic and optical
+            phenomena. For every experiment, you should be able to identify the independent and
+            dependent variables and articulate the direction of causality. For example, does an
+            object accelerate because a net force is applied, or is there a net force because the
+            object accelerates?
+          </p>
+          <p>
+            This course places heavy emphasis on scientific communication. You are expected to
+            justify conclusions with logical argument, identify sources of error, explain how the
+            precision of your measurements limits the confidence in your result, and consistently
+            use correct physical units. Communicating in units is not a formality; it is how a
+            scientific result becomes meaningful.
+          </p>
+        </section>
+
+        <!-- ===== How it works ===== -->
+        <section id="how-it-works" aria-labelledby="how-heading">
+          <h2 id="how-heading">How the course works</h2>
+          <p>
+            The course is asynchronous. You complete eleven labs over the session; your final grade
+            is built from the best ten. ASU Online policy does not allow synchronous attendance
+            requirements, so there are no mandatory meetings. Office hours are held weekly by the
+            instructor and the TAs, and are the fastest path through a confusing analysis. Office
+            hours are not lectures; bring a specific question.
+          </p>
+          <p>
+            The class discussion board is hosted on Yellowdig, accessible from the Canvas navigation
+            bar. You may post anonymously by clicking the ghost icon at the top right when composing
+            a post. Before asking a question, search recent posts; yours may already be answered.
+            Posts containing direct calculations or other material a TA judges inappropriate may be
+            removed or edited.
+          </p>
+          <p>
+            Each lab begins with a manual and (usually) a short video. Treat the values shown in
+            those materials as <em>illustrations only</em>. Your assigned numerical values come from
+            the Set of Parameters on Canvas.
+          </p>
+        </section>
+
+        <!-- ===== Topics ===== -->
+        <section id="topics" aria-labelledby="topics-heading">
+          <h2 id="topics-heading">Topics covered</h2>
+          <ul class="topic-list">
+            <li>Coulomb's law; electric field; electric potential</li>
+            <li>Capacitance; current and resistance; DC circuits</li>
+            <li>Snell's law; converging and diverging lenses</li>
+          </ul>
+          <h3>Learning outcomes</h3>
+          <p>
+            By the end of the course you should be able to: provide an experimental foundation for
+            the theoretical concepts of PHY 112; collect data carefully and analyze it correctly;
+            reason about sources of experimental error; and communicate scientific results clearly
+            and concisely in writing.
+          </p>
+        </section>
+
+        <!-- ===== LabFrame ===== -->
+        <section id="labframe" aria-labelledby="labframe-heading">
+          <h2 id="labframe-heading">Lab software: LabFrame</h2>
+          <p>
+            <strong>LabFrame</strong> is the lab environment for this course. It is a browser-based
+            application built and maintained by ASU Physics. There is no account to create and
+            nothing to install.
+          </p>
+
+          <h3>The submission path</h3>
+          <ol>
+            <li>Open LabFrame from the link in the lab's Canvas module.</li>
+            <li>Select PHY 114 and the current lab, then enter your name.</li>
+            <li>
+              Work through the structured prompts: free-text answers, measurements, equation entry,
+              data tables, plots, and embedded simulations.
+            </li>
+            <li>Use the <strong>Export PDF</strong> button to generate your report.</li>
+            <li>Upload that PDF to the corresponding Canvas assignment by the deadline.</li>
+          </ol>
+
+          <div class="callout">
+            <p>
+              <strong>Save your work yourself.</strong> LabFrame autosaves to your browser, not to a
+              server. If you clear your browser data, switch devices, or work in a private or
+              incognito window, your in-progress work is lost. Use the
+              <strong>Save Draft</strong> button regularly, and export a backup PDF before walking
+              away from a lab for a long time.
+            </p>
+          </div>
+
+          <div class="callout callout-warn">
+            <p>
+              <strong
+                >A draft is not a submission, and a submitted PDF is not always accepted
+                as-is.</strong
+              >
+              If the file you upload to Canvas shows substantial inconsistencies with your work
+              history (for example, the data was pasted in wholesale rather than entered as the lab
+              progressed), the report may require an oral exam with the instructor before it is
+              accepted for credit. The same applies to any submission where authorship is reasonably
+              in question.
+            </p>
+          </div>
+
+          <h3>Tech requirements</h3>
+          <ul>
+            <li>
+              A current version of <a href="https://www.google.com/chrome">Chrome</a>,
+              <a href="https://www.mozilla.org/firefox/">Firefox</a>, Safari, or Edge.
+            </li>
+            <li>A stable internet connection.</li>
+            <li>
+              A screen wider than about 768 pixels. LabFrame's embedded simulations are not usable
+              on phones.
+            </li>
+            <li>
+              <a href="https://get.adobe.com/reader/">Adobe Acrobat Reader</a> or any
+              standards-compliant PDF viewer, to review your exported report before submitting.
+            </li>
+          </ul>
+          <p>No microphone or camera is required for this course.</p>
+        </section>
+
+        <!-- ===== Parameters ===== -->
+        <section id="parameters" aria-labelledby="params-heading">
+          <h2 id="params-heading">Set of Parameters</h2>
+          <p>
+            Every lab assigns you a specific <strong>Set of Parameters</strong> in its Canvas
+            module. Values shown in the lab manual or in demonstration videos are illustrations;
+            they are not the numbers you should use for your analysis.
+          </p>
+          <div class="callout callout-warn">
+            <p>
+              A report submitted using the wrong parameter set will receive a zero. If your
+              calculations or conclusions don't match your assigned parameters, your TA will ask you
+              to explain or correct the discrepancy before grading; double-check your numbers
+              against the Set of Parameters in your Canvas module. A pattern of unresolved or
+              repeated mismatches may be referred to the Dean's office for review.
+            </p>
+          </div>
+        </section>
+
+        <!-- ===== Syllabus Quiz ===== -->
+        <section id="syllabus-quiz" aria-labelledby="quiz-heading">
+          <h2 id="quiz-heading">Syllabus Quiz</h2>
+          <p>
+            To unlock the full course, you must pass the <strong>Syllabus Quiz</strong>, located in
+            the Course Information module on Canvas. The quiz confirms that you have read and
+            understood these policies before beginning lab work. It may be retaken until passed.
+          </p>
+        </section>
+
+        <!-- ===== Grading ===== -->
+        <section id="grading" aria-labelledby="grading-heading">
+          <h2 id="grading-heading">Grading</h2>
+          <p>
+            Lab reports are graded manually by a TA. Point values for each report are shown inside
+            LabFrame and in the corresponding Canvas assignment. Your final grade is calculated from
+            the best ten of eleven lab reports; Canvas automatically drops your lowest score.
+          </p>
+          <p>
+            If you are satisfied with your grade after lab 11, you may skip the final lab. This is
+            not recommended.
+          </p>
+          <p>
+            You may re-submit a report any number of times before the deadline; only the most recent
+            file is graded. After the deadline, the last submission stands. If you uploaded the
+            wrong file or an unreadable file, your TA will enter a zero and notify you. A
+            re-submission after the deadline is treated as a late submission, with the corresponding
+            penalty.
+          </p>
+
+          <h3>Letter grade scale</h3>
+          <p>
+            Grades are assigned on the <strong>integer part</strong> of the percentage. The grade is
+            not rounded. 89.99% is a B+; 90.01% is an A&minus;.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                Final letter grade thresholds
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Grade</th>
+                  <th scope="col">Percentage range</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">A+</th>
+                  <td>97 &le; % &le; 100</td>
+                </tr>
+                <tr>
+                  <th scope="row">A</th>
+                  <td>94 &le; % &lt; 97</td>
+                </tr>
+                <tr>
+                  <th scope="row">A&minus;</th>
+                  <td>90 &le; % &lt; 94</td>
+                </tr>
+                <tr>
+                  <th scope="row">B+</th>
+                  <td>87 &le; % &lt; 90</td>
+                </tr>
+                <tr>
+                  <th scope="row">B</th>
+                  <td>84 &le; % &lt; 87</td>
+                </tr>
+                <tr>
+                  <th scope="row">B&minus;</th>
+                  <td>80 &le; % &lt; 84</td>
+                </tr>
+                <tr>
+                  <th scope="row">C+</th>
+                  <td>76 &le; % &lt; 80</td>
+                </tr>
+                <tr>
+                  <th scope="row">C</th>
+                  <td>70 &le; % &lt; 76</td>
+                </tr>
+                <tr>
+                  <th scope="row">D</th>
+                  <td>60 &le; % &lt; 70</td>
+                </tr>
+                <tr>
+                  <th scope="row">E</th>
+                  <td>% &lt; 60</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ===== Late & extensions ===== -->
+        <section id="extensions" aria-labelledby="ext-heading">
+          <h2 id="ext-heading">Extensions &amp; late policy</h2>
+
+          <h3>Late penalty</h3>
+          <p>
+            Reports submitted after the deadline are penalized on the following schedule. A late
+            submission is still worth far more than a missed one; the penalty is intended to nudge
+            you toward timeliness, not to push you out of finishing.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                Late penalty by time past the due date
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Time past deadline</th>
+                  <th scope="col">Penalty</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Up to 24 hours</td>
+                  <td>&minus;3 pts (&minus;10%)</td>
+                </tr>
+                <tr>
+                  <td>24 to 72 hours</td>
+                  <td>&minus;4.5 pts (&minus;15%)</td>
+                </tr>
+                <tr>
+                  <td>More than 72 hours</td>
+                  <td>&minus;6 pts (&minus;20%) cap</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            The final lab of the session is <strong>not</strong> eligible for any extension. Reports
+            submitted after the deadline of the final lab will not be accepted, except by written
+            prior arrangement with the instructor. All other late reports must be submitted before
+            the final lab deadline to be eligible for a grade.
+          </p>
+
+          <h3>Automatic 24-hour extension</h3>
+          <p>
+            Submit the Automatic 24-Hour Extension Request Form (linked in the Course Information
+            module on Canvas) any time before the deadline. No explanation needed. You have up to
+            <strong>three</strong> uses per session. If you submit the report within the extended
+            window, no late penalty applies. The form exists so you don't lose sleep over physics;
+            please use it before pulling an all-nighter.
+          </p>
+
+          <h3>General extension</h3>
+          <p>
+            For documented circumstances such as medical or family emergencies,
+            university-sanctioned activities, or religious observance, email the instructor from
+            your ASU address with <strong>[PHY 114 Online]: General Extension Request</strong> in
+            the subject and CC the TAs. Include an explanation, documentation if applicable, and a
+            proposed timeline. General extensions are granted case by case; for serious, documented
+            medical emergencies they may be granted retroactively. Please follow ASU policy for
+            <a href="http://www.asu.edu/aad/manuals/acd/acd304-04.html">religious accommodations</a>
+            and for
+            <a href="http://www.asu.edu/aad/manuals/acd/acd304-02.html"
+              >missed work due to University-sanctioned activities</a
+            >.
+          </p>
+        </section>
+
+        <!-- ===== Regrades ===== -->
+        <section id="regrades" aria-labelledby="regrade-heading">
+          <h2 id="regrade-heading">Re-grade requests</h2>
+          <p>If you believe a grade is wrong:</p>
+          <ol>
+            <li>
+              Read your TA's comments in the SpeedGrader tool.
+              <a
+                href="https://community.canvaslms.com/t5/Student-Guide/How-do-I-view-annotation-feedback-comments-from-my-instructor/ta-p/523"
+                >Canvas guide for accessing SpeedGrader feedback</a
+              >.
+            </li>
+            <li>
+              Email your TA, CC the instructor, within <strong>seven days</strong> of the grade
+              being posted. Include <strong>[PHY 114 Online]</strong> in the subject, the lab name,
+              your section, and the specific concern.
+            </li>
+            <li>If the issue is not resolved with the TA, contact the instructor directly.</li>
+          </ol>
+          <p>After seven days, the grade is final.</p>
+        </section>
+
+        <!-- ===== Report guidelines ===== -->
+        <section id="report-guidelines" aria-labelledby="guides-heading">
+          <h2 id="guides-heading">Lab report quality guidelines</h2>
+          <p>
+            The point breakdown for each report is shown inside LabFrame next to each prompt. These
+            guidelines explain what <em>quality</em> of answer earns those points. You do not need
+            to include a cover page; LabFrame captures your identity and timestamps your submission
+            automatically.
+          </p>
+
+          <h3>Objective</h3>
+          <p>
+            Two or three sentences in your own words. State what the experiment was designed to test
+            or measure.
+          </p>
+
+          <h3>Experimental data</h3>
+          <p>Use the Set of Parameters from Canvas. Every quantity must carry correct units.</p>
+
+          <h3>Data analysis &amp; results</h3>
+          <p>
+            Show calculations <strong>symbolically</strong> first. Do not substitute numerical
+            values or units until the final step.
+          </p>
+          <p>
+            Analysis is reasoning, not arithmetic. Start from a physics principle (Coulomb's law,
+            Ohm's law, Snell's law, the thin-lens equation, whatever applies) and walk through the
+            steps that connect that principle to your result.
+            <strong
+              >You can lose credit for unclear reasoning even when your numerical answer is
+              correct.</strong
+            >
+            Show <em>why</em> you did each step, not just <em>what</em> you did.
+          </p>
+          <p>
+            Trivial calculations like percent error don't need narration, but the formula,
+            intermediate steps, and final result should still appear.
+          </p>
+          <p>
+            Percent error and percent difference are different things. Know which you are computing
+            and show the equation you used.
+          </p>
+
+          <h3>Discussion &amp; conclusion</h3>
+          <p>
+            This is the most important section. Demonstrate that you understood what you measured
+            and what it means. Skip raw data and intermediate calculations; those belong above.
+          </p>
+          <p>For each part of the experiment:</p>
+          <ul>
+            <li>Restate the objective and connect your results back to the underlying physics.</li>
+            <li>Identify the independent and dependent variables.</li>
+            <li>
+              Briefly describe the procedure, the apparatus, and how your key results were obtained.
+            </li>
+            <li>
+              Describe any plots and explain what they were used for: visualization, or extracting a
+              slope or intercept.
+            </li>
+            <li>Cite percent errors or percent differences, and discuss sources of error.</li>
+          </ul>
+          <p>
+            Be specific and thorough, but avoid filler. There is no minimum word count, and writing
+            <em>"I learned a lot from this lab"</em> earns no points (even when true).
+          </p>
+        </section>
+
+        <!-- ===== Errors ===== -->
+        <section id="errors" aria-labelledby="errors-heading">
+          <h2 id="errors-heading">Sources of error</h2>
+          <p>
+            A complete discussion includes error analysis. We do not accept
+            <em>"human error"</em> as a category. That phrase is to physics what "the dog ate my
+            homework" is to grade school. Instead, distinguish between two kinds:
+          </p>
+
+          <h3>Measurement limitations</h3>
+          <p>
+            <strong>Measurement limitations</strong> are unavoidable consequences of the measurement
+            process. They can be reduced, never eliminated, and in this course they typically
+            produce small errors (under about 5%). Examples:
+          </p>
+          <ul>
+            <li>The limited precision of measuring devices</li>
+            <li>Rounding during calculations</li>
+            <li>Calibration tolerances</li>
+          </ul>
+
+          <h3>Mistakes</h3>
+          <p>
+            <strong>Mistakes</strong> are avoidable. They typically produce larger errors (in
+            physics, anything above about 5% deserves explanation). Examples:
+          </p>
+          <ul>
+            <li>Misreading a value</li>
+            <li>Recording incorrect data</li>
+            <li>Skipping steps or using wrong formulas</li>
+            <li>Forgetting units, or applying them incorrectly</li>
+            <li>Not following the correct procedure</li>
+          </ul>
+
+          <p>If your error is large, don't just report the number. Ask:</p>
+          <ul>
+            <li>Did I apply the method correctly?</li>
+            <li>Did I use the correct equations and units?</li>
+            <li>Was my data collection accurate and consistent?</li>
+            <li>Is there an assumption in my analysis that might not hold?</li>
+          </ul>
+
+          <p>
+            Even small errors deserve a sentence: say what produced them. Large errors require
+            careful explanation, because they often point to a real problem you can fix before
+            submitting.
+          </p>
+
+          <div class="callout">
+            <p>
+              <strong
+                >If you are seeing a large error and cannot identify its source, ask for
+                help.</strong
+              >
+              Office hours and the discussion board exist for exactly this. This is also why you
+              should start your lab report several days before the due date; you'll have time to
+              catch issues while there's still time to fix them.
+            </p>
+          </div>
+
+          <div class="callout callout-warn">
+            <p>
+              <strong>Fabricated data or fabricated results</strong> (entries that did not come from
+              the simulation, "fixes" that paper over an unexplained discrepancy) will receive a
+              zero for the entire report and a referral to the Dean's office. This is the single
+              thing we cannot tolerate in a laboratory course. If you are stuck, document what you
+              tried, what failed, and what you think went wrong.
+              <em
+                >Partial credit is available for an honest report of a failed experiment. Zero
+                credit is available for a polished report of fabricated success.</em
+              >
+            </p>
+          </div>
+        </section>
+
+        <!-- ===== Integrity ===== -->
+        <section id="integrity" aria-labelledby="integrity-heading">
+          <h2 id="integrity-heading">Academic integrity</h2>
+          <p>
+            You are bound by the
+            <a href="https://provost.asu.edu/academic-integrity/policy"
+              >ASU Academic Integrity Policy</a
+            >. In this course, that means:
+          </p>
+          <p>
+            Every sentence you submit must be one you composed. You may discuss labs on Yellowdig or
+            with classmates; you may not copy another student's wording, AI-generated text, or text
+            from any other source without attribution. Copying or pseudo-copying any material not
+            explicitly authorized in the lab module is plagiarism. External resources (Wikipedia,
+            OpenStax, textbooks, videos) may be consulted for understanding, but if any wording,
+            figure, or specific argument from a source appears in your report, it must be cited.
+          </p>
+          <p>
+            LabFrame records paste events, focus time per field, and keystroke metadata in the
+            appendix of your submitted PDF. We use this information to review reports when
+            authorship is in question. We are not policing your keyboard; we are using the record to
+            be fair when the question arises.
+          </p>
+          <div class="callout callout-warn">
+            <p>
+              <strong
+                >Plagiarized reports receive a zero, and the drop-the-lowest privilege is revoked
+                for the rest of the session. Significant or repeated cases are referred to the
+                Dean's office.</strong
+              >
+              If you are retaking the course, you may not reuse work from a previous attempt.
+            </p>
+          </div>
+          <p>
+            Lab reports are also subject to the rules at the
+            <a href="http://physics.asu.edu/home/physics.asu.edu/home/resources/student/integrity"
+              >ASU Physics academic integrity page</a
+            >
+            and the
+            <a href="http://www.asu.edu/aad/manuals/ssm/ssm104-01.html">Student Code of Conduct</a>.
+          </p>
+        </section>
+
+        <!-- ===== AI policy ===== -->
+        <section id="ai" aria-labelledby="ai-heading">
+          <h2 id="ai-heading">Use of generative AI</h2>
+          <p>
+            AI tools are part of the world your professional life will be lived in, and pretending
+            otherwise is unhelpful. The policy for this course tries to be both honest and
+            enforceable.
+          </p>
+
+          <h3>Allowed</h3>
+          <ul>
+            <li>Asking an AI tool to explain a physics concept you don't understand.</li>
+            <li>Asking an AI tool to clarify a passage of the lab manual or textbook.</li>
+            <li>
+              Asking an AI tool whether <em>your own</em> sentence reads clearly, with the final
+              wording remaining yours.
+            </li>
+            <li>
+              Asking an AI tool to help you debug an error in <em>your own</em> calculation that you
+              have already attempted.
+            </li>
+          </ul>
+
+          <h3>Not allowed</h3>
+          <ul>
+            <li>
+              Submitting AI-generated prose, calculations, conclusions, interpretations, or data
+              analysis as your own work, in any part of a report.
+            </li>
+            <li>Using AI to generate experimental data, results, or plots.</li>
+            <li>Using AI to produce text for the discussion and conclusion section.</li>
+          </ul>
+
+          <h3>Disclosure</h3>
+          <p>
+            LabFrame includes an AI-use disclosure field. Honestly describe any AI assistance you
+            used and how you used it.
+            <strong>Disclosed use of an allowed category will never be penalized.</strong>
+            Undisclosed use, or use that falls into one of the prohibited categories, will be
+            treated as both a plagiarism and a fabrication violation under the
+            <a href="https://provost.asu.edu/academic-integrity/policy"
+              >ASU Academic Integrity Policy</a
+            >.
+          </p>
+        </section>
+
+        <!-- ===== Communication ===== -->
+        <section id="communication" aria-labelledby="comms-heading">
+          <h2 id="comms-heading">Email, communication, and time zones</h2>
+          <p>
+            ASU email is an
+            <a href="http://www.asu.edu/aad/manuals/ssm/ssm107-03.html"
+              >official means of communication</a
+            >
+            at the university. All correspondence from the instructor and the TAs goes to your ASU
+            email. Replies from personal email accounts will not be answered. Every course-related
+            email must include <strong>[PHY 114 Online]</strong> in the subject line.
+          </p>
+          <p>
+            All deadlines are in <strong>Arizona time</strong>. Arizona does not observe Daylight
+            Saving Time. If you live elsewhere, plan for the difference. Canvas displays the current
+            Arizona time at the top of the course page via the "Time in AZ" link.
+          </p>
+          <p>
+            Submit all assignments to the designated Canvas assignment. Do not email lab reports.
+          </p>
+        </section>
+
+        <!-- ===== Admin ===== -->
+        <section id="admin" aria-labelledby="admin-heading">
+          <h2 id="admin-heading">Drop, add, withdrawal, appeals</h2>
+          <p>
+            This course follows a compressed schedule and may be part of a sequenced program; the
+            window to <a href="https://students.asu.edu/academic-calendar">drop or add</a> is short.
+            Consult your advisor and notify the instructor before changing your enrollment.
+            Withdrawing from PHY 112 will result in automatic withdrawal from PHY 114. If you are
+            considering a withdrawal, see ASU's policies on
+            <a href="http://www.asu.edu/aad/manuals/ssm/ssm201-08.html">withdrawal from classes</a>,
+            <a href="http://www.asu.edu/aad/manuals/ssm/ssm201-09.html"
+              >medical/compassionate withdrawal</a
+            >, and
+            <a href="http://www.asu.edu/aad/manuals/ssm/ssm203-09.html">grade of incomplete</a>.
+          </p>
+          <h3>Grade appeals</h3>
+          <p>
+            Discuss grade disputes with the instructor first, and <strong>during the term</strong>,
+            not after. If the dispute cannot be resolved, you may appeal to the department chair per
+            the
+            <a href="https://catalog.asu.edu/appeal"
+              >University Policy for Student Appeal Procedures on Grades</a
+            >.
+          </p>
+          <h3>Conduct &amp; netiquette</h3>
+          <p>
+            Discussion board posts should remain focused on the course; maintain a cordial
+            atmosphere and use tact in disagreement. Inappropriate posts may be deleted by the
+            instructor or a TA. ASU's full conduct expectations are documented in the
+            <a href="http://www.asu.edu/aad/manuals/ssm/ssm104-01.html">Student Code of Conduct</a>,
+            the
+            <a href="http://www.asu.edu/aad/manuals/acd/acd125.html"
+              >Computer, Internet, and Electronic Communications policy</a
+            >, and the resources at the
+            <a href="https://students.asu.edu/srr"
+              >Office of Student Rights &amp; Responsibilities</a
+            >. The
+            <a href="http://www.asu.edu/aad/manuals/ssm/ssm104-02.html"
+              >right to instruction free from interference</a
+            >
+            includes the instructor's authority to withdraw a student for disruptive behavior under
+            the
+            <a href="http://www.asu.edu/aad/manuals/usi/usi201-10.html"
+              >Instructor Withdrawal policy</a
+            >.
+          </p>
+          <h3>Commercial note-taking services</h3>
+          <p>
+            In accordance with
+            <a href="http://www.asu.edu/aad/manuals/acd/acd304-06.html">ACD 304-06</a>, written
+            permission from the instructor is required to sell notes derived from course content.
+          </p>
+          <h3>Course evaluation</h3>
+          <p>
+            Please complete the course evaluation when it opens. Your feedback is used to improve
+            future sessions of this course. You will be notified by ASU when the evaluation is
+            available.
+          </p>
+        </section>
+
+        <!-- ===== Accessibility ===== -->
+        <section id="accessibility" aria-labelledby="access-heading">
+          <h2 id="access-heading">Accessibility</h2>
+          <p>
+            In compliance with Section 504 of the Rehabilitation Act and the Americans with
+            Disabilities Act as amended (ADAAA), the Disability Resource Center (DRC) facilitates a
+            comprehensive range of academic accommodations for qualified students with disabilities.
+            Eligibility is based on qualifying documentation and assessment of individual need.
+            Students who believe they have a current need are
+            <a href="http://www.asu.edu/aad/manuals/ssm/ssm701-02.html"
+              >responsible for requesting accommodations</a
+            >
+            from the DRC.
+          </p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>
+                Disability Resource Center contacts by campus
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Campus</th>
+                  <th scope="col">Location</th>
+                  <th scope="col">Phone</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">ASU Online &amp; Downtown Phoenix</th>
+                  <td>University Center Building, Suite 160</td>
+                  <td>602-496-4321</td>
+                </tr>
+                <tr>
+                  <th scope="row">Polytechnic</th>
+                  <td></td>
+                  <td>480-727-1165</td>
+                </tr>
+                <tr>
+                  <th scope="row">West</th>
+                  <td>University Center Building, Room 130</td>
+                  <td>602-543-8145</td>
+                </tr>
+                <tr>
+                  <th scope="row">Tempe</th>
+                  <td></td>
+                  <td>480-965-1234</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>
+            This syllabus is provided in semantic HTML and targets
+            <strong>WCAG 2.2 Level AA</strong> conformance so that it can be reliably read by screen
+            readers and other assistive technology. LabFrame itself also targets WCAG 2.2 AA,
+            supports full keyboard navigation, and does not block paste or right-click operations.
+            If you encounter any element of this syllabus, the lab manuals, or LabFrame that is not
+            accessible to you, please email the instructor.
+          </p>
+        </section>
+
+        <!-- ===== Title IX ===== -->
+        <section id="title-ix" aria-labelledby="titleix-heading">
+          <h2 id="titleix-heading">Title IX</h2>
+          <p>
+            Title IX is a federal law providing that no person be excluded on the basis of sex from
+            participation in, be denied benefits of, or be subjected to discrimination under any
+            education program or activity. Both Title IX and university policy make clear that
+            sexual violence and harassment based on sex is prohibited.
+          </p>
+          <p>
+            If you or someone you know has been subjected to sex-based harassment or sexual
+            violence, support and academic resources, including counseling, are available at the
+            <a href="https://sexualviolenceprevention.asu.edu/faqs"
+              >ASU Sexual Violence Awareness, Prevention, and Response page</a
+            >.
+          </p>
+          <p>
+            As a mandated reporter, the instructor is obligated to report any information they
+            become aware of regarding alleged acts of sex-based discrimination, including sexual
+            violence and dating violence. For confidential support,
+            <a href="https://eoss.asu.edu/counseling">ASU Counseling Services</a> and
+            <a href="https://goto.asuonline.asu.edu/success/online-resources.html"
+              >360 Life Services</a
+            >
+            (for online students) are available.
+          </p>
+        </section>
+
+        <!-- ===== Copyright ===== -->
+        <section id="copyright" aria-labelledby="copyright-heading">
+          <h2 id="copyright-heading">Copyright</h2>
+          <p>
+            Course content (including the lab manuals, lab simulations, lab schedule, and LabFrame
+            configurations) is copyrighted. Students may not upload, sell, or otherwise redistribute
+            course materials. Students retain rights to their own writing but may not redistribute
+            lab reports, complete or incomplete, to anyone outside the course. Recordings and
+            excerpts of recordings may not be distributed. Exceptions may be granted only as part of
+            an accommodation approved in writing by the ASU Disability Resource Center.
+          </p>
+        </section>
+
+        <!-- ===== Disclaimer ===== -->
+        <section id="disclaimer" aria-labelledby="disclaimer-heading">
+          <h2 id="disclaimer-heading">Disclaimer</h2>
+          <p>
+            This syllabus is a statement of intent and serves as an implicit agreement between the
+            instructor and you. Every effort will be made not to change the schedule or these
+            policies, but the possibility exists that changes may be necessary. Check your ASU email
+            and the course site regularly.
+          </p>
+        </section>
+
+        <footer>
+          <p>
+            PHY 114 · University Physics II Laboratory · Arizona State University · Department of
+            Physics<br />
+            Syllabus last updated 29 June 2026.
+          </p>
+        </footer>
+      </main>
+    </div>
+
+    <script>
+      // Active-section highlighting in the sidebar TOC.
+      // Uses IntersectionObserver; degrades gracefully if unsupported.
+      (function () {
+        if (!('IntersectionObserver' in window)) return;
+        const tocLinks = Array.from(document.querySelectorAll('.toc-sidebar a[href^="#"]'));
+        if (tocLinks.length === 0) return;
+
+        const linkById = new Map();
+        tocLinks.forEach((a) => {
+          const id = a.getAttribute('href').slice(1);
+          linkById.set(id, a);
+        });
+
+        const sections = Array.from(document.querySelectorAll('main section[id]'));
+        let currentId = null;
+
+        function setActive(id) {
+          if (id === currentId) return;
+          currentId = id;
+          tocLinks.forEach((a) => a.removeAttribute('aria-current'));
+          const link = linkById.get(id);
+          if (link) link.setAttribute('aria-current', 'location');
+        }
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            const visible = entries
+              .filter((e) => e.isIntersecting)
+              .map((e) => e.target)
+              .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+            if (visible.length > 0) {
+              setActive(visible[0].id);
+            }
+          },
+          {
+            rootMargin: '0px 0px -65% 0px',
+            threshold: 0,
+          },
+        );
+
+        sections.forEach((s) => observer.observe(s));
+      })();
+    </script>
+  </body>
+</html>

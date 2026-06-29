@@ -2,7 +2,7 @@ import type { Course, LabAnswers } from '@/domain/schema';
 import { resolveIntegrityAgreementText } from '@/services/integrity/agreementText';
 import type { LabStoreState } from '@/state/labStore';
 
-export function buildAnswersFromStore(course: Course, store: LabStoreState): LabAnswers {
+export function buildAnswersFromStore(_course: Course, store: LabStoreState): LabAnswers {
   const agreementText = store.lab ? resolveIntegrityAgreementText(store.lab) : '';
   return {
     schemaVersion: 4,
@@ -11,7 +11,7 @@ export function buildAnswersFromStore(course: Course, store: LabStoreState): Lab
       semester: 'Fall',
       session: 'C',
       year: String(new Date().getFullYear()),
-      taName: course.title,
+      taName: store.taName || '',
     },
     integrity: {
       signedAs: store.studentName || 'Student',
