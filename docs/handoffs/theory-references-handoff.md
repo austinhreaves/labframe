@@ -40,7 +40,7 @@ Labs 1+2 share a folder (they were one combined lab before the LabFrame split). 
 
 ## Process for each lab
 
-### Step 1 -- Find the lab source file
+### Step 1: Find the lab source file
 
 Check the course manifest (`src/content/courses/phy114.course.ts`) for the `ref`. Several
 PHY 114 labs reuse PHY 132 lab objects directly:
@@ -50,7 +50,7 @@ PHY 114 labs reuse PHY 132 lab objects directly:
 - coulombsLaw, pointCharge, ohmsLaw, convergingLens, divergingLens -> `src/content/labs/phy114/<ref>.draft.lab.ts`
 - snellsLaw -> `src/content/labs/phy114/snellsLaw.lab.ts`
 
-### Step 2 -- Extract background sections
+### Step 2: Extract background sections
 
 Grep the lab file for `kind: 'instructions'` sections (these are the background/theory
 blocks). Also check for `tocLabel` starting with "Background:". Skip `kind: 'concept'`
@@ -66,7 +66,7 @@ GFM callouts). Note any phrases that reference the lab context directly, such as
 
 These must be de-contextualized or removed in the standalone document.
 
-### Step 3 -- Read the old materials
+### Step 3: Read the old materials
 
 Use Python to extract text:
 
@@ -110,11 +110,11 @@ for d in os.listdir(base):
 Run these via `pwsh -NoProfile -Command "python -c \"...\""` (the PowerShell tool is broken;
 use the Bash tool).
 
-### Step 4 -- Alignment audit
+### Step 4: Alignment audit
 
 Compare topics covered in the old materials against the LabFrame background sections.
 Flag anything present in the old materials but absent from LabFrame. Do NOT silently
-insert missing topics -- note the gap and decide with the user.
+insert missing topics; note the gap and decide with the user.
 
 Standard content to include in every theory reference (established by Lab 1):
 
@@ -123,7 +123,7 @@ Standard content to include in every theory reference (established by Lab 1):
   first one a student might read. For the optics labs (9-11), omit it.
 - All topics covered by the lab's own background sections.
 
-### Step 5 -- Write the Markdown
+### Step 5: Write the Markdown
 
 Create `docs/theory/lab-NN-<name>.md`. Structure:
 
@@ -149,24 +149,25 @@ Create `docs/theory/lab-NN-<name>.md`. Structure:
 
 **Content guidelines:**
 
-- No em dashes (`-`) anywhere. Use hyphens or rewrite.
+- **No em dashes (`—`) or double-hyphens (`--`) anywhere.** Use colons, semicolons, commas,
+  or parentheses instead. This applies to prose, headings, titles, and quoted examples.
 - No chemistry-discipline jargon (electronegativity, electron affinity, electron donor/acceptor).
   Replace with plain-physics language: "holds electrons loosely / tightly," etc.
-- Define technical terms inline on first use (e.g., "conductors -- materials, mostly metals,
-  whose electrons are free to move").
+- Define technical terms inline on first use (e.g., "conductors (mostly metals) whose electrons
+  are free to move").
 - GFM callouts (`> [!NOTE]`) do not render in Canvas. Use plain blockquotes (`> **Note:**`).
 - De-contextualize all lab-internal forward/backward references.
 - PHY 114 is algebra-based. No uncertainty, no error propagation. Keep percent error.
 
-### Step 6 -- Write the HTML
+### Step 6: Write the HTML
 
 Create `docs/theory/lab-NN-<name>.html`. Copy the structure from
-`docs/theory/lab-01-charge-buildup.html` -- it already has the right CSS (ASU maroon
+`docs/theory/lab-01-charge-buildup.html` (it already has the right CSS: ASU maroon
 header, note callout, print-friendly styles, no external deps). Update the `<title>`,
 `.lab-meta`, `<h1>`, `.lab-description`, and section content. Keep all CSS identical
 unless the lab needs additional element types.
 
-### Step 7 -- Validate and preview
+### Step 7: Validate and preview
 
 ```bash
 python -c "
@@ -188,7 +189,7 @@ These were deliberated with the user and should carry forward:
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | Charge quantization placement   | Opening paragraph of the first E+M section                                                                                 |
 | Triboelectric series            | State tendency directly ("tend to give up / take") rather than "sit high / sit low"                                        |
-| "Conductor" first use           | Define inline: "materials -- mostly metals -- whose electrons are free to move"                                            |
+| "Conductor" first use           | Define inline: "materials (mostly metals) whose electrons are free to move"                                                |
 | "Grounding" first use           | Define inline: "connected to a large neutral object, like the Earth, that can absorb or supply charge"                     |
 | Polarization attraction         | Explain the mechanism: shifted molecules create a slight opposite charge facing the charged object                         |
 | Spark (conduction)              | Keep as "a fast version of conduction: the voltage difference grows large enough to briefly turn the air...into a channel" |
