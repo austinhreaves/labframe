@@ -213,6 +213,21 @@ function AboutAndPrivacy({ courseTitle }: { courseTitle: string }) {
           publisher&apos;s product. Working with open tools lets the course evolve in response to
           what is actually working for the students taking it.
         </p>
+        <p>
+          LabFrame was created by{' '}
+          <a href="https://github.com/austinhreaves" rel="noreferrer noopener" target="_blank">
+            Austin Reaves
+          </a>{' '}
+          and is released under the{' '}
+          <a
+            href="https://www.gnu.org/licenses/agpl-3.0.html"
+            rel="noreferrer noopener"
+            target="_blank"
+          >
+            GNU Affero General Public License v3
+          </a>
+          .
+        </p>
       </Disclosure>
       <Disclosure title="Your data and FERPA">
         <p>
