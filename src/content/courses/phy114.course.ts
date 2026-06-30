@@ -13,17 +13,17 @@ export const phy114Course: Course = {
     // error propagation removed (114 is algebra-based).
     { ref: 'chargeBuildup', labNumber: 1, enabled: true, group: 'core' },
     { ref: 'coulombsLaw', labNumber: 2, enabled: true, group: 'core' },
-    { ref: 'pointCharge', labNumber: 3, enabled: true, group: 'core' },
-    { ref: 'chargeConfigurations', labNumber: 4, enabled: true, group: 'core' },
-    { ref: 'capacitorFundamentals', labNumber: 5, enabled: true, group: 'core' },
-    { ref: 'capacitorNetworks', labNumber: 6, enabled: true, group: 'core' },
-    { ref: 'ohmsLaw', labNumber: 7, enabled: true, group: 'core' },
-    { ref: 'kirchhoffsLaws', labNumber: 8, enabled: true, group: 'core' },
+    { ref: 'pointCharge', labNumber: 3, enabled: true, group: 'coming-soon' },
+    { ref: 'chargeConfigurations', labNumber: 4, enabled: true, group: 'coming-soon' },
+    { ref: 'capacitorFundamentals', labNumber: 5, enabled: true, group: 'coming-soon' },
+    { ref: 'capacitorNetworks', labNumber: 6, enabled: true, group: 'coming-soon' },
+    { ref: 'ohmsLaw', labNumber: 7, enabled: true, group: 'coming-soon' },
+    { ref: 'kirchhoffsLaws', labNumber: 8, enabled: true, group: 'coming-soon' },
     // Optics. snellsLaw is unchanged; geometricOptics is split into the two
     // lens labs below.
-    { ref: 'snellsLaw', labNumber: 9, enabled: true, group: 'core' },
-    { ref: 'convergingLens', labNumber: 10, enabled: true, group: 'core' },
-    { ref: 'divergingLens', labNumber: 11, enabled: true, group: 'core' },
+    { ref: 'snellsLaw', labNumber: 9, enabled: true, group: 'coming-soon' },
+    { ref: 'convergingLens', labNumber: 10, enabled: true, group: 'coming-soon' },
+    { ref: 'divergingLens', labNumber: 11, enabled: true, group: 'coming-soon' },
     // Retired source drafts (split into the entries above). Kept enabled:false
     // so graders can still reach in-flight student records saved against the
     // original lab IDs.
