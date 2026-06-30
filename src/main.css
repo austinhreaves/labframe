@@ -5,7 +5,12 @@
 @import './ui/base.css';
 
 :root {
-  --lab-header-offset: 120px;
+  /* The consolidated toolbar (Pass 4) is one ~52px row when it fits, but wraps
+     its context / controls groups at laptop widths. Bias the sticky-anchor
+     offset high so section anchors never scroll under a wrapped header;
+     over-estimating only adds harmless scroll gap, under-estimating hides
+     content. */
+  --lab-header-offset: 108px;
 }
 
 html {
@@ -738,8 +743,7 @@ a.lab-card:hover {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: var(--space-2);
-  min-height: 120px;
+  min-height: 52px;
   padding: var(--space-2) 0;
   position: sticky;
   top: 0;
@@ -749,7 +753,10 @@ a.lab-card:hover {
   overflow-x: clip;
 }
 
-.lab-header-top {
+/* Pass 4: one consolidated toolbar row. Context on the left, identity +
+   settings + actions on the right; both groups wrap as a unit when width is
+   tight (the redesign targets >= 600px, so wrapping is acceptable below that). */
+.lab-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -758,40 +765,30 @@ a.lab-card:hover {
   min-width: 0;
 }
 
-.lab-header-bottom {
+.lab-toolbar-context {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  flex: 1 1 auto;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: var(--space-2);
   min-width: 0;
 }
 
-.lab-header-bottom-main {
-  display: flex;
-  align-items: center;
-  flex: 1 1 520px;
-  min-width: 0;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.lab-header-actions {
+.lab-toolbar-controls {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   flex: 0 1 auto;
   flex-wrap: wrap;
   gap: var(--space-2);
+  min-width: 0;
 }
 
-.lab-header-left,
-.lab-header-right {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  min-width: 0;
+.lab-toolbar-divider {
+  align-self: stretch;
+  width: 1px;
+  min-height: var(--space-5);
+  background: var(--border-default);
 }
 
 .lab-wordmark {
@@ -814,12 +811,6 @@ a.lab-card:hover {
   white-space: nowrap;
 }
 
-.lab-header-right {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
 .lab-student-name {
   display: flex;
   align-items: center;
@@ -829,8 +820,8 @@ a.lab-card:hover {
 }
 
 .lab-student-name input {
-  width: min(180px, 45vw);
-  min-width: 120px;
+  width: min(150px, 32vw);
+  min-width: 96px;
 }
 
 .lab-ta-name {
@@ -842,8 +833,8 @@ a.lab-card:hover {
 }
 
 .lab-ta-name input {
-  width: min(180px, 45vw);
-  min-width: 120px;
+  width: min(130px, 28vw);
+  min-width: 84px;
 }
 
 .lab-save-status {
@@ -852,8 +843,9 @@ a.lab-card:hover {
   color: var(--text-secondary);
   display: inline-flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -873,6 +865,105 @@ a.lab-card:hover {
   align-items: center;
   flex-wrap: nowrap;
   gap: var(--space-2);
+}
+
+/* Pass 7: worksheet Text size control (Aa S/M/L). */
+.text-size-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.text-size-toggle-icon {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-right: var(--space-0-5);
+}
+
+.text-size-toggle button {
+  min-width: var(--space-5);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+.text-size-toggle button[aria-pressed='true'] {
+  background: var(--accent-soft);
+  border-color: var(--border-accent);
+  color: var(--accent-text);
+}
+
+/* Pass 4: Swap-sides becomes an icon button in the consolidated toolbar. */
+.lab-swap-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  min-width: var(--space-6);
+  min-height: var(--space-6);
+}
+
+/* Pass 4: the `...` overflow folding About and Take the tour. */
+.overflow-menu {
+  position: relative;
+}
+
+.overflow-menu > summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  min-width: var(--space-6);
+  min-height: var(--space-6);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  cursor: pointer;
+  list-style: none;
+}
+
+.overflow-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+@media (hover: hover) {
+  .overflow-menu > summary:hover {
+    border-color: var(--border-strong);
+  }
+}
+
+.overflow-menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-1));
+  margin: 0;
+  padding: var(--space-1);
+  list-style: none;
+  min-width: 160px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-overlay);
+  box-shadow: var(--shadow-3);
+  z-index: 20;
+}
+
+.overflow-menu-panel li {
+  list-style: none;
+}
+
+.overflow-menu-panel button {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+}
+
+@media (hover: hover) {
+  .overflow-menu-panel button:hover {
+    background: var(--surface-sunken);
+  }
 }
 
 .storage-note-banner {
@@ -939,16 +1030,6 @@ a.lab-card:hover {
 .tour-course-picker h2 {
   margin: 0 0 var(--space-3);
   font-size: var(--text-lg);
-}
-
-.lab-tour-button {
-  white-space: nowrap;
-}
-
-@media (pointer: coarse) {
-  .lab-tour-button {
-    min-height: var(--space-7);
-  }
 }
 
 .lab-tour-toast-actions {
@@ -1023,14 +1104,6 @@ a.lab-card:hover {
 
 .layout-toggle {
   display: flex;
-  gap: var(--space-2);
-}
-
-.layout-controls {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  min-width: 0;
   gap: var(--space-2);
 }
 
