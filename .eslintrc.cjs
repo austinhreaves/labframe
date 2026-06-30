@@ -24,7 +24,7 @@ module.exports = {
     '.vercel',
     'coverage',
     'node_modules',
-'_DataURI',
+    '_DataURI',
     '*.config.ts',
     '*.config.cjs',
   ],

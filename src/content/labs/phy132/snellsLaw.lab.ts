@@ -11,8 +11,6 @@ function sinFromDegrees(fieldName: string) {
   };
 }
 
-
-
 export const phy132SnellsLawLab: Lab = {
   id: 'snellsLaw',
   title: "Snell's Law",

@@ -30,12 +30,7 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
     coverage: {
       reporter: ['text', 'html', 'json-summary'],
-      exclude: [
-        'node_modules/',
-        'dist/',
-        'tests/',
-        '**/*.config.ts',
-      ],
+      exclude: ['node_modules/', 'dist/', 'tests/', '**/*.config.ts'],
     },
     include: ['tests/unit/**/*.test.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
     exclude: ['tests/e2e/**', 'node_modules/**'],

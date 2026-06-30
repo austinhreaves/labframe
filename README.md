@@ -50,17 +50,17 @@ npm run dev:vercel
 
 ### Scripts
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Vite frontend dev server |
-| `npm run dev:vercel` | Vercel dev server with API routes |
-| `npm run build` | Typecheck + production build |
-| `npm run typecheck` | TypeScript check only |
-| `npm run lint` | ESLint (warnings fail CI) |
-| `npm test` | Vitest suite |
-| `npm run test:e2e` | Playwright suite |
-| `npm run ci` | Full local CI pipeline |
-| `npm run analyze` | Bundle report at `dist/stats.html` |
+| Command              | Purpose                            |
+| -------------------- | ---------------------------------- |
+| `npm run dev`        | Vite frontend dev server           |
+| `npm run dev:vercel` | Vercel dev server with API routes  |
+| `npm run build`      | Typecheck + production build       |
+| `npm run typecheck`  | TypeScript check only              |
+| `npm run lint`       | ESLint (warnings fail CI)          |
+| `npm test`           | Vitest suite                       |
+| `npm run test:e2e`   | Playwright suite                   |
+| `npm run ci`         | Full local CI pipeline             |
+| `npm run analyze`    | Bundle report at `dist/stats.html` |
 
 ### Environment variables
 
