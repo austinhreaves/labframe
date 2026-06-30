@@ -1917,10 +1917,66 @@ a.lab-card:hover {
   letter-spacing: var(--tracking-tight);
 }
 
-.section-points-caption {
+.section-points-pill {
+  display: inline-flex;
+  align-items: center;
   margin: 0 0 var(--space-2);
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
+  padding: var(--space-0-5) var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+}
+
+/* Pass 1: answerable fields sit in a distinct card so "answer this" reads apart
+   from the teaching prose above it. */
+.answer-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--border-accent);
+  border-radius: var(--radius-md);
+  background: var(--accent-wash);
+}
+
+.answer-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--space-4);
+}
+
+.answer-card-eyebrow {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.answer-card-status {
+  margin-left: auto;
+  padding: var(--space-0-5) var(--space-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  background: var(--surface-sunken);
+  color: var(--text-tertiary);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.answer-card-status[data-answered] {
+  border-color: var(--success-border);
+  background: var(--success-bg);
+  color: var(--success-text);
 }
 
 .markdown-callout {

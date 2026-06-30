@@ -62,39 +62,40 @@ function calloutVariant(label: string): string {
 const markdownComponents: Components = {
   blockquote({ children }) {
     const flat = Array.isArray(children) ? children : [children];
-    const firstChild = flat[0];
-    const firstParagraph =
-      firstChild && typeof firstChild === 'object' && 'props' in firstChild
-        ? (firstChild.props as { children?: ReactNode }).children
+    // react-markdown's AST includes whitespace-only text nodes around block
+    // children (e.g. the newline between `<blockquote>` and its `<p>`); skip
+    // those to find the actual first paragraph and its real index.
+    const firstChildIndex = flat.findIndex(
+      (child) => !(typeof child === 'string' && child.trim() === ''),
+    );
+    const rawFirstChild = firstChildIndex === -1 ? undefined : flat[firstChildIndex];
+    const firstChild =
+      rawFirstChild && typeof rawFirstChild === 'object' && 'props' in rawFirstChild
+        ? (rawFirstChild as { props: Record<string, unknown> })
         : null;
-    const firstText =
-      typeof firstParagraph === 'string'
-        ? firstParagraph
-        : Array.isArray(firstParagraph) && typeof firstParagraph[0] === 'string'
-          ? firstParagraph[0]
-          : null;
+    const firstParagraphChildren = firstChild
+      ? (firstChild.props as { children?: ReactNode }).children
+      : null;
+    const paragraphFlat = Array.isArray(firstParagraphChildren)
+      ? firstParagraphChildren
+      : [firstParagraphChildren];
+    const firstText = typeof paragraphFlat[0] === 'string' ? paragraphFlat[0] : null;
     const match = firstText ? firstText.match(CALLOUT_PATTERN) : null;
-    if (!match) {
+    if (!match || !firstChild || !firstText) {
       return <blockquote>{children}</blockquote>;
     }
     const label = (match[1] ?? 'NOTE').toUpperCase();
-    const nextFirstText = firstText?.replace(CALLOUT_PATTERN, '').trimStart() ?? '';
-    let normalizedChildren = children;
-    if (
-      nextFirstText !== firstText &&
-      firstChild &&
-      typeof firstChild === 'object' &&
-      'props' in firstChild
-    ) {
-      const patchedFirst = {
-        ...firstChild,
-        props: {
-          ...(firstChild.props as Record<string, unknown>),
-          children: nextFirstText,
-        },
-      } as unknown as ReactNode;
-      normalizedChildren = [patchedFirst, ...flat.slice(1)];
-    }
+    const nextFirstText = firstText.replace(CALLOUT_PATTERN, '').trimStart();
+    const patchedFirst = {
+      ...firstChild,
+      props: {
+        ...firstChild.props,
+        children: [nextFirstText, ...paragraphFlat.slice(1)],
+      },
+    } as unknown as ReactNode;
+    const normalizedChildren = flat.map((child, index) =>
+      index === firstChildIndex ? patchedFirst : child,
+    );
     return (
       <aside className={`markdown-callout ${calloutVariant(label)}`}>
         <span className="markdown-callout-title">{label}</span>
