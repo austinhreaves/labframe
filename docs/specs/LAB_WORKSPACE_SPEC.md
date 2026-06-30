@@ -165,44 +165,78 @@ A part also carries a narrative thread (1A John Travoltage introduces friction /
 induction and foreshadows polarization, 1B Balloons tests conductor vs insulator against 1A, 1C
 returns to John Travoltage to synthesize), so the coupling earns its place.
 
-**Recommended data model (least invasive, backward compatible):** add an optional `parts`
-layer that groups the existing flat `sections`, rather than nesting sections inside parts in a
-way that churns every lab file at once.
+### Locked: data model
+
+An optional `parts` grouping layer over the existing flat `sections` array. Section references
+use **array index ranges** (not field IDs, since `instructions`, `dataTable`, `plot`, and
+`image` sections have no `fieldId`). Labs without `parts` keep rendering as one scroll;
+migration is incremental.
 
 ```ts
-// Each part references one simulation (by the existing simulations-record key) and a
-// contiguous run of sections. Labs without `parts` keep rendering as one scroll (today's
-// behavior), so migration is incremental.
-parts?: Array<{
-  key: string; // "1A"
-  title: string; // "John Travoltage"
-  simulationId: string; // key into lab.simulations
-  sectionRange: [startIndex, endIndexExclusive]; // or section ids
-}>;
+// Addition to LabSchema in src/domain/schema/lab.ts
+const PartSchema = z.object({
+  key: nonEmptyText,         // "1A" — used in ?part= URL param
+  title: nonEmptyText,       // "John Travoltage" — shown in sticky header and nav
+  simulationId: idSchema,    // key into lab.simulations record
+  sectionRange: z.tuple([    // [startIndex, endIndexExclusive] into lab.sections
+    z.number().int().nonnegative(),
+    z.number().int().positive(),
+  ]),
+});
+
+// In LabSchema:
+parts: z.array(PartSchema).min(2).optional(),
 ```
 
-The alternative is a `simulationId` field directly on each section plus a grouping key; that is
-more flexible but touches every section. The grouping-layer option keeps the section schema
-untouched and lets labs adopt parts one at a time. Decide this in review (see Open questions).
+Zod validation rules the lab validator must enforce (add to `src/services/verifyLab`):
 
-**Implications to spell out in the build:**
+1. Every `simulationId` resolves as a key in `lab.simulations`.
+2. Ranges are non-overlapping, contiguous, and together cover every section index (0 to
+   `sections.length - 1`).
+3. Each range `[start, end]` satisfies `start < end <= sections.length`.
 
-- **Schema:** extend `LabSchema` in `src/domain/schema/lab.ts`; the lab validator
-  (`npm run verify:lab`) and `src/services/verifyLab` must check that every `simulationId`
-  resolves and that section ranges are contiguous and cover the lab.
-- **Renderer:** `LabPage.tsx` renders only the active part's sections and binds
-  `activeSimulationId` to the active part instead of the picker. Remove the
-  `.simulation-picker` dropdown.
-- **PDF / envelope:** confirm the report still renders all sections across all parts (the
-  envelope is the whole lab, not just the active part). `pdfHidden` on `SectionMetadata` still
-  applies.
-- **Content:** parts are authored in the lab definition and should be drivable from the course
-  manifest narrative, consistent with how On deck / Up next read the manifest. The example
-  shape in the handoff (`key`, `title`, `phetUrl`, `questions[]`) maps onto a part plus its
-  section range; `phetUrl` stays in `lab.simulations` (single source), referenced by
-  `simulationId`.
+### Locked: active part in the URL
 
-This pass is the dependency for Pass 3 (active part / sim in the header) and Pass 6 (part nav).
+The active part key is stored in the `?part=` search param, consistent with `layout`, `tab`,
+`side`, and `student`. Default (no param) is the first part.
+
+```
+/c/phy114/chargeBuildup?part=1A
+/c/phy114/chargeBuildup?part=1B
+```
+
+Part navigation updates the param with `setSearchParams` (same pattern as layout toggle) and
+resets the worksheet-pane scroll to top. Browser back/forward works naturally.
+
+### Renderer changes in `LabPage.tsx`
+
+- Derive `activePart` from `?part=` param, falling back to `parts[0]`.
+- Render only `lab.sections.slice(activePart.sectionRange[0], activePart.sectionRange[1])`.
+- Set `activeSimulationId = activePart.simulationId` (read from `lab.simulations`); remove
+  the `activeSimulationId` state and the `.simulation-picker` `<Select>` dropdown.
+- Pass `activePart` to Pass 3 (sticky header) and Pass 6 (nav primitives).
+- For labs without `parts`, render all sections as today (no regression).
+
+### PDF / envelope
+
+The signed report must cover every section across all parts. `renderPDF` and
+`buildAnswersFromStore` iterate `lab.sections` in full, independent of which part is active;
+no change needed there. `pdfHidden` on `SectionMetadata` continues to apply per-section.
+
+### Locked: migration scope
+
+Only the two live PHY 114 labs receive authored `parts` in this pass:
+
+- `src/content/labs/phy114/chargeBuildup` (reuses `phy132ChargeBuildupLab` — parts must be
+  added to the PHY 132 source or a PHY-114-owned copy must be created; prefer the copy to keep
+  PHY 132 separate).
+- `src/content/labs/phy114/coulombsLaw.draft.lab.ts`.
+
+All other enabled labs keep the single-scroll layout until they are individually migrated.
+Run `npm run verify:lab -- chargeBuildup` and `-- coulombsLaw` after authoring parts.
+
+This pass is the dependency for Pass 3 (active part / sim in the sticky header) and Pass 6
+(part nav primitives).
 
 ---
 
@@ -262,11 +296,9 @@ Largely already built; this section records it so the redesign does not re-imple
 - Map the mock's dark palette, panels, borders (`rgba(255,255,255,0.06-0.10)`), and radii
   (9-16px) onto the existing tokens in `src/ui/tokens.css`. Adaptive theme, consistent with the
   start-screen decision: the dark mock is the dark-mode appearance.
-- **Fonts:** reuse the current stack to match the start-screen decision: Space Grotesk
-  (`--font-display`) for the wordmark and labels, Inter (`--font-sans`) for body, and the
-  existing JetBrains Mono (`--font-mono`) for the sim / URL captions the mock sets in IBM Plex
-  Mono. Do not add IBM Plex Sans or IBM Plex Mono (see Divergences). This is an open question if
-  the mock's exact faces are required.
+- **Fonts:** Space Grotesk (`--font-display`) for the wordmark and labels, Inter (`--font-sans`)
+  for body, JetBrains Mono (`--font-mono`) for sim / URL captions. Do not add IBM Plex Sans or
+  IBM Plex Mono; this matches the locked start-screen decision and avoids new font dependencies.
 - Minimum 44px hit targets; watch contrast on the muted greys, especially in light mode.
 
 ---
@@ -277,8 +309,7 @@ Largely already built; this section records it so the redesign does not re-imple
   styling plus verification, not a parser build.
 - **Process record already exists;** the "Answer persistence" pass is reconciliation, not new
   capture infrastructure.
-- **Fonts:** Inter for body and JetBrains Mono for mono, not IBM Plex Sans / Mono, matching the
-  start-screen locked decision and avoiding new font dependencies.
+- **Fonts:** Inter for body and JetBrains Mono for mono, not IBM Plex Sans / Mono (locked).
 - **Layout / swap / theme already exist;** Pass 7 mainly adds Text size and per-student
   persistence of the layout preference.
 - **Sim picker exists today;** Pass 5 removes it in favor of part-bound simulations.
@@ -297,18 +328,6 @@ sensible order:
 3. Pass 5 (parts model) - schema + renderer + validator + content migration, behind backward
    compatibility so unmigrated labs still render as one scroll.
 4. Pass 3 (sticky section header) and Pass 6 (nav primitives) - built on the part model.
-
-## Open questions
-
-- **Pass 5 data model:** grouping layer (`parts` over flat sections, recommended) vs
-  `simulationId` per section. Affects every lab file and the validator.
-- **Parts and the manifest:** how much of the part narrative is authored in the lab vs derived
-  from the course manifest, and whether parts need their own ids for deep-linking
-  (`/c/:courseId/:labId?part=1A`).
-- **Fonts:** accept Inter / JetBrains Mono (recommended) or add the IBM Plex faces for exact
-  mock fidelity.
-- **Migration scope:** which labs get parts first (the two live PHY 114 labs, Charge Buildup and
-  Coulomb's Law) and whether unmigrated labs keep the single-scroll layout indefinitely.
 
 ## Verification
 
