@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { ArrowLeftRight, Info } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
-import type { Course, Lab, Section } from '@/domain/schema';
+import type { Course, Lab, Part, Section } from '@/domain/schema';
 import {
   clearParentMessagingContext,
   configureParentMessaging,
@@ -94,9 +94,19 @@ type SimulationFrameProps = {
   title: string;
   url: string;
   allow?: string;
+  /** Keep-alive (Pass 5): hide a non-active sim with display:none rather than
+   *  unmounting, so its iframe runtime state (the wired circuit, the built-up
+   *  charge) survives part navigation. Never re-key on hide; that remounts. */
+  hidden?: boolean;
 };
 
-function StableSimulationFrame({ simulationId, title, url, allow }: SimulationFrameProps) {
+function StableSimulationFrame({
+  simulationId,
+  title,
+  url,
+  allow,
+  hidden = false,
+}: SimulationFrameProps) {
   const mountId = useRef(`${simulationId}-${Math.random().toString(36).slice(2, 10)}`);
   return (
     <iframe
@@ -106,7 +116,50 @@ function StableSimulationFrame({ simulationId, title, url, allow }: SimulationFr
       loading="lazy"
       className="simulation-frame"
       data-mount-id={mountId.current}
+      style={hidden ? { display: 'none' } : undefined}
     />
+  );
+}
+
+type PartNavProps = {
+  parts: Part[];
+  activePart: Part;
+  onNavigate: (partKey: string) => void;
+};
+
+/**
+ * Pass 6 (functional form): the bottom, non-sticky part nav at the end of a
+ * part's scroll. Last part shows "Finish & review" into the review step rather
+ * than advancing. The slimmer top arrows and the sticky header land in Pass 3.
+ */
+function PartNav({ parts, activePart, onNavigate }: PartNavProps) {
+  const index = parts.findIndex((part) => part.key === activePart.key);
+  const prev = index > 0 ? parts[index - 1] : undefined;
+  const next = index < parts.length - 1 ? parts[index + 1] : undefined;
+  return (
+    <nav className="part-nav" aria-label="Part navigation">
+      <div className="part-nav-side">
+        {prev ? (
+          <button type="button" onClick={() => onNavigate(prev.key)}>
+            {'‹'} Part {prev.key}
+          </button>
+        ) : null}
+      </div>
+      <span className="part-nav-status">
+        Part {activePart.key} - {index + 1} of {parts.length}
+      </span>
+      <div className="part-nav-side part-nav-side-end">
+        {next ? (
+          <button type="button" onClick={() => onNavigate(next.key)}>
+            Next: Part {next.key} {'›'}
+          </button>
+        ) : (
+          <button type="button" className="part-nav-finish" onClick={() => onNavigate('review')}>
+            Finish &amp; review {'›'}
+          </button>
+        )}
+      </div>
+    </nav>
   );
 }
 
@@ -493,43 +546,176 @@ export function LabPage({ course, lab }: Props) {
     }
   }, [setSimSide, side, simSide]);
 
+  // Pass 5: the optional parts grouping. A parts lab renders one part at a time
+  // (sim bound to the part); `?part=review` is the terminal review step. Labs
+  // without parts keep the single-scroll behavior unchanged.
+  const parts = lab.parts;
+  const hasParts = Boolean(parts && parts.length > 0);
+  const partParam = searchParams.get('part');
+  const isReview = hasParts && partParam === 'review';
+  const activePart =
+    hasParts && !isReview
+      ? (parts!.find((part) => part.key === partParam) ?? parts![0])
+      : undefined;
+  const reviewTailStart = parts ? parts[parts.length - 1]!.sectionRange[1] : lab.sections.length;
+
   const simulationEntries = useMemo(() => Object.entries(lab.simulations), [lab.simulations]);
-  const [activeSimulationId, setActiveSimulationId] = useState<string>(
+
+  // Picker state is only used by labs without parts (parts bind the sim to the
+  // active part, so the picker is removed for them).
+  const [pickedSimulationId, setPickedSimulationId] = useState<string>(
     () => simulationEntries[0]?.[0] ?? '',
   );
-
   useEffect(() => {
-    if (!simulationEntries.some(([id]) => id === activeSimulationId)) {
-      setActiveSimulationId(simulationEntries[0]?.[0] ?? '');
+    if (!hasParts && !simulationEntries.some(([id]) => id === pickedSimulationId)) {
+      setPickedSimulationId(simulationEntries[0]?.[0] ?? '');
     }
-  }, [simulationEntries, activeSimulationId]);
+  }, [hasParts, simulationEntries, pickedSimulationId]);
 
-  const activeSimulation = activeSimulationId ? lab.simulations[activeSimulationId] : undefined;
+  // The effective active simulation: bound to the active part in a parts lab,
+  // otherwise the picked sim. During review the sim pane is hidden, so fall back
+  // to the first part's sim purely to keep the keep-alive set coherent.
+  const activeSimulationId = hasParts
+    ? (activePart?.simulationId ?? parts![0]!.simulationId)
+    : pickedSimulationId;
 
-  const simulationPane = (
+  // Keep-alive (Pass 5): the distinct sim ids the parts reference (first-use
+  // order) and the set mounted so far. Once a sim is mounted it stays in the
+  // tree for the session, toggled with display:none, so its iframe runtime
+  // state survives part navigation.
+  const distinctPartSimIds = useMemo(() => {
+    if (!parts) {
+      return [] as string[];
+    }
+    const ids: string[] = [];
+    for (const part of parts) {
+      if (!ids.includes(part.simulationId)) {
+        ids.push(part.simulationId);
+      }
+    }
+    return ids;
+  }, [parts]);
+
+  const [activatedSimIds, setActivatedSimIds] = useState<Set<string>>(
+    () => new Set(hasParts ? [activeSimulationId] : []),
+  );
+  useEffect(() => {
+    if (!hasParts) {
+      return;
+    }
+    setActivatedSimIds((prev) => {
+      if (prev.has(activeSimulationId)) {
+        return prev;
+      }
+      const next = new Set(prev);
+      next.add(activeSimulationId);
+      return next;
+    });
+  }, [hasParts, activeSimulationId]);
+
+  const goToPart = (partKey: string) => {
+    const updated = new URLSearchParams(searchParams);
+    updated.set('part', partKey);
+    setSearchParams(updated);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  };
+
+  // On entering review, auto-place the student at the review tail (the sim-less
+  // discussion / conclusion) rather than the top of the long page; if there is
+  // no tail, drop them at the integrity / export block. The worksheet renders
+  // lazy (Suspense) section bodies whose heights settle after the first paint,
+  // so re-run the scroll a few times until the target position stabilizes
+  // rather than scrolling once against a still-growing layout.
+  useEffect(() => {
+    if (!isReview || typeof document === 'undefined') {
+      return;
+    }
+    const hasTail = reviewTailStart < lab.sections.length;
+    const scrollToTarget = () => {
+      const target = hasTail ? document.getElementById(`section-${reviewTailStart}`) : null;
+      if (target) {
+        target.scrollIntoView({ behavior: 'auto', block: 'start' });
+      } else {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'auto' });
+      }
+    };
+    scrollToTarget();
+    const timers = [80, 250, 600].map((delay) => window.setTimeout(scrollToTarget, delay));
+    return () => timers.forEach((id) => window.clearTimeout(id));
+  }, [isReview, reviewTailStart, lab.sections.length]);
+
+  const pickedSimulation = lab.simulations[pickedSimulationId];
+
+  const simulationPane = hasParts ? (
+    <div className="simulation-pane">
+      {distinctPartSimIds
+        .filter((id) => activatedSimIds.has(id))
+        .map((id) => {
+          const sim = lab.simulations[id];
+          if (!sim) {
+            return null;
+          }
+          return (
+            <StableSimulationFrame
+              key={id}
+              simulationId={id}
+              title={sim.title}
+              url={sim.url}
+              hidden={id !== activeSimulationId}
+              {...(sim.allow ? { allow: sim.allow } : {})}
+            />
+          );
+        })}
+    </div>
+  ) : (
     <div className="simulation-pane">
       {simulationEntries.length > 1 ? (
         <label className="simulation-picker">
           Simulation
           <Select
-            value={activeSimulationId}
-            onChange={setActiveSimulationId}
+            value={pickedSimulationId}
+            onChange={setPickedSimulationId}
             options={simulationEntries.map(([id, def]) => ({ value: id, label: def.title }))}
             size="md"
           />
         </label>
       ) : null}
-      {activeSimulation ? (
+      {pickedSimulation ? (
         <StableSimulationFrame
-          key={activeSimulationId}
-          simulationId={activeSimulationId}
-          title={activeSimulation.title}
-          url={activeSimulation.url}
-          {...(activeSimulation.allow ? { allow: activeSimulation.allow } : {})}
+          key={pickedSimulationId}
+          simulationId={pickedSimulationId}
+          title={pickedSimulation.title}
+          url={pickedSimulation.url}
+          {...(pickedSimulation.allow ? { allow: pickedSimulation.allow } : {})}
         />
       ) : null}
     </div>
   );
+
+  const renderSectionAt = (section: Section, index: number) => (
+    <div
+      key={`${section.kind}-${index}`}
+      id={`section-${index}`}
+      className="worksheet-section-anchor"
+      data-field-id={sectionFieldId(section)}
+    >
+      <SectionRenderer section={section} />
+    </div>
+  );
+
+  const worksheetBody =
+    hasParts && !isReview && activePart
+      ? lab.sections
+          .slice(activePart.sectionRange[0], activePart.sectionRange[1])
+          .map((section, i) => renderSectionAt(section, activePart.sectionRange[0] + i))
+      : lab.sections.map((section, index) => renderSectionAt(section, index));
+
+  // The integrity accept-gate + export live in the single scroll for non-parts
+  // labs and in the review step for parts labs (never inside an individual part).
+  const showSubmission = !hasParts || isReview;
+  const lastPart = hasParts ? parts![parts!.length - 1]! : undefined;
 
   const worksheet = (
     // Text-size zoom is scoped to the worksheet content wrapper only; it must
@@ -537,24 +723,35 @@ export function LabPage({ course, lab }: Props) {
     // invariant). The worksheet pane is in the opposite pane, so this is safe.
     <div className="worksheet-pane" style={{ zoom: textSizeZoom(textSize) }}>
       <h1>{lab.title}</h1>
-      {lab.sections.map((section, index) => (
-        <div
-          key={`${section.kind}-${index}`}
-          id={`section-${index}`}
-          className="worksheet-section-anchor"
-          data-field-id={sectionFieldId(section)}
-        >
-          <SectionRenderer section={section} />
+      {isReview && lastPart ? (
+        <div className="review-banner">
+          <button type="button" onClick={() => goToPart(lastPart.key)}>
+            {'‹'} Back to Part {lastPart.key}
+          </button>
+          <p>
+            Finish &amp; review: check your work above, answer the questions below, then submit.
+          </p>
         </div>
-      ))}
-      <IntegrityAgreement
-        ref={exportPdfButtonRef}
-        lab={lab}
-        isExporting={isExportingPdf}
-        onExport={() => void exportPdf()}
-      />
+      ) : null}
+      {worksheetBody}
+      {hasParts && !isReview && activePart ? (
+        <PartNav parts={parts!} activePart={activePart} onNavigate={goToPart} />
+      ) : null}
+      {showSubmission ? (
+        <IntegrityAgreement
+          ref={exportPdfButtonRef}
+          lab={lab}
+          isExporting={isExportingPdf}
+          onExport={() => void exportPdf()}
+        />
+      ) : null}
     </div>
   );
+
+  // The review step forces the worksheet-only view with the simulation hidden
+  // (but kept mounted, so part state survives); otherwise the chosen layout.
+  const effectiveLayout = isReview ? 'tabs' : layout;
+  const effectiveTab: 'simulation' | 'worksheet' = isReview ? 'worksheet' : tab;
 
   return (
     <main className="lab-page">
@@ -570,7 +767,16 @@ export function LabPage({ course, lab }: Props) {
               Back to {course.title}
             </Link>
             <span className="lab-toolbar-divider" aria-hidden="true" />
-            <TableOfContents sections={lab.sections} />
+            <TableOfContents
+              sections={lab.sections}
+              {...(hasParts
+                ? {
+                    parts: parts!,
+                    activePartKey: isReview ? 'review' : (activePart?.key ?? null),
+                    onNavigatePart: goToPart,
+                  }
+                : {})}
+            />
             <ProgressBar sections={lab.sections} />
           </div>
           <div className="lab-toolbar-controls">
@@ -787,20 +993,20 @@ export function LabPage({ course, lab }: Props) {
           </a>
         </p>
       </AccessibleDialog>
-      <div className={layout === 'tabs' ? 'lab-shell lab-shell-tabs' : 'lab-shell'}>
+      <div className={effectiveLayout === 'tabs' ? 'lab-shell lab-shell-tabs' : 'lab-shell'}>
         <div
           className={
-            layout === 'tabs'
+            effectiveLayout === 'tabs'
               ? 'lab-layout lab-layout-tabs'
               : `lab-layout lab-layout-side ${simSide === 'right' ? 'lab-layout-sim-right' : 'lab-layout-sim-left'}`
           }
           style={
-            layout === 'side'
+            effectiveLayout === 'side'
               ? ({ '--split-sim': `${splitFraction * 100}%` } as CSSProperties)
               : undefined
           }
         >
-          {layout === 'tabs' ? (
+          {effectiveLayout === 'tabs' && !isReview ? (
             <div className="tabs">
               <button
                 type="button"
@@ -810,7 +1016,7 @@ export function LabPage({ course, lab }: Props) {
                   updated.set('tab', 'simulation');
                   setSearchParams(updated);
                 }}
-                aria-pressed={tab === 'simulation'}
+                aria-pressed={effectiveTab === 'simulation'}
               >
                 Simulation
               </button>
@@ -822,7 +1028,7 @@ export function LabPage({ course, lab }: Props) {
                   updated.set('tab', 'worksheet');
                   setSearchParams(updated);
                 }}
-                aria-pressed={tab === 'worksheet'}
+                aria-pressed={effectiveTab === 'worksheet'}
               >
                 Worksheet
               </button>
@@ -830,19 +1036,19 @@ export function LabPage({ course, lab }: Props) {
           ) : null}
           <section
             className={
-              layout === 'tabs' && tab !== 'simulation'
+              effectiveLayout === 'tabs' && effectiveTab !== 'simulation'
                 ? 'layout-pane layout-pane-simulation is-hidden'
                 : 'layout-pane layout-pane-simulation'
             }
           >
             {simulationPane}
           </section>
-          {layout === 'side' ? (
+          {effectiveLayout === 'side' ? (
             <SplitHandle splitFraction={splitFraction} onChange={setSplitFraction} />
           ) : null}
           <section
             className={
-              layout === 'tabs' && tab !== 'worksheet'
+              effectiveLayout === 'tabs' && effectiveTab !== 'worksheet'
                 ? 'layout-pane layout-pane-worksheet is-hidden'
                 : 'layout-pane layout-pane-worksheet'
             }

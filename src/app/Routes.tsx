@@ -7,6 +7,7 @@ import {
   phy112KirchhoffsRulesLab,
   phy112ResistorsSeriesParallelLab,
   phy114CapacitorsLab,
+  phy114ChargeBuildupLab,
   phy114ChargesFieldsLab,
   phy114ConvergingLensLab,
   phy114CoulombsLawLab,
@@ -70,8 +71,9 @@ const labsByCourse: Record<string, Record<string, Lab>> = {
     theveninsTheorem: phy132TheveninsTheoremLab,
   },
   phy114: {
+    // PHY-114-owned Charge Buildup copy carrying the Pass 5 parts grouping.
+    chargeBuildup: phy114ChargeBuildupLab,
     // Core E&M reused from PHY 132 (no uncertainty content to strip).
-    chargeBuildup: phy132ChargeBuildupLab,
     chargeConfigurations: phy132ChargeConfigurationsLab,
     capacitorFundamentals: phy132CapacitorFundamentalsLab,
     capacitorNetworks: phy132CapacitorNetworksLab,

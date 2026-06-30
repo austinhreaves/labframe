@@ -1967,6 +1967,57 @@ a.lab-card:hover {
   min-width: 0;
 }
 
+/* Pass 6 (functional): bottom part navigation at the end of a part's scroll. */
+.part-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.part-nav-side {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.part-nav-side-end {
+  justify-content: flex-end;
+}
+
+.part-nav-status {
+  flex: 0 0 auto;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.part-nav-finish {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
+  font-weight: var(--weight-semibold);
+}
+
+/* Pass 5: the review step banner with a way back to the last part. */
+.review-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+}
+
+.review-banner p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
 .worksheet-section-anchor {
   scroll-margin-top: calc(var(--lab-header-offset) + var(--space-3));
 }
