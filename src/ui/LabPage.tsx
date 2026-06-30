@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { ArrowLeftRight, Info } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -18,6 +18,7 @@ import {
   configureTelemetry,
   reportError,
 } from '@/services/telemetry/errorReporter';
+import { isCountedSection, sectionHasText } from '@/state/answered';
 import { useLabStore, type RecoverableAttachment } from '@/state/labStore';
 import { AccessibleDialog } from '@/ui/AccessibleDialog';
 import { IntegrityAgreement } from '@/ui/IntegrityAgreement';
@@ -29,6 +30,7 @@ import { OverflowMenu } from '@/ui/layout/OverflowMenu';
 import { SplitHandle } from '@/ui/layout/SplitHandle';
 import { TableOfContents } from '@/ui/layout/TableOfContents';
 import { TextSizeToggle } from '@/ui/layout/TextSizeToggle';
+import { WorksheetSectionHeader } from '@/ui/layout/WorksheetSectionHeader';
 import { Icon } from '@/ui/primitives/Icon';
 import { Select } from '@/ui/primitives/Select';
 import { SectionRenderer } from '@/ui/sections/SectionRenderer';
@@ -209,6 +211,29 @@ export function LabPage({ course, lab }: Props) {
     () => safeStorageGet(STORAGE_NOTE_DISMISSED_KEY) === '1',
   );
   const exportPdfButtonRef = useRef<HTMLButtonElement | null>(null);
+  const labHeaderRef = useRef<HTMLElement | null>(null);
+
+  // Keep --lab-header-offset equal to the toolbar's real height so the sticky
+  // section header (Pass 3) and the sticky simulation pane sit flush below it at
+  // any width, instead of guessing with a fixed value that gaps or underlaps as
+  // the one-row toolbar wraps.
+  useEffect(() => {
+    const header = labHeaderRef.current;
+    if (!header || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    const apply = () => {
+      const height = Math.ceil(header.getBoundingClientRect().height);
+      document.documentElement.style.setProperty('--lab-header-offset', `${height}px`);
+    };
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(header);
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty('--lab-header-offset');
+    };
+  }, []);
 
   useEffect(() => {
     void initLab(course.id, lab.id, lab);
@@ -678,6 +703,21 @@ export function LabPage({ course, lab }: Props) {
     return () => timers.forEach((id) => window.clearTimeout(id));
   }, [isReview, reviewTailStart, lab.sections.length]);
 
+  // Pass 3: the active part's answerable sections (excluding instructions / plot,
+  // mirroring ProgressBar's counting) and how many are answered, for the slim
+  // section header's "n/m answered" count.
+  const partAnswerable = activePart
+    ? lab.sections
+        .slice(activePart.sectionRange[0], activePart.sectionRange[1])
+        .filter(isCountedSection)
+    : [];
+  const partAnsweredCount = useLabStore(
+    (state) => partAnswerable.filter((section) => sectionHasText(section, state)).length,
+  );
+
+  const activePartIndex =
+    hasParts && activePart ? parts!.findIndex((part) => part.key === activePart.key) : -1;
+
   const pickedSimulation = lab.simulations[pickedSimulationId];
 
   const simulationPane = hasParts ? (
@@ -749,34 +789,70 @@ export function LabPage({ course, lab }: Props) {
   const showSubmission = !hasParts || isReview;
   const lastPart = hasParts ? parts![parts!.length - 1]! : undefined;
 
+  // Pass 3 + 6: the slim sticky header props. Top arrows move between parts and
+  // dim at the first / last part (Finish & review is reached from the bottom nav
+  // or the Sections menu, not the top arrow).
+  let sectionHeader: ReactNode = null;
+  if (hasParts && activePart) {
+    const simTitle = lab.simulations[activePart.simulationId]?.title ?? activePart.title;
+    sectionHeader = (
+      <WorksheetSectionHeader
+        labTitle={lab.title}
+        partLabel={`Part ${activePart.key} - ${simTitle}`}
+        answered={partAnsweredCount}
+        total={partAnswerable.length}
+        canPrev={activePartIndex > 0}
+        canNext={activePartIndex < parts!.length - 1}
+        onPrev={() => goToPart(parts![activePartIndex - 1]!.key)}
+        onNext={() => goToPart(parts![activePartIndex + 1]!.key)}
+      />
+    );
+  } else if (isReview && lastPart) {
+    sectionHeader = (
+      <WorksheetSectionHeader
+        labTitle={lab.title}
+        partLabel="Finish & review"
+        answered={null}
+        total={null}
+        canPrev={true}
+        canNext={false}
+        onPrev={() => goToPart(lastPart.key)}
+        onNext={() => undefined}
+      />
+    );
+  }
+
   const worksheet = (
-    // Text-size zoom is scoped to the worksheet content wrapper only; it must
-    // never sit on an ancestor of the simulation iframe (iframe-stability
-    // invariant). The worksheet pane is in the opposite pane, so this is safe.
-    <div className="worksheet-pane" style={{ zoom: textSizeZoom(textSize) }}>
-      <h1>{lab.title}</h1>
-      {isReview && lastPart ? (
-        <div className="review-banner">
-          <button type="button" onClick={() => goToPart(lastPart.key)}>
-            {'‹'} Back to Part {lastPart.key}
-          </button>
-          <p>
-            Finish &amp; review: check your work above, answer the questions below, then submit.
-          </p>
-        </div>
-      ) : null}
-      {worksheetBody}
-      {hasParts && !isReview && activePart ? (
-        <PartNav parts={parts!} activePart={activePart} onNavigate={goToPart} />
-      ) : null}
-      {showSubmission ? (
-        <IntegrityAgreement
-          ref={exportPdfButtonRef}
-          lab={lab}
-          isExporting={isExportingPdf}
-          onExport={() => void exportPdf()}
-        />
-      ) : null}
+    <div className="worksheet-pane">
+      {sectionHeader}
+      {/* Text-size zoom is scoped to the worksheet content wrapper only; it must
+          never sit on an ancestor of the simulation iframe (iframe-stability
+          invariant), and it stays off the slim header chrome above. */}
+      <div className="worksheet-zoom" style={{ zoom: textSizeZoom(textSize) }}>
+        <h1>{lab.title}</h1>
+        {isReview && lastPart ? (
+          <div className="review-banner">
+            <button type="button" onClick={() => goToPart(lastPart.key)}>
+              {'‹'} Back to Part {lastPart.key}
+            </button>
+            <p>
+              Finish &amp; review: check your work above, answer the questions below, then submit.
+            </p>
+          </div>
+        ) : null}
+        {worksheetBody}
+        {hasParts && !isReview && activePart ? (
+          <PartNav parts={parts!} activePart={activePart} onNavigate={goToPart} />
+        ) : null}
+        {showSubmission ? (
+          <IntegrityAgreement
+            ref={exportPdfButtonRef}
+            lab={lab}
+            isExporting={isExportingPdf}
+            onExport={() => void exportPdf()}
+          />
+        ) : null}
+      </div>
     </div>
   );
 
@@ -787,7 +863,7 @@ export function LabPage({ course, lab }: Props) {
 
   return (
     <main className="lab-page">
-      <header className="lab-header">
+      <header className="lab-header" ref={labHeaderRef}>
         <div className="lab-toolbar">
           <div className="lab-toolbar-context">
             {/* Track O: a pinned student returns to their scoped course, not the
