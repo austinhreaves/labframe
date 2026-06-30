@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { Info } from 'lucide-react';
+import { ArrowLeftRight, Info } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import type { Course, Lab, Section } from '@/domain/schema';
@@ -25,8 +25,10 @@ import { ProgressBar } from '@/ui/ProgressBar';
 import { StudentInfoPreflightDialog } from '@/ui/StudentInfoPreflightDialog';
 import { StudentNameGateDialog } from '@/ui/StudentNameGateDialog';
 import { LayoutToggle } from '@/ui/layout/LayoutToggle';
+import { OverflowMenu } from '@/ui/layout/OverflowMenu';
 import { SplitHandle } from '@/ui/layout/SplitHandle';
 import { TableOfContents } from '@/ui/layout/TableOfContents';
+import { TextSizeToggle } from '@/ui/layout/TextSizeToggle';
 import { Icon } from '@/ui/primitives/Icon';
 import { Select } from '@/ui/primitives/Select';
 import { SectionRenderer } from '@/ui/sections/SectionRenderer';
@@ -36,6 +38,15 @@ import {
   storeThemePreference,
   type ThemePreference,
 } from '@/ui/theme';
+import {
+  getStoredLayout,
+  getStoredTextSize,
+  storeLayout,
+  storeTextSize,
+  textSizeZoom,
+  type LayoutMode,
+  type TextSize,
+} from '@/ui/viewSettings';
 import {
   buildPhaseBSteps,
   depositAfterTour,
@@ -140,6 +151,7 @@ export function LabPage({ course, lab }: Props) {
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
   const [isStorageInfoDialogOpen, setIsStorageInfoDialogOpen] = useState(false);
   const [themePreference, setThemePreference] = useState<ThemePreference>('system');
+  const [textSize, setTextSize] = useState<TextSize>(() => getStoredTextSize());
   const [isStorageBannerDismissed, setIsStorageBannerDismissed] = useState<boolean>(
     () => safeStorageGet(STORAGE_NOTE_DISMISSED_KEY) === '1',
   );
@@ -248,6 +260,10 @@ export function LabPage({ course, lab }: Props) {
   }, [themePreference]);
 
   useEffect(() => {
+    storeTextSize(textSize);
+  }, [textSize]);
+
+  useEffect(() => {
     configureTelemetry({
       ...(course.telemetryEndpoint ? { telemetryEndpoint: course.telemetryEndpoint } : {}),
       labId: lab.id,
@@ -280,11 +296,19 @@ export function LabPage({ course, lab }: Props) {
     void listRecoverableAttachments().then(setRecoverable);
   }, [listRecoverableAttachments, status.lastError]);
 
-  const savedLabel = useMemo(() => {
+  // Short form in the toolbar ("Saved 22:47"); the full sentence is the hover
+  // title (Pass 4), so the status stays compact in the single row.
+  const { savedLabel, savedTitle } = useMemo(() => {
     if (!status.lastSavedAt) {
-      return 'Not saved yet in this browser';
+      const full = 'Not saved yet in this browser';
+      return { savedLabel: 'Not saved yet', savedTitle: full };
     }
-    return `Saved ${new Date(status.lastSavedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })} in this browser`;
+    const time = new Date(status.lastSavedAt).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+    return { savedLabel: `Saved ${time}`, savedTitle: `Saved ${time} in this browser` };
   }, [status.lastSavedAt]);
 
   const commitStudentName = () => {
@@ -483,7 +507,15 @@ export function LabPage({ course, lab }: Props) {
     exportPdfButtonRef.current?.focus();
   };
 
-  const layout = searchParams.get('layout') === 'tabs' ? 'tabs' : 'side';
+  // URL param wins (shareable/deep-linkable); the persisted preference is the
+  // fallback when no param is present (Pass 7).
+  const layoutParam = searchParams.get('layout');
+  const layout: LayoutMode =
+    layoutParam === 'tabs'
+      ? 'tabs'
+      : layoutParam === 'side'
+        ? 'side'
+        : (getStoredLayout() ?? 'side');
   const tab = searchParams.get('tab') === 'simulation' ? 'simulation' : 'worksheet';
   const side = searchParams.get('side') === 'right' ? 'right' : 'left';
 
@@ -532,7 +564,10 @@ export function LabPage({ course, lab }: Props) {
   );
 
   const worksheet = (
-    <div className="worksheet-pane">
+    // Text-size zoom is scoped to the worksheet content wrapper only; it must
+    // never sit on an ancestor of the simulation iframe (iframe-stability
+    // invariant). The worksheet pane is in the opposite pane, so this is safe.
+    <div className="worksheet-pane" style={{ zoom: textSizeZoom(textSize) }}>
       <h1>{lab.title}</h1>
       {lab.sections.map((section, index) => (
         <div
@@ -556,8 +591,8 @@ export function LabPage({ course, lab }: Props) {
   return (
     <main className="lab-page">
       <header className="lab-header">
-        <div className="lab-header-top">
-          <div className="lab-header-left">
+        <div className="lab-toolbar">
+          <div className="lab-toolbar-context">
             {/* Track O: a pinned student returns to their scoped course, not the
                 full /labs staff index. Falls back to /labs when unpinned. */}
             <Link to={pinnedCourseId ? `/c/${pinnedCourseId}` : '/labs'} className="lab-wordmark">
@@ -566,56 +601,11 @@ export function LabPage({ course, lab }: Props) {
             <Link to={`/c/${course.id}`} className="lab-back-link">
               Back to {course.title}
             </Link>
-          </div>
-          <div className="lab-header-right">
-            <div className="layout-controls">
-              <label className="lab-theme-select">
-                Theme
-                <Select
-                  value={themePreference}
-                  onChange={(next) => setThemePreference(next as ThemePreference)}
-                  options={[
-                    { value: 'system', label: 'System' },
-                    { value: 'light', label: 'Light' },
-                    { value: 'dark', label: 'Dark' },
-                  ]}
-                  size="sm"
-                />
-              </label>
-              <button type="button" onClick={() => setIsAboutDialogOpen(true)}>
-                About
-              </button>
-              <button type="button" className="lab-tour-button" onClick={startRefresherTour}>
-                Take the tour
-              </button>
-              <LayoutToggle
-                layout={layout}
-                onChange={(next) => {
-                  const updated = new URLSearchParams(searchParams);
-                  updated.set('layout', next);
-                  if (next === 'tabs' && !updated.get('tab')) {
-                    updated.set('tab', 'worksheet');
-                  }
-                  setSearchParams(updated);
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  const updated = new URLSearchParams(searchParams);
-                  updated.set('side', simSide === 'left' ? 'right' : 'left');
-                  setSearchParams(updated);
-                }}
-              >
-                Swap sides
-              </button>
-            </div>
-          </div>
-        </div>
-        <div className="lab-header-bottom">
-          <div className="lab-header-bottom-main">
+            <span className="lab-toolbar-divider" aria-hidden="true" />
             <TableOfContents sections={lab.sections} />
             <ProgressBar sections={lab.sections} />
+          </div>
+          <div className="lab-toolbar-controls">
             <label className="lab-student-name">
               Student
               <input
@@ -646,7 +636,7 @@ export function LabPage({ course, lab }: Props) {
                 aria-label="TA name(s)"
               />
             </label>
-            <p className="lab-save-status" aria-live="polite">
+            <p className="lab-save-status" aria-live="polite" title={savedTitle}>
               {savedLabel}
               <button
                 type="button"
@@ -657,8 +647,46 @@ export function LabPage({ course, lab }: Props) {
                 <Icon icon={Info} size={14} />
               </button>
             </p>
-          </div>
-          <div className="lab-header-actions">
+            <span className="lab-toolbar-divider" aria-hidden="true" />
+            <label className="lab-theme-select">
+              Theme
+              <Select
+                value={themePreference}
+                onChange={(next) => setThemePreference(next as ThemePreference)}
+                options={[
+                  { value: 'system', label: 'System' },
+                  { value: 'light', label: 'Light' },
+                  { value: 'dark', label: 'Dark' },
+                ]}
+                size="sm"
+              />
+            </label>
+            <TextSizeToggle value={textSize} onChange={setTextSize} />
+            <LayoutToggle
+              layout={layout}
+              onChange={(next) => {
+                storeLayout(next);
+                const updated = new URLSearchParams(searchParams);
+                updated.set('layout', next);
+                if (next === 'tabs' && !updated.get('tab')) {
+                  updated.set('tab', 'worksheet');
+                }
+                setSearchParams(updated);
+              }}
+            />
+            <button
+              type="button"
+              className="lab-swap-button"
+              aria-label="Swap sides"
+              onClick={() => {
+                const updated = new URLSearchParams(searchParams);
+                updated.set('side', simSide === 'left' ? 'right' : 'left');
+                setSearchParams(updated);
+              }}
+            >
+              <Icon icon={ArrowLeftRight} size={18} />
+            </button>
+            <span className="lab-toolbar-divider" aria-hidden="true" />
             <button
               type="button"
               onClick={() => {
@@ -672,6 +700,12 @@ export function LabPage({ course, lab }: Props) {
             <button type="button" onClick={() => void exportDraftPdf()} disabled={isExportingDraft}>
               {isExportingDraft ? 'Saving draft...' : 'Save draft'}
             </button>
+            <OverflowMenu
+              items={[
+                { label: 'About', onSelect: () => setIsAboutDialogOpen(true) },
+                { label: 'Take the tour', onSelect: startRefresherTour },
+              ]}
+            />
           </div>
         </div>
       </header>

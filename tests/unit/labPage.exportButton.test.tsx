@@ -60,10 +60,12 @@ describe('LabPage export PDF control', () => {
   it('removes Export PDF from the header and renders it inside the integrity agreement', () => {
     renderLab();
 
-    const headerActions = document.querySelector('.lab-header-actions');
-    expect(headerActions).not.toBeNull();
+    // Pass 4: the header actions now live in the consolidated toolbar; Export
+    // PDF must still not appear there (it belongs to the integrity agreement).
+    const toolbar = document.querySelector('.lab-toolbar');
+    expect(toolbar).not.toBeNull();
     expect(
-      within(headerActions as HTMLElement).queryByRole('button', { name: /^export pdf$/i }),
+      within(toolbar as HTMLElement).queryByRole('button', { name: /^export pdf$/i }),
     ).toBeNull();
 
     const agreement = document.querySelector('.integrity-agreement');

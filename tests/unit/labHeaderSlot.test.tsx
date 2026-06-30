@@ -46,14 +46,16 @@ describe('LabPage header shell', () => {
     );
 
     const header = container.querySelector('.lab-header');
-    const headerBottom = container.querySelector('.lab-header-bottom');
+    // Pass 4 merged the two header bands into one consolidated toolbar; the
+    // identity / persistence controls live in the right-hand controls group.
+    const controls = container.querySelector('.lab-toolbar-controls');
 
     expect(header).toBeTruthy();
-    expect(headerBottom).toBeTruthy();
+    expect(controls).toBeTruthy();
     expect(window.getComputedStyle(header as HTMLElement).position).toBe('sticky');
-    const lowerBandEl = headerBottom as HTMLElement;
-    expect(within(lowerBandEl).getByLabelText(/student name/i)).toBeInTheDocument();
-    expect(within(lowerBandEl).getByRole('button', { name: /start fresh/i })).toBeInTheDocument();
-    expect(within(lowerBandEl).getByText(/not saved yet/i)).toBeInTheDocument();
+    const controlsEl = controls as HTMLElement;
+    expect(within(controlsEl).getByLabelText(/student name/i)).toBeInTheDocument();
+    expect(within(controlsEl).getByRole('button', { name: /start fresh/i })).toBeInTheDocument();
+    expect(within(controlsEl).getByText(/not saved yet/i)).toBeInTheDocument();
   });
 });

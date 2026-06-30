@@ -1,5 +1,5 @@
 import ReactMarkdown from 'react-markdown';
-import type { ReactNode } from 'react';
+import { cloneElement, isValidElement, type ReactElement, type ReactNode } from 'react';
 import rehypeKatex from 'rehype-katex';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import remarkBreaks from 'remark-breaks';
@@ -68,12 +68,8 @@ const markdownComponents: Components = {
     const firstChildIndex = flat.findIndex(
       (child) => !(typeof child === 'string' && child.trim() === ''),
     );
-    const rawFirstChild = firstChildIndex === -1 ? undefined : flat[firstChildIndex];
-    const firstChild =
-      rawFirstChild && typeof rawFirstChild === 'object' && 'props' in rawFirstChild
-        ? (rawFirstChild as { props: Record<string, unknown> })
-        : null;
-    const firstParagraphChildren = firstChild
+    const firstChild = firstChildIndex === -1 ? undefined : flat[firstChildIndex];
+    const firstParagraphChildren = isValidElement(firstChild)
       ? (firstChild.props as { children?: ReactNode }).children
       : null;
     const paragraphFlat = Array.isArray(firstParagraphChildren)
@@ -81,21 +77,21 @@ const markdownComponents: Components = {
       : [firstParagraphChildren];
     const firstText = typeof paragraphFlat[0] === 'string' ? paragraphFlat[0] : null;
     const match = firstText ? firstText.match(CALLOUT_PATTERN) : null;
-    if (!match || !firstChild || !firstText) {
+    if (!match || !isValidElement(firstChild) || !firstText) {
       return <blockquote>{children}</blockquote>;
     }
     const label = (match[1] ?? 'NOTE').toUpperCase();
     const nextFirstText = firstText.replace(CALLOUT_PATTERN, '').trimStart();
-    const patchedFirst = {
-      ...firstChild,
-      props: {
-        ...firstChild.props,
-        children: [nextFirstText, ...paragraphFlat.slice(1)],
-      },
-    } as unknown as ReactNode;
-    const normalizedChildren = flat.map((child, index) =>
-      index === firstChildIndex ? patchedFirst : child,
+    const patchedFirst = cloneElement(
+      firstChild as ReactElement,
+      undefined,
+      nextFirstText,
+      ...paragraphFlat.slice(1),
     );
+    // Drop the leading whitespace text node(s) before the paragraph and keep the
+    // rest; this preserves react-markdown's element keys (avoiding duplicate-key
+    // warnings) instead of re-emitting the whitespace siblings.
+    const normalizedChildren = [patchedFirst, ...flat.slice(firstChildIndex + 1)];
     return (
       <aside className={`markdown-callout ${calloutVariant(label)}`}>
         <span className="markdown-callout-title">{label}</span>
