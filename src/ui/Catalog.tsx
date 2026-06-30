@@ -565,11 +565,11 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
             {standaloneCourse ? (
               <section className="catalog-hero catalog-hero-compact">
                 <div className="catalog-hero-copy">
-                  <p className="catalog-hero-eyebrow">
-                    <Link to="/labs">All courses</Link>
-                  </p>
                   <h1 className="catalog-hero-title">{standaloneCourse.title}</h1>
                   <p className="catalog-hero-description">{courseMetaLabel(standaloneCourse)}</p>
+                </div>
+                <div className="catalog-hero-figure">
+                  <HeroIllustration />
                 </div>
               </section>
             ) : (
