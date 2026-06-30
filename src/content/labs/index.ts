@@ -34,6 +34,8 @@ export { phy132RlcBandpassFilterLab } from './phy132/rlcBandpassFilter.lab';
 export { phy132TheveninsTheoremLab } from './phy132/theveninsTheorem.lab';
 
 export { phy114CapacitorsLab } from './phy114/capacitors.draft.lab';
+// PHY-114-owned copy of Charge Buildup with the Pass 5 parts grouping authored.
+export { phy114ChargeBuildupLab } from './phy114/chargeBuildup.lab';
 export { phy114ChargesFieldsLab } from './phy114/chargesFields.draft.lab';
 export { phy114DcCircuitsLab } from './phy114/dcCircuits.draft.lab';
 export { phy114GeometricOpticsLab } from './phy114/geometricOptics.draft.lab';

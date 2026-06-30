@@ -148,6 +148,24 @@ function checkLab(lab: Lab): Finding[] {
     }
   }
 
+  // 2b. Orphaned simulations (Pass 5, rule 5). When a lab declares parts, every
+  //     simulation should be reachable from some part. A superRefine can only
+  //     fail, so the soft "authored but unreachable" check lives here as a
+  //     warning. Labs without parts are unaffected (the sim picker reaches all).
+  if (lab.parts && lab.parts.length > 0) {
+    const usedSimIds = new Set(lab.parts.map((part) => part.simulationId));
+    for (const simId of Object.keys(lab.simulations)) {
+      if (!usedSimIds.has(simId)) {
+        findings.push({
+          severity: 'warning',
+          code: 'orphan-sim',
+          location: `simulations.${simId}`,
+          message: `simulation "${simId}" is referenced by no part and is unreachable`,
+        });
+      }
+    }
+  }
+
   // 3. Course wiring.
   const refs = COURSES.flatMap((c) => c.labs.map((l) => ({ course: c.id, ...l })));
   const matches = refs.filter((r) => r.ref === labId);
