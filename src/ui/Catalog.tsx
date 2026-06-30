@@ -56,12 +56,16 @@ function courseMetaLabel(course: Course): string {
   const visible = course.labs.filter((labRef) => labRef.enabled);
   const core = visible.filter((labRef) => (labRef.group ?? 'core') === 'core').length;
   const enrichment = visible.filter((labRef) => labRef.group === 'enrichment').length;
+  const comingSoon = visible.filter((labRef) => labRef.group === 'coming-soon').length;
   const parts: string[] = [];
   if (core > 0) {
     parts.push(enrichment > 0 ? `${core} core` : `${core} ${core === 1 ? 'lab' : 'labs'}`);
   }
   if (enrichment > 0) {
     parts.push(`${enrichment} coming soon`);
+  }
+  if (comingSoon > 0) {
+    parts.push(`${comingSoon} coming soon`);
   }
   return parts.join(' · ');
 }
@@ -83,7 +87,7 @@ function LabCard({
         ? 'Enrichment'
         : null;
 
-  if (!labRef.enabled || labRef.group === 'enrichment') {
+  if (!labRef.enabled || labRef.group === 'enrichment' || labRef.group === 'coming-soon') {
     return (
       <div className="lab-card" data-disabled="true" aria-disabled="true">
         <span className="lab-card-top">
@@ -120,7 +124,7 @@ function CourseSection({
   standalone: boolean;
 }) {
   const coreLabs = course.labs.filter(
-    (labRef) => labRef.enabled && (labRef.group ?? 'core') === 'core',
+    (labRef) => labRef.enabled && ((labRef.group ?? 'core') === 'core' || labRef.group === 'coming-soon'),
   );
   const enrichmentLabs = course.labs.filter(
     (labRef) => labRef.enabled && labRef.group === 'enrichment',

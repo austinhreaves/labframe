@@ -12,7 +12,7 @@ export const CourseLabRefSchema = z.object({
   ref: idSchema,
   labNumber: z.number().int().positive().optional(),
   enabled: z.boolean(),
-  group: z.enum(['core', 'enrichment']).optional(),
+  group: z.enum(['core', 'enrichment', 'coming-soon']).optional(),
   overrides: z
     .object({
       sections: z.array(SectionOverridePatchSchema).optional(),

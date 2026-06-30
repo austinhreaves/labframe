@@ -101,7 +101,7 @@ Then compare both experimental values of $k$ against the accepted value.`,
 > | Symbol | Value | Role |
 > |---|---|---|
 > | $Q_1$ | $-3\\,\\mathrm{e}$ | constant (fixed across all measurements) |
-> | $d$ | $600\\,\\mathrm{pm}$ | constant separation between charges |
+> | $d$ | $60\\,\\mathrm{pm}$ | constant separation between charges |
 > | $Q_2$ | $+1\\,\\mathrm{e},\\ +2\\,\\mathrm{e},\\ +3\\,\\mathrm{e},\\ +4\\,\\mathrm{e},\\ +5\\,\\mathrm{e}$ | **vary** across your five measurements |
 >
 > Reminder: $\\mathrm{e}$ is the elementary charge ($\\approx 1.602 \\times 10^{-19}\\,\\mathrm{C}$); $\\mathrm{pm}$ is a picometer ($10^{-12}\\,\\mathrm{m}$).`,
@@ -241,7 +241,7 @@ You'll generate all three plots in Part 2B and use the linear one to extract a s
 > |---|---|---|
 > | $Q_1$ | $+2\\,\\mathrm{e}$ | constant (fixed across all measurements) |
 > | $Q_2$ | $+5\\,\\mathrm{e}$ | constant (fixed across all measurements) |
-> | $d$ | $200\\,\\mathrm{pm},\\ 300\\,\\mathrm{pm},\\ 400\\,\\mathrm{pm},\\ 500\\,\\mathrm{pm},\\ 600\\,\\mathrm{pm}$ | **vary** across your five measurements |
+> | $d$ | $20\\,\\mathrm{pm},\\ 30\\,\\mathrm{pm},\\ 40\\,\\mathrm{pm},\\ 50\\,\\mathrm{pm},\\ 60\\,\\mathrm{pm}$ | **vary** across your five measurements |
 >
 > Stay on the **Atomic Scale** screen of the sim. Same unit reminders as Part 2A.`,
     },
@@ -263,7 +263,7 @@ Set $Q_1$ and $Q_2$ to the values given above, then transcribe them into the fie
     {
       kind: 'instructions',
       tocHidden: true,
-      html: `**Step 2.** Step the distance $d$ through the five values given above ($200\\,\\mathrm{pm}$ through $600\\,\\mathrm{pm}$). Record the force $F$ shown by the sim at each value of $d$ (note its unit and stay consistent across rows). The $1/d$ and $1/d^2$ columns are computed automatically.`,
+      html: `**Step 2.** Step the distance $d$ through the five values given above ($20\\,\\mathrm{pm}$ through $60\\,\\mathrm{pm}$). Record the force $F$ shown by the sim at each value of $d$ (note its unit and stay consistent across rows). The $1/d$ and $1/d^2$ columns are computed automatically.`,
     },
     {
       kind: 'dataTable',
