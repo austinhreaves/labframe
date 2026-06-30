@@ -151,9 +151,10 @@ and **3 simulations**. The migration step in Pass 5 must:
 
 - Map the real 25 sections into part `sectionRange`s (teaching + answerable together), not
   transcribe the mock's 8 questions.
-- Decide what happens to `twoConductorInduction`: give it its own part, or drop it from the
-  lab. Recommend a validator **warning** when a `lab.simulations` entry is referenced by no
-  part (orphaned sim), so this surfaces during `verify:lab` rather than silently.
+- Decide what happens to `twoConductorInduction`. **Resolved:** the real lab uses it in Part 1C
+  (it was only the simplified mock that dropped it), so no sim is orphaned. See the worked
+  Charge Buildup parts example in `LAB_WORKSPACE_SPEC.md`. A validator **warning** for any
+  `lab.simulations` entry referenced by no part still guards future labs.
 - Note that a `simulationId` may be reused across parts (the mock's 1A and 1C are both John
   Travoltage); the schema's many-parts-to-one-sim is intended, not a mistake to "fix."
 
