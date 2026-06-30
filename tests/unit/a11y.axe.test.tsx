@@ -25,7 +25,7 @@ describe('A11y axe smoke checks', () => {
       </MemoryRouter>,
     );
 
-    await screen.findByRole('heading', { name: /interactive physics labs/i });
+    await screen.findByRole('heading', { name: /LabFrame/i });
 
     const result = await runAxe(container);
     expect(result.violations).toEqual([]);

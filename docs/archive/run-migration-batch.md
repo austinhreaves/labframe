@@ -2,7 +2,7 @@
 
 ## Context
 
-You are working on `labframe`, a TypeScript + React + Vite app. The repo has a migration script at `scripts/migrate-from-legacy.ts` that converts legacy lab worksheets (under `physics-labs.up.railway.app/`) into draft `*.lab.ts` files for the new schema-driven renderer.
+You are working on `labframe`, a TypeScript + React + Vite app. The repo has a migration script at `scripts/migrate-from-legacy.ts` that converts legacy lab worksheets (under `legacy-app/`) into draft `*.lab.ts` files for the new schema-driven renderer.
 
 The script's author was unable to run it in their environment due to a virtiofs mount sync issue. Your job is to run it on all 11 legacy labs in a clean environment, verify the output, and report findings.
 
@@ -23,8 +23,8 @@ Read these files in this order:
 
 ```bash
 # 1. Confirm working directory contains the legacy tree:
-ls physics-labs.up.railway.app/labs/snellsLaw/labConfig.js
-ls physics-labs.up.railway.app/phy_114/snellsLaw/labConfig.js
+ls legacy-app/labs/snellsLaw/labConfig.js
+ls legacy-app/phy_114/snellsLaw/labConfig.js
 # Both should exist. If either fails, stop and report — the working directory is missing inputs.
 
 # 2. Install deps (the v2 script added @babel/parser, @babel/traverse, @babel/types, prettier, tsx):
@@ -37,7 +37,7 @@ Run the migration on Snell's Law (PHY 132 variant) and diff against the hand-mig
 
 ```bash
 npm run migrate -- \
-  --in physics-labs.up.railway.app/labs/snellsLaw \
+  --in legacy-app/labs/snellsLaw \
   --out src/content/labs/phy132/snellsLaw.draft.lab.ts
 ```
 
@@ -76,14 +76,14 @@ If the smoke test looks reasonable, run all 11 migrations:
 # PHY 132 (5 labs — snellsLaw excluded per the reorg)
 for lab in staticElectricity chargesFields capacitors dcCircuits magneticFieldFaraday; do
   npm run migrate -- \
-    --in "physics-labs.up.railway.app/labs/${lab}" \
+    --in "legacy-app/labs/${lab}" \
     --out "src/content/labs/phy132/${lab}.draft.lab.ts"
 done
 
 # PHY 114 (6 labs)
 for lab in snellsLaw staticElectricity chargesFields capacitors dcCircuits geometricOptics; do
   npm run migrate -- \
-    --in "physics-labs.up.railway.app/phy_114/${lab}" \
+    --in "legacy-app/phy_114/${lab}" \
     --out "src/content/labs/phy114/${lab}.draft.lab.ts" \
     --strip-uncertainty
 done

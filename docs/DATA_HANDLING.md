@@ -27,7 +27,7 @@ The remainder of this document inventories every piece of data, traces every flo
 
 ## 2. System overview
 
-LabFrame is a single-page web application built in React + TypeScript with a single Vercel serverless function for signing. It is deployed at a URL under ASU control (currently `physics-labs.up.railway.app` for the legacy version; production URL for v1.0 to be confirmed). The source code is maintained internally and is available for review on request.
+LabFrame is a single-page web application built in React + TypeScript with a single Vercel serverless function for signing. It is deployed at `labframe-gamma.vercel.app` under ASU control. The source code is maintained internally and is available for review on request.
 
 **Architecture in one paragraph:** A student opens LabFrame in a browser. The app loads from Vercel's CDN as a static bundle. The student selects a course, a lab, types their name, and works through the lab worksheet — answering questions, entering measurements, generating plots from data tables. Their work autosaves to their browser's localStorage every 250ms. When they finish, they click "Export PDF." The browser computes a canonical JSON representation of all answers, sends it to `/api/sign`, receives a signature back, embeds the signature and the canonical JSON inside a generated PDF, and triggers a browser download. The student then uploads that PDF through Canvas as their assignment submission.
 

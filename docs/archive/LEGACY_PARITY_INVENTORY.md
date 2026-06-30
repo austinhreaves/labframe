@@ -1,6 +1,6 @@
 # Legacy Parity Inventory
 
-Source-of-truth mapping from `physics-labs.up.railway.app/{labs,phy_114}/<lab>/{labConfig.js,LabReportForm.js}` → new schema files under `src/content/labs/`. Generated from a full read of all 12 legacy labs on 2026-05-02. Reference for Phase 4 migration work; supersedes `SNELLS_PARITY_INVENTORY.md` (which can be deleted once this is signed off).
+Source-of-truth mapping from `legacy-app/{labs,phy_114}/<lab>/{labConfig.js,LabReportForm.js}` → new schema files under `src/content/labs/`. Generated from a full read of all 12 legacy labs on 2026-05-02. Reference for Phase 4 migration work; supersedes `SNELLS_PARITY_INVENTORY.md` (which can be deleted once this is signed off).
 
 ## Lab inventory
 

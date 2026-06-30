@@ -30,15 +30,9 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
     coverage: {
       reporter: ['text', 'html', 'json-summary'],
-      exclude: [
-        'node_modules/',
-        'dist/',
-        'tests/',
-        '**/*.config.ts',
-        'physics-labs.up.railway.app/',
-      ],
+      exclude: ['node_modules/', 'dist/', 'tests/', '**/*.config.ts'],
     },
     include: ['tests/unit/**/*.test.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
-    exclude: ['tests/e2e/**', 'physics-labs.up.railway.app/**', 'node_modules/**'],
+    exclude: ['tests/e2e/**', 'node_modules/**'],
   },
 });

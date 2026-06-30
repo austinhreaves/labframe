@@ -4,8 +4,8 @@ This matrix maps legacy `phy_114/snellsLaw` content to schema targets before Pha
 
 ## Legacy source checkpoints
 
-- `physics-labs.up.railway.app/phy_114/snellsLaw/LabReportForm.js`
-- `physics-labs.up.railway.app/phy_114/snellsLaw/labConfig.js`
+- `legacy-app/phy_114/snellsLaw/LabReportForm.js`
+- `legacy-app/phy_114/snellsLaw/labConfig.js`
 
 ## Required parity structure
 

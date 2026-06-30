@@ -1,7 +1,7 @@
 # LabFrame — Data Handling Executive Summary
 
 **For:** ASU leadership, deans, VPs, and decision-makers reviewing LabFrame for departmental or institutional approval
-**From:** Austin Reaves, Instructional Professional, ASU Department of Physics (Interactive Physics Labs)
+**From:** Austin Reaves, Instructional Professional, ASU Department of Physics
 **Date:** 2026-05-02 | **Status:** v1.0 launch posture
 
 ---
@@ -56,7 +56,7 @@ Endorsement to proceed with v1.0 deployment for ASU PHY 114 and the general phys
 
 ## Quick reference
 
-- **Project owner:** Austin Reaves, ASU Department of Physics (Interactive Physics Labs)
+- **Project owner:** Austin Reaves, ASU Department of Physics
 - **Source code:** Internal repository, available on request
 - **Hosting:** Vercel (US East), with an HMAC signing secret stored in Vercel's encrypted environment variables
 - **Open-source dependencies:** standard React/TypeScript stack; full audit trail in `package.json` and `package-lock.json`

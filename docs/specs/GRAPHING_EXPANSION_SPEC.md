@@ -17,7 +17,7 @@ LabFrame's chart utility supports student-facing curve fitting on lab data. v1 c
 - Multi-parameter polynomial fits beyond degree 2. If a lab needs a cubic, it is probably specified wrong.
 - Weighted least squares (heteroscedastic data). Not currently needed; revisit if a lab introduces explicit per-point uncertainties.
 - Bayesian fitting / MCMC / anything beyond frequentist OLS.
-- Importing patterns from `physics-labs.up.railway.app/utils/fitCalculations.js`. Read it for product knowledge (which labs use which fits, what students saw on screen). Do not lift code.
+- Importing patterns from `legacy-app/utils/fitCalculations.js`. Read it for product knowledge (which labs use which fits, what students saw on screen). Do not lift code.
 
 ## 3. v1 baseline (for context)
 

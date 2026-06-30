@@ -1,6 +1,6 @@
 # Migration Script — `migrate-from-legacy.ts`
 
-Reads a legacy lab directory (`physics-labs.up.railway.app/{labs,phy_114}/<lab>/`) and emits a draft `*.lab.ts` file targeting `src/domain/schema`. Companion to `LEGACY_PARITY_INVENTORY.md` and `REORG_PROPOSAL.md` at the repo root.
+Reads a legacy lab directory (`legacy-app/{labs,phy_114}/<lab>/`) and emits a draft `*.lab.ts` file targeting `src/domain/schema`. Companion to `LEGACY_PARITY_INVENTORY.md` and `REORG_PROPOSAL.md` at the repo root.
 
 **Best-effort by design.** Every output gets manually reviewed. The script aims to nail structural skeleton, prose extraction, and the common derived-formula pattern, and marks fragile transformations with explicit `// TODO(human)` markers so review is fast.
 
@@ -37,7 +37,7 @@ Migrate snellsLaw 132:
 
 ```bash
 npm run migrate -- \
-  --in physics-labs.up.railway.app/labs/snellsLaw \
+  --in legacy-app/labs/snellsLaw \
   --out src/content/labs/phy132/snellsLaw.draft.lab.ts
 ```
 
@@ -45,7 +45,7 @@ Migrate the PHY 114 variant:
 
 ```bash
 npm run migrate -- \
-  --in physics-labs.up.railway.app/phy_114/snellsLaw \
+  --in legacy-app/phy_114/snellsLaw \
   --out src/content/labs/phy114/snellsLaw.draft.lab.ts \
   --strip-uncertainty
 ```
@@ -55,13 +55,13 @@ Migrate all 12 legacy labs (bash):
 ```bash
 for lab in snellsLaw staticElectricity chargesFields capacitors dcCircuits magneticFieldFaraday; do
   npm run migrate -- \
-    --in "physics-labs.up.railway.app/labs/${lab}" \
+    --in "legacy-app/labs/${lab}" \
     --out "src/content/labs/phy132/${lab}.draft.lab.ts"
 done
 
 for lab in snellsLaw staticElectricity chargesFields capacitors dcCircuits geometricOptics; do
   npm run migrate -- \
-    --in "physics-labs.up.railway.app/phy_114/${lab}" \
+    --in "legacy-app/phy_114/${lab}" \
     --out "src/content/labs/phy114/${lab}.draft.lab.ts" \
     --strip-uncertainty
 done

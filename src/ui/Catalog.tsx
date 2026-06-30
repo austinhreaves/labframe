@@ -591,7 +591,7 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
             ) : (
               <section className="catalog-hero">
                 <div className="catalog-hero-copy">
-                  <h1 className="catalog-hero-title">Interactive physics labs</h1>
+                  <h1 className="catalog-hero-title">LabFrame</h1>
                   <p className="catalog-hero-description">
                     Run the simulation, record your data, and export a signed report. Built for ASU
                     online physics. No account, no install, no textbook.

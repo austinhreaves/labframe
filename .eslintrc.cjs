@@ -24,7 +24,6 @@ module.exports = {
     '.vercel',
     'coverage',
     'node_modules',
-    'physics-labs.up.railway.app',
     '_DataURI',
     '*.config.ts',
     '*.config.cjs',

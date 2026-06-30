@@ -1,4 +1,4 @@
-# Interactive Physics Labs — Rebuild Spec
+# LabFrame — Rebuild Spec
 
 **Audience:** Austin (ASU IPL) + downstream coding agents
 **Status:** Adversarial review of the existing IPL-frontend bundle, plus a clean-slate plan
@@ -8,7 +8,7 @@
 
 ## 0. TL;DR
 
-The current `physics-labs.up.railway.app` codebase is a sourcemap-revealed React 17 SPA that does one job — render a lab worksheet next to a PhET iframe and emit a PDF — but it does it through:
+The current `legacy-app` codebase is a sourcemap-revealed React 17 SPA that does one job — render a lab worksheet next to a PhET iframe and emit a PDF — but it does it through:
 
 - a 485-line god-hook (`useLabState`) that owns state, security, persistence, PDF orchestration, and side effects,
 - a duplicated lab tree (`labs/` and `phy_114/`) where the second tree is mostly `transformLabForCourse(...)` of the first plus a few drifted forks,
@@ -708,7 +708,7 @@ provides (target: clean rebuild of an existing physics lab worksheet app).
 
 Read the rebuild spec at REBUILD_SPEC.md sections 5.1–5.4 and 5.11–5.12
 for architectural intent. Read the existing legacy code at
-physics-labs.up.railway.app/labs/snellsLaw/{labConfig.js,LabReportForm.js}
+legacy-app/labs/snellsLaw/{labConfig.js,LabReportForm.js}
 to see the source content you must migrate.
 
 Tasks:
@@ -1304,7 +1304,7 @@ lab; image attachments survive a multi-megabyte payload; tests green.
 Phase 2 finished persistence. Now replace the legacy PDF pipeline.
 
 Read REBUILD_SPEC.md sections 5.9, 5.13, 5.14, and 3.5. The legacy approach
-in physics-labs.up.railway.app/utils/pdfGenerator.js (1531 LOC) used
+in legacy-app/utils/pdfGenerator.js (1531 LOC) used
 html2canvas to screenshot the live DOM after sleep(1000) and a layout
 switch. You will not do that. PDFs are generated from the same Lab schema
 + LabAnswers state that drives the UI, deterministically, with
@@ -2846,13 +2846,13 @@ student feedback.
 
 ### Phase 4 — Migrate course-specific labs (PHY 132 + PHY 114)
 
-**Goal:** Both real courses fully populated with their own lab schemas. PHY 132 (current `general` course, renamed) gets 6 labs; PHY 114 gets 6 labs. **The two trees are not duplicates of each other** — five lab IDs share names but the source files in `labs/` and `phy_114/` are independently authored, with different prose, different point values, different tables. Treat them as 12 distinct schemas across 2 course-scoped folders. After this phase the legacy `physics-labs.up.railway.app/` folder can be deleted.
+**Goal:** Both real courses fully populated with their own lab schemas. PHY 132 (current `general` course, renamed) gets 6 labs; PHY 114 gets 6 labs. **The two trees are not duplicates of each other** — five lab IDs share names but the source files in `labs/` and `phy_114/` are independently authored, with different prose, different point values, different tables. Treat them as 12 distinct schemas across 2 course-scoped folders. After this phase the legacy `legacy-app/` folder can be deleted.
 
 **Why this phase exists.** The earlier draft of Phase 4 assumed `labs/` and `phy_114/` were duplicate trees that drifted, requiring a reconciliation pass. They are not duplicates — verified against legacy `index.js` files in both folders, each course imports its own per-lab `labConfig.js` and `LabReportForm.js`. The rebuild needs to encode this fact into the directory structure so future authors don't accidentally re-merge them. We're also renaming `general` → `phy132` to remove the ambiguity that "general" caused (Austin confirmed the `general` course has always been PHY 132 specifically).
 
 **Lab inventory (12 total schemas, 11 new):**
 
-PHY 132 (source: `physics-labs.up.railway.app/labs/<id>/`):
+PHY 132 (source: `legacy-app/labs/<id>/`):
 1. staticElectricity
 2. chargesFields
 3. capacitors
@@ -2860,7 +2860,7 @@ PHY 132 (source: `physics-labs.up.railway.app/labs/<id>/`):
 5. magneticFieldFaraday
 6. snellsLaw — already migrated as `src/content/labs/snellsLaw.lab.ts`; **relocate** to `phy132/snellsLaw.lab.ts` and verify it actually came from `labs/snellsLaw/` (not `phy_114/snellsLaw/`) before declaring it canonical for PHY 132.
 
-PHY 114 (source: `physics-labs.up.railway.app/phy_114/<id>/`):
+PHY 114 (source: `legacy-app/phy_114/<id>/`):
 1. staticElectricity
 2. chargesFields
 3. capacitors
@@ -2912,10 +2912,10 @@ Unique to one course: magneticFieldFaraday (PHY 132 only), geometricOptics (PHY 
      ```
    - PHY 114 inherits the `parentOriginAllowList: ['https://canvas.asu.edu']` it already has.
    - PHY 132's `parentOriginAllowList` stays `[]` for now (no Canvas LTI launch yet).
-   - The legacy `LAB_ACCESS_CONFIG` in `physics-labs.up.railway.app/phy_114/index.js` enables all 6 PHY 114 labs (its "labs 1-4 only" comment is stale code — verified by reading the actual config). Don't carry the stale comment forward.
+   - The legacy `LAB_ACCESS_CONFIG` in `legacy-app/phy_114/index.js` enables all 6 PHY 114 labs (its "labs 1-4 only" comment is stale code — verified by reading the actual config). Don't carry the stale comment forward.
 
 5. **Per-lab migrations.** For each of the 11 new lab files, plus the snellsLaw relocation:
-   - Source: the matching `physics-labs.up.railway.app/{labs|phy_114}/<id>/{labConfig.js, LabReportForm.js}`.
+   - Source: the matching `legacy-app/{labs|phy_114}/<id>/{labConfig.js, LabReportForm.js}`.
    - Encode faithfully per the Phase 0 schema (sections, dataModel, simulations, studentInfo). Section prose, point values, and table column configs come straight from `LabReportForm.js`.
    - Lab `id` field stays the bare name (e.g., `'staticElectricity'`); course context comes from the folder location and the registry. Storage uniqueness is provided by the existing `(courseId, labId, studentId)` key in `labStore`.
    - Each lab ships with: a unit test asserting the schema parses + the lab loads via the registry; a unit test for any derived-column formula computing correctly on a fixture row; a Playwright E2E filling a deterministic fixture and snapshotting the PDF text.
@@ -2924,7 +2924,7 @@ Unique to one course: magneticFieldFaraday (PHY 132 only), geometricOptics (PHY 
 
 7. **Cleanup.**
    - Delete `scripts/migrate-from-legacy.ts` if it exists and no longer serves a purpose. Move to `scripts/legacy/` only if the agent finds it cited from elsewhere.
-   - After Austin signs off on visual parity per-lab, delete `physics-labs.up.railway.app/` from the repo.
+   - After Austin signs off on visual parity per-lab, delete `legacy-app/` from the repo.
 
 **Definition of done:** PHY 132 and PHY 114 catalogs each render 6 labs; every lab opens, accepts input, generates a PDF that matches the legacy version's content (Austin signs off lab-by-lab); rename to `phy132` is clean across code + tests + URLs; per-lab tests green; full suite green; legacy folder ready to delete.
 
@@ -2946,7 +2946,7 @@ PHY 114 trees are NOT duplicates — read REBUILD_SPEC.md section
 
 Critical context: five lab IDs (staticElectricity, chargesFields,
 capacitors, dcCircuits, snellsLaw) appear in BOTH courses, but each
-course's source file in physics-labs.up.railway.app/{labs|phy_114}/
+course's source file in legacy-app/{labs|phy_114}/
 is independently authored. They share names; they do not share
 content. Do not diff them. Do not factor common prose out. Each
 becomes its own .lab.ts file under a course-scoped folder.
@@ -2964,8 +2964,8 @@ Read these files first:
 - src/content/labs/index.ts (current flat re-export)
 - src/app/Routes.tsx (current flat lab registry; needs two-level
   refactor)
-- physics-labs.up.railway.app/labs/index.js (PHY 132 source registry)
-- physics-labs.up.railway.app/phy_114/index.js (PHY 114 source
+- legacy-app/labs/index.js (PHY 132 source registry)
+- legacy-app/phy_114/index.js (PHY 114 source
   registry; ignore the stale "labs 1-4 only" comment — actual config
   enables all 6)
 
@@ -2991,7 +2991,7 @@ Tasks:
    a. Create src/content/labs/phy132/ and src/content/labs/phy114/.
    b. Move src/content/labs/snellsLaw.lab.ts → phy132/snellsLaw.lab.ts.
    VERIFY first that the existing schema was migrated from
-   physics-labs.up.railway.app/labs/snellsLaw/, not phy_114/. Spot-
+   legacy-app/labs/snellsLaw/, not phy_114/. Spot-
    check section prose against both legacy LabReportForm.js files
    and pick the matching tree. If it actually matches phy_114's
    version, move it to phy114/ instead and document the discovery.
@@ -3062,7 +3062,7 @@ Tasks:
    a. Delete scripts/migrate-from-legacy.ts if no callers (or move
    to scripts/legacy/ only if cited).
    b. After all 12 labs render and Austin signs off, delete
-   physics-labs.up.railway.app/ from the repo.
+   legacy-app/ from the repo.
 
 8. npm run lint && npm run typecheck && npm test && npx playwright
    test. All green.
@@ -3131,7 +3131,7 @@ Tasks:
      in the fields, preview locally, ship a PR. Target reader: a TA with
      light JS knowledge, no React knowledge.
    - docs/ARCHITECTURE.md: link to this REBUILD_SPEC.md and summarize.
-6. Final cleanup: delete physics-labs.up.railway.app/ from the repo (after
+6. Final cleanup: delete legacy-app/ from the repo (after
    Austin signs off). Bump version to 1.0.0.
 
 Constraints:
