@@ -262,6 +262,34 @@ state (`activeSection`); do not revert to local-only state to "match the mock."
 - Pass `activePart` to Pass 3 (sticky header) and Pass 6 (nav primitives).
 - For labs without `parts`, render all sections as today (no regression).
 
+### Locked: simulation keep-alive across parts
+
+The active simulation must **not** unmount and remount as the student navigates parts. A PhET
+sim holds its state (the circuit they wired, the charge they built up) in the iframe's runtime;
+unmounting destroys it, forcing the student to set it up again every time a part revisits the
+sim. The build must:
+
+- Render **one persistent iframe per distinct `simulationId`** the lab's parts reference, not a
+  single frame bound to the active part. This replaces today's `key={activeSimulationId}` remount
+  in `StableSimulationFrame` (keep the `mountId` stability; render the set of activated sims and
+  toggle which one shows).
+- **Mount lazily, then keep alive.** Do not mount a sim's iframe until the student first reaches a
+  part that uses it; once mounted, keep it mounted for the rest of the session.
+- **Show the active sim, hide the others with `display:none`.** `display:none` preserves the
+  iframe's document and runtime state and does not reload; it is not an unmount. Never change a
+  sim iframe's React key on part navigation, layout toggle (Side / Tabs), swap, or split resize.
+- **Reused `simulationId` is a shared live instance.** Two parts referencing the same
+  `simulationId` (1A and 1C both John Travoltage) share one iframe, so state set up in the earlier
+  part is still present in the later one. This matches the synthesis narrative and is intended.
+  An author who needs a fresh, independent instance for a later part gives it a distinct
+  `simulationId` pointing at the same URL.
+- **Caveat:** prefer `display:none`. If a specific PhET sim drops its WebGL / canvas context while
+  hidden, fall back to keeping that sim in layout but visually hidden (off-screen / absolute) so
+  the context survives. Validate during the Charge Buildup migration: John Travoltage hidden
+  across Part 1B and shown again in Part 1C must retain the charge from Part 1A.
+- Memory: a handful of mounted PhET iframes (2 to 3 distinct sims per lab) is fine; the count is
+  bounded by distinct sims, not parts.
+
 ### PDF / envelope
 
 The signed report must cover every section across all parts. `renderPDF` and
@@ -330,7 +358,8 @@ gaps the prototype left open (it shows an informational integrity blurb but no e
 - **Review renders all parts, worksheet-only.** The review step forces the worksheet-only view
   (the existing `layout=tabs` / `tab=worksheet` mode, simulation hidden) and renders **every**
   section across all parts, which is exactly today's full `lab.sections.map(...)`. The student
-  reviews the whole lab in one place.
+  reviews the whole lab in one place. The kept-alive sim iframes stay mounted but hidden during
+  review (the whole sim pane is hidden), so returning to editing preserves every sim's state.
 - **Accept and export at the end of review.** The existing `IntegrityAgreement` accept control,
   the `validateStudentInfoForPdf` preflight, and the signed `exportPdf` flow render at the bottom
   of the review step, reused unchanged. `Save draft` remains available throughout.
@@ -437,5 +466,6 @@ sensible order:
   move between parts and reset scroll; Finish & review opens the worksheet-only review over all
   sections with the integrity accept-gate and export at the end, and a way back to editing; text
   size and layout persist across a fresh navigation; the simulation iframe never reloads or
-  animates on a layout or zoom change; PDF export still includes every section across all parts
-  with the process record intact.
+  animates on a layout or zoom change; **a sim reused across parts keeps its state when revisited
+  (set up John Travoltage in Part 1A, leave to 1B, return in 1C, and the charge is still there)**;
+  PDF export still includes every section across all parts with the process record intact.
