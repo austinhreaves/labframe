@@ -29,6 +29,14 @@ mock was drawn against an older build in places.
 | 7    | View settings persisted per student              | Partially (split/swap/theme)         |
 | --   | Answer persistence + process record              | Built (autosave + paste attribution) |
 
+**Guiding principle: reduce extraneous cognitive load.** The student's attention should go to the
+physics, not to operating the app. Wherever a step is not about the physics, streamline or
+eliminate it: bind the simulation to the part so there is nothing to pick; keep questions that
+need a simulation with that simulation, and route questions that do not (discussion, conclusion,
+reflection) into the final review where the student already has everything in view; auto-place the
+student at the next thing to do rather than making them hunt for it. When a design choice is
+otherwise a toss-up, prefer the one that removes a non-physics decision.
+
 **Non-goals:**
 
 - Any server-side state, accounts, or login (ADR-0002 is absolute).
@@ -160,7 +168,10 @@ dividers, reclaiming about 48px of height.
 
 **Part-progress segments:** one segment per part (not per section). Three states, matching the
 mock: filled accent when every answerable section in the part is answered, half-tone
-(`rgba(99,102,232,0.45)`) when some are, faint (`rgba(255,255,255,0.09)`) when none.
+(`rgba(99,102,232,0.45)`) when some are, faint (`rgba(255,255,255,0.09)`) when none. When the lab
+has a review tail with answerable questions (the discussion / conclusion), append one more segment
+for it (a "Review" segment), so a student can see questions still remain after the last part and
+does not mistake finishing Part 1C for finishing the lab.
 
 **Sections menu:** in a parts lab the `Sections` dropdown navigates parts (or groups sections
 under their part), driving the same `?part=` navigation; it no longer lists raw sections that do
@@ -200,9 +211,16 @@ worksheet pane scrolls that part's content exactly as today. What is removed is 
 **all-parts-in-one-scroll**: the pane renders only the active part's sections, and the sticky
 "next" primitive (Pass 6) advances Part 1A to Part 1B, swapping that part's sections **and** its
 bound simulation together. The sim-to-part relationship is many-parts-to-one-sim: a lab may use
-the same `simulationId` in several parts (1A and 1C are both John Travoltage), and that is
-correct, not a duplicate to collapse. The integrity accept-gate and PDF export do **not** live
-inside any part; they live in the review step (see "Submission and review flow" below).
+the same `simulationId` in several parts (in the simplified mock, 1A and 1C are both John
+Travoltage), and that is correct, not a duplicate to collapse.
+
+**Parts cover the sim-coupled work, not necessarily the whole lab.** Sections that need a
+simulation belong to a part; trailing sections that do **not** need a simulation (the discussion,
+conclusion, and reflection questions) are not assigned to any part. They are the **review tail**,
+surfaced in Finish & Review (see "Submission and review flow"). This is the guiding principle in
+action: a student answering a reflection question should not be parked in front of an irrelevant
+simulation. The integrity accept-gate and PDF export also live in the review step, not inside any
+part.
 
 ### Locked: data model
 
@@ -231,12 +249,16 @@ Zod validation rules the lab validator must enforce (add to `src/services/verify
 
 1. Every `simulationId` resolves as a key in `lab.simulations`. The same `simulationId` may
    appear in more than one part (reuse across parts is allowed and expected).
-2. Ranges are non-overlapping, contiguous, and together cover every section index (0 to
-   `sections.length - 1`).
+2. Parts form a contiguous run starting at index 0: `parts[0]` starts at 0, and each part's
+   `start` equals the previous part's `end` (non-overlapping, no gaps).
 3. Each range `[start, end]` satisfies `start < end <= sections.length`.
-4. **Warn** (do not fail) when a `lab.simulations` entry is referenced by no part: an authored
-   sim is orphaned and unreachable in the parts view. Surfaces migration decisions like Charge
-   Buildup's `twoConductorInduction` (see migration scope) during `verify:lab`.
+4. The parts cover a **prefix** `[0, R)` where `R = parts[last].end`. Sections `[R,
+sections.length)` are the **review tail** (the sim-less discussion / conclusion zone) and are
+   allowed; the tail may be empty (parts cover everything). Sections before `R` must all belong to
+   a part.
+5. **Warn** (do not fail) when a `lab.simulations` entry is referenced by no part: an authored
+   sim is orphaned and unreachable. (For Charge Buildup all three sims are used, so this stays
+   silent; it guards future labs.)
 
 ### Locked: active part in the URL
 
@@ -255,10 +277,13 @@ state (`activeSection`); do not revert to local-only state to "match the mock."
 
 ### Renderer changes in `LabPage.tsx`
 
-- Derive `activePart` from `?part=` param, falling back to `parts[0]`.
-- Render only `lab.sections.slice(activePart.sectionRange[0], activePart.sectionRange[1])`.
+- Derive `activePart` from `?part=` param, falling back to `parts[0]`. `?part=review` selects the
+  review step (see "Submission and review flow").
+- In a part, render only `lab.sections.slice(activePart.sectionRange[0], activePart.sectionRange[1])`.
 - Set `activeSimulationId = activePart.simulationId` (read from `lab.simulations`); remove
   the `activeSimulationId` state and the `.simulation-picker` `<Select>` dropdown.
+- The review tail (`lab.sections.slice(R)` where `R` is the last part's `end`) never renders
+  inside a part; it renders only in the review step, alongside all earlier sections.
 - Pass `activePart` to Pass 3 (sticky header) and Pass 6 (nav primitives).
 - For labs without `parts`, render all sections as today (no regression).
 
@@ -294,9 +319,10 @@ sim. The build must:
 
 ### PDF / envelope
 
-The signed report must cover every section across all parts. `renderPDF` and
-`buildAnswersFromStore` iterate `lab.sections` in full, independent of which part is active;
-no change needed there. `pdfHidden` on `SectionMetadata` continues to apply per-section.
+The signed report must cover every section, including the parts and the review tail. `renderPDF`
+and `buildAnswersFromStore` iterate `lab.sections` in full, independent of which part is active
+and independent of the parts grouping; no change needed there. `pdfHidden` on `SectionMetadata`
+continues to apply per-section.
 
 ### Locked: migration scope
 
@@ -327,11 +353,12 @@ background `instructions` block leads its part.
 parts: [
   { key: '1A', title: 'John Travoltage', simulationId: 'johnTravoltage', sectionRange: [0, 7] },
   { key: '1B', title: 'Balloons and Static Electricity', simulationId: 'balloons', sectionRange: [7, 14] },
-  { key: '1C', title: 'Induction in Conductors', simulationId: 'twoConductorInduction', sectionRange: [14, 25] },
+  { key: '1C', title: 'Induction in Conductors', simulationId: 'twoConductorInduction', sectionRange: [14, 21] },
 ],
+// sections [21, 25) are the review tail (Discussion and Conclusion), not assigned to a part.
 ```
 
-Index map (the ranges cover all 25 sections, contiguous, no gaps):
+Index map (parts cover the prefix `[0, 21)`; `[21, 25)` is the review tail):
 
 - **Part 1A `[0, 7)`:** integrity blurb (0), objective "Explain the goal" (1), Background: charge
   imbalances + NOTE (2), the three John Travoltage procedure-plus-observation concepts (3 to 5),
@@ -339,20 +366,23 @@ Index map (the ranges cover all 25 sections, contiguous, no gaps):
 - **Part 1B `[7, 14)`:** Background: conservation of charge (7), the three balloon
   procedure-plus-observation concepts (8 to 10), the three balloon concept-check questions
   (11 to 13).
-- **Part 1C `[14, 25)`:** Background: polarization vs induction (14), the two two-conductor
-  procedure concepts (15 to 16), the four induction and synthesis questions (17 to 20), and the
-  Discussion and Conclusion block plus its three conclusion questions (21 to 24).
+- **Part 1C `[14, 21)`:** Background: polarization vs induction (14), the two two-conductor
+  procedure concepts (15 to 16), and the four induction and synthesis questions (17 to 20,
+  including the cross-lab mechanism summary).
+- **Review tail `[21, 25)`:** the Discussion and Conclusion heading (21) and the three conclusion
+  questions (22 to 24). These need no simulation, so they surface in Finish & Review rather than a
+  part. The flow is 1A, 1B, 1C, then Finish & Review.
 
 Migration notes:
 
-- **No orphaned sims.** All three simulations map to a part, so validator rule 4 stays silent
-  here. (This resolves the earlier open question about `twoConductorInduction`: the real lab uses
-  it in Part 1C.)
-- **Conclusion placement (the one judgment call).** Sections 21 to 24 are not tied to a
-  simulation; they are folded into Part 1C above, so the two-conductor sim stays shown during the
-  wrap-up. If a cleaner separation is preferred, split them into a fourth "Discussion and
-  Conclusion" part, either reusing the 1C sim or making `simulationId` optional for a sim-less
-  part (a small schema relaxation). Everything else in this mapping is mechanical.
+- **No orphaned sims.** All three simulations map to a part. (Resolves the earlier
+  `twoConductorInduction` question: the real lab uses it in Part 1C.)
+- **The conclusion is the review tail, not a part.** This is the streamlined resolution of the
+  earlier judgment call: instead of folding the sim-less discussion into Part 1C behind the
+  two-conductor sim, it lives in Finish & Review where the student sees all their work in one view.
+- **Boundary nudge.** Part 1C ends at the explicit "Discussion and Conclusion" heading (21). The
+  cross-lab mechanism-summary question (20) is kept as the cap of 1C; an author could instead push
+  it into the review tail (start the tail at 20). This is the only soft line in the mapping.
 - **Rewrite the picker references.** Three preambles say "Select X from the simulation picker"
   (sections 3, 8, 15). Pass 5 removes the picker and binds the sim to the part, so rewrite those
   lines (for example "The simulation for this part is John Travoltage.") or delete the sentence.
@@ -394,17 +424,26 @@ gaps the prototype left open (it shows an informational integrity blurb but no e
 - **Finish & review is a review step, not a part.** Reached by the green Finish & review button on
   the last part. Model it as a terminal state in the same `?part=` scheme, e.g. `?part=review`, so
   it shares navigation and back/forward with the parts.
-- **Review renders all parts, worksheet-only.** The review step forces the worksheet-only view
-  (the existing `layout=tabs` / `tab=worksheet` mode, simulation hidden) and renders **every**
-  section across all parts, which is exactly today's full `lab.sections.map(...)`. The student
-  reviews the whole lab in one place. The kept-alive sim iframes stay mounted but hidden during
-  review (the whole sim pane is hidden), so returning to editing preserves every sim's state.
+- **Review renders everything, worksheet-only, in one scroll.** The review step forces the
+  worksheet-only view (the existing `layout=tabs` / `tab=worksheet` mode, simulation hidden) and
+  renders **every** section in order: all parts' sections followed by the review-tail discussion
+  and conclusion sections. This is exactly today's full `lab.sections.map(...)`. Every answer field
+  is live and editable here (it is the full worksheet); the only thing missing versus a part is the
+  simulation. The kept-alive sim iframes stay mounted but hidden (the whole sim pane is hidden), so
+  returning to a part preserves every sim's state.
+- **Auto-place the student at the next thing to do.** On entering review, auto-scroll to the start
+  of the review tail (the "Discussion and Conclusion" heading), so the student lands on the
+  questions that remain rather than at the top of a long page. They can scroll up to review any
+  earlier part's work, edit it in place, or proceed down through the discussion questions to the
+  export. If the lab has no review tail (parts cover everything), scroll to the integrity / export
+  block instead.
 - **Accept and export at the end of review.** The existing `IntegrityAgreement` accept control,
   the `validateStudentInfoForPdf` preflight, and the signed `exportPdf` flow render at the bottom
-  of the review step, reused unchanged. `Save draft` remains available throughout.
+  of the review step, after the discussion questions, reused unchanged. `Save draft` remains
+  available throughout.
 - **Back to editing.** Provide a way back from review to the parts (a "Back to Part N" affordance
-  or the top arrows / Sections menu), so a student who spots a gap can return, fix it, and come
-  back to review.
+  or the top arrows / Sections menu), so a student who wants the simulation again can return to the
+  relevant part. Editing answers, though, can be done inline in review without leaving.
 
 **Where:** `LabPage.tsx`. The review step is a thin branch: when `?part=review`, render the
 worksheet-only layout over all sections plus the existing `IntegrityAgreement` block, instead of
@@ -502,9 +541,12 @@ sensible order:
   toolbar is one row and folds gracefully at 1280 to 1440px; part-progress segments show the
   three-state fill; switching parts swaps worksheet and simulation together with no picker; the
   per-part answered count ignores teaching sections; the top arrows and bottom labeled nav both
-  move between parts and reset scroll; Finish & review opens the worksheet-only review over all
-  sections with the integrity accept-gate and export at the end, and a way back to editing; text
-  size and layout persist across a fresh navigation; the simulation iframe never reloads or
-  animates on a layout or zoom change; **a sim keeps its state across part navigation (charge John
-  Travoltage in Part 1A, go to 1B, return to 1A, and the charge is still there)**; PDF export still
-  includes every section across all parts with the process record intact.
+  move between parts and reset scroll; Finish & review opens the worksheet-only view over all
+  sections, auto-scrolled to the Discussion and Conclusion heading, with earlier parts reviewable
+  above and the integrity accept-gate plus export at the bottom, and a way back to a part; the
+  discussion / conclusion questions appear only in review (not parked behind the two-conductor
+  sim) and are editable inline; text size and layout persist across a fresh navigation; the
+  simulation iframe never reloads or animates on a layout or zoom change; **a sim keeps its state
+  across part navigation (charge John Travoltage in Part 1A, go to 1B, return to 1A, and the charge
+  is still there)**; PDF export still includes every section across all parts and the review tail
+  with the process record intact.
