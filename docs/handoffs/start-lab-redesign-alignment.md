@@ -11,6 +11,15 @@ screenshots (current catalog "before"; new lab workspace "after"). Cross-checked
 `LabPage.tsx`, the lab/course schemas, the section views, `MarkdownBlock`, the persistence
 layer, and the real `chargeBuildup` lab content.
 
+**Resolution status (folded into the specs):** all findings below have been applied to the three
+specs to make the set run-ready. Two clarifications from the author shaped B-1 / B-2: (1) the
+within-part scroll is **retained** (a part scrolls in the worksheet pane; only the
+all-parts-in-one scroll is removed, and the sticky "next" primitive swaps the part's sections and
+its bound sim together); (2) "Finish & review" shows **all parts in worksheet-only (tab) view
+with the simulation hidden**, then the existing integrity accept-gate and export at the end. See
+`LAB_WORKSPACE_SPEC.md` Pass 5 "What changes and what does not" and the "Submission and review
+flow" section.
+
 ---
 
 ## Bottom line
