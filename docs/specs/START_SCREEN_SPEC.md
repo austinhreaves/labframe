@@ -85,9 +85,14 @@ Reusable pieces to carry forward rather than rebuild:
 
 - Wordmark `LabFrame` in `--font-display` (Space Grotesk, weight 700) plus a course chip
   (`PHY 114`) and a tagline directly beneath, around 17px, in muted text.
-- Right side: the compact physics motif. Extend the existing `HeroIllustration` (already a
-  charge dipole with field lines and a sine trace, themed through CSS custom properties) with
-  the two ambient animations in the Animation spec below. Keep it `aria-hidden`.
+- Right side: a compact physics motif. Author a **new** small SVG component (the mock is a
+  `220x92` inline SVG: two charges with `+` indigo and `-` amber, two field-line curves, one
+  dashed animated connector, and a drifting sine), not the existing `HeroIllustration`. That
+  component is a `560x372` "ink and graph" catalog hero (ruler ticks, dimension callout, escape
+  lines) sized and composed for a different role; the new start screen replaces the catalog, so
+  this compact header motif supersedes it. Carry the two ambient animations from the Animation
+  spec below; the `waveMove` loop math is tied to the compact path width. Keep it `aria-hidden`
+  and themed through CSS custom properties.
 
 ### Your details (collapsible, persisted)
 
