@@ -278,15 +278,17 @@ sim. The build must:
 - **Show the active sim, hide the others with `display:none`.** `display:none` preserves the
   iframe's document and runtime state and does not reload; it is not an unmount. Never change a
   sim iframe's React key on part navigation, layout toggle (Side / Tabs), swap, or split resize.
-- **Reused `simulationId` is a shared live instance.** Two parts referencing the same
-  `simulationId` (1A and 1C both John Travoltage) share one iframe, so state set up in the earlier
-  part is still present in the later one. This matches the synthesis narrative and is intended.
-  An author who needs a fresh, independent instance for a later part gives it a distinct
-  `simulationId` pointing at the same URL.
+- **Keep-alive covers revisits, not just reuse.** Charge Buildup uses a distinct sim per part, so
+  the win here is revisiting: a student who builds charge in Part 1A, moves to 1B, and returns to
+  1A finds John Travoltage still charged. In labs where two parts share a `simulationId`, they
+  share one live iframe, so state set up in the earlier part is present in the later one (intended,
+  for example a synthesis part returning to an earlier sim). An author who instead needs a fresh,
+  independent instance for a later part gives it a distinct `simulationId` pointing at the same
+  URL.
 - **Caveat:** prefer `display:none`. If a specific PhET sim drops its WebGL / canvas context while
   hidden, fall back to keeping that sim in layout but visually hidden (off-screen / absolute) so
-  the context survives. Validate during the Charge Buildup migration: John Travoltage hidden
-  across Part 1B and shown again in Part 1C must retain the charge from Part 1A.
+  the context survives. Validate during the Charge Buildup migration: charge John Travoltage in
+  Part 1A, navigate away to 1B, return to 1A, and the charge must still be there.
 - Memory: a handful of mounted PhET iframes (2 to 3 distinct sims per lab) is fine; the count is
   bounded by distinct sims, not parts.
 
@@ -311,14 +313,51 @@ Run `npm run verify:lab -- chargeBuildup` and `-- coulombsLaw` after authoring p
 **The mock is illustrative, not literal.** The prototype shows a simplified Charge Buildup of 3
 parts and 8 free-text questions using 2 simulations. The real lab has **25 sections** (19
 `concept`, 5 `instructions`, 1 `objective`) and **3 simulations** (`johnTravoltage`, `balloons`,
-`twoConductorInduction`). The migration must:
+`twoConductorInduction`), one per part. Author part `sectionRange`s over the lab's actual 25
+sections (teaching plus answerable together), not the mock's 8 questions.
 
-- Author part `sectionRange`s over the lab's actual 25 sections (teaching plus answerable
-  together), not transcribe the mock's 8 questions.
-- Decide `twoConductorInduction`: give it its own part, or drop it from the lab. The orphaned-sim
-  warning (validator rule 4) surfaces this during `verify:lab`.
-- Confirm part boundaries fall on real section indices; a part spans whatever contiguous run of
-  sections belongs with its sim.
+#### Worked example: Charge Buildup parts
+
+The lab is already part-labeled (`### Part 1A / 1B / 1C` in the concept preambles) and delivers
+just-in-time theory before each part (the lab's own comment: charging mechanisms before 1A,
+conservation of charge before 1B, polarization vs induction before 1C), so each part's
+background `instructions` block leads its part.
+
+```ts
+parts: [
+  { key: '1A', title: 'John Travoltage', simulationId: 'johnTravoltage', sectionRange: [0, 7] },
+  { key: '1B', title: 'Balloons and Static Electricity', simulationId: 'balloons', sectionRange: [7, 14] },
+  { key: '1C', title: 'Induction in Conductors', simulationId: 'twoConductorInduction', sectionRange: [14, 25] },
+],
+```
+
+Index map (the ranges cover all 25 sections, contiguous, no gaps):
+
+- **Part 1A `[0, 7)`:** integrity blurb (0), objective "Explain the goal" (1), Background: charge
+  imbalances + NOTE (2), the three John Travoltage procedure-plus-observation concepts (3 to 5),
+  the charging-type question (6).
+- **Part 1B `[7, 14)`:** Background: conservation of charge (7), the three balloon
+  procedure-plus-observation concepts (8 to 10), the three balloon concept-check questions
+  (11 to 13).
+- **Part 1C `[14, 25)`:** Background: polarization vs induction (14), the two two-conductor
+  procedure concepts (15 to 16), the four induction and synthesis questions (17 to 20), and the
+  Discussion and Conclusion block plus its three conclusion questions (21 to 24).
+
+Migration notes:
+
+- **No orphaned sims.** All three simulations map to a part, so validator rule 4 stays silent
+  here. (This resolves the earlier open question about `twoConductorInduction`: the real lab uses
+  it in Part 1C.)
+- **Conclusion placement (the one judgment call).** Sections 21 to 24 are not tied to a
+  simulation; they are folded into Part 1C above, so the two-conductor sim stays shown during the
+  wrap-up. If a cleaner separation is preferred, split them into a fourth "Discussion and
+  Conclusion" part, either reusing the 1C sim or making `simulationId` optional for a sim-less
+  part (a small schema relaxation). Everything else in this mapping is mechanical.
+- **Rewrite the picker references.** Three preambles say "Select X from the simulation picker"
+  (sections 3, 8, 15). Pass 5 removes the picker and binds the sim to the part, so rewrite those
+  lines (for example "The simulation for this part is John Travoltage.") or delete the sentence.
+- **Author on a PHY-114-owned copy** of the lab (per migration scope), leaving the shared PHY 132
+  object untouched.
 
 This pass is the dependency for Pass 3 (active part / sim in the sticky header) and Pass 6
 (part nav primitives).
@@ -466,6 +505,6 @@ sensible order:
   move between parts and reset scroll; Finish & review opens the worksheet-only review over all
   sections with the integrity accept-gate and export at the end, and a way back to editing; text
   size and layout persist across a fresh navigation; the simulation iframe never reloads or
-  animates on a layout or zoom change; **a sim reused across parts keeps its state when revisited
-  (set up John Travoltage in Part 1A, leave to 1B, return in 1C, and the charge is still there)**;
-  PDF export still includes every section across all parts with the process record intact.
+  animates on a layout or zoom change; **a sim keeps its state across part navigation (charge John
+  Travoltage in Part 1A, go to 1B, return to 1A, and the charge is still there)**; PDF export still
+  includes every section across all parts with the process record intact.
