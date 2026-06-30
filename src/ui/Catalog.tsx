@@ -124,7 +124,8 @@ function CourseSection({
   standalone: boolean;
 }) {
   const coreLabs = course.labs.filter(
-    (labRef) => labRef.enabled && ((labRef.group ?? 'core') === 'core' || labRef.group === 'coming-soon'),
+    (labRef) =>
+      labRef.enabled && ((labRef.group ?? 'core') === 'core' || labRef.group === 'coming-soon'),
   );
   const enrichmentLabs = course.labs.filter(
     (labRef) => labRef.enabled && labRef.group === 'enrichment',
