@@ -105,12 +105,17 @@ answer card must keep `Field` as the input; rebuilding from the mock's bare text
 silently drop the process record from the exported PDF. This is the highest-risk regression in
 this pass.
 
-**Reuse:** the "answered" predicate already exists for `src/ui/ProgressBar.tsx` /
-`src/ui/layout/TableOfContents.tsx` (they count answered sections). Factor that predicate into a
-shared helper and drive the status tag from it so the tag, the progress segments (Pass 4), and
-the sticky-header count (Pass 3) all agree. The predicate counts **answerable** sections only
-(field-bearing kinds); `instructions` and other non-field sections never count toward a part's
-answered total.
+**Reuse:** the "answered" predicate exists today only as the private `sectionHasText(section,
+state)` in `src/ui/ProgressBar.tsx`. `src/ui/layout/TableOfContents.tsx` does **not** compute
+answered state (it only builds TOC entries and tracks the scrolled-into-view section); the
+sticky-header per-part count (Pass 3) is net-new wiring, not a reuse of the TOC. Factor
+`sectionHasText` out into a shared helper and drive the status tag, the progress segments
+(Pass 4), and the sticky-header count (Pass 3) from it so they all agree. For per-part counts,
+reuse the per-section `sectionHasText` over the part's section slice; do **not** reuse
+ProgressBar's `buildSectionGroups`, which partitions sections under TOC headings (a different
+grouping than parts). The predicate counts **answerable** sections only; mirror ProgressBar's
+existing `isCountedSection`, which excludes both `instructions` **and** `plot` (the field-less
+kinds), so a part's answered total matches today's counting behavior.
 
 ---
 
@@ -245,7 +250,12 @@ const PartSchema = z.object({
 parts: z.array(PartSchema).min(2).optional(),
 ```
 
-Zod validation rules the lab validator must enforce (add to `src/services/verifyLab`):
+Validation rules to enforce. There is no `src/services/verifyLab` module: lab validation is the
+Zod `LabSchema` in `src/domain/schema/lab.ts` plus the deterministic script `scripts/verify-lab.ts`.
+The parts rules below are cross-field, so add them as a `.superRefine` on `LabSchema` (rules 1-4,
+which then run everywhere the schema runs), and add rule 5's orphan check as a `warning`-severity
+finding in `scripts/verify-lab.ts` (the script already has a `warning` severity; a `superRefine`
+can only fail, not warn):
 
 1. Every `simulationId` resolves as a key in `lab.simulations`. The same `simulationId` may
    appear in more than one part (reuse across parts is allowed and expected).
