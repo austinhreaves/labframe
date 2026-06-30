@@ -10,12 +10,12 @@ test('first run shows the splash and Skip tutorial reveals the catalog', async (
   await expect(page.getByRole('button', { name: /get started/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /skip tutorial/i })).toBeVisible();
   // The normal catalog hero is hidden during first run.
-  await expect(page.getByRole('heading', { name: /interactive physics labs/i })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: /LabFrame/i })).toHaveCount(0);
 
   await page.getByRole('button', { name: /skip tutorial/i }).click();
 
   // Skipping drops the student into the normal catalog and does not nag again.
-  await expect(page.getByRole('heading', { name: /interactive physics labs/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /LabFrame/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /get started/i })).toHaveCount(0);
 });
 

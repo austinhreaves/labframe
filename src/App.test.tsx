@@ -14,8 +14,6 @@ describe('App routes', () => {
       </MemoryRouter>,
     );
 
-    expect(
-      screen.getAllByRole('heading', { name: /interactive physics labs/i }).length,
-    ).toBeGreaterThan(0);
+    expect(screen.getAllByRole('heading', { name: /LabFrame/i }).length).toBeGreaterThan(0);
   });
 });
