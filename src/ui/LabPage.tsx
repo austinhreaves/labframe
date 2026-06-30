@@ -26,6 +26,7 @@ import { ProgressBar } from '@/ui/ProgressBar';
 import { StudentInfoPreflightDialog } from '@/ui/StudentInfoPreflightDialog';
 import { LayoutToggle } from '@/ui/layout/LayoutToggle';
 import { OverflowMenu } from '@/ui/layout/OverflowMenu';
+import { PartProgressSegments } from '@/ui/layout/PartProgressSegments';
 import { SplitHandle } from '@/ui/layout/SplitHandle';
 import { TableOfContents } from '@/ui/layout/TableOfContents';
 import { TextSizeToggle } from '@/ui/layout/TextSizeToggle';
@@ -797,7 +798,10 @@ export function LabPage({ course, lab }: Props) {
           never sit on an ancestor of the simulation iframe (iframe-stability
           invariant), and it stays off the slim header chrome above. */}
       <div className="worksheet-zoom" style={{ zoom: textSizeZoom(textSize) }}>
-        <h1>{lab.title}</h1>
+        {/* In a parts lab the slim section header already shows the title, so the
+            visible h1 is redundant; keep it for screen readers (heading landmark)
+            but hide it visually. Non-parts labs keep the visible h1. */}
+        <h1 className={hasParts ? 'visually-hidden' : undefined}>{lab.title}</h1>
         {isReview && lastPart ? (
           <div className="review-banner">
             <button type="button" onClick={() => goToPart(lastPart.key)}>
@@ -853,7 +857,17 @@ export function LabPage({ course, lab }: Props) {
                   }
                 : {})}
             />
-            <ProgressBar sections={lab.sections} />
+            {hasParts ? (
+              <PartProgressSegments
+                parts={parts!}
+                sections={lab.sections}
+                reviewTailStart={reviewTailStart}
+                activeKey={isReview ? 'review' : (activePart?.key ?? null)}
+                onNavigate={goToPart}
+              />
+            ) : (
+              <ProgressBar sections={lab.sections} />
+            )}
           </div>
           <div className="lab-toolbar-controls">
             <label className="lab-student-name">
