@@ -2,7 +2,7 @@
 
 LabFrame is an online worksheet app for ASU physics labs. Students run a simulation and complete a structured worksheet in the same screen, then export a signed PDF report.
 
-This repository is the rebuild of the legacy `physics-labs.up.railway.app` app. The living product and engineering spec is [`docs/SPEC.md`](./docs/SPEC.md); the original rebuild design and phase history is archived at [`docs/archive/REBUILD_SPEC.md`](./docs/archive/REBUILD_SPEC.md).
+The living product and engineering spec is [`docs/SPEC.md`](./docs/SPEC.md); the original rebuild design and phase history is archived at [`docs/archive/REBUILD_SPEC.md`](./docs/archive/REBUILD_SPEC.md).
 
 ## Tech stack
 

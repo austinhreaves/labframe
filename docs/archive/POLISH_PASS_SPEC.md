@@ -527,7 +527,7 @@ A few things other things to consider:
 4. **Stylelint enforcement** — use it. Without it, the next agent will reach for a raw hex within a week. If you'd rather not add another linter, document the rule in `DESIGN_SYSTEM.md` and rely on review.
 5. **Status colors — Radix vs hand-pick** — For better contrast guaranteed out of the box, copy from Radix Colors `green/amber/red/blue` (light + dark). It's one of the few cases where someone else has thought about it more carefully than we will.
 6. **Should this absorb the dark-mode tokens that Phase 5.5 already shipped?** Yes — this spec supersedes the token list in Phase 5.5 deliverable 4. The migration path is: write the new tokens, rename the existing ones to match, delete the old. Document the mapping in the PR.
-7. **What about the legacy CSS in `physics-labs.up.railway.app/`?** Ignore — that's the decompressed source of the old app. Not in scope.
+7. **What about the legacy CSS in `legacy-app/`?** Ignore — that's the decompressed source of the old app. Not in scope.
 
 ---
 

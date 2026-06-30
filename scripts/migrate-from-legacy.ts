@@ -2,7 +2,7 @@
 /**
  * scripts/migrate-from-legacy.ts
  *
- * Migrates a legacy lab from physics-labs.up.railway.app/ into a draft *.lab.ts
+ * Migrates a legacy lab from legacy-app/ into a draft *.lab.ts
  * file against src/domain/schema.
  *
  * BEST-EFFORT BY DESIGN. Every output gets manually reviewed. The script aims

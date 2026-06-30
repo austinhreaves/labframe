@@ -45,7 +45,6 @@ Thumbs.db
 
 # Legacy reference code — kept on disk for content migration in Phases 0–4,
 # explicitly excluded from version control.
-physics-labs.up.railway.app/
 
 .vercel
 

@@ -11,8 +11,7 @@ function sinFromDegrees(fieldName: string) {
   };
 }
 
-// Migrated from physics-labs.up.railway.app/labs/snellsLaw/ (PHY 132). If lineage disagrees with
-// legacy, flag for Austin — docs/archive/SNELLS_PARITY_INVENTORY.md referenced phy_114 checkpoints during renderer work.
+
 
 export const phy132SnellsLawLab: Lab = {
   id: 'snellsLaw',
