@@ -82,15 +82,27 @@ build from zero:
   **"Not yet" to "Answered"** (grey to green) as the student types.
 - The procedure step is a light instruction row; the answer card sits below it, indented.
 
+- Two teaching badge styles exist in the mock and should be preserved: rounded-square badges for
+  background / mechanism rows, light circular outlined badges for procedure ("do this") steps.
+
 **Where:** the answerable section views (`concept`, `calculation`, `objective`, `measurement`,
 `multiMeasurement`, `dataTable`, `plot`, `image`) under `src/ui/sections/`, plus styling in
 `src/main.css`. The answer-card chrome (eyebrow + status tag) is best added once, around the
 shared `Field` primitive or a small wrapper, rather than per view.
 
+**Do not detach the `Field` instrumentation.** The prototype's answer input is a plain
+`<textarea>`, but the real answer field routes through the instrumented `Field` primitive that
+feeds paste attribution and edit-timing into the signed process record. Wrapping the field in an
+answer card must keep `Field` as the input; rebuilding from the mock's bare textarea would
+silently drop the process record from the exported PDF. This is the highest-risk regression in
+this pass.
+
 **Reuse:** the "answered" predicate already exists for `src/ui/ProgressBar.tsx` /
 `src/ui/layout/TableOfContents.tsx` (they count answered sections). Factor that predicate into a
 shared helper and drive the status tag from it so the tag, the progress segments (Pass 4), and
-the sticky-header count (Pass 3) all agree.
+the sticky-header count (Pass 3) all agree. The predicate counts **answerable** sections only
+(field-bearing kinds); `instructions` and other non-field sections never count toward a part's
+answered total.
 
 ---
 
@@ -120,7 +132,8 @@ the sticky-header count (Pass 3) all agree.
 
 - Left: lab title (`Charge Buildup`) + the active part and sim name (`Part 1A - John
 Travoltage`).
-- Right: the per-section answered count (`2/3 answered`) + the minimal nav arrows from Pass 6.
+- Right: the per-part answered count (`2/3 answered`, over the active part's answerable sections
+  only, per the Pass 1 predicate) + the minimal nav arrows from Pass 6.
 - Small primitives only: no large progress pill, no stacked rows.
 
 **Depends on Pass 5:** "active part" and "sim name" only exist once the lab is modeled as parts.
@@ -138,12 +151,27 @@ binding is the point of the row.
 dividers, reclaiming about 48px of height.
 
 - **Left (context):** `LabFrame` wordmark, `< PHY 114` back link, `Sections` menu (the current
-  `TableOfContents` as a dropdown), the section-progress segments, and the active part label.
+  `TableOfContents` as a dropdown, but navigating **parts** in a parts lab, see below), the
+  **part-progress segments**, and the active part label.
 - **Right (identity + settings + actions):** Student / TA inputs, autosave status (short
   `Saved 22:47`, full timestamp on hover), Theme (icon), **Text size Aa S/M/L** (Pass 7),
   layout **Side / Tabs**, **Swap** (icon), `Start fresh`, `Save draft`, and a `...` overflow
   that folds About and Take the tour.
-- Low-priority chrome collapses to icons or into the `...` overflow to hold one row.
+
+**Part-progress segments:** one segment per part (not per section). Three states, matching the
+mock: filled accent when every answerable section in the part is answered, half-tone
+(`rgba(99,102,232,0.45)`) when some are, faint (`rgba(255,255,255,0.09)`) when none.
+
+**Sections menu:** in a parts lab the `Sections` dropdown navigates parts (or groups sections
+under their part), driving the same `?part=` navigation; it no longer lists raw sections that do
+not correspond to the one-part-at-a-time view. Unmigrated labs keep the flat section list.
+
+**Overflow priority (responsive):** the row holds many controls and the mock is drawn wide. When
+width is tight, fold in this order (first to fold first): Take the tour and About (already in
+`...`), then Text size, then Swap, then Theme, collapsing labeled toggles to icons before hiding.
+Always keep visible: wordmark, active part label, student name, save status, Side / Tabs, Start
+fresh, Save draft. This explicit order prevents an autonomous run from producing a row that wraps
+or clips at 1280 to 1440px.
 
 **Where:** the `<header className="lab-header">` block in `LabPage.tsx` (today
 `.lab-header-top` + `.lab-header-bottom`) and its CSS in `main.css`. This is a layout refactor
@@ -165,6 +193,17 @@ A part also carries a narrative thread (1A John Travoltage introduces friction /
 induction and foreshadows polarization, 1B Balloons tests conductor vs insulator against 1A, 1C
 returns to John Travoltage to synthesize), so the coupling earns its place.
 
+### What changes and what does not
+
+The within-part scroll stays. A part is teaching plus its questions and can be long; the
+worksheet pane scrolls that part's content exactly as today. What is removed is the
+**all-parts-in-one-scroll**: the pane renders only the active part's sections, and the sticky
+"next" primitive (Pass 6) advances Part 1A to Part 1B, swapping that part's sections **and** its
+bound simulation together. The sim-to-part relationship is many-parts-to-one-sim: a lab may use
+the same `simulationId` in several parts (1A and 1C are both John Travoltage), and that is
+correct, not a duplicate to collapse. The integrity accept-gate and PDF export do **not** live
+inside any part; they live in the review step (see "Submission and review flow" below).
+
 ### Locked: data model
 
 An optional `parts` grouping layer over the existing flat `sections` array. Section references
@@ -175,8 +214,8 @@ migration is incremental.
 ```ts
 // Addition to LabSchema in src/domain/schema/lab.ts
 const PartSchema = z.object({
-  key: nonEmptyText,         // "1A" — used in ?part= URL param
-  title: nonEmptyText,       // "John Travoltage" — shown in sticky header and nav
+  key: nonEmptyText,         // "1A", used in ?part= URL param
+  title: nonEmptyText,       // "John Travoltage", shown in sticky header and nav
   simulationId: idSchema,    // key into lab.simulations record
   sectionRange: z.tuple([    // [startIndex, endIndexExclusive] into lab.sections
     z.number().int().nonnegative(),
@@ -190,10 +229,14 @@ parts: z.array(PartSchema).min(2).optional(),
 
 Zod validation rules the lab validator must enforce (add to `src/services/verifyLab`):
 
-1. Every `simulationId` resolves as a key in `lab.simulations`.
+1. Every `simulationId` resolves as a key in `lab.simulations`. The same `simulationId` may
+   appear in more than one part (reuse across parts is allowed and expected).
 2. Ranges are non-overlapping, contiguous, and together cover every section index (0 to
    `sections.length - 1`).
 3. Each range `[start, end]` satisfies `start < end <= sections.length`.
+4. **Warn** (do not fail) when a `lab.simulations` entry is referenced by no part: an authored
+   sim is orphaned and unreachable in the parts view. Surfaces migration decisions like Charge
+   Buildup's `twoConductorInduction` (see migration scope) during `verify:lab`.
 
 ### Locked: active part in the URL
 
@@ -206,7 +249,9 @@ The active part key is stored in the `?part=` search param, consistent with `lay
 ```
 
 Part navigation updates the param with `setSearchParams` (same pattern as layout toggle) and
-resets the worksheet-pane scroll to top. Browser back/forward works naturally.
+resets the worksheet-pane scroll to top. Browser back/forward works naturally. This URL-driven
+approach is a deliberate upgrade over the prototype, which tracks the active part in local React
+state (`activeSection`); do not revert to local-only state to "match the mock."
 
 ### Renderer changes in `LabPage.tsx`
 
@@ -227,13 +272,25 @@ no change needed there. `pdfHidden` on `SectionMetadata` continues to apply per-
 
 Only the two live PHY 114 labs receive authored `parts` in this pass:
 
-- `src/content/labs/phy114/chargeBuildup` (reuses `phy132ChargeBuildupLab` — parts must be
+- `src/content/labs/phy114/chargeBuildup` (reuses `phy132ChargeBuildupLab`; parts must be
   added to the PHY 132 source or a PHY-114-owned copy must be created; prefer the copy to keep
   PHY 132 separate).
 - `src/content/labs/phy114/coulombsLaw.draft.lab.ts`.
 
 All other enabled labs keep the single-scroll layout until they are individually migrated.
 Run `npm run verify:lab -- chargeBuildup` and `-- coulombsLaw` after authoring parts.
+
+**The mock is illustrative, not literal.** The prototype shows a simplified Charge Buildup of 3
+parts and 8 free-text questions using 2 simulations. The real lab has **25 sections** (19
+`concept`, 5 `instructions`, 1 `objective`) and **3 simulations** (`johnTravoltage`, `balloons`,
+`twoConductorInduction`). The migration must:
+
+- Author part `sectionRange`s over the lab's actual 25 sections (teaching plus answerable
+  together), not transcribe the mock's 8 questions.
+- Decide `twoConductorInduction`: give it its own part, or drop it from the lab. The orphaned-sim
+  warning (validator rule 4) surfaces this during `verify:lab`.
+- Confirm part boundaries fall on real section indices; a part spans whatever contiguous run of
+  sections belongs with its sim.
 
 This pass is the dependency for Pass 3 (active part / sim in the sticky header) and Pass 6
 (part nav primitives).
@@ -246,14 +303,44 @@ This pass is the dependency for Pass 3 (active part / sim in the sticky header) 
 
 1. **Top, sticky:** a minimal `<` `>` arrow pair in the section header (Pass 3). Dims at the
    first / last part. Always reachable, costs no vertical space.
-2. **Bottom, non-sticky:** a larger labeled nav at the natural end of the scroll:
+2. **Bottom, non-sticky:** a larger labeled nav at the natural end of the part's scroll:
    `< Part 1A` / `Part 1B - 2 of 3` / `Next: Part 1C >`, becoming a green **Finish & review**
-   on the last part.
+   on the last part. Finish & review enters the review step (see "Submission and review flow"),
+   it does not advance to another part.
 
 Both drive the same part navigation and **reset the worksheet scroll to top** on change.
 
 **Where:** `LabPage.tsx` (the worksheet pane), `main.css`. Depends on Pass 5 for the part
 sequence. Scroll reset targets the `.worksheet-pane` scroll container.
+
+---
+
+## Submission and review flow (Finish & review)
+
+The parts model removes the single scroll where the integrity accept-gate and export button live
+today, so the submission flow gets an explicit home. This is the resolution of the two functional
+gaps the prototype left open (it shows an informational integrity blurb but no export screen).
+
+- **Informational integrity blurb at entry.** A passive, informational integrity card appears
+  once at the top of the first part (the amber "Your report includes a process record..." card in
+  the mock). It is copy only, not the accept control.
+- **Finish & review is a review step, not a part.** Reached by the green Finish & review button on
+  the last part. Model it as a terminal state in the same `?part=` scheme, e.g. `?part=review`, so
+  it shares navigation and back/forward with the parts.
+- **Review renders all parts, worksheet-only.** The review step forces the worksheet-only view
+  (the existing `layout=tabs` / `tab=worksheet` mode, simulation hidden) and renders **every**
+  section across all parts, which is exactly today's full `lab.sections.map(...)`. The student
+  reviews the whole lab in one place.
+- **Accept and export at the end of review.** The existing `IntegrityAgreement` accept control,
+  the `validateStudentInfoForPdf` preflight, and the signed `exportPdf` flow render at the bottom
+  of the review step, reused unchanged. `Save draft` remains available throughout.
+- **Back to editing.** Provide a way back from review to the parts (a "Back to Part N" affordance
+  or the top arrows / Sections menu), so a student who spots a gap can return, fix it, and come
+  back to review.
+
+**Where:** `LabPage.tsx`. The review step is a thin branch: when `?part=review`, render the
+worksheet-only layout over all sections plus the existing `IntegrityAgreement` block, instead of
+the active-part slice. No change to the export, signing, or envelope code.
 
 ---
 
@@ -269,10 +356,17 @@ sequence. Scroll reset targets the `.worksheet-pane` scroll container.
 - **Theme** System / light / dark. Already persisted via `src/ui/theme.ts`; no change beyond
   surfacing it in the consolidated toolbar.
 
+The draggable split (`SplitHandle` + persisted `splitFraction`) is **retained**. The prototype
+hardcodes a fixed 50/50 with no resize handle; that is a mock simplification, not a directive to
+remove the resize affordance.
+
 **Where:** a small view-settings module (mirror `theme.ts`) for text size and the persisted
-layout preference, read in `LabPage.tsx`; CSS variable or `zoom` on the worksheet content
-wrapper for text size. Keep the URL params working (they are good for sharing / deep links);
-persistence is the fallback when no param is present.
+layout preference, read in `LabPage.tsx`; `zoom` (or a font-size CSS variable) on the worksheet
+content wrapper for text size. Keep the URL params working (they are good for sharing / deep
+links); persistence is the fallback when no param is present. The `zoom` must stay scoped to the
+worksheet content wrapper and never an ancestor of the simulation iframe (iframe stability
+invariant); it reflows worksheet layout, so any pixel-position e2e assertion on the worksheet
+must account for the active scale. `zoom` is broadly supported (Firefox 126+).
 
 ---
 
@@ -327,7 +421,9 @@ sensible order:
 2. Pass 7 (view settings) and Pass 4 (toolbar) - layout refactors, no schema change.
 3. Pass 5 (parts model) - schema + renderer + validator + content migration, behind backward
    compatibility so unmigrated labs still render as one scroll.
-4. Pass 3 (sticky section header) and Pass 6 (nav primitives) - built on the part model.
+4. Pass 3 (sticky section header), Pass 6 (nav primitives), and the Submission and review flow -
+   built on the part model; the review step reuses the existing full-worksheet render plus
+   `IntegrityAgreement` and export.
 
 ## Verification
 
@@ -335,8 +431,11 @@ sensible order:
   `npm run verify:lab -- <labId>` after any schema or content change for Pass 5.
 - Manually confirm in the browser, in both themes: answer cards are visually distinct with the
   Not yet / Answered tag; point pills show on every gradable question; callouts render; the
-  toolbar is one row; switching parts swaps worksheet and simulation together with no picker; the
-  top arrows and bottom labeled nav both move between parts and reset scroll; text size and
-  layout persist across a fresh navigation; the simulation iframe never reloads or animates on a
-  layout change; PDF export still includes every section across all parts with the process record
-  intact.
+  toolbar is one row and folds gracefully at 1280 to 1440px; part-progress segments show the
+  three-state fill; switching parts swaps worksheet and simulation together with no picker; the
+  per-part answered count ignores teaching sections; the top arrows and bottom labeled nav both
+  move between parts and reset scroll; Finish & review opens the worksheet-only review over all
+  sections with the integrity accept-gate and export at the end, and a way back to editing; text
+  size and layout persist across a fresh navigation; the simulation iframe never reloads or
+  animates on a layout or zoom change; PDF export still includes every section across all parts
+  with the process record intact.

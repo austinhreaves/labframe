@@ -32,6 +32,11 @@ A secondary `Just explore` button on the start screen, placed near the Your deta
 does not compete with the On-deck CTAs. It routes to `/sims`. The button and placement are
 owned by `docs/specs/START_SCREEN_SPEC.md`; this spec owns the destination page.
 
+Note: the `Just explore` button does **not** appear in the start-screen prototype
+(`LabFrame Start.dc.html`); it is described in the handoff only. Its placement and styling are
+designer intent, not a pixel-match target. Build it in the start screen's card visual language
+near Your details.
+
 ---
 
 ## Route
