@@ -1131,6 +1131,46 @@ a.lab-card:hover {
   min-width: 144px;
 }
 
+/* Pass 4: one part-progress segment per part (plus a Review segment when the
+   review tail has questions). Three-state fill: all answered, some, none. */
+.part-segments {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.part-segment {
+  width: 26px;
+  height: 12px;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  background: var(--surface-sunken);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.part-segment[data-state='some'] {
+  border-color: transparent;
+  background: var(--accent-300);
+}
+
+.part-segment[data-state='all'] {
+  border-color: transparent;
+  background: var(--accent-bg);
+}
+
+.part-segment[aria-current='step'] {
+  outline: 2px solid var(--border-accent);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .part-segment:hover {
+    border-color: var(--border-strong);
+  }
+}
+
 .progress {
   display: inline-flex;
   align-items: center;
