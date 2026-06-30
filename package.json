@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "description": "LabFrame - online worksheet app for ASU physics labs.",
+  "author": "Austin Reaves",
+  "license": "AGPL-3.0-or-later",
   "scripts": {
     "dev": "vite",
     "dev:vite": "vite",
