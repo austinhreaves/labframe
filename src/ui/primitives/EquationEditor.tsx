@@ -15,6 +15,7 @@ import { appendPasteEvent, createEmptyFieldValue, markFieldActivity } from '@/st
 import { EquationSymbolPalette } from '@/ui/primitives/EquationSymbolPalette';
 import { Field } from '@/ui/primitives/Field';
 import { MarkdownBlock } from '@/ui/primitives/MarkdownBlock';
+import { useActiveTime } from '@/ui/primitives/useActiveTime';
 
 type EquationEditorProps = {
   id: string;
@@ -55,8 +56,8 @@ export function EquationEditor({
   const [isReady, setIsReady] = useState(false);
   const [mode, setMode] = useState<'math' | 'latex'>('math');
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-  const focusStartedAt = useRef<number | null>(null);
   const composition = useRef<{ startOffset: number; startText: string } | null>(null);
+  const { onFocus, onBlur } = useActiveTime({ value: effective, onChange });
   const mathFieldRef = useRef<MathFieldElement | null>(null);
   const latexInputRef = useRef<HTMLTextAreaElement | null>(null);
   const ignoreNextInputValue = useRef<string | null>(null);
@@ -135,42 +136,6 @@ export function EquationEditor({
     }
     const end = Math.max(offset, after.length - suffixLength);
     return after.slice(offset, end);
-  };
-
-  const withFocusMeta = (): FieldValue => {
-    if (effective.meta.firstFocusAt !== undefined) {
-      return effective;
-    }
-    return {
-      ...effective,
-      meta: {
-        ...effective.meta,
-        firstFocusAt: Date.now(),
-      },
-    };
-  };
-
-  const handleFocus = () => {
-    focusStartedAt.current = Date.now();
-    if (effective.meta.firstFocusAt !== undefined) {
-      return;
-    }
-    onChange(withFocusMeta());
-  };
-
-  const handleBlur = () => {
-    if (focusStartedAt.current === null) {
-      return;
-    }
-    const elapsed = Date.now() - focusStartedAt.current;
-    focusStartedAt.current = null;
-    onChange({
-      ...effective,
-      meta: {
-        ...effective.meta,
-        activeMs: effective.meta.activeMs + Math.max(0, elapsed),
-      },
-    });
   };
 
   const isLikelyLatex = (text: string): boolean => text.includes('\\') && /\{[^}]+\}/.test(text);
@@ -375,8 +340,8 @@ export function EquationEditor({
                 element.mathVirtualKeyboardPolicy = 'manual';
               }
             },
-            onFocus: handleFocus,
-            onBlur: handleBlur,
+            onFocus,
+            onBlur,
             onPaste: handlePaste,
             onKeyDown: (event: KeyboardEvent<MathFieldElement>) => {
               if (event.key !== 'Enter' || event.shiftKey) {
@@ -469,8 +434,8 @@ export function EquationEditor({
               rows={4}
               value={effective.text}
               placeholder="Type text normally. Use $...$ for inline math (e.g. $F = ma$) and $$...$$ for display equations."
-              onFocus={handleFocus}
-              onBlur={handleBlur}
+              onFocus={onFocus}
+              onBlur={onBlur}
               onPaste={handlePaste}
               onCompositionStart={(event) => {
                 composition.current = {
