@@ -161,6 +161,19 @@ const styles = StyleSheet.create({
   drawImage: { maxWidth: 515, maxHeight: 380, objectFit: 'contain', marginTop: 4 },
   drawPage: { marginTop: 6 },
   prompt: { marginBottom: 4 },
+  // Frames a student response so answers stand out from instructor prose. Mirrors the
+  // callout box pattern in markdown/renderMarkdownToPdf.ts (left border + light tint),
+  // which already paginates cleanly. Kept subtle so the paste italic / autocomplete blue
+  // span colors stay legible on top.
+  responseFrame: {
+    borderLeftWidth: 2.5,
+    borderLeftColor: '#5a67e4',
+    backgroundColor: '#f6f7fe',
+    paddingLeft: 8,
+    paddingTop: 3,
+    paddingBottom: 3,
+    paddingRight: 6,
+  },
   typed: { fontStyle: 'normal', color: '#111' },
   pasteClipboard: { fontStyle: 'italic', color: '#111' },
   pasteAutocomplete: { color: '#3f3f99' },
@@ -232,7 +245,7 @@ function fieldView(value: FieldValue | undefined): JSX.Element {
 
   const attributed = attributePastes(value.text, value.pastes);
   return (
-    <View style={styles.row}>
+    <View style={[styles.responseFrame, styles.row]}>
       <Text>
         {attributed.spans.length === 0 ? (
           <Text style={styles.typed}>-</Text>
