@@ -71,6 +71,13 @@ export const LabAnswersSchema = z.object({
     submitted: z.boolean(),
     lastSavedAt: z.number().int().nonnegative(),
   }),
+  /**
+   * Reserved for randomized per-student givens (v5 additive, not yet used).
+   * When present, the signing service will include it in the canonical string
+   * so the signed envelope proves which seed generated the student's givens.
+   * Absent on all current envelopes; parsers must treat it as optional.
+   */
+  seed: z.string().optional(),
 });
 
 export type PasteEvent = z.infer<typeof PasteEventSchema>;
