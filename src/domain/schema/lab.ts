@@ -196,6 +196,12 @@ export const LabSchema = z
       const at = (message: string) =>
         ctx.addIssue({ code: z.ZodIssueCode.custom, message, path: ['parts', index] });
 
+      // Rule 0: "review" is reserved for the Finish & Review step, which shares
+      // the ?part= namespace; a real part keyed "review" would be unreachable.
+      if (part.key === 'review') {
+        at('part key "review" is reserved for the Finish & Review step');
+      }
+
       // Rule 1: simulationId resolves to a key in lab.simulations (reuse allowed).
       if (!(part.simulationId in lab.simulations)) {
         at(`part "${part.key}" references unknown simulationId "${part.simulationId}"`);
