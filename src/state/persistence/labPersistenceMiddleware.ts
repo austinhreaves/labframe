@@ -158,11 +158,19 @@ export function migratePersistedLabState(
   return null;
 }
 
+export type LabPersistenceHandle = {
+  /** Tear down the subscription and cancel any pending debounced write. */
+  dispose: () => void;
+  /** Persist immediately, bypassing (and clearing) the debounce. Fire-and-forget
+   *  so it is safe to call from an unload path; never await it there. */
+  flushPersistence: () => void;
+};
+
 export function attachLabPersistence(
   store: StoreApi<LabStoreState>,
   adapter: PersistenceAdapter,
   serialize: (state: LabStoreState, savedAt: number) => PersistedLabState,
-): () => void {
+): LabPersistenceHandle {
   let timeout: ReturnType<typeof setTimeout> | null = null;
   let disposed = false;
 
@@ -218,7 +226,15 @@ export function attachLabPersistence(
     }, PERSIST_DEBOUNCE_MS);
   });
 
-  return () => {
+  const flushPersistence = () => {
+    if (timeout) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
+    void persistNow();
+  };
+
+  const dispose = () => {
     disposed = true;
     if (timeout) {
       clearTimeout(timeout);
@@ -226,4 +242,6 @@ export function attachLabPersistence(
     }
     unsubscribe();
   };
+
+  return { dispose, flushPersistence };
 }

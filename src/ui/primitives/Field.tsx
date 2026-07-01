@@ -2,6 +2,7 @@ import { useRef, type CompositionEvent, type FormEvent, type ReactNode } from 'r
 
 import type { FieldValue } from '@/domain/schema';
 import { appendPasteEvent, createEmptyFieldValue, markFieldActivity } from '@/state/labStore';
+import { useActiveTime } from '@/ui/primitives/useActiveTime';
 
 type FieldProps = {
   id: string;
@@ -33,8 +34,8 @@ export function Field({
   onChange,
 }: FieldProps) {
   const effective = value ?? createEmptyFieldValue();
-  const focusStartedAt = useRef<number | null>(null);
   const composition = useRef<{ startOffset: number; startText: string } | null>(null);
+  const { onFocus, onBlur } = useActiveTime({ value: effective, onChange });
 
   const getComposedSubstring = (before: string, after: string, startOffset: number) => {
     const offset = Math.max(0, Math.min(startOffset, after.length));
@@ -48,36 +49,6 @@ export function Field({
     }
     const end = Math.max(offset, after.length - suffixLength);
     return after.slice(offset, end);
-  };
-
-  const handleFocus = () => {
-    focusStartedAt.current = Date.now();
-    if (effective.meta.firstFocusAt !== undefined) {
-      return;
-    }
-
-    onChange({
-      ...effective,
-      meta: {
-        ...effective.meta,
-        firstFocusAt: Date.now(),
-      },
-    });
-  };
-
-  const handleBlur = () => {
-    if (focusStartedAt.current === null) {
-      return;
-    }
-    const elapsed = Date.now() - focusStartedAt.current;
-    focusStartedAt.current = null;
-    onChange({
-      ...effective,
-      meta: {
-        ...effective.meta,
-        activeMs: effective.meta.activeMs + Math.max(0, elapsed),
-      },
-    });
   };
 
   const handleInput = (event: FormEvent<HTMLInputElement> | FormEvent<HTMLTextAreaElement>) => {
@@ -135,8 +106,8 @@ export function Field({
           rows={rows}
           value={effective.text}
           readOnly={readOnly}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
+          onFocus={onFocus}
+          onBlur={onBlur}
           onInput={handleInput}
           onCompositionStart={handleCompositionStart}
           onCompositionEnd={handleCompositionEnd}
@@ -146,8 +117,8 @@ export function Field({
           id={id}
           value={effective.text}
           readOnly={readOnly}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
+          onFocus={onFocus}
+          onBlur={onBlur}
           onInput={handleInput}
           onCompositionStart={handleCompositionStart}
           onCompositionEnd={handleCompositionEnd}

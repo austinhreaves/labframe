@@ -757,7 +757,21 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
     },
   }));
 
-  attachLabPersistence(useStore, adapter, serializePersistedState);
+  const { flushPersistence } = attachLabPersistence(useStore, adapter, serializePersistedState);
+
+  // Bypass the 250 ms debounce when the tab is going away, so a value banked
+  // moments before unload (notably the leak-proof activeMs flush) still reaches
+  // IndexedDB. These fire after the field-level flush has written activeMs into
+  // the store (same synchronous event), so the flushed value is what persists.
+  if (typeof window !== 'undefined') {
+    window.addEventListener('pagehide', flushPersistence);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        flushPersistence();
+      }
+    });
+  }
+
   return useStore;
 }
 
