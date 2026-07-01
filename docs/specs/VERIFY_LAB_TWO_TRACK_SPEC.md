@@ -97,13 +97,13 @@ the report is for human consumption.
 
 ## Decision record
 
-| Decision | Rationale |
-|---|---|
-| Two separate commands, not flags | Prevents accidental AI calls in CI (`--pedagogy` flag would be too easy to add to the gate). |
-| Track 2 is authoring-time only, not CI | Pedagogy findings require author judgment; blocking merges on them would create pressure to suppress or waive findings without documentation. |
-| Track 1 has no warning tier | Warnings become ignored. Hard errors get fixed. |
-| Fable, not GPT-4 or Sonnet | Fable (claude-fable-5) is the most capable Claude model for long-document reasoning and nuanced pedagogy judgment. Track 2 is a high-value, low-frequency operation -- latency and cost are acceptable. |
-| Rubric is a spec artifact, not a prompt | Writing the rubric in this spec (not inside a system prompt) means it can be versioned, reviewed, and cited. The prompt passed to Fable at runtime will reference this spec. |
+| Decision                                | Rationale                                                                                                                                                                                               |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Two separate commands, not flags        | Prevents accidental AI calls in CI (`--pedagogy` flag would be too easy to add to the gate).                                                                                                            |
+| Track 2 is authoring-time only, not CI  | Pedagogy findings require author judgment; blocking merges on them would create pressure to suppress or waive findings without documentation.                                                           |
+| Track 1 has no warning tier             | Warnings become ignored. Hard errors get fixed.                                                                                                                                                         |
+| Fable, not GPT-4 or Sonnet              | Fable (claude-fable-5) is the most capable Claude model for long-document reasoning and nuanced pedagogy judgment. Track 2 is a high-value, low-frequency operation -- latency and cost are acceptable. |
+| Rubric is a spec artifact, not a prompt | Writing the rubric in this spec (not inside a system prompt) means it can be versioned, reviewed, and cited. The prompt passed to Fable at runtime will reference this spec.                            |
 
 ---
 
