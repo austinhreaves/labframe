@@ -637,23 +637,11 @@ export function LabPage({ course, lab }: Props) {
     ? (activePart?.simulationId ?? parts![0]!.simulationId)
     : pickedSimulationId;
 
-  // Keep-alive (Pass 5): the distinct sim ids the parts reference (first-use
-  // order) and the set mounted so far. Once a sim is mounted it stays in the
-  // tree for the session, toggled with display:none, so its iframe runtime
-  // state survives part navigation.
-  const distinctPartSimIds = useMemo(() => {
-    if (!parts) {
-      return [] as string[];
-    }
-    const ids: string[] = [];
-    for (const part of parts) {
-      if (!ids.includes(part.simulationId)) {
-        ids.push(part.simulationId);
-      }
-    }
-    return ids;
-  }, [parts]);
-
+  // Keep-alive (Pass 5): the set of sim ids mounted so far (insertion order =
+  // navigation order). Once a sim is mounted it stays in the tree for the
+  // session, toggled with display:none, so its iframe runtime state survives
+  // part navigation. Every id here is a part's simulationId, so it always
+  // resolves in lab.simulations.
   const [activatedSimIds, setActivatedSimIds] = useState<Set<string>>(
     () => new Set(hasParts ? [activeSimulationId] : []),
   );
@@ -701,7 +689,24 @@ export function LabPage({ course, lab }: Props) {
     };
     scrollToTarget();
     const timers = [80, 250, 600].map((delay) => window.setTimeout(scrollToTarget, delay));
-    return () => timers.forEach((id) => window.clearTimeout(id));
+    // Stop re-pinning the moment the student takes over scrolling, so the retry
+    // volley (which fights lazy layout shift) never yanks them back after they
+    // have deliberately scrolled elsewhere.
+    const cancel = () => {
+      timers.forEach((id) => window.clearTimeout(id));
+      window.removeEventListener('wheel', cancel);
+      window.removeEventListener('touchstart', cancel);
+      window.removeEventListener('keydown', cancel);
+    };
+    window.addEventListener('wheel', cancel, { passive: true });
+    window.addEventListener('touchstart', cancel, { passive: true });
+    window.addEventListener('keydown', cancel);
+    return () => {
+      timers.forEach((id) => window.clearTimeout(id));
+      window.removeEventListener('wheel', cancel);
+      window.removeEventListener('touchstart', cancel);
+      window.removeEventListener('keydown', cancel);
+    };
   }, [isReview, reviewTailStart, lab.sections.length]);
 
   // Pass 3: the active part's answerable sections (excluding instructions / plot,
@@ -723,24 +728,22 @@ export function LabPage({ course, lab }: Props) {
 
   const simulationPane = hasParts ? (
     <div className="simulation-pane">
-      {distinctPartSimIds
-        .filter((id) => activatedSimIds.has(id))
-        .map((id) => {
-          const sim = lab.simulations[id];
-          if (!sim) {
-            return null;
-          }
-          return (
-            <StableSimulationFrame
-              key={id}
-              simulationId={id}
-              title={sim.title}
-              url={sim.url}
-              hidden={id !== activeSimulationId}
-              {...(sim.allow ? { allow: sim.allow } : {})}
-            />
-          );
-        })}
+      {[...activatedSimIds].map((id) => {
+        const sim = lab.simulations[id];
+        if (!sim) {
+          return null;
+        }
+        return (
+          <StableSimulationFrame
+            key={id}
+            simulationId={id}
+            title={sim.title}
+            url={sim.url}
+            hidden={id !== activeSimulationId}
+            {...(sim.allow ? { allow: sim.allow } : {})}
+          />
+        );
+      })}
     </div>
   ) : (
     <div className="simulation-pane">
