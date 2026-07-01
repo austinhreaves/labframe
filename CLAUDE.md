@@ -33,9 +33,18 @@ making non-trivial product changes. Architecture overview: `docs/ARCHITECTURE.md
 | Full local CI               | `npm run ci` (typecheck + lint + format:check + test)                                  |
 | Verify a lab                | `npm run verify:lab -- <labId>` or `-- <path/to/lab.lab.ts>` (use `--all` to list IDs) |
 | Verify every lab (CI gate)  | `npm run verify:labs` (`verify-lab --all`, errors-only; runs in CI after unit tests)   |
+| Mutation audit (on-demand)  | `npm run test:mutation` (Stryker; scoped to the modules in `stryker.config.json`)      |
 
 Run `npm run ci` before opening or updating a PR. Add `npm run test:e2e` for any UI,
 accessibility, or routing/layout change. Lint warnings fail CI (`--max-warnings 0`).
+
+**Mutation testing is an on-demand audit, not a CI gate.** `npm run test:mutation` runs
+Stryker over the pure, high-blast-radius modules listed in `stryker.config.json`
+(canonicalize, buildAnswers, latexToUnicode, leastSquares, persistence migrations) to
+check whether the existing tests actually catch injected bugs. Run it periodically or
+before a release, not per-PR; review the report under `reports/mutation/` and either add
+the missing assertion for each survived mutant or consciously accept it. Do not widen the
+`mutate` scope to UI/IO code (slow, noisy survivors); those are covered by e2e + axe.
 
 **E2e test authoring note:** navigate directly to a lab route (`page.goto('/c/:courseId/:labId')`)
 rather than clicking catalog links. Catalog visibility (`enabled`, `group`) is independent of lab

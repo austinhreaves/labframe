@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "_comment": "On-demand mutation audit (npm run test:mutation), NOT a CI gate. Scoped to pure, high-blast-radius modules so a run stays in single-digit minutes. See CLAUDE.md.",
+  "packageManager": "npm",
+  "testRunner": "vitest",
+  "coverageAnalysis": "perTest",
+  "reporters": ["html", "clear-text", "progress"],
+  "htmlReporter": { "fileName": "reports/mutation/index.html" },
+  "mutate": [
+    "src/services/integrity/canonicalize.ts",
+    "src/services/integrity/buildAnswers.ts",
+    "src/services/pdf/markdown/latexToUnicode.ts",
+    "src/services/math/leastSquares.ts",
+    "src/state/persistence/labPersistenceMiddleware.ts"
+  ]
+}
