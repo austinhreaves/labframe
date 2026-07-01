@@ -1,7 +1,7 @@
 # Just Explore / `/sims` Spec
 
-**Status:** Not started. Spec only. Separate pass from the start-screen redesign because
-`/sims` is new routing and a new page.
+**Status:** Implemented (2026-07-01) at `src/ui/Sims.tsx`. Scope reads the pinned course
+(falls back to all academic courses); de-dup by URL lists every mapped lab on the card.
 **Created:** 2026-06-29
 **Companion spec:** `docs/specs/START_SCREEN_SPEC.md` (the `Just explore` button that links here).
 

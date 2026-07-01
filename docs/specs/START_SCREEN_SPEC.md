@@ -1,7 +1,7 @@
 # Start Screen Redesign Spec
 
-**Status:** Not started. Spec only (the source handoff was explicit: brainstorm and write
-spec, not edit code).
+**Status:** Implemented (2026-07-01) except the deferred Completed section, which still
+needs the report registry + sealed-PDF persistence described below.
 **Created:** 2026-06-29
 **Source:** `LabFrame Start.dc.html` mock + the start-screen handoff.
 **Companion spec:** `docs/specs/SIMS_SPEC.md` covers the "Just explore" / `/sims` path,

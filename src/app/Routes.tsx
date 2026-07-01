@@ -43,6 +43,7 @@ import {
 import type { Course, Lab } from '@/domain/schema';
 import { Catalog } from '@/ui/Catalog';
 import { LabPage } from '@/ui/LabPage';
+import { Sims } from '@/ui/Sims';
 import { PrimitivesShowcase } from '@/ui/visual/PrimitivesShowcase';
 
 const courses: Course[] = [phy132Course, phy114Course, phy112Course, welcomeCourse];
@@ -178,6 +179,9 @@ export function AppRoutes() {
         element={<Catalog courses={courses} labsByCourse={labsByCourse} showWizard={false} />}
       />
       <Route path="/phy_114" element={<Navigate to="/c/phy114" replace />} />
+      {/* "Just explore": outbound sim cards derived from the same manifest +
+          lab registry the router uses (see docs/specs/SIMS_SPEC.md). */}
+      <Route path="/sims" element={<Sims courses={courses} labsByCourse={labsByCourse} />} />
       {/* Friendly alias for the onboarding demo lab. Pass 2 adds ?tour=1 behavior. */}
       <Route
         path="/welcome"

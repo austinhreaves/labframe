@@ -4,18 +4,19 @@ import { test, expect } from '@playwright/test';
 // suite-wide onboarded seed in playwright.config.ts.
 test.use({ storageState: { cookies: [], origins: [] } });
 
-test('first run shows the splash and Skip tutorial reveals the catalog', async ({ page }) => {
+test('first run shows the splash and Skip tutorial reveals the start screen', async ({ page }) => {
   await page.goto('/');
 
   await expect(page.getByRole('button', { name: /get started/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /skip tutorial/i })).toBeVisible();
-  // The normal catalog hero is hidden during first run.
-  await expect(page.getByRole('heading', { name: /LabFrame/i })).toHaveCount(0);
+  // The normal start-screen wordmark is hidden during first run (exact: the
+  // splash's own "Welcome to LabFrame" heading would match a loose regex).
+  await expect(page.getByRole('heading', { name: 'LabFrame', exact: true })).toHaveCount(0);
 
   await page.getByRole('button', { name: /skip tutorial/i }).click();
 
-  // Skipping drops the student into the normal catalog and does not nag again.
-  await expect(page.getByRole('heading', { name: /LabFrame/i })).toBeVisible();
+  // Skipping drops the student into the normal start screen and does not nag again.
+  await expect(page.getByRole('heading', { name: 'LabFrame', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: /get started/i })).toHaveCount(0);
 });
 
