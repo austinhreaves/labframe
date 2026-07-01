@@ -1,7 +1,9 @@
 # Handoff: Start Screen + Lab Workspace Redesign
 
-**Branch:** `claude/eloquent-hypatia-66a4c5` (PR #22). Specs only so far, no app code.
-**Status:** Run-ready. All decisions are locked; there are no open questions in the specs.
+**Branch:** `claude/eloquent-hypatia-66a4c5` (PR #22).
+**Status:** Implemented (2026-07-01): lab workspace passes 1-7 + parts model + Finish &
+review, the start screen, and `/sims`. Only the start screen's Completed section remains
+deferred (needs report persistence; see `START_SCREEN_SPEC.md`).
 
 ## What this is
 

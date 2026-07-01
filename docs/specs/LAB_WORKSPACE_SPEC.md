@@ -1,6 +1,7 @@
 # Lab Workspace Redesign Spec
 
-**Status:** Not started. Spec only.
+**Status:** Implemented (2026-07-01): all seven passes, the parts model with simulation
+keep-alive, and the Finish & review flow.
 **Created:** 2026-06-30
 **Source:** `LabFrame Lab.dc.html` mock + the lab-workspace handoff (the seven passes).
 **Related:** `docs/specs/UI_REDESIGN_BRIEF.md` already earmarks lab-page work as its "Phase 3"
