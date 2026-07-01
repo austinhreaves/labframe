@@ -27,6 +27,7 @@
     "migrate": "tsx scripts/migrate-from-legacy.ts",
     "verify:lab": "tsx scripts/verify-lab.ts",
     "verify:labs": "tsx scripts/verify-lab.ts --all",
+    "test:mutation": "stryker run",
     "analyze": "cross-env ANALYZE=true vite build"
   },
   "dependencies": {
@@ -62,6 +63,8 @@
     "@babel/traverse": "^7.26.4",
     "@babel/types": "^7.26.3",
     "@playwright/test": "^1.47.2",
+    "@stryker-mutator/core": "^9.6.1",
+    "@stryker-mutator/vitest-runner": "^9.6.1",
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/react": "^16.0.1",
     "@testing-library/user-event": "^14.5.2",

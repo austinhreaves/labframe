@@ -31,6 +31,8 @@ coverage/
 playwright-report/
 test-results/
 .vitest/
+reports/
+.stryker-tmp/
 
 # IDE / editor
 .vscode/
