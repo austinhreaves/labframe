@@ -1,1 +1,1 @@
-{"root":["./api/sign.ts"],"version":"5.9.3"}
+{"root":["./api/_authorship.ts","./api/sign.ts","./api/verify.ts"],"version":"5.9.3"}

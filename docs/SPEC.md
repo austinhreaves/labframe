@@ -31,7 +31,7 @@ The deliverable is a **PDF carrying a signed canonical JSON record**. The PDF is
 7. **Every text value carries its history.** `FieldValue = {text, pastes, meta}` propagates through the store, the persisted state, the canonical envelope, and the PDF renderer.
 8. **Images are first-class submission content.** Image sections are part of the graded artifact: the exported PDF embeds the image visually, and the canonical envelope carries a SHA-256 of the bytes so the signature covers them. See [ADR-0003](./decisions/0003-images-first-class-hashed.md). **[Decided 2026-06-10, not implemented]** (today the PDF prints only attachment metadata and the envelope has no hash).
 9. **Canonical JSON is byte-deterministic everywhere.** Object keys sort by UTF-16 code unit, no whitespace, finite numbers only. **[Decided 2026-06-10, not implemented]**: the current implementation sorts with `localeCompare`, which is locale-dependent and must change with envelope v5.
-10. **A signature without a verifier is theater.** Verification tooling (a stateless `/api/verify` plus the client-only integrity inspector) is committed roadmap, prioritized ahead of nonce binding. **[Decided 2026-06-10, not implemented]**. See [`docs/specs/INTEGRITY_INSPECTOR_SPEC.md`](./specs/INTEGRITY_INSPECTOR_SPEC.md).
+10. **A signature without a verifier is theater.** Verification tooling (a stateless `/api/verify` plus the client-only integrity inspector) is committed roadmap, prioritized ahead of nonce binding. `/api/verify` and `public/verify.html` (TA Checker) are now implemented. The client-only integrity inspector remains pending. See [`docs/specs/INTEGRITY_INSPECTOR_SPEC.md`](./specs/INTEGRITY_INSPECTOR_SPEC.md).
 
 ---
 
@@ -124,11 +124,11 @@ Adopted from the integrity draft, amended by [ADR-0003](./decisions/0003-images-
 3. **Images are untrusted bytes.** Per ADR-0003 (supersedes the draft's text-only stance): the envelope carries `{sha256, mime, bytes}` per image, binary stays out of the JSON, and any consumer that decodes image bytes does a `createImageBitmap()` round-trip and EXIF strip.
 4. **Prompt injection.** No future workflow may pass raw `FieldValue.text` or `PasteEvent.text` into an LLM as instructions; student content must be delimited as data, and no LLM-derived value may drive a grade without human review.
 
-### 4.5 Verification roadmap **[Decided 2026-06-10, not implemented]**
+### 4.5 Verification roadmap
 
-1. `POST /api/verify` accepting `{canonical, signedAt, signature}`, returning pass/fail. Stateless, same secret, ~20 lines. Prerequisite: the code-unit canonicalization fix (envelope v5), since a locale-dependent canonical form would produce false tampering accusations.
-2. The **Integrity Inspector**: a client-only page that accepts a `lab.json` or a signed PDF, extracts and validates via `loadUntrustedLabJson`, and renders field reconstruction, timeline, and paste inventory views. Spec: [`docs/specs/INTEGRITY_INSPECTOR_SPEC.md`](./specs/INTEGRITY_INSPECTOR_SPEC.md). Locked client-only: no upload, no backend, ever.
-3. **Resume-from-PDF**: the same untrusted loader powers a student-facing "Restore from PDF" action (drag a draft or signed PDF onto the lab page to rehydrate the store). This turns the PDF into a portable save file and is the primary mitigation for browser-local data loss. Requires drafts to carry the (unsigned) JSON attachment too.
+1. **TA Checker** (`public/verify.html` + `POST /api/verify`) **[Implemented 2026-06-30]**: drag-and-drop PDF verifier for TAs. Extracts the `lab.json` envelope from the PDF server-side, performs HMAC-SHA256 constant-time compare, and returns a cryptographic verdict plus advisory checks (integrity agreement, AI declaration, identity, field/table completeness, fit coverage). Access-gated by `VERIFY_PASSPHRASE` env var. Degrades gracefully for legacy PDFs (pre-envelope format) with a structural-only verdict. The `checks` response array is the extension point for future automated grading signals -- add entries here before reaching for an LLM.
+2. The **Integrity Inspector**: a client-only page that accepts a `lab.json` or a signed PDF, extracts and validates via `loadUntrustedLabJson`, and renders field reconstruction, timeline, and paste inventory views. Spec: [`docs/specs/INTEGRITY_INSPECTOR_SPEC.md`](./specs/INTEGRITY_INSPECTOR_SPEC.md). Locked client-only: no upload, no backend, ever. **[Not implemented]**
+3. **Resume-from-PDF**: the same untrusted loader powers a student-facing "Restore from PDF" action (drag a draft or signed PDF onto the lab page to rehydrate the store). This turns the PDF into a portable save file and is the primary mitigation for browser-local data loss. Requires drafts to carry the (unsigned) JSON attachment too. **[Not implemented]**
 
 ---
 
@@ -194,7 +194,7 @@ Agreed in the 2026-06-10 review, in priority order. Each item should land with a
 | 12  | Telemetry scrub of storage-key patterns (names) from message/stack                                                                                                                                                                                 | Privacy     |
 | 13  | `/api/sign` origin check + rate limit; security headers in `vercel.json`                                                                                                                                                                           | Security    |
 | 14  | Process Record: time bands instead of raw ms; exclude IME counts from the printed appendix                                                                                                                                                         | Integrity   |
-| 15  | `/api/verify` endpoint                                                                                                                                                                                                                             | Integrity   |
+| 15  | `/api/verify` endpoint + `public/verify.html` TA Checker **[Done 2026-06-30]**                                                                                                                                                                     | Integrity   |
 | 16  | Integrity Inspector (client-only; see spec)                                                                                                                                                                                                        | Integrity   |
 | 17  | Resume-from-PDF (drafts gain unsigned JSON attachment; loader shared with inspector)                                                                                                                                                               | Product     |
 | 18  | Remove dead schema surface: `CourseLabRef.overrides`, `requireTaName`, the `equation` process-record arm; fix or remove `splitFraction` persistence; real version/build info in the About dialog; replace `window.alert` with the dialog primitive | Cleanup     |
@@ -230,7 +230,7 @@ Carried forward from the rebuild spec; these remain hard constraints for every c
 1. **LMS embed origin:** exact parent origin(s) for the Canvas allow-list (`canvas.asu.edu` vs `*.instructure.com` sub-tool URLs). Blocks enabling `parentOriginAllowList` in production manifests.
 2. **Lab gating at launch:** review mode shows everything; a launch needs a decision on URL gating (`enabled` is not access control). Deferred spec: lab URL gating.
 3. **Prerequisite DAG sequencing** (from the archived reorg proposal): labs currently use `labNumber`; the DAG + pacing idea died by drift, not decision. Decide explicitly, record an ADR either way.
-4. **Verification UX shape:** is `/api/verify` TA-facing JSON only, or a small `/verify` page (paste or drop a PDF, see pass/fail)?
+4. **Verification UX shape:** resolved -- `public/verify.html` is a standalone TA-facing drag-and-drop checker served at `/verify.html`. Access-gated by passphrase. **[Resolved 2026-06-30]**
 5. **Nonce binding (v1.1):** revisit only after verification tooling exists and if re-sign abuse is observed in practice.
 6. **Course expansion:** PHY 112 Tier B is in flight; anything beyond (PHY 113/115) affects content tooling priorities.
 7. **Pen test:** DATA_HANDLING recommends an independent review before broad rollout; unscheduled.
