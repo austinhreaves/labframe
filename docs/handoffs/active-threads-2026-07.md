@@ -7,8 +7,8 @@
 
 ## Open branches / PRs
 
-| Branch | PR | Status | What it contains |
-|--------|----|--------|-----------------|
+| Branch                           | PR  | Status                                                         | What it contains                                                              |
+| -------------------------------- | --- | -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | `claude/eloquent-hypatia-66a4c5` | #22 | In progress -- Passes 1-6 done, Finish & Review flow remaining | Start screen + lab workspace redesign (7 passes, parts model, sim keep-alive) |
 
 Specs for PR #22 live on that branch: `START_SCREEN_SPEC.md`, `SIMS_SPEC.md`,
@@ -36,13 +36,13 @@ tooling and the Fable prompt are not written yet.
 
 ## Specs: deferred (do not start without explicit sign-off)
 
-| Spec | Reason deferred |
-|------|----------------|
-| `LAB_MANUAL_SPEC.md` | Fable to re-scope before any code |
-| `GRAPHING_EXPANSION_SPEC.md` | Execute per-need when a specific lab requires a new fit type |
-| `POLISH_SPEC_B_BUTTONS_SEGMENTED.md` | SegmentedControl not built; remainder deferred |
-| `POLISH_SPEC_D_CATALOG.md` | Some catalog changes landed; full scope deferred |
-| `PHY112_TIER_AB_SPEC.md` | PHY 112 content authoring; no code yet, deferred |
+| Spec                                 | Reason deferred                                              |
+| ------------------------------------ | ------------------------------------------------------------ |
+| `LAB_MANUAL_SPEC.md`                 | Fable to re-scope before any code                            |
+| `GRAPHING_EXPANSION_SPEC.md`         | Execute per-need when a specific lab requires a new fit type |
+| `POLISH_SPEC_B_BUTTONS_SEGMENTED.md` | SegmentedControl not built; remainder deferred               |
+| `POLISH_SPEC_D_CATALOG.md`           | Some catalog changes landed; full scope deferred             |
+| `PHY112_TIER_AB_SPEC.md`             | PHY 112 content authoring; no code yet, deferred             |
 
 ---
 
@@ -75,9 +75,9 @@ tooling and the Fable prompt are not written yet.
 
 ## What shipped recently (as of 2026-07-01)
 
-| Feature | Commit | Spec (now archived) |
-|---------|--------|---------------------|
-| Overleaf-lite equation editor | 514461c | `docs/archive/OVERLEAF_LITE_SPEC.md` |
-| Onboarding tour + course scoping | 29a424a | `docs/archive/ONBOARDING_COURSE_SCOPING_SPEC.md` |
-| PHY 132 unit cleanup | a93b394, c152c88 | `docs/archive/phy132-unit-cleanup-handoff.md` |
-| Verify-lab CI gate (Track 1) | 5e1073d, e5a4bb0 | `docs/specs/VERIFY_LAB_TWO_TRACK_SPEC.md` (active) |
+| Feature                          | Commit           | Spec (now archived)                                |
+| -------------------------------- | ---------------- | -------------------------------------------------- |
+| Overleaf-lite equation editor    | 514461c          | `docs/archive/OVERLEAF_LITE_SPEC.md`               |
+| Onboarding tour + course scoping | 29a424a          | `docs/archive/ONBOARDING_COURSE_SCOPING_SPEC.md`   |
+| PHY 132 unit cleanup             | a93b394, c152c88 | `docs/archive/phy132-unit-cleanup-handoff.md`      |
+| Verify-lab CI gate (Track 1)     | 5e1073d, e5a4bb0 | `docs/specs/VERIFY_LAB_TWO_TRACK_SPEC.md` (active) |

@@ -21,20 +21,20 @@ making non-trivial product changes. Architecture overview: `docs/ARCHITECTURE.md
 
 ## Commands
 
-| Task                        | Command                                                                                |
-| --------------------------- | -------------------------------------------------------------------------------------- |
-| Dev server (frontend)       | `npm run dev`                                                                          |
-| Dev server with `/api/sign` | `npm run dev:vercel`                                                                   |
-| Typecheck                   | `npm run typecheck`                                                                    |
-| Lint (warnings fail)        | `npm run lint`                                                                         |
-| Format check / write        | `npm run format:check` / `npm run format`                                              |
-| Unit tests                  | `npm test` (Vitest)                                                                    |
-| E2E tests                   | `npm run test:e2e` (Playwright)                                                        |
-| Full local CI               | `npm run ci` (typecheck + lint + format:check + test)                                  |
-| Verify a lab                | `npm run verify:lab -- <labId>` or `-- <path/to/lab.lab.ts>` (use `--all` to list IDs) |
-| Verify every lab (CI gate)  | `npm run verify:labs` (`verify-lab --all`, errors-only; runs in CI after unit tests)   |
+| Task                        | Command                                                                                                            |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Dev server (frontend)       | `npm run dev`                                                                                                      |
+| Dev server with `/api/sign` | `npm run dev:vercel`                                                                                               |
+| Typecheck                   | `npm run typecheck`                                                                                                |
+| Lint (warnings fail)        | `npm run lint`                                                                                                     |
+| Format check / write        | `npm run format:check` / `npm run format`                                                                          |
+| Unit tests                  | `npm test` (Vitest)                                                                                                |
+| E2E tests                   | `npm run test:e2e` (Playwright)                                                                                    |
+| Full local CI               | `npm run ci` (typecheck + lint + format:check + test)                                                              |
+| Verify a lab                | `npm run verify:lab -- <labId>` or `-- <path/to/lab.lab.ts>` (use `--all` to list IDs)                             |
+| Verify every lab (CI gate)  | `npm run verify:labs` (`verify-lab --all`, errors-only; runs in CI after unit tests)                               |
 | Pedagogy review (authoring) | `npm run verify:lab:pedagogy -- <labId>` (Track 2 -- not yet built; see `docs/specs/VERIFY_LAB_TWO_TRACK_SPEC.md`) |
-| Mutation audit (on-demand)  | `npm run test:mutation` (Stryker; scoped to the modules in `stryker.config.json`)      |
+| Mutation audit (on-demand)  | `npm run test:mutation` (Stryker; scoped to the modules in `stryker.config.json`)                                  |
 
 Run `npm run ci` before opening or updating a PR. Add `npm run test:e2e` for any UI,
 accessibility, or routing/layout change. Lint warnings fail CI (`--max-warnings 0`).
