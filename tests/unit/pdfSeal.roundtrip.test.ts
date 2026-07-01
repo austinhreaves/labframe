@@ -99,6 +99,16 @@ describe('PDF seal roundtrip', () => {
 
     expect(sealedDoc.getTitle()).toBe('Test Report');
     expect(namesDict).toBeDefined();
-    expect(attachedJson).toBe(canonical);
+    // lab.json is a self-contained verification envelope: canonical answers plus the full
+    // signature and timestamp, so /api/verify can recompute the HMAC from the PDF alone.
+    expect(attachedJson).not.toBeNull();
+    const envelope = JSON.parse(attachedJson as string) as {
+      canonical: string;
+      signature: string;
+      signedAt: number;
+    };
+    expect(envelope.canonical).toBe(canonical);
+    expect(envelope.signature).toBe(signature);
+    expect(envelope.signedAt).toBe(signedAt);
   });
 });

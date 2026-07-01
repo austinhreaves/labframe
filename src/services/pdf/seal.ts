@@ -40,9 +40,17 @@ export async function sealPDF(inputBytes: Uint8Array, args: SealArgs): Promise<U
     drawFooter(page, footer);
   }
 
-  // pdf-lib treats string attachments as base64; canonical JSON must be UTF-8 bytes.
-  const canonicalBytes = new Uint8Array(await new Response(args.canonical).arrayBuffer());
-  await pdfDoc.attach(canonicalBytes, 'lab.json', {
+  // Attach a self-contained verification envelope so /api/verify has everything
+  // it needs from the PDF alone: canonical JSON, full HMAC signature, and timestamp.
+  // Legacy PDFs (pre-envelope) attached the raw canonical string; the verifier
+  // detects the format by checking whether the parsed value is a string or object.
+  const envelope = JSON.stringify({
+    canonical: args.canonical,
+    signature: args.signature,
+    signedAt: args.signedAt,
+  });
+  const envelopeBytes = new Uint8Array(await new Response(envelope).arrayBuffer());
+  await pdfDoc.attach(envelopeBytes, 'lab.json', {
     mimeType: 'application/json',
     description: 'Canonical signed lab answers',
     creationDate: new Date(args.signedAt),

@@ -13,6 +13,9 @@
   "functions": {
     "api/sign.ts": {
       "maxDuration": 5
+    },
+    "api/verify.ts": {
+      "maxDuration": 15
     }
   }
 }
