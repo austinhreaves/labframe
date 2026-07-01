@@ -72,6 +72,16 @@ describe('LabSchema parts validation', () => {
     expect(result.success).toBe(false);
   });
 
+  it('rejects a part whose key is the reserved "review"', () => {
+    const result = LabSchema.safeParse(
+      labWithParts([
+        { key: 'review', title: 'One', simulationId: 'simA', sectionRange: [0, 3] },
+        { key: '2', title: 'Two', simulationId: 'simB', sectionRange: [3, 6] },
+      ]),
+    );
+    expect(result.success).toBe(false);
+  });
+
   it('rejects an unknown simulationId', () => {
     const result = LabSchema.safeParse(
       labWithParts([
