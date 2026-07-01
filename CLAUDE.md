@@ -33,6 +33,7 @@ making non-trivial product changes. Architecture overview: `docs/ARCHITECTURE.md
 | Full local CI               | `npm run ci` (typecheck + lint + format:check + test)                                  |
 | Verify a lab                | `npm run verify:lab -- <labId>` or `-- <path/to/lab.lab.ts>` (use `--all` to list IDs) |
 | Verify every lab (CI gate)  | `npm run verify:labs` (`verify-lab --all`, errors-only; runs in CI after unit tests)   |
+| Pedagogy review (authoring) | `npm run verify:lab:pedagogy -- <labId>` (Track 2 -- not yet built; see `docs/specs/VERIFY_LAB_TWO_TRACK_SPEC.md`) |
 | Mutation audit (on-demand)  | `npm run test:mutation` (Stryker; scoped to the modules in `stryker.config.json`)      |
 
 Run `npm run ci` before opening or updating a PR. Add `npm run test:e2e` for any UI,
@@ -69,8 +70,10 @@ selectors break silently when a lab is hidden.
 - `docs/decisions/` - ADRs. `docs/specs/` - feature specs. `docs/handoffs/` - in-flight work.
 - `docs/theory/` - per-lab student-facing theory references. Each lab has a
   `lab-NN-kebab-name.md` (source of truth) and a matching `.html` (Canvas embed artifact).
-  See `docs/handoffs/theory-references-handoff.md` for the authoring process and the
+  See `docs/archive/theory-references-handoff.md` for the authoring process and the
   folder-to-lab mapping for the external PHY 114 instructional materials.
+- `docs/handoffs/active-threads-2026-07.md` - current branch/spec/handoff inventory.
+  Read this first when starting a new session to understand what is in-flight vs. deferred.
 
 ## Authoring or editing a lab
 
