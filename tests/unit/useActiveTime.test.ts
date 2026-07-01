@@ -171,6 +171,16 @@ describe('useActiveTime (hook)', () => {
     expect(field.value().meta.activeMs).toBe(5000);
   });
 
+  it('banks unflushed time when focus fires again without an intervening blur', () => {
+    const field = mountField();
+    field.onFocus();
+    advanceClock(2000);
+    field.onFocus(); // duplicate focus event: must flush, not discard
+    advanceClock(3000);
+    field.onBlur();
+    expect(field.value().meta.activeMs).toBe(3000);
+  });
+
   it('accumulates across focus cycles rather than resetting (stale-closure guard)', () => {
     const field = mountField();
     advanceClock(1000);

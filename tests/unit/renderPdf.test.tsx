@@ -164,9 +164,11 @@ describe('renderPDF', () => {
     expect(textDump).not.toContain('Background theory');
     expect(textDump).not.toContain('Reference only.');
     expect(textDump).toContain('My goal');
-    // Process Record still records the visible objective's activity.
+    // Process Record still records the visible objective's activity, labeled
+    // by its prompt and banded (5000ms -> "under 1 min").
     expect(textDump).toContain('Objective');
-    expect(textDump).toContain('5s');
+    expect(textDump).toContain('State the goal.');
+    expect(textDump).toContain('under 1 min');
   });
 
   it('compacts an all-empty Coulomb draft (P-C/P-D/P-E)', () => {

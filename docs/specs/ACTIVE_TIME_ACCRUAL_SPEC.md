@@ -138,10 +138,10 @@ logic; a fix applied to one and not the other would silently half-work. Extract 
 
 ```ts
 // src/ui/primitives/useActiveTime.ts
-export function useActiveTime(args: {
-  value: FieldValue;
-  onChange: (next: FieldValue) => void;
-}): { onFocus: () => void; onBlur: () => void };
+export function useActiveTime(args: { value: FieldValue; onChange: (next: FieldValue) => void }): {
+  onFocus: () => void;
+  onBlur: () => void;
+};
 ```
 
 Responsibilities, all internal to the hook:
@@ -184,14 +184,14 @@ writes the returned `meta` back through `onChange`.
 
 ## 4. Files touched
 
-| File | Change |
-| --- | --- |
-| `src/ui/primitives/useActiveTime.ts` | **NEW.** Hook + `accrueActiveMs` pure helper. |
-| `src/ui/primitives/Field.tsx` | Replace local focus/blur time logic with `useActiveTime`. |
-| `src/ui/primitives/EquationEditor.tsx` | Same. |
-| `src/state/persistence/labPersistenceMiddleware.ts` | Return `flushPersistence()` from `attachLabPersistence`. |
+| File                                                             | Change                                                                        |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `src/ui/primitives/useActiveTime.ts`                             | **NEW.** Hook + `accrueActiveMs` pure helper.                                 |
+| `src/ui/primitives/Field.tsx`                                    | Replace local focus/blur time logic with `useActiveTime`.                     |
+| `src/ui/primitives/EquationEditor.tsx`                           | Same.                                                                         |
+| `src/state/persistence/labPersistenceMiddleware.ts`              | Return `flushPersistence()` from `attachLabPersistence`.                      |
 | store/provider setup (wherever `attachLabPersistence` is called) | Register one `pagehide` + `visibilitychange` listener → `flushPersistence()`. |
-| `tests/unit/useActiveTime.test.ts` | **NEW.** Pure `accrueActiveMs` + jsdom hook tests. |
+| `tests/unit/useActiveTime.test.ts`                               | **NEW.** Pure `accrueActiveMs` + jsdom hook tests.                            |
 
 No schema, no persisted-shape, no PDF-render change. `Document.tsx` Process Record rendering
 is unaffected (it just sums a now-accurate `activeMs`).
