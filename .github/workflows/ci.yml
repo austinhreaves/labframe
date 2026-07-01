@@ -34,6 +34,9 @@ jobs:
       - name: Unit tests
         run: npm test -- --reporter=verbose
 
+      - name: Verify lab content
+        run: npm run verify:labs
+
       - name: Build
         run: npm run build
 

@@ -32,6 +32,7 @@ making non-trivial product changes. Architecture overview: `docs/ARCHITECTURE.md
 | E2E tests                   | `npm run test:e2e` (Playwright)                                                        |
 | Full local CI               | `npm run ci` (typecheck + lint + format:check + test)                                  |
 | Verify a lab                | `npm run verify:lab -- <labId>` or `-- <path/to/lab.lab.ts>` (use `--all` to list IDs) |
+| Verify every lab (CI gate)  | `npm run verify:labs` (`verify-lab --all`, errors-only; runs in CI after unit tests)   |
 
 Run `npm run ci` before opening or updating a PR. Add `npm run test:e2e` for any UI,
 accessibility, or routing/layout change. Lint warnings fail CI (`--max-warnings 0`).
