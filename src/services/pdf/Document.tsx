@@ -11,7 +11,7 @@ import {
 } from '@react-pdf/renderer';
 
 import { formatPointsLabel, sumSectionPoints } from '@/domain/pointsFormatting';
-import { formatDuration } from '@/services/pdf/formatDuration';
+import { formatTimeBand } from '@/services/pdf/formatDuration';
 import type {
   Course,
   FieldValue,
@@ -135,6 +135,60 @@ function sectionTitle(section: Section): string {
       return _exhaustive;
     }
   }
+}
+
+const PROCESS_RECORD_LABEL_MAX = 48;
+
+function truncateProcessRecordLabel(text: string): string {
+  const plain = mathToInline(text).replace(/\s+/g, ' ').trim();
+  if (plain.length <= PROCESS_RECORD_LABEL_MAX) {
+    return plain;
+  }
+  return `${plain.slice(0, PROCESS_RECORD_LABEL_MAX - 3).trimEnd()}...`;
+}
+
+/**
+ * Section-specific label for a Process Record row (SPEC 4.2). Unlike
+ * `sectionTitle` (shared with the PDF body headings and the compaction list,
+ * so it must stay generic), this prefers the section's real identity: an
+ * authored `tocLabel`, a kind-specific title or label, else a truncated
+ * prompt, else the kind name. Presentation only - derived from the already
+ * signed section, never a new signed field.
+ */
+function processRecordLabel(section: Section): string {
+  if (section.tocLabel && section.tocLabel.trim().length > 0) {
+    return truncateProcessRecordLabel(section.tocLabel);
+  }
+  switch (section.kind) {
+    case 'measurement':
+      return truncateProcessRecordLabel(section.label);
+    case 'objective':
+    case 'calculation':
+    case 'concept':
+      return section.prompt && section.prompt.trim().length > 0
+        ? truncateProcessRecordLabel(section.prompt)
+        : sectionTitle(section);
+    default:
+      return sectionTitle(section);
+  }
+}
+
+/** Suffix repeated labels with an occurrence index ("Response 3") so rows from
+ *  sections that share a label stay distinct in the appendix. */
+function disambiguateLabels(labels: string[]): string[] {
+  const totals = new Map<string, number>();
+  for (const label of labels) {
+    totals.set(label, (totals.get(label) ?? 0) + 1);
+  }
+  const seen = new Map<string, number>();
+  return labels.map((label) => {
+    if ((totals.get(label) ?? 0) <= 1) {
+      return label;
+    }
+    const occurrence = (seen.get(label) ?? 0) + 1;
+    seen.set(label, occurrence);
+    return `${label} ${occurrence}`;
+  });
 }
 
 const styles = StyleSheet.create({
@@ -293,71 +347,73 @@ function emptyProcessRecord(): ProcessRecord {
   };
 }
 
-function processRecordForSection(section: Section, answers: LabAnswers): ProcessRecord {
-  const fieldIds: string[] = [];
-
+/** Every FieldValue a section owns. Data table cells live in `answers.tables`
+ *  (keyed by table id, then column id per row), not `answers.fields` - looking
+ *  column ids up in `fields` would drop all table activity and could collide
+ *  with an unrelated top-level field of the same id. */
+function fieldValuesForSection(section: Section, answers: LabAnswers): FieldValue[] {
   switch (section.kind) {
     case 'objective':
     case 'measurement':
     case 'calculation':
-    case 'concept':
-      fieldIds.push(section.fieldId);
-      break;
+    case 'concept': {
+      const field = answers.fields[section.fieldId];
+      return field ? [field] : [];
+    }
     case 'multiMeasurement':
-      fieldIds.push(...section.rows.map((row) => row.id));
-      break;
-    case 'image':
-      fieldIds.push(section.captionFieldId);
-      break;
+      return section.rows
+        .map((row) => answers.fields[row.id])
+        .filter((field): field is FieldValue => field !== undefined);
+    case 'image': {
+      const field = answers.fields[section.captionFieldId];
+      return field ? [field] : [];
+    }
     case 'dataTable': {
       const rows = answers.tables[section.tableId] ?? [];
-      for (const row of rows) {
-        fieldIds.push(...Object.keys(row));
-      }
-      break;
+      return rows.flatMap((row) => Object.values(row));
     }
     case 'instructions':
-      // Instructions sections own no fields, so process record is intentionally empty.
-      return emptyProcessRecord();
     case 'plot':
-      // Plot sections also own no fields directly, so process record is intentionally empty.
-      return emptyProcessRecord();
+      // These sections own no fields, so their process record is intentionally empty.
+      return [];
     default: {
       const _exhaustive: never = section;
       return _exhaustive;
     }
   }
-
-  let activeMs = 0;
-  let keystrokes = 0;
-  let deletes = 0;
-  const pastes: PasteCounts = { clipboard: 0, autocomplete: 0, ime: 0 };
-
-  for (const fieldId of fieldIds) {
-    const field = answers.fields[fieldId];
-    if (field) {
-      activeMs += field.meta.activeMs;
-      keystrokes += field.meta.keystrokes;
-      deletes += field.meta.deletes;
-      for (const paste of field.pastes) {
-        pastes[paste.source] += 1;
-      }
-    }
-  }
-
-  return { activeMs, keystrokes, deletes, pastes };
 }
 
-function totalPastes(pastes: PasteCounts): number {
-  return pastes.clipboard + pastes.autocomplete + pastes.ime;
+function processRecordForSection(section: Section, answers: LabAnswers): ProcessRecord {
+  const record = emptyProcessRecord();
+  for (const field of fieldValuesForSection(section, answers)) {
+    record.activeMs += field.meta.activeMs;
+    record.keystrokes += field.meta.keystrokes;
+    record.deletes += field.meta.deletes;
+    for (const paste of field.pastes) {
+      record.pastes[paste.source] += 1;
+    }
+  }
+  return record;
+}
+
+// IME paste counts are excluded from the printed appendix and from activity
+// detection (SPEC 4.2): they carry no integrity signal and would flag CJK
+// typists. Granular counts stay in the signed envelope for the inspector.
+function integrityPastes(pastes: PasteCounts): number {
+  return pastes.clipboard + pastes.autocomplete;
 }
 
 function formatPastes(pastes: PasteCounts): string {
-  return `${pastes.clipboard} / ${pastes.autocomplete} / ${pastes.ime}`;
+  return `${pastes.clipboard} / ${pastes.autocomplete}`;
 }
 
 function hasRecordedActivity(record: ProcessRecord): boolean {
-  return record.activeMs > 0 || record.keystrokes > 0 || totalPastes(record.pastes) > 0;
+  return (
+    record.activeMs > 0 ||
+    record.keystrokes > 0 ||
+    record.deletes > 0 ||
+    integrityPastes(record.pastes) > 0
+  );
 }
 
 function sectionView(
@@ -683,26 +739,30 @@ export function LabReportDocument(props: PDFProps) {
 
   // Process Record (P-D): one dense row per field-owning section with recorded
   // activity, plus a totals row; zero-activity sections collapse to one line.
+  // Rows carry section-specific labels (SPEC 4.2), disambiguated across the
+  // whole appendix so repeats stay distinct.
+  const fieldOwningSections = visibleSections
+    .map(({ section }) => section)
+    .filter((section) => isFieldOwning(section));
+  const rowLabels = disambiguateLabels(fieldOwningSections.map(processRecordLabel));
   const totals = emptyProcessRecord();
   const activeRecords: Array<{ title: string; record: ProcessRecord }> = [];
   const noActivityTitles: string[] = [];
-  for (const { section } of visibleSections) {
-    if (!isFieldOwning(section)) {
-      continue;
-    }
+  fieldOwningSections.forEach((section, sectionIndex) => {
+    const label = rowLabels[sectionIndex] ?? sectionTitle(section);
     const record = processRecordForSection(section, answers);
     if (!hasRecordedActivity(record)) {
-      noActivityTitles.push(sectionTitle(section));
-      continue;
+      noActivityTitles.push(label);
+      return;
     }
-    activeRecords.push({ title: sectionTitle(section), record });
+    activeRecords.push({ title: label, record });
     totals.activeMs += record.activeMs;
     totals.keystrokes += record.keystrokes;
     totals.deletes += record.deletes;
     totals.pastes.clipboard += record.pastes.clipboard;
     totals.pastes.autocomplete += record.pastes.autocomplete;
     totals.pastes.ime += record.pastes.ime;
-  }
+  });
 
   return (
     <Document
@@ -750,12 +810,12 @@ export function LabReportDocument(props: PDFProps) {
               <Text style={[styles.prCell, styles.prHeaderText]}>Active time</Text>
               <Text style={[styles.prCell, styles.prHeaderText]}>Keystrokes</Text>
               <Text style={[styles.prCell, styles.prHeaderText]}>Deletes</Text>
-              <Text style={[styles.prCell, styles.prHeaderText]}>Pastes (c / a / i)</Text>
+              <Text style={[styles.prCell, styles.prHeaderText]}>Pastes (c / a)</Text>
             </View>
             {activeRecords.map(({ title, record }, recordIndex) => (
               <View key={`pr-${recordIndex}`} style={styles.prRow}>
                 <Text style={styles.prCellWide}>{title}</Text>
-                <Text style={styles.prCell}>{formatDuration(record.activeMs)}</Text>
+                <Text style={styles.prCell}>{formatTimeBand(record.activeMs)}</Text>
                 <Text style={styles.prCell}>{record.keystrokes}</Text>
                 <Text style={styles.prCell}>{record.deletes}</Text>
                 <Text style={styles.prCell}>{formatPastes(record.pastes)}</Text>
@@ -764,7 +824,7 @@ export function LabReportDocument(props: PDFProps) {
             <View style={styles.prTotalsRow}>
               <Text style={[styles.prCellWide, styles.prHeaderText]}>Total</Text>
               <Text style={[styles.prCell, styles.prHeaderText]}>
-                {formatDuration(totals.activeMs)}
+                {formatTimeBand(totals.activeMs)}
               </Text>
               <Text style={[styles.prCell, styles.prHeaderText]}>{totals.keystrokes}</Text>
               <Text style={[styles.prCell, styles.prHeaderText]}>{totals.deletes}</Text>

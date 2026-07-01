@@ -126,6 +126,10 @@ export function useActiveTime({ value, onChange }: UseActiveTimeArgs): {
   }, [flush, stopHeartbeat]);
 
   const onFocus = useCallback(() => {
+    // A double focus event (some custom elements re-fire focus without an
+    // intervening blur) must not discard the unflushed delta since the last
+    // anchor; bank it before re-anchoring.
+    flush();
     anchorRef.current = performance.now();
     focusedRef.current = true;
     attachListeners();
@@ -135,7 +139,7 @@ export function useActiveTime({ value, onChange }: UseActiveTimeArgs): {
       // firstFocusAt is a wall-clock instant (display/forensic), so Date.now().
       commit({ ...current, meta: { ...current.meta, firstFocusAt: Date.now() } });
     }
-  }, [attachListeners, startHeartbeat]);
+  }, [flush, attachListeners, startHeartbeat]);
 
   const onBlur = useCallback(() => {
     flush();
