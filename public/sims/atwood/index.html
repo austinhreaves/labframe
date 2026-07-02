@@ -329,10 +329,17 @@
       <div id="srSummary" class="visually-hidden" aria-live="polite"></div>
     </div>
 
-    <script>
-      'use strict';
+    <script type="module">
+      import { createEngine } from '../lib/engine/engine.js';
+      import { atwoodAcceleration, createAtwoodModel } from './model.js';
 
       /**
+       * Physics runs on the shared sim engine (public/sims/lib/engine/, spec at
+       * docs/specs/PHYSICS_ENGINE_SPEC.md): RK4 at dt = 0.01 s, with the end of
+       * the cart's travel found by guard bisection. The model lives in ./model.js.
+       * The reported time (and therefore a_measured = 2d/t^2) carries seeded
+       * stopwatch noise (spec section 2.1.1); the trajectory and plots are exact.
+       *
        * Telemetry: every event is posted to the parent LabFrame window as
        * { type: 'labframe:sim-event', detail } via window.parent.postMessage.
        * `t` in each detail is seconds since page load (performance.now based).
@@ -344,9 +351,15 @@
        *                           a_theoretical, near_equilibrium, t }
        *   trial_reset:          { type, t }
        *   measurement_recorded: { type, field, value, t }
+       *   engine_event:         { type, event: 'mode_enter'|'mode_exit'|'guard_fired'
+       *                           |'reset_applied', from?, to?, guard?, sim_t,
+       *                           observables, t }
        *
        * `near_equilibrium` is true when |a_theoretical| < 0.05 m/s^2.
        * `a_theoretical` is for the AI layer only and is never shown in the sim.
+       * `duration` in trial_completed is the noisy reading the student saw;
+       * engine_event carries exact sim times. engine_event forwards the engine's
+       * mode transitions and resets (never per-step samples), per spec section 5.
        */
       const sessionStart = performance.now();
       function emit(detail) {
@@ -360,6 +373,29 @@
         return (performance.now() - sessionStart) / 1000;
       }
 
+      // Forward engine events (mode transitions, guard firings, resets) to the
+      // parent as they appear in the in-memory log; the engine itself never
+      // touches postMessage.
+      let forwardedEngineEvents = 0;
+      function forwardEngineEvents() {
+        if (!state.engine) return;
+        const log = state.engine.events;
+        for (; forwardedEngineEvents < log.length; forwardedEngineEvents += 1) {
+          const ev = log[forwardedEngineEvents];
+          const detail = {
+            type: 'engine_event',
+            event: ev.event,
+            sim_t: ev.sim_t,
+            observables: ev.observables,
+            t: now(),
+          };
+          if (ev.from !== undefined) detail.from = ev.from;
+          if (ev.to !== undefined) detail.to = ev.to;
+          if (ev.guard !== undefined) detail.guard = ev.guard;
+          emit(detail);
+        }
+      }
+
       // Physics constants (SI units).
       const G = 9.8;
       const TRACK_LEN = 1.5; // cart travel distance from rest to the pulley end (m)
@@ -368,6 +404,9 @@
       const T_MAX = 20; // near-equilibrium trial cap (s)
       const NEAR_EQ = 0.05; // |a| below this counts as near equilibrium (m/s^2)
       const D_LIMIT = Math.min(TRACK_LEN, DROP); // first termination distance
+      // Fixed stopwatch-noise seed: deterministic and replayable. The per-student
+      // envelope seed slot replaces this when randomized givens land.
+      const NOISE_SEED = 201;
 
       // Scene geometry (world units are meters, y up; pivot is the track's wall anchor).
       const PIVOT = { x: 0, y: 1.55 };
@@ -444,12 +483,13 @@
         acc: 0, // integrator time accumulator (s)
         aMeasured: 0,
         countUp: null, // { start } while the a_measured count-up runs
+        engine: null, // physics engine instance for the trial in progress
+        tReading: 0, // noisy stopwatch reading shown at completion
+        trialIndex: 0, // monotonic; the noise-layer sampleIndex for this session
       };
 
       function aTheoretical() {
-        const { M, m, theta } = state;
-        const rad = (theta * Math.PI) / 180;
-        return (G * (m - M * Math.sin(rad))) / (M + m);
+        return atwoodAcceleration({ M: state.M, m: state.m, thetaDeg: state.theta, g: G });
       }
 
       // ---------- parameters ----------
@@ -572,7 +612,10 @@
         state.samples = [];
         state.pulleyPhi = 0;
         state.aMeasured = 0;
+        state.tReading = 0;
         state.countUp = null;
+        state.engine = null;
+        forwardedEngineEvents = 0;
         els.results.hidden = true;
         els.results.classList.remove('pop');
       }
@@ -591,9 +634,26 @@
         if (state.phase === 'complete') resetTrial();
         clearTrialData();
         state.samples.push({ t: 0, d: 0, v: 0 });
+        state.trialIndex += 1;
+        state.engine = createEngine(
+          createAtwoodModel({
+            M: state.M,
+            m: state.m,
+            thetaDeg: state.theta,
+            g: G,
+            dLimit: D_LIMIT,
+          }),
+          { seed: NOISE_SEED },
+        );
+        forwardEngineEvents();
         emit({ type: 'trial_started', M: state.M, m: state.m, theta: state.theta, t: now() });
         if (reducedMotion.matches) {
-          completeInstantly();
+          // prefers-reduced-motion: skip the animation and run the same
+          // fixed-timestep engine loop to completion synchronously (the 20 s
+          // cap bounds this at 2000 steps).
+          while (!stepPhysics()) {
+            /* stepping */
+          }
           return;
         }
         state.phase = 'running';
@@ -601,39 +661,25 @@
         updateRunAvailability();
       }
 
-      /** prefers-reduced-motion: skip the animation and jump to the end state. */
-      function completeInstantly() {
-        const a = aTheoretical();
-        let tEnd = Math.sqrt((2 * D_LIMIT) / a);
-        let dEnd = D_LIMIT;
-        if (tEnd > T_MAX) {
-          tEnd = T_MAX;
-          dEnd = 0.5 * a * T_MAX * T_MAX;
-        }
-        const steps = 160;
-        state.samples = [];
-        for (let i = 0; i <= steps; i += 1) {
-          const t = (tEnd * i) / steps;
-          state.samples.push({ t, d: 0.5 * a * t * t, v: a * t });
-        }
-        state.t = tEnd;
-        state.d = dEnd;
-        state.v = a * tEnd;
-        state.pulleyPhi = dEnd / PULLEY_R;
-        completeTrial();
-      }
-
       function completeTrial() {
         state.phase = 'complete';
         lockParams(false);
         const aTh = aTheoretical();
-        state.aMeasured = state.t > 0 ? (2 * state.d) / (state.t * state.t) : 0;
+        // Stopwatch reading: the seeded noise layer perturbs only the reported
+        // time; the trajectory (and the plots) stay exact. a_measured = 2d/t^2
+        // then inherits the ~1 percent spread the Euler integrator used to
+        // produce by accident.
+        state.tReading = state.engine.read('timeReading', state.trialIndex);
+        // Show the reading everywhere so the overlay and results panel agree.
+        state.t = state.tReading;
+        state.aMeasured =
+          state.tReading > 0 ? (2 * state.d) / (state.tReading * state.tReading) : 0;
         emit({
           type: 'trial_completed',
           M: state.M,
           m: state.m,
           theta: state.theta,
-          duration: state.t,
+          duration: state.tReading,
           distance: state.d,
           a_measured: state.aMeasured,
           a_theoretical: aTh,
@@ -641,14 +687,14 @@
           t: now(),
         });
         for (const [field, value] of [
-          ['time', state.t],
+          ['time', state.tReading],
           ['distance', state.d],
           ['final_velocity', state.v],
           ['a_measured', state.aMeasured],
         ]) {
           emit({ type: 'measurement_recorded', field, value, t: now() });
         }
-        els.resT.textContent = state.t.toFixed(2);
+        els.resT.textContent = state.tReading.toFixed(2);
         els.resD.textContent = state.d.toFixed(3);
         els.resV.textContent = state.v.toFixed(2);
         els.results.hidden = false;
@@ -662,24 +708,21 @@
         updateRunAvailability();
       }
 
-      /** One fixed integrator tick. Returns true when the trial finished. */
+      /** One fixed engine tick (dt = 0.01 s). Returns true when the trial finished. */
       function stepPhysics() {
-        const a = aTheoretical();
-        const vPrev = state.v;
-        const dPrev = state.d;
-        state.v += a * DT;
-        state.d += state.v * DT;
-        state.t += DT;
-        if (state.d >= D_LIMIT && state.v > 0) {
-          // Interpolate the exact crossing inside this step so t matches d.
-          const frac = Math.min(1, Math.max(0, (D_LIMIT - dPrev) / (state.d - dPrev)));
-          state.t += DT * (frac - 1);
-          state.v = vPrev + a * DT * frac;
-          state.d = D_LIMIT;
-        }
+        const engine = state.engine;
+        engine.step();
+        forwardEngineEvents();
+        const s = engine.getState();
+        // s.tt is the time coordinate: it equals engine.t while running, and
+        // freezes at the exact bisected event time when the track_end guard
+        // fires (the engine's clock still advances to the step boundary).
+        state.t = s.tt;
+        state.d = s.d;
+        state.v = s.v;
         state.pulleyPhi = state.d / PULLEY_R;
         state.samples.push({ t: state.t, d: state.d, v: state.v });
-        if (state.d >= D_LIMIT || state.t >= T_MAX) {
+        if (engine.mode === 'done' || state.t >= T_MAX) {
           completeTrial();
           return true;
         }

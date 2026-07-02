@@ -3,7 +3,15 @@
 **Status:** Decisions locked 2026-07-02 (Section 9). **Phase E1 built 2026-07-02:**
 engine core at `public/sims/lib/engine/` (engine.js + noise.js, JSDoc ES modules,
 typechecked via `tsconfig.engine.json`) with the Section 6 test suite under
-`tests/unit/engine/`. No sim consumes it yet; Phase E2 (Atwood port) is next.
+`tests/unit/engine/`. **Phase E2 built 2026-07-02:** the Atwood sim runs on the
+engine (model at `public/sims/atwood/model.js`, migration validation in
+`tests/unit/engine/atwood.migration.test.ts`); RK4 replaced Euler, the percent-error
+gap moved to seeded stopwatch noise (gaussian, 0.5 percent relative on the timing
+readout, seed fixed at 201 until the envelope seed slot is wired), and the sim
+forwards `engine_event` telemetry. Note the sim iframe now needs
+`sandbox: 'allow-scripts allow-same-origin'`: module scripts fetch in CORS mode,
+so relative engine imports fail under an opaque origin on static hosting.
+Phase E3 (pulley inertia + friction) is next.
 
 **Companion to:** `docs/handoffs/n2l-atwood-sim-handoff.md` (the first custom sim, shipped
 without an engine), `docs/SPEC.md` (product/eng scope), and
@@ -308,9 +316,14 @@ sim-kit extraction (Section 1.1) waits until the second new sim begins.
    guard surface should place the state exactly on it (e.g. `y: 0` at a bounce), since
    bisection stops within `timeTol` past the crossing and the engine never snaps state.
 
+7. **Noise descriptor vocabulary (decided in Phase E2):** two kinds cover the roadmap:
+   `{ kind: 'gaussian', relative? , absolute? }` (additive, sigma = absolute or
+   |value| \* relative) and `{ kind: 'quantize', step }` (deterministic digital
+   readout). The Atwood "~1% feel" target is pinned as gaussian `relative: 0.005` on
+   the timing readout: sigma on a_measured = 2d/t^2 is twice the sigma on t, giving
+   the ~1 percent spread the Euler discretization used to produce by accident (now
+   unbiased and seed-reproducible). New kinds are added only when a sim needs one.
+
 ### Deferred / still open
 
-- **Noise descriptor vocabulary:** the exact set of noise kinds (Gaussian relative /
-  absolute, quantization step, others) is finalized when the Atwood port pins down the
-  "~1% feel" target in Phase E2.
 - **sim-kit spec** (Section 1.1): written when Phase E4 begins.

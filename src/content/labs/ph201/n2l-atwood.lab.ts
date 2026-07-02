@@ -20,7 +20,13 @@ export const ph201N2lAtwoodLab: Lab = {
     atwood: {
       title: 'Adjustable-Angle Atwood Machine',
       url: '/sims/atwood/index.html',
-      sandbox: 'allow-scripts',
+      // allow-same-origin is required: the sim is an ES module page (it imports
+      // the shared physics engine from /sims/lib/engine/), and module scripts
+      // are always fetched in CORS mode. Under an opaque origin (allow-scripts
+      // alone) those imports need CORS headers static hosting does not send.
+      // The sim is first-party content served from our own origin; the sandbox
+      // still blocks popups, top navigation, forms, and downloads.
+      sandbox: 'allow-scripts allow-same-origin',
     },
   },
   sections: [
