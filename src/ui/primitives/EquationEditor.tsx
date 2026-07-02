@@ -100,11 +100,31 @@ export function EquationEditor({
     if (!isReady || mode !== 'math') {
       return;
     }
-    const sink = mathFieldRef.current?.querySelector('.ML__keyboard-sink[role="textbox"]');
-    if (sink instanceof HTMLElement) {
-      sink.setAttribute('aria-label', label);
-      sink.setAttribute('title', label);
-    }
+    // MathLive's keystroke sink is a role="textbox" span inside the math-field's
+    // (open) shadow root, and its template carries no accessible name, so axe
+    // flags aria-input-field-name. The host's own aria-label does not propagate
+    // to it. Label it directly; query the shadow root (a light-DOM querySelector
+    // cannot reach it) and retry across a few frames because the custom element
+    // upgrades asynchronously after mount.
+    let frame = 0;
+    let attempts = 0;
+    const labelSink = () => {
+      const host = mathFieldRef.current;
+      const sink =
+        host?.shadowRoot?.querySelector('.ML__keyboard-sink[role="textbox"]') ??
+        host?.querySelector('.ML__keyboard-sink[role="textbox"]');
+      if (sink instanceof HTMLElement) {
+        sink.setAttribute('aria-label', label);
+        sink.setAttribute('title', label);
+        return;
+      }
+      if (attempts < 10) {
+        attempts += 1;
+        frame = requestAnimationFrame(labelSink);
+      }
+    };
+    labelSink();
+    return () => cancelAnimationFrame(frame);
   }, [isReady, label, mode, effective.text]);
 
   const getSelectionStart = (target: MathFieldElement): number => {
