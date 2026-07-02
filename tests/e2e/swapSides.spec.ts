@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('swap sides changes layout order and keeps iframe mount stable', async ({ page }) => {
-  await page.goto('/c/phy132/snellsLaw?layout=side&side=left');
+  await page.goto('/c/phy132/snellsLaw?layout=parallel&side=left');
   await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();
 
   const iframe = page.getByTitle(/bending light/i);
@@ -11,7 +11,7 @@ test('swap sides changes layout order and keeps iframe mount stable', async ({ p
   expect(mountId).toBeTruthy();
 
   const before = await page.evaluate(() => {
-    const layout = document.querySelector('.lab-layout-side') as HTMLElement | null;
+    const layout = document.querySelector('.lab-layout-parallel') as HTMLElement | null;
     if (!layout) {
       return '';
     }
@@ -22,7 +22,7 @@ test('swap sides changes layout order and keeps iframe mount stable', async ({ p
   await expect(page).toHaveURL(/side=right/);
 
   const after = await page.evaluate(() => {
-    const layout = document.querySelector('.lab-layout-side') as HTMLElement | null;
+    const layout = document.querySelector('.lab-layout-parallel') as HTMLElement | null;
     if (!layout) {
       return '';
     }

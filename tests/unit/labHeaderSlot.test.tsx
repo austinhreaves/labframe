@@ -55,7 +55,10 @@ describe('LabPage header shell', () => {
     expect(window.getComputedStyle(header as HTMLElement).position).toBe('sticky');
     const controlsEl = controls as HTMLElement;
     expect(within(controlsEl).getByLabelText(/student name/i)).toBeInTheDocument();
-    expect(within(controlsEl).getByRole('button', { name: /start fresh/i })).toBeInTheDocument();
+    // Save draft stays a top-level toolbar button; Start fresh now lives in the
+    // "..." overflow menu as a menuitem.
+    expect(within(controlsEl).getByRole('button', { name: /save draft/i })).toBeInTheDocument();
+    expect(within(controlsEl).getByRole('menuitem', { name: /start fresh/i })).toBeInTheDocument();
     expect(within(controlsEl).getByText(/not saved yet/i)).toBeInTheDocument();
   });
 });

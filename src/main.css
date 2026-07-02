@@ -951,11 +951,32 @@ html {
   justify-content: center;
 }
 
-.lab-theme-select {
-  display: flex;
+/* Two-state light/dark pill for the lab toolbar (replaces the theme dropdown). */
+.theme-pill {
+  display: inline-flex;
   align-items: center;
-  flex-wrap: nowrap;
-  gap: var(--space-2);
+  gap: var(--space-0-5);
+  padding: var(--space-0-5);
+  min-height: var(--space-6);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-full);
+  background: var(--surface-raised);
+  cursor: pointer;
+}
+
+.theme-pill-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  color: var(--text-tertiary);
+}
+
+.theme-pill-icon[data-active] {
+  background: var(--accent-soft);
+  color: var(--accent-text);
 }
 
 /* Pass 7: worksheet Text size control (Aa S/M/L). */
@@ -1029,8 +1050,7 @@ html {
   top: calc(100% + var(--space-1));
   margin: 0;
   padding: var(--space-1);
-  list-style: none;
-  min-width: 160px;
+  min-width: 168px;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   background: var(--surface-overlay);
@@ -1038,17 +1058,48 @@ html {
   z-index: 20;
 }
 
-.overflow-menu-panel li {
+.overflow-menu-list {
+  margin: 0;
+  padding: 0;
   list-style: none;
 }
 
+.overflow-menu-list li {
+  list-style: none;
+}
+
+.overflow-menu-group {
+  padding-bottom: var(--space-1);
+  margin-bottom: var(--space-1);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.overflow-menu-group-label {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
 .overflow-menu-panel button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   width: 100%;
   text-align: left;
   border: 0;
   background: transparent;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
+}
+
+.overflow-menu-check {
+  display: inline-flex;
+  width: 14px;
+  flex-shrink: 0;
+  color: var(--accent-text);
 }
 
 @media (hover: hover) {
@@ -1190,11 +1241,6 @@ html {
 .preflight-dialog-actions {
   display: flex;
   justify-content: flex-end;
-  gap: var(--space-2);
-}
-
-.layout-toggle {
-  display: flex;
   gap: var(--space-2);
 }
 
@@ -1912,10 +1958,6 @@ html {
   align-items: start;
 }
 
-.lab-shell-tabs {
-  display: block;
-}
-
 .table-of-contents-popover {
   position: relative;
   flex: 0 0 auto;
@@ -1994,7 +2036,9 @@ html {
   font-weight: var(--weight-semibold);
 }
 
-.lab-layout-side {
+/* Parallel: simulation beside the worksheet, kept visible (sticky) while the
+   worksheet scrolls. */
+.lab-layout-parallel {
   display: grid;
   grid-template-columns: var(--split-sim, 60%) 8px 1fr;
   grid-template-areas: 'sim splitter worksheet';
@@ -2002,29 +2046,37 @@ html {
   align-items: start;
 }
 
-/* Keep simulation visible while scrolling the worksheet */
-.lab-layout-side .layout-pane-simulation {
+.lab-layout-parallel .layout-pane-simulation {
   grid-area: sim;
   position: sticky;
   top: calc(var(--lab-header-offset) + var(--space-2));
   align-self: start;
 }
 
-.lab-layout-side .layout-pane-worksheet {
+.lab-layout-parallel .layout-pane-worksheet {
   grid-area: worksheet;
 }
 
-.lab-layout-side .split-handle {
+.lab-layout-parallel .split-handle {
   grid-area: splitter;
 }
 
-.lab-layout-side.lab-layout-sim-right {
+.lab-layout-parallel.lab-layout-sim-right {
   grid-template-columns: 1fr 8px var(--split-sim, 60%);
   grid-template-areas: 'worksheet splitter sim';
 }
 
-.lab-layout-tabs .layout-pane {
-  display: block;
+/* Series: single-column scroll with the sim at the top (not sticky -- it
+   scrolls away as the student reads down), worksheet below. Also the shape the
+   review step uses, with the sim pane hidden. */
+.lab-layout-series {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.lab-layout-series .layout-pane-simulation {
+  position: static;
 }
 
 .layout-pane.is-hidden {
@@ -2097,8 +2149,7 @@ html {
   min-width: 0;
 }
 
-/* Pass 7: text-size zoom is scoped to this inner content wrapper, kept off the
-   slim sticky section header chrome above it. */
+/* Pass 7: text-size zoom is scoped to this inner content wrapper. */
 .worksheet-zoom {
   display: flex;
   flex-direction: column;
@@ -2106,75 +2157,45 @@ html {
   min-width: 0;
 }
 
-/* Pass 3: slim persistent header at the top of the worksheet pane. Sticks just
-   below the consolidated toolbar (whose height is measured into
-   --lab-header-offset), so it never overlaps it or leaves a gap. */
-.worksheet-section-header {
-  position: sticky;
-  top: var(--lab-header-offset);
-  z-index: 6;
+/* Active-part context, lifted into the toolbar's center gap (was a separate
+   slim sticky row): the current part + its sim, the answered count, and the
+   minimal prev/next arrows. Shown only on parts labs. */
+.lab-toolbar-part {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  min-height: 36px;
-  margin-bottom: var(--space-3);
-  padding: var(--space-1) var(--space-3);
-  background: var(--surface-base);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-}
-
-.wsh-context {
-  display: flex;
-  align-items: baseline;
   gap: var(--space-2);
   min-width: 0;
-  overflow: hidden;
 }
 
-.wsh-title {
-  font-weight: var(--weight-semibold);
-  white-space: nowrap;
-}
-
-.wsh-sep {
-  color: var(--text-tertiary);
-}
-
-.wsh-part {
+.lab-toolbar-part-label {
   color: var(--text-secondary);
   font-size: var(--text-sm);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
-.wsh-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex: 0 0 auto;
-}
-
-.wsh-count {
+.lab-toolbar-part-count {
   font-size: var(--text-xs);
   color: var(--text-secondary);
   white-space: nowrap;
+  flex: 0 0 auto;
 }
 
-.wsh-arrows {
+.lab-part-arrows {
   display: inline-flex;
   gap: var(--space-1);
+  flex: 0 0 auto;
 }
 
-.wsh-arrows button {
+.lab-part-arrows button {
   min-width: var(--space-5);
   padding: var(--space-0-5) var(--space-2);
   line-height: 1;
 }
 
-.wsh-arrows button:disabled {
+.lab-part-arrows button:disabled {
   opacity: 0.4;
   cursor: default;
 }
@@ -2294,25 +2315,6 @@ html {
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: var(--text-tertiary);
-}
-
-.answer-card-status {
-  margin-left: auto;
-  padding: var(--space-0-5) var(--space-2);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-full);
-  background: var(--surface-sunken);
-  color: var(--text-tertiary);
-  font-size: var(--text-2xs);
-  font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-}
-
-.answer-card-status[data-answered] {
-  border-color: var(--success-border);
-  background: var(--success-bg);
-  color: var(--success-text);
 }
 
 .markdown-callout {
@@ -2818,12 +2820,6 @@ th {
   text-align: right;
 }
 
-.tabs {
-  display: flex;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
 .section-instructions :is(h1, h2, h3, h4) {
   margin: var(--space-1) 0 var(--space-2);
 }
@@ -2946,10 +2942,10 @@ code {
     min-height: 360px;
   }
 
-  /* Side-by-side collapses: sim on top, worksheet below.
+  /* Parallel collapses: sim on top, worksheet below.
      The split handle has no purpose in a single-column layout. */
-  .lab-layout-side,
-  .lab-layout-side.lab-layout-sim-right {
+  .lab-layout-parallel,
+  .lab-layout-parallel.lab-layout-sim-right {
     grid-template-columns: 1fr;
     grid-template-areas:
       'sim'
@@ -2958,7 +2954,7 @@ code {
 
   /* Unstick the simulation pane -- sticky only makes sense when
      the sim and worksheet are side by side. */
-  .lab-layout-side .layout-pane-simulation {
+  .lab-layout-parallel .layout-pane-simulation {
     position: static;
     top: auto;
   }

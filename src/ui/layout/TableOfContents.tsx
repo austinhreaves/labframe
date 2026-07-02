@@ -84,7 +84,7 @@ function PartsMenu({
                 select('review');
               }}
             >
-              Finish &amp; review
+              Discussion
             </a>
           </li>
         </ul>

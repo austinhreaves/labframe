@@ -1,6 +1,5 @@
 import { lazy } from 'react';
 import type { ConceptSection } from '@/domain/schema';
-import { hasText } from '@/state/answered';
 import { useLabStore } from '@/state/labStore';
 import { AnswerCard } from '@/ui/sections/AnswerCard';
 import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
@@ -19,7 +18,7 @@ export function ConceptSectionView({ section }: Props) {
       <SectionPointsCaption points={section.points} />
       {section.preamble ? <MarkdownBlock markdown={section.preamble} /> : null}
       <MarkdownBlock markdown={section.prompt} />
-      <AnswerCard answered={hasText(value?.text)}>
+      <AnswerCard>
         <Field
           id={section.fieldId}
           label={section.prompt}
