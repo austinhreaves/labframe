@@ -45,7 +45,10 @@ test('the open gate has no axe violations', async ({ page }) => {
   await page.goto('/c/phy132/snellsLaw');
   await expect(page.getByRole('dialog', { name: /enter your name to begin/i })).toBeVisible();
 
-  const results = await new AxeBuilder({ page }).analyze();
+  // Scope the scan to the gate: the lab content behind the backdrop renders
+  // lazily and has its own pre-existing violations (MathLive keyboard sink,
+  // table formula contrast), so a whole-page scan is flaky and off-topic here.
+  const results = await new AxeBuilder({ page }).include('.preflight-dialog-backdrop').analyze();
   expect(results.violations).toEqual([]);
 });
 
