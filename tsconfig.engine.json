@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "allowJs": true,
+    "checkJs": true,
+    "types": ["vitest/globals"]
+  },
+  "_comment": "JSDoc typechecking for the no-build-step sim engine (public/sims/lib/engine) plus its unit tests. noUncheckedIndexedAccess is deliberately off: the engine's whole surface is string-keyed Record<string, number> maps, where the flag is pure noise.",
+  "include": ["public/sims/lib/engine", "tests/unit/engine"]
+}

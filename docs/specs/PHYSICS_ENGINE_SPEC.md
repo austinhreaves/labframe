@@ -1,7 +1,9 @@
 # Custom Sim Physics Engine - Spec
 
-**Status:** Design only, decisions locked 2026-07-02 (Section 9). Ready to build starting
-Phase E1. No code in this pass.
+**Status:** Decisions locked 2026-07-02 (Section 9). **Phase E1 built 2026-07-02:**
+engine core at `public/sims/lib/engine/` (engine.js + noise.js, JSDoc ES modules,
+typechecked via `tsconfig.engine.json`) with the Section 6 test suite under
+`tests/unit/engine/`. No sim consumes it yet; Phase E2 (Atwood port) is next.
 
 **Companion to:** `docs/handoffs/n2l-atwood-sim-handoff.md` (the first custom sim, shipped
 without an engine), `docs/SPEC.md` (product/eng scope), and
@@ -248,7 +250,7 @@ The engine ships with its own test suite before any sim consumes it:
   untouched.
 - **Mode-switch cases:** stiction capture and breakaway at the analytic threshold;
   slack-string jerk conserves momentum and loses the predicted energy; no chattering
-  (guard hysteresis or minimum-dwell rule, to be designed) at grazing crossings.
+  at grazing crossings (policy decided in E1, see Section 9).
 - **Migration validation:** port the Atwood sim to the engine and assert the engine
   trajectory matches the current closed form within integrator tolerance at all three
   angle regimes plus the near-equilibrium 20 s cap.
@@ -292,10 +294,22 @@ sim-kit extraction (Section 1.1) waits until the second new sim begins.
    now, emitted by the engine into an in-memory log and forwarded by the sim. (Section 5)
 5. **Sequencing:** engine-first. (Section 8)
 
+6. **Chatter control (decided in Phase E1):** strict-sign crossing rule plus a hard
+   transition cap, instead of hysteresis or a minimum-dwell rule. A guard fires only
+   when its value at the start of the (sub)step is strictly on the departing side, or
+   exactly zero with the (sub)step ending strictly across the surface; a guard sitting
+   at zero on mode entry therefore cannot re-fire from the surface itself, while a
+   trajectory that leaves the surface and re-crosses within the same substep is still
+   caught (otherwise tiny arcs tunnel silently). Genuine Zeno regimes (a restitution
+   bounce settling to rest) exceed `maxTransitionsPerStep` (default 8) and throw
+   loudly; the model author resolves them with a terminating mode. Rationale: dwell
+   and hysteresis rules can silently skip legitimate transitions; the cap makes the
+   modeling error loud instead. Corollary for authors: a reset that re-enters the same
+   guard surface should place the state exactly on it (e.g. `y: 0` at a bounce), since
+   bisection stops within `timeTol` past the crossing and the engine never snaps state.
+
 ### Deferred / still open
 
-- **Chatter control at grazing guard crossings** (hysteresis vs minimum-dwell rule):
-  design during Phase E1, noted in Section 6.
 - **Noise descriptor vocabulary:** the exact set of noise kinds (Gaussian relative /
   absolute, quantization step, others) is finalized when the Atwood port pins down the
   "~1% feel" target in Phase E2.
