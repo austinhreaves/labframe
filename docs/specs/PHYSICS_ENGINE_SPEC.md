@@ -1,6 +1,7 @@
 # Custom Sim Physics Engine - Spec
 
-**Status:** Design only. No code in this pass. Written 2026-07-02.
+**Status:** Design only, decisions locked 2026-07-02 (Section 9). Ready to build starting
+Phase E1. No code in this pass.
 
 **Companion to:** `docs/handoffs/n2l-atwood-sim-handoff.md` (the first custom sim, shipped
 without an engine), `docs/SPEC.md` (product/eng scope), and
@@ -93,6 +94,13 @@ Model
   answers the pulley-inertia subtlety: with pulley moment of inertia I, the two string
   tensions differ (their difference torques the pulley), so `tensionCart` and
   `tensionHang` are two observables, not one `T`.
+- **Energy accounting is mandatory (decided).** Every model exposes `KE`, `PE`, and
+  `E_dissipated` observables from day one, plus a derived `E_total = KE + PE +
+E_dissipated` that the engine can assert is conserved to tolerance in conservative
+  modes (a built-in correctness check, and the reason to make it universal rather than
+  per-sim). Cheap to write alongside the dynamics; expensive to retrofit once several
+  sims exist. The AI layer reads these to reason about where a student's energy
+  intuition breaks.
 
 ### 2.1 Integrator
 
@@ -105,13 +113,34 @@ Model
   every machine. This is what makes trajectories testable, telemetry replayable for the
   AI layer, and per-student randomized givens (envelope seed slot already reserved)
   auditable later.
-- **Accuracy note for sign-off:** the shipped Atwood sim uses semi-implicit Euler and
-  shows ~1% discretization gap between a_measured and a_theoretical, which currently
-  gives students a small nonzero percent error even with perfect reading. RK4 collapses
-  that gap to ~1e-6. Decide whether the pedagogical gap is a feature to preserve
-  (e.g. by injecting a documented measurement quantization instead) or a bug to fix.
-  The engine itself should be accurate; any "experimental noise" belongs in an explicit,
-  seeded layer on top, never in the integrator.
+- **Accuracy (decided):** the engine integrates accurately (RK4 collapses the
+  Euler-era ~1% a_measured/a_theoretical gap to ~1e-6). The pedagogical percent-error
+  gap is preserved deliberately, but as an **explicit, seeded measurement-noise layer on
+  top of the trajectory, never inside the integrator** (Section 2.1.1). The shipped
+  Atwood sim's Euler discretization error is an accident of the integrator; a seeded
+  noise model is a physics-honest, reproducible, and gradeable replacement.
+
+#### 2.1.1 Measurement-noise layer (decided)
+
+The engine produces exact trajectories; a separate, opt-in noise layer perturbs only the
+values a student would **read off an instrument**, leaving the underlying dynamics clean.
+
+- **Seeded and deterministic.** The layer takes an explicit integer `seed`; same seed and
+  model yield identical perturbed readings on every machine. The seed slot already
+  reserved in the answer envelope (per-student randomized givens) is the natural source,
+  so a grader can reproduce exactly what a given student saw.
+- **Perturbs observations, not state.** Noise is applied when an observable is _sampled
+  for display or telemetry_ (the reported t, d, v_f, and thus a_measured), never fed back
+  into `derivatives`. The trajectory a replay reconstructs is the clean one; the readings
+  are the noisy ones. This keeps energy accounting and mode guards exact.
+- **Model declares the noise, not the engine.** Each observable may carry an optional
+  noise descriptor (e.g. `{ kind: 'gaussian', relative: 0.01 }` or an absolute
+  quantization step for a simulated digital readout). Sims with no descriptor read exact
+  values. Default for the PH 201 Atwood port: a small relative Gaussian on the timing
+  readout sized to reproduce the current ~1% percent-error feel.
+- **A pure function of (cleanValue, seed, sampleIndex).** No global RNG state; the
+  `sampleIndex` (or event id) makes each reading independently reproducible regardless of
+  render framerate.
 
 ### 2.2 Worked example: spring-Atwood slack mode (the motivating case)
 
@@ -133,14 +162,14 @@ The whole failure regime the user described is two modes, two guards, one reset 
 That is the engine's whole job; the animation on top is unchanged rendering of body
 positions.
 
-## 3. Where the code lives (decision needed)
+## 3. Where the code lives (decided)
 
 Constraint: custom sims are standalone static HTML under `public/`, no build step, no
 imports from the app bundle (locked in the Atwood handoff, and worth keeping: sims stay
 trivially sandboxable and testable by opening a file).
 
-**Recommendation: `public/sims/lib/engine/` as dependency-free, JSDoc-typed vanilla ES
-modules.** Sims import via `<script type="module">` with a relative path.
+**Decided: `public/sims/lib/engine/` as dependency-free, JSDoc-typed vanilla ES
+modules.** Sims import via `<script type="module">` with a relative path. No build step.
 
 - Type safety without a build step: JSDoc annotations checked by `tsc` (`checkJs` over
   that directory, wired into `npm run typecheck`).
@@ -151,10 +180,10 @@ modules.** Sims import via `<script type="module">` with a relative path.
   ceremony; breaking changes are a grep across `public/sims/*/index.html`. A comment
   header documents the module contract.
 
-Alternative (author in TS under `src/sim-engine/`, emit a static bundle into
+Rejected alternative (author in TS under `src/sim-engine/`, emit a static bundle into
 `public/sims/lib/` via a tiny esbuild step): nicer types, but it introduces the build
 step the sim architecture explicitly avoided, plus a generated-artifact-in-git or
-build-order problem. Not recommended unless JSDoc typing proves too weak in practice.
+build-order problem. Revisit only if JSDoc typing proves too weak in practice.
 
 ## 4. Physics roadmap the engine must not preclude
 
@@ -173,17 +202,50 @@ Ordered roughly by expected need; none require engine surface beyond Section 2:
 7. **Driven systems:** time enters as an explicit state coordinate (t' = 1), so
    sinusoidal driving needs no special casing.
 
-## 5. Testing strategy
+## 5. Telemetry: the engine event log (decided)
+
+The AI layer gets the engine's mode-transition log, beyond the sim-level `trial_*`
+events the Atwood sim already emits. The engine surfaces every mode transition and every
+guard-triggered reset; the sim forwards them to the parent via the existing
+`labframe:sim-event` postMessage channel under a new reserved shape:
+
+```
+engine_event: {
+  type: 'engine_event',
+  event: 'mode_enter' | 'mode_exit' | 'guard_fired' | 'reset_applied',
+  from,            // mode name (for exit/transition), optional
+  to,              // mode name (for enter/transition), optional
+  guard,           // guard name that fired, optional
+  sim_t,           // simulation time of the event (seconds, exact, post-bisection)
+  observables,     // snapshot of named observables at the event (incl. energy terms)
+  t,               // wall-session time, same basis as existing events
+}
+```
+
+- **Reserve the shape now** even though the AI layer is out of scope, so the schema is
+  correct from day one (same discipline as the Atwood sim's telemetry).
+- **The engine emits into an in-memory log; the sim decides what to postMessage.** The
+  engine never calls `postMessage` itself (it is DOM-free). A sim may forward all engine
+  events, throttle them, or drop them; the reference Atwood port forwards mode
+  transitions and resets but not per-step samples.
+- **Deterministic and replayable.** Because the trajectory and event times are
+  deterministic (Section 2.1), the event log reconstructs identically from
+  (model, seed, dt), so the AI layer can replay a student session exactly.
+
+## 6. Testing strategy
 
 The engine ships with its own test suite before any sim consumes it:
 
 - **Analytic goldens:** frictionless incline-Atwood closed form (also cross-validates
   the shipped sim), small-angle pendulum period, terminal velocity under linear drag,
   spring-mass period, projectile range without drag.
-- **Property tests (fast-check, already a dev dependency):** energy conserved to
-  tolerance in conservative modes across random parameters; energy monotonically
-  non-increasing with friction/drag; event times found by bisection are consistent under
-  dt refinement; determinism (two runs, identical trajectories).
+- **Property tests (fast-check, already a dev dependency):** `E_total` conserved to
+  tolerance in conservative modes across random parameters (uses the mandatory energy
+  observables directly); energy monotonically non-increasing with friction/drag; event
+  times found by bisection are consistent under dt refinement; determinism (two runs,
+  identical trajectories and identical engine event logs); the seeded noise layer is
+  reproducible (same seed -> identical readings) and leaves the clean trajectory
+  untouched.
 - **Mode-switch cases:** stiction capture and breakaway at the analytic threshold;
   slack-string jerk conserves momentum and loses the predicted energy; no chattering
   (guard hysteresis or minimum-dwell rule, to be designed) at grazing crossings.
@@ -191,7 +253,7 @@ The engine ships with its own test suite before any sim consumes it:
   trajectory matches the current closed form within integrator tolerance at all three
   angle regimes plus the near-equilibrium 20 s cap.
 
-## 6. Non-goals
+## 7. Non-goals
 
 - 2D rigid-body contact/collision detection, broadphase, contact manifolds, 3D.
 - A general constraint solver (constraints are hand-reduced into minimal coordinates by
@@ -200,31 +262,41 @@ The engine ships with its own test suite before any sim consumes it:
 - Soft bodies, fluids, fields as dynamical systems.
 - Replacing PhET sims; this is only for LabFrame-authored sims.
 
-## 7. Phasing
+## 8. Phasing
 
-1. **Phase E1:** engine core (state/modes/guards/resets, RK4, bisection, observables,
-   determinism) + test suite. No sim changes.
-2. **Phase E2:** port the Atwood sim onto the engine as the reference consumer, with
-   the validation harness of Section 5. Behavior-preserving except the integrator
-   accuracy decision (Section 2.1).
+**Engine-first (decided).** The next builds are dynamics-heavy, so the engine leads; the
+sim-kit extraction (Section 1.1) waits until the second new sim begins.
+
+1. **Phase E1:** engine core (state/modes/guards/resets, RK4, event bisection,
+   mandatory energy observables, seeded measurement-noise layer, in-memory engine event
+   log, determinism) + test suite. No sim changes.
+2. **Phase E2:** port the Atwood sim onto the engine as the reference consumer, with the
+   validation harness of Section 6. Behavior-preserving, with two intended changes: RK4
+   replaces Euler (Section 2.1) and the preserved percent-error gap moves to the seeded
+   noise layer (Section 2.1.1). Wire the `engine_event` telemetry shape (Section 5).
 3. **Phase E3:** first genuinely new physics: pulley inertia + friction on the Atwood
    sim (parameters and one mode pair), proving the extension story.
 4. **Phase E4 (separate spec):** spring-Atwood sim with slack mode; sim-kit extraction
-   begins when the second new sim starts, not before.
+   begins with this second new sim.
 
-## 8. Open questions for sign-off
+## 9. Decisions locked (2026-07-02)
 
-1. **Integrator accuracy vs pedagogy** (Section 2.1): should a_measured match theory to
-   float precision, or do we add an explicit seeded measurement-noise layer so percent
-   error stays a meaningful exercise?
-2. **Home for the code** (Section 3): accept the JSDoc-in-`public/` recommendation, or
-   pay for a build step to author in TypeScript?
-3. **Energy accounting as a universal observable:** should every sim expose KE/PE/
-   E_dissipated from day one (cheap now, retrofit-annoying later)? The AI layer would
-   likely want it.
-4. **Does the AI layer want the engine event log** (mode transitions with timestamps)
-   in telemetry, beyond the current trial\_\* events? If yes, the telemetry schema should
-   reserve an `engine_event` shape now.
-5. **Sequencing:** engine-first assumes the next sims are dynamics-heavy. If the next
-   two sims are, say, optics ray diagrams, the sim-kit spec should jump the queue and
-   this one waits for the spring-Atwood build.
+1. **Integrator + accuracy:** RK4 (accurate to ~1e-6), with the pedagogical percent-error
+   gap preserved as an explicit seeded measurement-noise layer on top of the trajectory,
+   never inside the integrator. (Sections 2.1, 2.1.1)
+2. **Home for the code:** JSDoc-typed dependency-free ES modules in
+   `public/sims/lib/engine/`, no build step. (Section 3)
+3. **Energy accounting:** universal from day one; every model exposes KE/PE/E_dissipated
+   plus a conserved E_total used as a built-in correctness check. (Section 2)
+4. **Engine event log in telemetry:** yes; reserve the `engine_event` postMessage shape
+   now, emitted by the engine into an in-memory log and forwarded by the sim. (Section 5)
+5. **Sequencing:** engine-first. (Section 8)
+
+### Deferred / still open
+
+- **Chatter control at grazing guard crossings** (hysteresis vs minimum-dwell rule):
+  design during Phase E1, noted in Section 6.
+- **Noise descriptor vocabulary:** the exact set of noise kinds (Gaussian relative /
+  absolute, quantization step, others) is finalized when the Atwood port pins down the
+  "~1% feel" target in Phase E2.
+- **sim-kit spec** (Section 1.1): written when Phase E4 begins.
