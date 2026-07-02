@@ -1,6 +1,16 @@
 // Vitest setup: enables @testing-library/jest-dom matchers.
 import '@testing-library/jest-dom/vitest';
+import { configure } from '@testing-library/react';
 import { vi } from 'vitest';
+
+// Section views (InstructionsSectionView, calculation/table renderers) are
+// React.lazy chunks pulling in KaTeX + the markdown pipeline. Under the full
+// suite's parallel workers on a loaded machine, those chunks can take longer
+// than testing-library's 1000 ms default to resolve, so waitFor/findBy calls
+// waiting on post-Suspense content flake with "Unable to find role=..." while
+// the DOM still shows .section-skeleton. Raise the async timeout suite-wide so
+// these settle; tests that expect a timeout still pass their own shorter value.
+configure({ asyncUtilTimeout: 10_000 });
 
 Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
   value: vi.fn(() => ({
