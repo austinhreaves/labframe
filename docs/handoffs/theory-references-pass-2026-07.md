@@ -1,5 +1,12 @@
 # Handoff: PHY 114 theory reference pass (2026-07)
 
+> **Status (2026-07-02): complete.** All 11 theory docs exist as `.md` + `.html` pairs
+> under `docs/theory/`, the Lab 1 induction fix below is applied to both Lab 1 files,
+> everything is Prettier-clean and em-dash-free, and the HTML was verified in the
+> theory-preview server. The Lab 1 fix covered only the theory doc; the matching in-lab
+> Background fix (tracked in the Lab 01 pedagogy review under A1) is still a lab-content
+> edit for a separate pass, as are the other out-of-scope items below.
+
 ## Goal
 
 Author the student-facing theory reference for each enabled PHY 114 lab that lacks one.
@@ -26,19 +33,19 @@ self-contained `lab-NN-kebab-name.html` (inline CSS, no external deps) for Canva
 
 ## Lab inventory (PHY 114 course manifest order)
 
-| #   | lab ref                          | theory doc                    | status                                |
-| --- | -------------------------------- | ----------------------------- | ------------------------------------- |
-| 1   | chargeBuildup                    | lab-01-charge-buildup         | exists, needs the induction fix below |
-| 2   | coulombsLaw                      | lab-02-coulombs-law           | to write                              |
-| 3   | pointCharge                      | lab-03-point-charge           | to write                              |
-| 4   | chargeConfigurations             | lab-04-charge-configurations  | to write                              |
-| 5   | capacitorFundamentals            | lab-05-capacitor-fundamentals | to write                              |
-| 6   | capacitorNetworks                | lab-06-capacitor-networks     | to write                              |
-| 7   | ohmsLaw (Continuity & Ohm's Law) | lab-07-ohms-law               | to write                              |
-| 8   | kirchhoffsLaws                   | lab-08-kirchhoffs-laws        | to write                              |
-| 9   | snellsLaw                        | lab-09-snells-law             | to write                              |
-| 10  | convergingLens                   | lab-10-converging-lens        | to write                              |
-| 11  | divergingLens                    | lab-11-diverging-lens         | to write                              |
+| #   | lab ref                          | theory doc                    | status                       |
+| --- | -------------------------------- | ----------------------------- | ---------------------------- |
+| 1   | chargeBuildup                    | lab-01-charge-buildup         | done (induction fix applied) |
+| 2   | coulombsLaw                      | lab-02-coulombs-law           | done                         |
+| 3   | pointCharge                      | lab-03-point-charge           | done                         |
+| 4   | chargeConfigurations             | lab-04-charge-configurations  | done                         |
+| 5   | capacitorFundamentals            | lab-05-capacitor-fundamentals | done                         |
+| 6   | capacitorNetworks                | lab-06-capacitor-networks     | done                         |
+| 7   | ohmsLaw (Continuity & Ohm's Law) | lab-07-ohms-law               | done                         |
+| 8   | kirchhoffsLaws                   | lab-08-kirchhoffs-laws        | done                         |
+| 9   | snellsLaw                        | lab-09-snells-law             | done                         |
+| 10  | convergingLens                   | lab-10-converging-lens        | done                         |
+| 11  | divergingLens                    | lab-11-diverging-lens         | done                         |
 
 Lab numbers are the PHY 114 numbers (`src/content/courses/phy114.course.ts`). Several
 labs are shared PHY 132 objects reused by 114; the theory doc is written for the 114

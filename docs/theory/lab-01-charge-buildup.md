@@ -43,12 +43,19 @@ briefly turn the air between the objects into a channel for charge to jump acros
 ---
 
 **3. Charging by induction.** A charged object brought _near_ (without contact) a neutral
-conductor pushes or pulls the conductor's free electrons to one side. If the conductor is
-then separated into two pieces while the charged object is still nearby, or briefly
-connected to the ground (a large neutral object, like the Earth, that can absorb or supply
-charge) and then disconnected, the rearranged charges get locked in place. The conductor
-ends up with a net charge **opposite** to the inducing object, even after the inducing
-object is removed.
+conductor pushes or pulls the conductor's free electrons to one side. The rearranged
+charges can then be locked in place in two ways, with different results.
+
+If the conductor is briefly connected to the ground (a large neutral object, like the
+Earth, that can absorb or supply charge) and then disconnected, charge flows in or out
+through that connection, and the conductor ends up with a net charge **opposite** to the
+inducing object, even after the inducing object is removed.
+
+If the conductor is instead separated into two pieces while the charged object is still
+nearby, no charge enters or leaves; it only redistributes. The piece **nearer** the
+inducing object ends up charged opposite to it, the **farther** piece ends up with the
+same sign, and the two pieces together remain net-neutral, as conservation of charge
+requires.
 
 ---
 
@@ -88,7 +95,10 @@ can travel freely across the whole object, not just within one molecule. When a 
 object is brought nearby, the free electrons shift across the entire conductor. This is
 **induction**.
 
-If part of that conductor is then separated while the charged object is still nearby, or
-the conductor is briefly grounded (connected to the Earth so charge can flow in or out)
-and then disconnected, the shifted electrons are locked in place. The conductor keeps a
-real net charge even after the inducing object is removed.
+If the conductor is briefly grounded (connected to the Earth so charge can flow in or
+out) and then disconnected, the shifted electrons are locked in place and the conductor
+keeps a real net charge, opposite in sign to the inducing object, even after it is
+removed. If the conductor is instead separated into two pieces while the charged object
+is still nearby, each piece keeps the charge that was shifted onto it: the near piece is
+charged opposite to the inducing object, the far piece carries the same sign, and the two
+pieces together still add up to zero net charge.

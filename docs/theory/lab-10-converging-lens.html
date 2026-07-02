@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Theory Reference: Converging (Convex) Lens | PHY 114 Lab 10</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        color: #1a1a1a;
+        background: #ffffff;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+      }
+
+      /* ---- Header ---- */
+      .lab-header {
+        border-bottom: 3px solid #8c1d40;
+        padding-bottom: 1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .lab-meta {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #8c1d40;
+        margin-bottom: 0.4rem;
+      }
+
+      .lab-header h1 {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: #111;
+        line-height: 1.25;
+      }
+
+      .lab-description {
+        margin-top: 0.5rem;
+        color: #555;
+        font-size: 0.9rem;
+      }
+
+      /* ---- Sections ---- */
+      section {
+        margin-bottom: 2.75rem;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 1rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1.5px solid #e0e0e0;
+      }
+
+      p {
+        margin-bottom: 0.85rem;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      ul {
+        margin: 0 0 0.85rem 1.4rem;
+      }
+
+      li {
+        margin-bottom: 0.4rem;
+      }
+
+      /* ---- Display equations ---- */
+      .equation {
+        text-align: center;
+        font-size: 1.05rem;
+        margin: 1.1rem 0;
+      }
+
+      /* ---- Horizontal rule ---- */
+      hr {
+        border: none;
+        border-top: 1px solid #ebebeb;
+        margin: 1.25rem 0;
+      }
+
+      /* ---- Note callout ---- */
+      .note {
+        background: #f5f7fb;
+        border-left: 4px solid #4a6fa5;
+        border-radius: 0 5px 5px 0;
+        padding: 0.8rem 1.1rem;
+        margin: 1.25rem 0 0;
+        font-size: 0.92rem;
+        color: #2c3a5e;
+      }
+
+      .note .note-label {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #4a6fa5;
+        margin-bottom: 0.3rem;
+      }
+
+      /* ---- Inline typography ---- */
+      em {
+        font-style: italic;
+      }
+      strong {
+        font-weight: 700;
+      }
+
+      /* ---- Print ---- */
+      @media print {
+        body {
+          max-width: 100%;
+          padding: 0.5in;
+        }
+        .lab-header {
+          border-bottom-color: #000;
+        }
+        .lab-meta {
+          color: #000;
+        }
+        .lab-header h1 {
+          color: #000;
+        }
+        h2 {
+          color: #000;
+          border-bottom-color: #bbb;
+        }
+        .note {
+          background: #f5f5f5;
+          border-left-color: #666;
+          color: #000;
+        }
+        .note .note-label {
+          color: #444;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="lab-header">
+      <p class="lab-meta">PHY 114 &nbsp;|&nbsp; Lab 10</p>
+      <h1>Theory Reference: Converging (Convex) Lens</h1>
+      <p class="lab-description">
+        Background reading covering how a lens forms images, the focal point and focal length, real
+        versus virtual images, the thin-lens equation and its sign conventions, magnification, and
+        the image regimes of a converging lens.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>Lenses and the Focal Point</h2>
+
+        <p>
+          A lens is a shaped piece of transparent material that uses refraction (Snell's Law,
+          applied at each curved surface) to redirect light in a controlled way. A
+          <strong>converging (convex) lens</strong> is thicker in the middle than at the edges; it
+          bends incoming rays toward each other.
+        </p>
+
+        <p>
+          Rays that arrive parallel to the optical axis (the horizontal line through the center of
+          the lens) are bent so that they all pass through a single point on the far side: the
+          <strong>focal point</strong>. The distance from the lens to the focal point is the
+          <strong>focal length</strong> <em>f</em>. A converging lens has a focal point on each
+          side, at the same distance, and its focal length is counted as <strong>positive</strong>.
+        </p>
+
+        <p>
+          The focal length is set by the lens itself, by its curvature and its index of refraction,
+          not by where the object is. Moving the object changes where the image forms, never
+          <em>f</em>.
+        </p>
+
+        <p>
+          This lab treats the lens as a <strong>thin lens</strong>: its thickness is small compared
+          to the object and image distances, so all the bending can be treated as happening at a
+          single plane through the lens center.
+        </p>
+      </section>
+
+      <section>
+        <h2>Real and Virtual Images</h2>
+
+        <p>
+          A lens forms an image where the light rays from each point of the object are brought back
+          together, or appear to come from.
+        </p>
+
+        <ul>
+          <li>
+            A <strong>real image</strong> forms where the refracted rays actually intersect, on the
+            opposite side of the lens from the object. Because the light really converges there, a
+            real image can be projected onto a screen placed at that spot. Real images formed by a
+            single lens are inverted: rays from the top and bottom of the object cross on the way to
+            the image.
+          </li>
+          <li>
+            A <strong>virtual image</strong> forms where the refracted rays only <em>appear</em> to
+            come from. The rays leaving the lens spread apart, but extending them backward, they all
+            trace to a common point on the <strong>same side</strong> of the lens as the object. No
+            light actually passes through that point, so a virtual image cannot be projected onto a
+            screen; but the eye (itself a converging lens) can look through the lens and see it.
+            Virtual images are upright, because the rays never cross.
+          </li>
+        </ul>
+
+        <p>
+          This is the honest test for real versus virtual: ask whether the rays truly intersect at
+          the image location, or only their backward extensions do.
+        </p>
+      </section>
+
+      <section>
+        <h2>The Thin-Lens Equation</h2>
+
+        <p>
+          The object distance <em>d</em>&#8320; (lens to object), the image distance <em>d</em
+          ><sub>i</sub> (lens to image), and the focal length <em>f</em> are linked by the
+          <strong>thin-lens equation</strong>:
+        </p>
+
+        <p class="equation">1/<em>f</em> = 1/<em>d</em>&#8320; + 1/<em>d</em><sub>i</sub></p>
+
+        <p>The signs carry the geometry:</p>
+
+        <ul>
+          <li><em>d</em>&#8320; is positive (the object is a real object in front of the lens).</li>
+          <li>
+            <em>d</em><sub>i</sub> is <strong>positive</strong> for a real image (opposite side of
+            the lens) and <strong>negative</strong> for a virtual image (same side as the object).
+          </li>
+          <li><em>f</em> is positive for a converging lens.</li>
+        </ul>
+
+        <p>
+          Measuring <em>d</em>&#8320; and <em>d</em><sub>i</sub> therefore determines the focal
+          length experimentally: solve the equation for <em>f</em>, keeping the sign of <em>d</em
+          ><sub>i</sub>. The distances in the simulation are in centimeters, so <em>f</em> comes out
+          in centimeters as well.
+        </p>
+      </section>
+
+      <section>
+        <h2>Magnification</h2>
+
+        <p>
+          The <strong>magnification</strong> <em>M</em> compares the image to the object. It can be
+          computed two equivalent ways:
+        </p>
+
+        <p class="equation">
+          <em>M</em> = &#8722;<em>d</em><sub>i</sub> / <em>d</em>&#8320; = <em>h</em><sub>i</sub> /
+          <em>h</em>&#8320;
+        </p>
+
+        <p>
+          where <em>h</em>&#8320; is the object height and <em>h</em><sub>i</sub> is the image
+          height, with an inverted image counted as a <strong>negative</strong> height.
+          Magnification is a pure number with no units.
+        </p>
+
+        <p>The sign and size of <em>M</em> summarize the image in one number:</p>
+
+        <ul>
+          <li>
+            <em>M</em> negative: the image is inverted (this happens for real images, where
+            <em>d</em><sub>i</sub> &gt; 0).
+          </li>
+          <li><em>M</em> positive: the image is upright (virtual images).</li>
+          <li>
+            |<em>M</em>| &gt; 1: the image is larger than the object; |<em>M</em>| &lt; 1: smaller.
+          </li>
+        </ul>
+
+        <p>
+          Because the two expressions must agree, computing <em>M</em> both ways is a built-in
+          consistency check on the four measured values.
+        </p>
+      </section>
+
+      <section>
+        <h2>The Image Regimes of a Converging Lens</h2>
+
+        <p>
+          Where the object sits relative to the focal point decides everything about the image.
+          Sliding the object in from far away, a converging lens with focal length <em>f</em> runs
+          through these regimes:
+        </p>
+
+        <ul>
+          <li>
+            <strong><em>d</em>&#8320; &gt; 2<em>f</em> (far outside the focal length).</strong>
+            Real, inverted image on the opposite side, smaller than the object, located between
+            <em>f</em> and 2<em>f</em> from the lens.
+          </li>
+          <li>
+            <strong><em>d</em>&#8320; = 2<em>f</em>.</strong> Real, inverted image at exactly 2<em
+              >f</em
+            >
+            on the other side, the same size as the object (<em>M</em> = &#8722;1).
+          </li>
+          <li>
+            <strong><em>f</em> &lt; <em>d</em>&#8320; &lt; 2<em>f</em>.</strong> Real, inverted
+            image beyond 2<em>f</em>, larger than the object. As the object approaches the focal
+            point, the image races away from the lens and keeps growing.
+          </li>
+          <li>
+            <strong><em>d</em>&#8320; = <em>f</em> (at the focal point).</strong> No image forms at
+            any finite distance: the refracted rays leave parallel and never converge.
+          </li>
+          <li>
+            <strong><em>d</em>&#8320; &lt; <em>f</em> (inside the focal length).</strong> The rays
+            diverge after the lens, and the image becomes <strong>virtual</strong>: upright,
+            enlarged, on the same side as the object, and farther from the lens than the object
+            itself. This is the magnifying-glass configuration.
+          </li>
+        </ul>
+
+        <p>
+          The moment the object crosses the focal point, the image jumps from "real, inverted, far
+          away on the other side" to "virtual, upright, on the same side": the most dramatic
+          transition in the lab, worth watching closely in the simulation.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

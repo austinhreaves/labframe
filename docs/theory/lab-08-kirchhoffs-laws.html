@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Theory Reference: Kirchhoff's Laws &amp; Power | PHY 114 Lab 8</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        color: #1a1a1a;
+        background: #ffffff;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+      }
+
+      /* ---- Header ---- */
+      .lab-header {
+        border-bottom: 3px solid #8c1d40;
+        padding-bottom: 1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .lab-meta {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #8c1d40;
+        margin-bottom: 0.4rem;
+      }
+
+      .lab-header h1 {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: #111;
+        line-height: 1.25;
+      }
+
+      .lab-description {
+        margin-top: 0.5rem;
+        color: #555;
+        font-size: 0.9rem;
+      }
+
+      /* ---- Sections ---- */
+      section {
+        margin-bottom: 2.75rem;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 1rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1.5px solid #e0e0e0;
+      }
+
+      p {
+        margin-bottom: 0.85rem;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      ul {
+        margin: 0 0 0.85rem 1.4rem;
+      }
+
+      li {
+        margin-bottom: 0.4rem;
+      }
+
+      /* ---- Display equations ---- */
+      .equation {
+        text-align: center;
+        font-size: 1.05rem;
+        margin: 1.1rem 0;
+      }
+
+      /* ---- Horizontal rule ---- */
+      hr {
+        border: none;
+        border-top: 1px solid #ebebeb;
+        margin: 1.25rem 0;
+      }
+
+      /* ---- Note callout ---- */
+      .note {
+        background: #f5f7fb;
+        border-left: 4px solid #4a6fa5;
+        border-radius: 0 5px 5px 0;
+        padding: 0.8rem 1.1rem;
+        margin: 1.25rem 0 0;
+        font-size: 0.92rem;
+        color: #2c3a5e;
+      }
+
+      .note .note-label {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #4a6fa5;
+        margin-bottom: 0.3rem;
+      }
+
+      /* ---- Inline typography ---- */
+      em {
+        font-style: italic;
+      }
+      strong {
+        font-weight: 700;
+      }
+
+      /* ---- Print ---- */
+      @media print {
+        body {
+          max-width: 100%;
+          padding: 0.5in;
+        }
+        .lab-header {
+          border-bottom-color: #000;
+        }
+        .lab-meta {
+          color: #000;
+        }
+        .lab-header h1 {
+          color: #000;
+        }
+        h2 {
+          color: #000;
+          border-bottom-color: #bbb;
+        }
+        .note {
+          background: #f5f5f5;
+          border-left-color: #666;
+          color: #000;
+        }
+        .note .note-label {
+          color: #444;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="lab-header">
+      <p class="lab-meta">PHY 114 &nbsp;|&nbsp; Lab 8</p>
+      <h1>Theory Reference: Kirchhoff's Laws &amp; Power</h1>
+      <p class="lab-description">
+        Background reading covering the junction and loop rules with their sign conventions, real
+        batteries and internal resistance, electric power, the power delivered to a load, the
+        maximum-power-transfer rule, and the difference between maximum power and maximum
+        efficiency.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>Kirchhoff's Current Law (the Junction Rule)</h2>
+
+        <p>
+          A <strong>junction</strong> (or node) is a point in a circuit where three or more wires
+          meet. Since current is a flow of charge and charge cannot pile up or vanish at a point in
+          a steady circuit, the total current flowing into a junction must equal the total current
+          flowing out:
+        </p>
+
+        <p class="equation">sum of <em>I</em><sub>in</sub> = sum of <em>I</em><sub>out</sub></p>
+
+        <p>
+          This is <strong>Kirchhoff's Current Law (KCL)</strong>, a direct consequence of
+          conservation of charge. Equivalently, give every branch current a reference direction,
+          count currents into the junction as positive and out as negative, and the signed sum is
+          zero.
+        </p>
+
+        <p>
+          If a meter reads a negative current, the actual flow is opposite to the reference
+          direction that was assumed. That is not an error; record the signed value and the
+          bookkeeping takes care of itself.
+        </p>
+      </section>
+
+      <section>
+        <h2>Kirchhoff's Voltage Law (the Loop Rule)</h2>
+
+        <p>
+          Walk around any closed loop of a circuit and you must return to the potential you started
+          at. So the algebraic sum of the potential changes around any closed loop is zero:
+        </p>
+
+        <p class="equation">sum of &#916;<em>V</em> around a loop = 0</p>
+
+        <p>
+          This is <strong>Kirchhoff's Voltage Law (KVL)</strong>, a consequence of conservation of
+          energy: voltage is energy per unit charge, and a charge carried around a full loop ends
+          where it began.
+        </p>
+
+        <p>
+          Applying KVL requires a consistent sign convention. Pick a direction to traverse the loop;
+          then:
+        </p>
+
+        <ul>
+          <li>
+            Crossing a battery from the &#8722; terminal to the + terminal is a potential
+            <strong>rise</strong>: +<em>&#949;</em>. Crossing it from + to &#8722; is a drop:
+            &#8722;<em>&#949;</em>.
+          </li>
+          <li>
+            Crossing a resistor <strong>in the same direction as the current</strong> through it is
+            a drop: &#8722;<em>IR</em>. Crossing it against the current is a rise: +<em>IR</em>.
+          </li>
+        </ul>
+
+        <p>
+          A circuit with <em>N</em> junctions gives <em>N</em> &#8722; 1 independent junction
+          equations, and a two-loop circuit gives two independent loop equations. Together that is
+          enough algebra to solve for every unknown current in the network, or, as in this lab, to
+          verify that measured currents and voltages satisfy both rules.
+        </p>
+      </section>
+
+      <section>
+        <h2>Real Batteries: EMF and Internal Resistance</h2>
+
+        <p>
+          An ideal battery would hold a fixed terminal voltage no matter how much current it
+          supplies. Real batteries do not. A real source is modeled as an ideal EMF
+          <em>&#949;</em> in series with a small <strong>internal resistance</strong> <em>r</em>
+          inside the battery itself.
+        </p>
+
+        <p>
+          Connect a load resistance <em>R</em> across the terminals and the same current
+          <em>I</em> flows through both <em>r</em> and <em>R</em>. The loop rule gives:
+        </p>
+
+        <p class="equation">
+          <em>&#949;</em> = <em>I</em> <em>r</em> + <em>I</em> <em>R</em>, so <em>I</em> =
+          <em>&#949;</em> / (<em>R</em> + <em>r</em>)
+        </p>
+
+        <p>
+          The voltage actually available at the terminals is the EMF minus the internal drop,
+          <em>V</em><sub>terminal</sub> = <em>&#949;</em> &#8722; <em>I</em> <em>r</em>, which is
+          why a battery's terminal voltage sags as it delivers more current.
+        </p>
+      </section>
+
+      <section>
+        <h2>Electric Power</h2>
+
+        <p>
+          Power is the rate at which energy is converted from one form to another. For a circuit
+          element with voltage <em>V</em> across it and current <em>I</em> through it:
+        </p>
+
+        <p class="equation"><em>P</em> = <em>V</em> &#215; <em>I</em></p>
+
+        <p>
+          measured in watts (1 W = 1 J/s). In a resistor the energy becomes heat. Substituting Ohm's
+          Law gives two equivalent forms for a resistor:
+        </p>
+
+        <p class="equation">
+          <em>P</em> = <em>I</em>&#178; <em>R</em> = <em>V</em>&#178; / <em>R</em>
+        </p>
+      </section>
+
+      <section>
+        <h2>Power Delivered to a Load</h2>
+
+        <p>
+          Combining <em>P</em> = <em>I</em>&#178;<em>R</em> with <em>I</em> = <em>&#949;</em>/(<em
+            >R</em
+          >
+          + <em>r</em>) gives the power delivered to the load resistor:
+        </p>
+
+        <p class="equation">
+          <em>P</em><sub>R</sub> = <em>&#949;</em>&#178; <em>R</em> / (<em>R</em> +
+          <em>r</em>)&#178;
+        </p>
+
+        <p>
+          This curve has a distinctive shape. At very small <em>R</em>, the <em>R</em> in the
+          numerator wins and the power is tiny (almost everything is dissipated inside the battery).
+          At very large <em>R</em>, the (<em>R</em> + <em>r</em>)&#178; in the denominator wins and
+          the power falls again (the current becomes tiny). Somewhere in between the delivered power
+          peaks.
+        </p>
+
+        <p>
+          The <strong>maximum-power-transfer theorem</strong> says the peak occurs where the load
+          matches the source:
+        </p>
+
+        <p class="equation"><em>R</em> = <em>r</em></p>
+
+        <p>At that matched load the delivered power is</p>
+
+        <p class="equation"><em>P</em><sub>max</sub> = <em>&#949;</em>&#178; / (4<em>r</em>)</p>
+
+        <p>
+          which follows by substituting <em>R</em> = <em>r</em> into the power formula. In this lab
+          the rule is verified empirically: sweep <em>R</em> through values bracketing <em>r</em>,
+          plot <em>P</em><sub>R</sub> against <em>R</em>, and read off where the measured curve
+          peaks.
+        </p>
+
+        <aside class="note">
+          <span class="note-label">Note</span><br />
+          The power-transfer fit on the plot uses the model <em>P</em> =
+          <em>A</em>&#183;<em>R</em>/(<em>R</em> + <em>B</em>)&#178;, which is the delivered-power
+          formula with <em>A</em> standing for <em>&#949;</em>&#178; and <em>B</em> standing for
+          <em>r</em>. <em>A</em> therefore carries units of volts squared (V&#178;) and
+          <em>B</em> carries ohms (&#937;). The best-fit <em>A</em> gives an experimental EMF,
+          <em>&#949;</em> = &#8730;<em>A</em>, and the best-fit <em>B</em> gives an experimental
+          internal resistance, each comparable to the values set in the simulation via a percent
+          error.
+        </aside>
+      </section>
+
+      <section>
+        <h2>Maximum Power Is Not Maximum Efficiency</h2>
+
+        <p>
+          The <strong>efficiency</strong> of the circuit is the fraction of the total generated
+          power that reaches the load rather than heating the battery:
+        </p>
+
+        <p class="equation">
+          <em>&#951;</em> = <em>P</em><sub>R</sub> / <em>P</em><sub>total</sub> = <em>R</em> / (<em
+            >R</em
+          >
+          + <em>r</em>)
+        </p>
+
+        <p>
+          At the matched load <em>R</em> = <em>r</em>, exactly half the power is wasted inside the
+          source: maximum power transfer comes with only 50% efficiency. Raising <em>R</em> above
+          <em>r</em> improves the efficiency (a larger share of the power reaches the load) but
+          lowers the absolute power delivered, because the total current drops.
+        </p>
+
+        <p>
+          The two goals therefore pull in opposite directions, and which one wins depends on the
+          application. An audio amplifier driving a subwoofer wants maximum loudness, so the speaker
+          resistance is matched to the amplifier's. A power grid wants minimum waste, so it operates
+          with the load resistance far above the source resistance.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

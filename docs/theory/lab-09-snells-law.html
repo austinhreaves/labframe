@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Theory Reference: Snell's Law | PHY 114 Lab 9</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        color: #1a1a1a;
+        background: #ffffff;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+      }
+
+      /* ---- Header ---- */
+      .lab-header {
+        border-bottom: 3px solid #8c1d40;
+        padding-bottom: 1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .lab-meta {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #8c1d40;
+        margin-bottom: 0.4rem;
+      }
+
+      .lab-header h1 {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: #111;
+        line-height: 1.25;
+      }
+
+      .lab-description {
+        margin-top: 0.5rem;
+        color: #555;
+        font-size: 0.9rem;
+      }
+
+      /* ---- Sections ---- */
+      section {
+        margin-bottom: 2.75rem;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 1rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1.5px solid #e0e0e0;
+      }
+
+      p {
+        margin-bottom: 0.85rem;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      /* ---- Display equations ---- */
+      .equation {
+        text-align: center;
+        font-size: 1.05rem;
+        margin: 1.1rem 0;
+      }
+
+      /* ---- Horizontal rule ---- */
+      hr {
+        border: none;
+        border-top: 1px solid #ebebeb;
+        margin: 1.25rem 0;
+      }
+
+      /* ---- Note callout ---- */
+      .note {
+        background: #f5f7fb;
+        border-left: 4px solid #4a6fa5;
+        border-radius: 0 5px 5px 0;
+        padding: 0.8rem 1.1rem;
+        margin: 1.25rem 0 0;
+        font-size: 0.92rem;
+        color: #2c3a5e;
+      }
+
+      .note .note-label {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #4a6fa5;
+        margin-bottom: 0.3rem;
+      }
+
+      /* ---- Inline typography ---- */
+      em {
+        font-style: italic;
+      }
+      strong {
+        font-weight: 700;
+      }
+
+      /* ---- Print ---- */
+      @media print {
+        body {
+          max-width: 100%;
+          padding: 0.5in;
+        }
+        .lab-header {
+          border-bottom-color: #000;
+        }
+        .lab-meta {
+          color: #000;
+        }
+        .lab-header h1 {
+          color: #000;
+        }
+        h2 {
+          color: #000;
+          border-bottom-color: #bbb;
+        }
+        .note {
+          background: #f5f5f5;
+          border-left-color: #666;
+          color: #000;
+        }
+        .note .note-label {
+          color: #444;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="lab-header">
+      <p class="lab-meta">PHY 114 &nbsp;|&nbsp; Lab 9</p>
+      <h1>Theory Reference: Snell's Law</h1>
+      <p class="lab-description">
+        Background reading covering the index of refraction, the laws of reflection and refraction,
+        the sin-sin straight-line method for measuring an unknown index, total internal reflection
+        and the critical angle, and the percent difference used to compare two measurements.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>The Index of Refraction</h2>
+
+        <p>
+          Light travels at <em>c</em> = 299,792,458 m/s in vacuum, but it effectively moves slower
+          inside a material: as the light passes through, it interacts with the material's atoms,
+          and the accumulated delays make the beam advance more slowly than it would in empty space.
+          The <strong>index of refraction</strong> <em>n</em> of a material compares the two speeds:
+        </p>
+
+        <p class="equation"><em>n</em> = <em>c</em> / <em>v</em></p>
+
+        <p>
+          where <em>v</em> is the speed of light in the material. Because <em>v</em> never exceeds
+          <em>c</em>, the index of refraction is always greater than or equal to 1. Air has
+          <em>n</em> very close to 1; water is about 1.33; typical glass is around 1.5. A material
+          with a higher index is called <strong>optically denser</strong> (this is shorthand for
+          "higher <em>n</em>"; it does not always track mass density in real materials).
+        </p>
+      </section>
+
+      <section>
+        <h2>Reflection and Refraction at a Boundary</h2>
+
+        <p>
+          When a beam of light strikes the boundary between two materials, part of it bounces back
+          (<strong>reflection</strong>) and part crosses into the second material with a changed
+          direction (<strong>refraction</strong>). Usually both happen at once.
+        </p>
+
+        <p>
+          All the angles in this topic are measured from the <strong>normal</strong>: the line
+          perpendicular to the boundary at the point where the beam hits, shown as the vertical
+          dotted line in the simulation.
+        </p>
+
+        <p>
+          <strong>Law of reflection.</strong> The reflected beam leaves at the same angle the
+          incident beam arrived:
+        </p>
+
+        <p class="equation"><em>&#952;</em>&#8321;&#8242; = <em>&#952;</em>&#8321;</p>
+
+        <p>
+          <strong>Snell's Law.</strong> The refracted angle <em>&#952;</em>&#8322; in the second
+          material is related to the incident angle <em>&#952;</em>&#8321; by:
+        </p>
+
+        <p class="equation">
+          <em>n</em>&#8321; sin <em>&#952;</em>&#8321; = <em>n</em>&#8322; sin
+          <em>&#952;</em>&#8322;
+        </p>
+
+        <p>
+          The direction of the bend follows from the indices. Going into an optically denser
+          material (<em>n</em>&#8322; &gt; <em>n</em>&#8321;), the beam bends
+          <strong>toward</strong> the normal; going into a less dense material (<em>n</em>&#8322;
+          &lt; <em>n</em>&#8321;), it bends <strong>away</strong> from the normal. If
+          <em>n</em>&#8321; = <em>n</em>&#8322; the beam does not bend at all: as far as the light
+          is concerned, there is no boundary.
+        </p>
+      </section>
+
+      <section>
+        <h2>Measuring an Unknown Index with a Straight Line</h2>
+
+        <p>
+          Snell's Law can be rearranged to isolate the unknown. If light passes from a known
+          material <em>n</em>&#8321; into an unknown material (call its index <em>n</em
+          ><sub>A</sub>), then
+        </p>
+
+        <p class="equation">
+          sin <em>&#952;</em><sub>A</sub> = (<em>n</em>&#8321; / <em>n</em><sub>A</sub>) &#215; sin
+          <em>&#952;</em>&#8321;
+        </p>
+
+        <p>
+          This is a proportionality between the two sines. Plotting sin <em>&#952;</em
+          ><sub>A</sub> (the refracted-angle sine, y-axis) against sin <em>&#952;</em>&#8321; (the
+          incident-angle sine, x-axis) for several incident angles should give a straight line
+          through the origin with slope
+        </p>
+
+        <p class="equation"><em>A</em> = <em>n</em>&#8321; / <em>n</em><sub>A</sub></p>
+
+        <p>
+          so the unknown index is <em>n</em><sub>A</sub> = <em>n</em>&#8321; / <em>A</em>. The
+          proportional fit (<em>y</em> = <em>Ax</em>) is the physically right choice here: when the
+          incident angle is zero, the refracted angle is zero too, so the true line must pass
+          through (0, 0).
+        </p>
+
+        <p>
+          Note that both sines and the slope are pure numbers with no units, and indices of
+          refraction are unitless as well; the only unit in the lab is the degree on the measured
+          angles.
+        </p>
+      </section>
+
+      <section>
+        <h2>Total Internal Reflection</h2>
+
+        <p>
+          When light travels from an optically denser medium into a less dense one
+          (<em>n</em>&#8321; &gt; <em>n</em>&#8322;), Snell's Law demands a refracted angle larger
+          than the incident angle. Push the incident angle high enough and the predicted refracted
+          angle reaches 90 degrees: the refracted beam grazes along the boundary itself. The
+          incident angle where this happens is the <strong>critical angle</strong> <em>&#952;</em
+          ><sub>c</sub>. Setting <em>&#952;</em>&#8322; = 90 degrees (so sin <em>&#952;</em>&#8322;
+          = 1) in Snell's Law gives:
+        </p>
+
+        <p class="equation">
+          sin <em>&#952;</em><sub>c</sub> = <em>n</em>&#8322; / <em>n</em>&#8321;, so <em>&#952;</em
+          ><sub>c</sub> = arcsin(<em>n</em>&#8322; / <em>n</em>&#8321;)
+        </p>
+
+        <p>
+          For any incident angle at or beyond <em>&#952;</em><sub>c</sub> there is no refracted beam
+          at all; every bit of the light is reflected back into the denser medium. This is
+          <strong>total internal reflection</strong>. It can only happen when <em>n</em>&#8321; &gt;
+          <em>n</em>&#8322;: otherwise <em>n</em>&#8322;/<em>n</em>&#8321; exceeds 1 and no angle
+          has a sine that large.
+        </p>
+
+        <p>
+          Total internal reflection is the basis of fiber optics: light injected into a glass fiber
+          at a steep enough angle reflects off the fiber walls completely, over and over, and is
+          carried along the fiber with almost no loss.
+        </p>
+
+        <p>
+          Measuring <em>&#952;</em><sub>c</sub> gives a second, independent route to an unknown
+          index: with <em>n</em>&#8322; known, the critical angle determines <em>n</em>&#8321; =
+          <em>n</em>&#8322; / sin <em>&#952;</em><sub>c</sub>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Percent Difference</h2>
+
+        <p>
+          When two experimental values of the same quantity are compared (rather than an
+          experimental value against an accepted one), the comparison is the
+          <strong>percent difference</strong>: the gap between them divided by their average,
+        </p>
+
+        <p class="equation">
+          percent difference = |<em>a</em> &#8722; <em>b</em>| / ((<em>a</em> + <em>b</em>) / 2)
+          &#215; 100%
+        </p>
+
+        <p>
+          A small percent difference between the slope-based and critical-angle-based values of the
+          same index is a consistency check: two different methods agreeing is much stronger
+          evidence than either method alone.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

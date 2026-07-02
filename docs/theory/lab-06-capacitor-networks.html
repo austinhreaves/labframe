@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Theory Reference: Capacitor Networks | PHY 114 Lab 6</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        color: #1a1a1a;
+        background: #ffffff;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+      }
+
+      /* ---- Header ---- */
+      .lab-header {
+        border-bottom: 3px solid #8c1d40;
+        padding-bottom: 1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .lab-meta {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #8c1d40;
+        margin-bottom: 0.4rem;
+      }
+
+      .lab-header h1 {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: #111;
+        line-height: 1.25;
+      }
+
+      .lab-description {
+        margin-top: 0.5rem;
+        color: #555;
+        font-size: 0.9rem;
+      }
+
+      /* ---- Sections ---- */
+      section {
+        margin-bottom: 2.75rem;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 1rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1.5px solid #e0e0e0;
+      }
+
+      p {
+        margin-bottom: 0.85rem;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      ul,
+      ol {
+        margin: 0 0 0.85rem 1.4rem;
+      }
+
+      li {
+        margin-bottom: 0.4rem;
+      }
+
+      /* ---- Display equations ---- */
+      .equation {
+        text-align: center;
+        font-size: 1.05rem;
+        margin: 1.1rem 0;
+      }
+
+      /* ---- Horizontal rule ---- */
+      hr {
+        border: none;
+        border-top: 1px solid #ebebeb;
+        margin: 1.25rem 0;
+      }
+
+      /* ---- Note callout ---- */
+      .note {
+        background: #f5f7fb;
+        border-left: 4px solid #4a6fa5;
+        border-radius: 0 5px 5px 0;
+        padding: 0.8rem 1.1rem;
+        margin: 1.25rem 0 0;
+        font-size: 0.92rem;
+        color: #2c3a5e;
+      }
+
+      .note .note-label {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #4a6fa5;
+        margin-bottom: 0.3rem;
+      }
+
+      /* ---- Inline typography ---- */
+      em {
+        font-style: italic;
+      }
+      strong {
+        font-weight: 700;
+      }
+
+      /* ---- Print ---- */
+      @media print {
+        body {
+          max-width: 100%;
+          padding: 0.5in;
+        }
+        .lab-header {
+          border-bottom-color: #000;
+        }
+        .lab-meta {
+          color: #000;
+        }
+        .lab-header h1 {
+          color: #000;
+        }
+        h2 {
+          color: #000;
+          border-bottom-color: #bbb;
+        }
+        .note {
+          background: #f5f5f5;
+          border-left-color: #666;
+          color: #000;
+        }
+        .note .note-label {
+          color: #444;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="lab-header">
+      <p class="lab-meta">PHY 114 &nbsp;|&nbsp; Lab 6</p>
+      <h1>Theory Reference: Capacitor Networks</h1>
+      <p class="lab-description">
+        Background reading covering equivalent capacitance, the parallel and series combination
+        rules and where they come from, charge sharing between capacitors, and the
+        collapse-then-split method for mixed networks.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>Equivalent Capacitance</h2>
+
+        <p>
+          Capacitors are manufactured in standard values, so getting a different value for a circuit
+          means combining several of them. Any network of capacitors between two terminals behaves,
+          from the outside, like a single <strong>equivalent capacitor</strong>: one value <em>C</em
+          ><sub>eq</sub> that stores the same total charge at the same applied voltage as the whole
+          network does.
+        </p>
+
+        <p>
+          The equivalent value depends on how the capacitors are wired. There are two basic
+          arrangements, and every larger network is built from them.
+        </p>
+      </section>
+
+      <section>
+        <h2>Capacitors in Parallel</h2>
+
+        <p>
+          Capacitors are <strong>in parallel</strong> when both plates of each connect to the same
+          two nodes, so every capacitor has the same voltage <em>V</em> across it.
+        </p>
+
+        <p>
+          Each one stores its own charge, <em>Q</em>&#8321; = <em>C</em>&#8321;<em>V</em>,
+          <em>Q</em>&#8322; = <em>C</em>&#8322;<em>V</em>, and so on. The total charge drawn from
+          the source is the sum:
+        </p>
+
+        <p class="equation">
+          <em>Q</em><sub>total</sub> = <em>Q</em>&#8321; + <em>Q</em>&#8322; + <em>Q</em>&#8323; +
+          ... = (<em>C</em>&#8321; + <em>C</em>&#8322; + <em>C</em>&#8323; + ...) <em>V</em>
+        </p>
+
+        <p>so the equivalent capacitance of a parallel combination is the plain sum:</p>
+
+        <p class="equation">
+          <em>C</em><sub>parallel</sub> = <em>C</em>&#8321; + <em>C</em>&#8322; + <em>C</em>&#8323;
+          + ...
+        </p>
+
+        <p>
+          A parallel combination is always <strong>larger</strong> than any of its members: wiring
+          capacitors in parallel is effectively adding plate area. The charge divides among them in
+          proportion to capacitance (the biggest capacitor takes the most charge), while the voltage
+          is the same on all.
+        </p>
+      </section>
+
+      <section>
+        <h2>Capacitors in Series</h2>
+
+        <p>
+          Capacitors are <strong>in series</strong> when they are wired in a single chain, end to
+          end, so the same charging current must pass through the whole chain.
+        </p>
+
+        <p>
+          Series capacitors all carry the <strong>same charge <em>Q</em></strong
+          >. The reason is charge conservation on an isolated island: the pair of facing plates
+          between two neighboring series capacitors is connected to nothing else, so it starts
+          neutral and must stay net-neutral. If +<em>Q</em> appears on one plate of the pair,
+          exactly &#8722;<em>Q</em> must appear on the other. The charge <em>Q</em> is therefore
+          identical all along the chain.
+        </p>
+
+        <p>
+          The voltages, on the other hand, add. Each capacitor has <em>V</em> = <em>Q</em>/<em
+            >C</em
+          >
+          across it, and the total across the chain is the sum, which gives the reciprocal rule:
+        </p>
+
+        <p class="equation">
+          1/<em>C</em><sub>series</sub> = 1/<em>C</em>&#8321; + 1/<em>C</em>&#8322; +
+          1/<em>C</em>&#8323; + ...
+        </p>
+
+        <p>
+          A series combination is always <strong>smaller</strong> than its smallest member. And
+          because each capacitor carries the same <em>Q</em>, the voltage across each is inversely
+          proportional to its capacitance: the smallest capacitor in the chain takes the largest
+          share of the voltage.
+        </p>
+      </section>
+
+      <section>
+        <h2>Charge Sharing</h2>
+
+        <p>
+          Suppose a single capacitor <em>C</em>&#8321; is charged by a battery to voltage
+          <em>V</em>&#8320;, so it carries charge <em>Q</em>&#8320; =
+          <em>C</em>&#8321;<em>V</em>&#8320;. Now disconnect the battery and connect
+          <em>C</em>&#8321; to one or more <strong>uncharged</strong> capacitors instead. Two
+          principles decide what happens:
+        </p>
+
+        <ol>
+          <li>
+            <strong>Conservation of charge.</strong> The connected capacitors form an isolated
+            system; the total charge <em>Q</em>&#8320; cannot change, only redistribute.
+          </li>
+          <li>
+            <strong>A common final voltage.</strong> Charge flows until nothing pushes it further,
+            which happens when all the connected (parallel) capacitors sit at the same voltage.
+          </li>
+        </ol>
+
+        <p>
+          For a parallel sharing problem, those two conditions fix the answer. The total charge
+          <em>Q</em>&#8320; spreads over the combined capacitance, so the final voltage on every
+          connected capacitor is
+        </p>
+
+        <p class="equation">
+          <em>V</em><sub>shared</sub> = <em>Q</em>&#8320; / (<em>C</em>&#8321; + <em>C</em>&#8322; +
+          <em>C</em>&#8323; + ...)
+        </p>
+
+        <p>
+          The voltage always drops when another uncharged capacitor joins: the same charge is spread
+          over more capacitance. Each capacitor's individual share of the charge is then
+          <em>Q</em><sub>i</sub> = <em>C</em><sub>i</sub> &#215; <em>V</em><sub>shared</sub>.
+        </p>
+
+        <p>
+          If sharing happens in stages (first <em>C</em>&#8321; with <em>C</em>&#8322;, then
+          <em>C</em>&#8322; with <em>C</em>&#8323;, with switches isolating the rest), apply the
+          same reasoning one stage at a time: only the capacitors currently connected share their
+          charge, and any isolated capacitor keeps whatever charge and voltage it had.
+        </p>
+
+        <aside class="note">
+          <span class="note-label">Note</span><br />
+          Charge is conserved during sharing, but stored energy is not. Before sharing,
+          <em>U</em> = &#189;<em>Q</em>&#8320;&#178;/<em>C</em>&#8321;; after sharing, <em>U</em> =
+          &#189;<em>Q</em>&#8320;&#178;/(<em>C</em>&#8321; + <em>C</em>&#8322;), which is smaller.
+          The missing energy is dissipated as heat (and a brief current spike) in the connecting
+          wires while the charge redistributes. Conserve charge, not energy, when predicting
+          voltages.
+        </aside>
+      </section>
+
+      <section>
+        <h2>Mixed Series and Parallel Networks</h2>
+
+        <p>
+          Real networks nest series and parallel sub-blocks. The method is the same as for
+          resistors: <strong>collapse, solve, split back</strong>.
+        </p>
+
+        <ol>
+          <li>
+            <strong>Collapse.</strong> Replace each series or parallel cluster with its equivalent
+            capacitance, working inward until the network is simple enough to solve. For a series
+            pair, <em>C</em>&#8322;&#8323; = (1/<em>C</em>&#8322; +
+            1/<em>C</em>&#8323;)<sup>&#8722;1</sup>.
+          </li>
+          <li>
+            <strong>Solve.</strong> Treat the collapsed network as an ordinary sharing or charging
+            problem. For example, a charged <em>C</em>&#8321; sharing with the series pair becomes
+            parallel sharing between <em>C</em>&#8321; and <em>C</em>&#8322;&#8323;: <em>V</em
+            ><sub>shared</sub> = <em>Q</em>&#8320; / (<em>C</em>&#8321; + <em>C</em>&#8322;&#8323;).
+          </li>
+          <li>
+            <strong>Split back.</strong> Undo the collapse to find individual charges and voltages.
+            The equivalent <em>C</em>&#8322;&#8323; carries charge <em>Q</em>&#8322;&#8323; =
+            <em>C</em>&#8322;&#8323; &#215; <em>V</em><sub>shared</sub>; because <em>C</em>&#8322;
+            and <em>C</em>&#8323; are in series, each carries that same charge, and their voltages
+            split in inverse proportion to their capacitances: <em>V</em>&#8322; =
+            <em>Q</em>&#8322;&#8323;/<em>C</em>&#8322; and <em>V</em>&#8323; =
+            <em>Q</em>&#8322;&#8323;/<em>C</em>&#8323;, with <em>V</em>&#8322; + <em>V</em>&#8323; =
+            <em>V</em><sub>shared</sub>.
+          </li>
+        </ol>
+
+        <p>
+          Predicted voltages are compared to measured ones with a percent error: |predicted &#8722;
+          measured| / measured &#215; 100%. Small discrepancies can come from the voltmeter's
+          connection to the circuit and from reading the meter before the redistribution transient
+          has fully settled.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

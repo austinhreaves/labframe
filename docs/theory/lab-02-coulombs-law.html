@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Theory Reference: Coulomb's Law | PHY 114 Lab 2</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        color: #1a1a1a;
+        background: #ffffff;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+      }
+
+      /* ---- Header ---- */
+      .lab-header {
+        border-bottom: 3px solid #8c1d40;
+        padding-bottom: 1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .lab-meta {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #8c1d40;
+        margin-bottom: 0.4rem;
+      }
+
+      .lab-header h1 {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: #111;
+        line-height: 1.25;
+      }
+
+      .lab-description {
+        margin-top: 0.5rem;
+        color: #555;
+        font-size: 0.9rem;
+      }
+
+      /* ---- Sections ---- */
+      section {
+        margin-bottom: 2.75rem;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 1rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1.5px solid #e0e0e0;
+      }
+
+      h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #111;
+        margin: 1.4rem 0 0.7rem;
+      }
+
+      p {
+        margin-bottom: 0.85rem;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      ul {
+        margin: 0 0 0.85rem 1.4rem;
+      }
+
+      li {
+        margin-bottom: 0.4rem;
+      }
+
+      /* ---- Display equations ---- */
+      .equation {
+        text-align: center;
+        font-size: 1.05rem;
+        margin: 1.1rem 0;
+      }
+
+      /* ---- Horizontal rule ---- */
+      hr {
+        border: none;
+        border-top: 1px solid #ebebeb;
+        margin: 1.25rem 0;
+      }
+
+      /* ---- Note callout ---- */
+      .note {
+        background: #f5f7fb;
+        border-left: 4px solid #4a6fa5;
+        border-radius: 0 5px 5px 0;
+        padding: 0.8rem 1.1rem;
+        margin: 1.25rem 0 0;
+        font-size: 0.92rem;
+        color: #2c3a5e;
+      }
+
+      .note .note-label {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #4a6fa5;
+        margin-bottom: 0.3rem;
+      }
+
+      /* ---- Inline typography ---- */
+      em {
+        font-style: italic;
+      }
+      strong {
+        font-weight: 700;
+      }
+
+      /* ---- Print ---- */
+      @media print {
+        body {
+          max-width: 100%;
+          padding: 0.5in;
+        }
+        .lab-header {
+          border-bottom-color: #000;
+        }
+        .lab-meta {
+          color: #000;
+        }
+        .lab-header h1 {
+          color: #000;
+        }
+        h2 {
+          color: #000;
+          border-bottom-color: #bbb;
+        }
+        .note {
+          background: #f5f5f5;
+          border-left-color: #666;
+          color: #000;
+        }
+        .note .note-label {
+          color: #444;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="lab-header">
+      <p class="lab-meta">PHY 114 &nbsp;|&nbsp; Lab 2</p>
+      <h1>Theory Reference: Coulomb's Law</h1>
+      <p class="lab-description">
+        Background reading covering the force law between point charges, the atomic-scale units used
+        in the simulation, the straight-line method for testing an inverse-square law, percent
+        error, and the comparison with gravity.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>Coulomb's Law</h2>
+
+        <p>
+          Two charged objects push or pull on each other without touching: the electrostatic force
+          is a non-contact force that acts across the space between the charges. Experiments show
+          that like charges repel, unlike charges attract, and the strength of the interaction
+          depends on only two things: how much charge each object carries and how far apart they
+          are.
+        </p>
+
+        <p>
+          <strong>Coulomb's Law</strong> gives the magnitude of the force between two point charges
+          <em>Q</em>&#8321; and <em>Q</em>&#8322; separated by a distance <em>d</em>:
+        </p>
+
+        <p class="equation">
+          <em>F</em> = <em>k</em> |<em>Q</em>&#8321;<em>Q</em>&#8322;| / <em>d</em>&#178;
+        </p>
+
+        <p>where <em>k</em> is <strong>Coulomb's constant</strong>:</p>
+
+        <p class="equation"><em>k</em> &#8776; 8.988 &#215; 10&#8313; N&#183;m&#178;/C&#178;</p>
+
+        <p>
+          In words: the force is directly proportional to the product of the two charge magnitudes
+          and inversely proportional to the square of the distance between them. The force acts
+          along the line joining the two charges. The absolute-value bars are a reminder that the
+          formula gives the size of the force; the signs of the charges decide its direction (toward
+          each other for unlike charges, apart for like charges).
+        </p>
+
+        <aside class="note">
+          <span class="note-label">Note</span><br />
+          Coulomb's Law applies to <strong>point charges</strong>: objects that are small compared
+          to the distance separating them. A uniformly charged sphere also behaves like a point
+          charge located at its center whenever the separation is larger than the sphere's radius.
+          The charges in the simulation are drawn as small spheres; treat them as point charges at
+          their centers, with <em>d</em> measured center to center.
+        </aside>
+      </section>
+
+      <section>
+        <h2>Units on the Atomic Scale</h2>
+
+        <p>The simulation's Atomic Scale screen uses two units that suit very small systems.</p>
+
+        <p>
+          <strong>Elementary charge (e).</strong> The magnitude of the charge on a single proton
+          (positive) or a single electron (negative):
+        </p>
+
+        <p class="equation">1 e &#8776; 1.602 &#215; 10&#8315;&#185;&#8313; C</p>
+
+        <p>
+          Charge is quantized: every net charge is a whole-number multiple of e. On the atomic scale
+          it is natural to count charge in units of e. A charge of &#8722;3 e, for example, has the
+          magnitude of three elementary charges and the same sign as an electron's charge.
+        </p>
+
+        <p><strong>Picometer (pm).</strong> A length unit:</p>
+
+        <p class="equation">1 pm = 10&#8315;&#185;&#178; m</p>
+
+        <p>For scale, the radius of a hydrogen atom (the Bohr radius) is about 53 pm.</p>
+
+        <aside class="note">
+          <span class="note-label">Note</span><br />
+          Coulomb's constant <em>k</em> is stated in SI units (newtons, meters, coulombs), so an
+          experimental value of <em>k</em> can only be compared to the accepted one after
+          converting: charges from e to C, distances from pm to m, and forces into N. Skipping a
+          single conversion changes the answer by many powers of ten, so write out every conversion
+          factor explicitly.
+        </aside>
+      </section>
+
+      <section>
+        <h2>Reading a Force Law from a Straight Line</h2>
+
+        <p>
+          A proportionality is easy to test on a graph: data that follow <em>y</em> =
+          <em>Ax</em> fall on a straight line through the origin, and the slope <em>A</em> can be
+          measured from a fit. Coulomb's Law can be put in that form in two different ways,
+          depending on which quantity is varied.
+        </p>
+
+        <h3>Varying the charge</h3>
+
+        <p>
+          If <em>Q</em>&#8321; and <em>d</em> are held constant while <em>Q</em>&#8322; changes,
+          Coulomb's Law can be regrouped as
+        </p>
+
+        <p class="equation">
+          <em>F</em> = (<em>k</em> |<em>Q</em>&#8321;| / <em>d</em>&#178;) &#215; <em>Q</em>&#8322;
+        </p>
+
+        <p>
+          Everything inside the parentheses is constant, so <em>F</em> is directly proportional to
+          <em>Q</em>&#8322;: doubling <em>Q</em>&#8322; doubles <em>F</em>. A plot of
+          <em>F</em> (y-axis) against <em>Q</em>&#8322; (x-axis) should be a straight line through
+          the origin with slope
+        </p>
+
+        <p class="equation"><em>A</em> = <em>k</em> |<em>Q</em>&#8321;| / <em>d</em>&#178;</p>
+
+        <p>
+          Measuring <em>A</em> from the fit, and knowing <em>Q</em>&#8321; and <em>d</em>, gives an
+          experimental value of Coulomb's constant: <em>k</em> = <em>A</em> <em>d</em>&#178; /
+          |<em>Q</em>&#8321;|.
+        </p>
+
+        <h3>Varying the distance</h3>
+
+        <p>
+          If both charges are held constant while the separation changes, Coulomb's Law predicts
+          that <em>F</em> is proportional to 1/<em>d</em>&#178;: doubling the distance cuts the
+          force to one quarter.
+        </p>
+
+        <p>
+          A plot of <em>F</em> against <em>d</em> itself is a falling curve, and by eye one falling
+          curve looks much like another; the graph alone cannot distinguish a 1/<em>d</em> law from
+          a 1/<em>d</em>&#178; law. The trick is to change what is plotted on the x-axis: plot
+          <em>F</em> against 1/<em>d</em> and against 1/<em>d</em>&#178;, and look for which choice
+          straightens the data.
+        </p>
+
+        <ul>
+          <li>
+            If the force followed a 1/<em>d</em> law, the <em>F</em> vs 1/<em>d</em> plot would be
+            the straight line.
+          </li>
+          <li>
+            If the force follows a 1/<em>d</em>&#178; law, as Coulomb's Law predicts, the
+            <em>F</em> vs 1/<em>d</em>&#178; plot is the straight line through the origin and the
+            <em>F</em> vs 1/<em>d</em> plot stays curved.
+          </li>
+        </ul>
+
+        <p>
+          With <em>x</em> = 1/<em>d</em>&#178;, the straight line is <em>F</em> = <em>A</em>
+          <em>x</em> with slope
+        </p>
+
+        <p class="equation"><em>A</em> = <em>k</em> |<em>Q</em>&#8321;<em>Q</em>&#8322;|</p>
+
+        <p>
+          so the slope gives a second, independent experimental value: <em>k</em> = <em>A</em> /
+          |<em>Q</em>&#8321;<em>Q</em>&#8322;|.
+        </p>
+
+        <aside class="note">
+          <span class="note-label">Note</span><br />
+          A slope always carries units: the y-axis unit divided by the x-axis unit. In the
+          <em>F</em> vs <em>Q</em>&#8322; plot, <em>A</em> is a force unit per unit charge; in the
+          <em>F</em> vs 1/<em>d</em>&#178; plot, <em>A</em> is a force unit times a distance unit
+          squared. Keeping track of the slope's units is what makes the conversion to SI come out
+          right when extracting <em>k</em>.
+        </aside>
+      </section>
+
+      <section>
+        <h2>Percent Error</h2>
+
+        <p>An experimental value is compared to an accepted value using the percent error:</p>
+
+        <p class="equation">
+          percent error = |experimental &#8722; accepted| / accepted &#215; 100%
+        </p>
+
+        <p>
+          A perfect match gives 0%. In this lab, small discrepancies are expected from the
+          resolution of the simulation's force readout, rounding in the computed 1/<em>d</em> and
+          1/<em>d</em>&#178; values, and the quality of the straight-line fit.
+        </p>
+      </section>
+
+      <section>
+        <h2>Electric Force vs. Gravity</h2>
+
+        <p>
+          Newton's law of universal gravitation has the same mathematical form as Coulomb's Law:
+        </p>
+
+        <p class="equation">
+          <em>F</em> = <em>G</em> <em>m</em>&#8321;<em>m</em>&#8322; / <em>d</em>&#178;, with
+          <em>G</em> &#8776; 6.67 &#215; 10&#8315;&#185;&#185; N&#183;m&#178;/kg&#178;
+        </p>
+
+        <p>
+          Both are non-contact, inverse-square laws: the force falls off as 1/<em>d</em>&#178;, and
+          it is proportional to the product of the two quantities that cause it (masses for gravity,
+          charges for the electric force).
+        </p>
+
+        <p>The differences matter just as much:</p>
+
+        <ul>
+          <li>
+            Gravity only attracts; there is no negative mass. The electric force can attract or
+            repel, depending on the signs of the charges.
+          </li>
+          <li>
+            The electric force is far stronger at the particle scale. Coulomb's constant
+            <em>k</em> is enormous compared to the gravitational constant <em>G</em>: for two
+            protons, the electric repulsion between them is about 10&#179;&#8310; times larger than
+            their gravitational attraction. That is why gravity is negligible inside atoms, while
+            the electric force is what holds atoms and solid matter together.
+          </li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

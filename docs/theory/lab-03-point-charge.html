@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Theory Reference: Electric Field &amp; Potential of a Point Charge | PHY 114 Lab 3
+    </title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        color: #1a1a1a;
+        background: #ffffff;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+      }
+
+      /* ---- Header ---- */
+      .lab-header {
+        border-bottom: 3px solid #8c1d40;
+        padding-bottom: 1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .lab-meta {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #8c1d40;
+        margin-bottom: 0.4rem;
+      }
+
+      .lab-header h1 {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: #111;
+        line-height: 1.25;
+      }
+
+      .lab-description {
+        margin-top: 0.5rem;
+        color: #555;
+        font-size: 0.9rem;
+      }
+
+      /* ---- Sections ---- */
+      section {
+        margin-bottom: 2.75rem;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 1rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1.5px solid #e0e0e0;
+      }
+
+      p {
+        margin-bottom: 0.85rem;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      ul {
+        margin: 0 0 0.85rem 1.4rem;
+      }
+
+      li {
+        margin-bottom: 0.4rem;
+      }
+
+      /* ---- Display equations ---- */
+      .equation {
+        text-align: center;
+        font-size: 1.05rem;
+        margin: 1.1rem 0;
+      }
+
+      /* ---- Horizontal rule ---- */
+      hr {
+        border: none;
+        border-top: 1px solid #ebebeb;
+        margin: 1.25rem 0;
+      }
+
+      /* ---- Note callout ---- */
+      .note {
+        background: #f5f7fb;
+        border-left: 4px solid #4a6fa5;
+        border-radius: 0 5px 5px 0;
+        padding: 0.8rem 1.1rem;
+        margin: 1.25rem 0 0;
+        font-size: 0.92rem;
+        color: #2c3a5e;
+      }
+
+      .note .note-label {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #4a6fa5;
+        margin-bottom: 0.3rem;
+      }
+
+      /* ---- Inline typography ---- */
+      em {
+        font-style: italic;
+      }
+      strong {
+        font-weight: 700;
+      }
+
+      /* ---- Print ---- */
+      @media print {
+        body {
+          max-width: 100%;
+          padding: 0.5in;
+        }
+        .lab-header {
+          border-bottom-color: #000;
+        }
+        .lab-meta {
+          color: #000;
+        }
+        .lab-header h1 {
+          color: #000;
+        }
+        h2 {
+          color: #000;
+          border-bottom-color: #bbb;
+        }
+        .note {
+          background: #f5f5f5;
+          border-left-color: #666;
+          color: #000;
+        }
+        .note .note-label {
+          color: #444;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="lab-header">
+      <p class="lab-meta">PHY 114 &nbsp;|&nbsp; Lab 3</p>
+      <h1>Theory Reference: Electric Field &amp; Potential of a Point Charge</h1>
+      <p class="lab-description">
+        Background reading covering the field concept, the inverse-square field of a point charge,
+        electric potential, equipotential lines, and the straight-line test that extracts
+        <em>kq</em> from a <em>V</em> vs 1/<em>r</em> plot.
+      </p>
+    </header>
+
+    <main>
+      <section>
+        <h2>The Electric Field</h2>
+
+        <p>
+          The electric force, like gravity, is a non-contact force: two charges push or pull on each
+          other across empty space. The <strong>field</strong> concept explains how. A charge
+          modifies the space around it, creating an <strong>electric field</strong>; any other
+          charge placed in that field then feels a force from the field at its own location.
+        </p>
+
+        <p>
+          The electric field at a point in space is defined by the force a small positive
+          <strong>test charge</strong> would feel if placed there, divided by the size of that test
+          charge:
+        </p>
+
+        <p class="equation"><em>E</em> = <em>F</em> / <em>q</em><sub>test</sub></p>
+
+        <p>
+          The SI unit of <em>E</em> is the newton per coulomb (N/C), which is equivalent to the volt
+          per meter (V/m); the simulation's sensors read the field in V/m. The test charge must be
+          small enough that it does not disturb the field being measured.
+        </p>
+
+        <p>
+          The electric field is a vector: it has a magnitude and a direction at every point. The
+          direction is the direction of the force on a positive test charge. Field maps drawn with
+          arrows or field lines show both at once: the arrows point along the field, and the field
+          is strong where the lines are dense and weak where they spread apart.
+        </p>
+      </section>
+
+      <section>
+        <h2>Field of a Point Charge</h2>
+
+        <p>
+          For an isolated point charge <em>q</em>, Coulomb's Law gives the force on a test charge at
+          distance <em>r</em>, and dividing by the test charge gives the field magnitude:
+        </p>
+
+        <p class="equation"><em>E</em> = <em>k</em> |<em>q</em>| / <em>r</em>&#178;</p>
+
+        <p>
+          with Coulomb's constant <em>k</em> &#8776; 8.988 &#215; 10&#8313; N&#183;m&#178;/C&#178;.
+        </p>
+
+        <p>Two features of this formula are worth checking against experiment:</p>
+
+        <ul>
+          <li>
+            <em>E</em> is proportional to |<em>q</em>|: doubling the charge doubles the field at any
+            fixed distance.
+          </li>
+          <li>
+            <em>E</em> falls off as the inverse square of the distance: doubling <em>r</em> cuts the
+            field to one quarter of its value.
+          </li>
+        </ul>
+
+        <p>
+          The direction is radial: outward from a positive charge, inward toward a negative charge.
+          By symmetry, sensors placed at the same distance from the charge in different directions
+          all read the same magnitude; only the direction of the field arrow changes.
+        </p>
+
+        <p>
+          When several point charges are present, the total field at any point is the vector sum of
+          the individual fields (the <strong>superposition principle</strong>). Stacking two
+          identical charges at the same spot therefore doubles the field everywhere, exactly as if a
+          single charge of 2<em>q</em> sat there.
+        </p>
+      </section>
+
+      <section>
+        <h2>Electric Potential</h2>
+
+        <p>
+          A charge sitting in an electric field has electric potential energy, just as a mass in a
+          gravitational field has gravitational potential energy. The
+          <strong>electric potential</strong> <em>V</em> at a point is the potential energy per unit
+          charge that a small test charge would have at that location:
+        </p>
+
+        <p class="equation"><em>V</em> = PE / <em>q</em><sub>test</sub></p>
+
+        <p>Its unit is the volt: 1 V = 1 J/C (one joule per coulomb).</p>
+
+        <p>
+          Potential differs from field in an important way: the field is a vector, but the potential
+          is a scalar, a single number at each point with no direction attached. That makes
+          potential easier to map: a single reading per location tells the whole story.
+        </p>
+
+        <p>
+          An <strong>equipotential line</strong> is a set of points that all have the same
+          potential. Around a single point charge the equipotentials are circles centered on the
+          charge (spheres, in three dimensions), because the potential depends only on the distance
+          <em>r</em>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Potential of a Point Charge</h2>
+
+        <p>
+          For a single point charge <em>q</em>, taking the potential to be zero very far away, the
+          potential at distance <em>r</em> turns out to be
+        </p>
+
+        <p class="equation"><em>V</em> = <em>k</em> <em>q</em> / <em>r</em></p>
+
+        <p>
+          (You will see where this expression comes from in a calculus-based course; here it is
+          enough to know the result and test it.) Unlike the field formula, this one keeps the sign
+          of <em>q</em>: a positive charge produces positive potential around it, a negative charge
+          produces negative potential.
+        </p>
+
+        <p>
+          Note carefully: this is <strong>not</strong> an inverse-square relationship. The potential
+          falls off as 1/<em>r</em>, while the field falls off as 1/<em>r</em>&#178;. Doubling the
+          distance halves the potential but quarters the field. Confusing the two scalings is the
+          most common error in this topic, so the lab has you measure both.
+        </p>
+      </section>
+
+      <section>
+        <h2>The Straight-Line Test</h2>
+
+        <p>
+          A plot of <em>V</em> against <em>r</em> for a point charge is a falling curve, and a curve
+          by itself does not identify the law behind it. As in the Coulomb's Law lab, the fix is to
+          change the x-axis: plot <em>V</em> against 1/<em>r</em>. If the relationship <em>V</em> =
+          <em>kq</em>/<em>r</em> is right, then with <em>x</em> = 1/<em>r</em> the data obey
+        </p>
+
+        <p class="equation"><em>V</em> = (<em>kq</em>) &#215; (1/<em>r</em>)</p>
+
+        <p>
+          which is a straight line through the origin with slope equal to <em>kq</em>. Reading the
+          slope off a proportional fit gives an experimental value of <em>kq</em>, which can be
+          compared to the value computed directly from the known charge and Coulomb's constant,
+          using a percent error:
+        </p>
+
+        <p class="equation">
+          percent error = |experimental &#8722; accepted| / accepted &#215; 100%
+        </p>
+
+        <p>
+          Small discrepancies are expected: the equipotential rings may be drawn slightly off the
+          intended radius, sensor and meter readouts are rounded, and the fit averages over those
+          imperfections.
+        </p>
+
+        <aside class="note">
+          <span class="note-label">Note</span><br />
+          The slope of the <em>V</em> vs 1/<em>r</em> line carries units: volts divided by
+          (1/meters), which is volt&#183;meters (V&#183;m). The expected value <em>kq</em> also
+          comes out in V&#183;m when <em>q</em> is in coulombs, so the two can be compared directly
+          once the charge is converted from nanocoulombs: 1 nC = 10&#8315;&#8313; C.
+        </aside>
+      </section>
+
+      <section>
+        <h2>Units in the Simulation</h2>
+
+        <p>The Charges and Fields simulation uses:</p>
+
+        <ul>
+          <li>
+            charge in nanocoulombs (nC), with each placed charge equal to &#177;1 nC (1 nC =
+            10&#8315;&#8313; C)
+          </li>
+          <li>distance in meters (m), read from the grid or the measuring tape</li>
+          <li>electric field in volts per meter (V/m), equivalent to N/C</li>
+          <li>electric potential in volts (V)</li>
+        </ul>
+
+        <p>
+          Coulomb's constant <em>k</em> is in SI units, so convert charges to coulombs before
+          computing expected values of <em>E</em>, <em>V</em>, or <em>kq</em>.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>
