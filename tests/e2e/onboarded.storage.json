@@ -3,7 +3,10 @@
   "origins": [
     {
       "origin": "http://localhost:5173",
-      "localStorage": [{ "name": "labframe:onboarded", "value": "1" }]
+      "localStorage": [
+        { "name": "labframe:onboarded", "value": "1" },
+        { "name": "labframe:student-name", "value": "E2E Student" }
+      ]
     }
   ]
 }

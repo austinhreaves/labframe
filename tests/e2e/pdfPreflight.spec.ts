@@ -1,6 +1,9 @@
 import { expect, test } from '@playwright/test';
 
-test('gates PDF generation on integrity agreement and student info', async ({ page }) => {
+test('gates PDF generation on the integrity agreement', async ({ page }) => {
+  // The suite seeds a student name, so the name gate is already satisfied; this
+  // test covers the remaining export gate (the integrity agreement). The
+  // missing-name path is now enforced by the on-load gate (studentNameGate.spec).
   let signCalls = 0;
   await page.route('**/api/sign', async (route) => {
     signCalls += 1;
@@ -17,23 +20,19 @@ test('gates PDF generation on integrity agreement and student info', async ({ pa
   await page.goto('/c/phy132/snellsLaw');
   await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();
 
+  // Set a real name for the report filename, committing over the seeded value.
+  await page.getByLabel(/student name/i).fill('Austin Reaves');
+  await page.getByLabel(/student name/i).press('Enter');
+
   const exportButton = page.getByRole('button', { name: /^export pdf$/i });
   await exportButton.scrollIntoViewIfNeeded();
   await expect(exportButton).toBeDisabled();
+  expect(signCalls).toBe(0);
 
-  // Affirm the agreement — button enables, but student name is still missing.
+  // Affirm the agreement — the button enables and export succeeds.
   await page.getByRole('checkbox', { name: /i affirm this submission/i }).check();
   await expect(exportButton).toBeEnabled();
 
-  await exportButton.click();
-  await expect(page.getByRole('dialog')).toBeVisible();
-  await expect(page.getByRole('dialog')).toContainText(/student name/i);
-  await page.getByRole('button', { name: /^ok$/i }).click();
-  await expect(page.getByRole('dialog')).toBeHidden();
-  expect(signCalls).toBe(0);
-
-  // Fill name, then export should succeed and trigger a download.
-  await page.getByLabel(/student name/i).fill('Austin Reaves');
   const [download] = await Promise.all([page.waitForEvent('download'), exportButton.click()]);
 
   expect(signCalls).toBe(1);
