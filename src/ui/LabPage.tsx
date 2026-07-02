@@ -20,7 +20,9 @@ import {
 } from '@/services/telemetry/errorReporter';
 import { isCountedSection, sectionHasText } from '@/state/answered';
 import { useLabStore, type RecoverableAttachment } from '@/state/labStore';
+import { saveReport } from '@/state/reports';
 import { AccessibleDialog } from '@/ui/AccessibleDialog';
+import { downloadBlob } from '@/ui/downloadBlob';
 import { IntegrityAgreement } from '@/ui/IntegrityAgreement';
 import { ProgressBar } from '@/ui/ProgressBar';
 import { StudentInfoPreflightDialog } from '@/ui/StudentInfoPreflightDialog';
@@ -400,15 +402,6 @@ export function LabPage({ course, lab }: Props) {
     return `${bytes} B`;
   };
 
-  const downloadBlob = (blob: Blob, filename: string) => {
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = filename;
-    anchor.click();
-    URL.revokeObjectURL(url);
-  };
-
   const exportPdf = async () => {
     const preflight = validateStudentInfoForPdf({ studentName: studentNameDraft });
     if (!preflight.ok) {
@@ -476,6 +469,24 @@ export function LabPage({ course, lab }: Props) {
       downloadBlob(sealed, filename);
       setSubmitted(true);
       postSubmitAnswersToParent();
+      // Persist the sealed report so the course page's Completed section can
+      // re-download the exact original. Awaited so a student who navigates away
+      // immediately still has it saved; the download already happened above, so
+      // a storage failure (e.g. quota) is swallowed and never undoes the export.
+      await saveReport(
+        {
+          courseId: course.id,
+          labId: lab.id,
+          studentName: studentNameForPdf,
+          submittedAt: signing.signedAt,
+          signature: signing.signature,
+          filename,
+          bytes: sealed.size,
+        },
+        sealed,
+      ).catch((error) => {
+        void reportError({ error, sectionId: 'report-persist', labId: lab.id });
+      });
     } catch (error) {
       void reportError({ error, sectionId: 'pdf-export', labId: lab.id });
       const message =
