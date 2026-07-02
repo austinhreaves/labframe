@@ -6,7 +6,7 @@ test.describe('tablet viewport (768x1024)', () => {
   test('no horizontal scroll at 768x1024 tablet viewport -- Snells Law side layout', async ({
     page,
   }) => {
-    await page.goto('/c/phy132/snellsLaw?layout=side');
+    await page.goto('/c/phy132/snellsLaw?layout=parallel');
     await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();
 
     const hasHorizontalScroll = await page.evaluate(
@@ -17,7 +17,7 @@ test.describe('tablet viewport (768x1024)', () => {
 });
 
 test('sticky header stays visible over long scroll', async ({ page }, testInfo) => {
-  await page.goto('/c/phy132/snellsLaw?layout=side');
+  await page.goto('/c/phy132/snellsLaw?layout=parallel');
   await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();
 
   await page.evaluate(() => window.scrollTo(0, 1000));
@@ -31,7 +31,7 @@ test('sticky header stays visible over long scroll', async ({ page }, testInfo) 
 });
 
 test('splitter resizes panes without remounting iframe and resets on reload', async ({ page }) => {
-  await page.goto('/c/phy132/snellsLaw?layout=side');
+  await page.goto('/c/phy132/snellsLaw?layout=parallel');
   await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();
 
   const iframe = page.getByTitle(/bending light/i);
@@ -40,7 +40,7 @@ test('splitter resizes panes without remounting iframe and resets on reload', as
   expect(mountId).toBeTruthy();
 
   const initial = await page.evaluate(() => {
-    const layout = document.querySelector('.lab-layout-side') as HTMLElement | null;
+    const layout = document.querySelector('.lab-layout-parallel') as HTMLElement | null;
     const frame = document.querySelector('.simulation-frame') as HTMLElement | null;
     const sheet = document.querySelector('.worksheet-pane') as HTMLElement | null;
     return {

@@ -1,6 +1,7 @@
 import { lazy } from 'react';
 import type { MultiMeasurementSection } from '@/domain/schema';
 import { useLabStore } from '@/state/labStore';
+import { AnswerCard } from '@/ui/sections/AnswerCard';
 import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
 import { Field } from '@/ui/primitives/Field';
 const MarkdownInline = lazy(() => import('@/ui/primitives/MarkdownInline'));
@@ -16,25 +17,27 @@ export function MultiMeasurementSectionView({ section }: Props) {
   return (
     <section className="section">
       <SectionPointsCaption points={section.points} />
-      {section.rows.map((row) => {
-        const label = row.unit ? `${row.label} (${row.unit})` : row.label;
-        const labelDisplay = (
-          <>
-            <MarkdownInline markdown={row.label} />
-            {row.unit ? ` (${row.unit})` : null}
-          </>
-        );
-        return (
-          <Field
-            key={row.id}
-            id={row.id}
-            label={label}
-            labelDisplay={labelDisplay}
-            value={fields[row.id]}
-            onChange={(next) => setField(row.id, next)}
-          />
-        );
-      })}
+      <AnswerCard hideEyebrow>
+        {section.rows.map((row) => {
+          const label = row.unit ? `${row.label} (${row.unit})` : row.label;
+          const labelDisplay = (
+            <>
+              <MarkdownInline markdown={row.label} />
+              {row.unit ? ` (${row.unit})` : null}
+            </>
+          );
+          return (
+            <Field
+              key={row.id}
+              id={row.id}
+              label={label}
+              labelDisplay={labelDisplay}
+              value={fields[row.id]}
+              onChange={(next) => setField(row.id, next)}
+            />
+          );
+        })}
+      </AnswerCard>
     </section>
   );
 }

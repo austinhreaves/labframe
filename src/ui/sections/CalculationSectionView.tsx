@@ -8,6 +8,7 @@ import {
 } from '@/domain/calculationResponse';
 import type { CalculationSection } from '@/domain/schema';
 import { createEmptyFieldValue, useLabStore } from '@/state/labStore';
+import { AnswerCard } from '@/ui/sections/AnswerCard';
 import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
 import { Field } from '@/ui/primitives/Field';
 const EquationEditor = lazy(() => import('@/ui/primitives/EquationEditor'));
@@ -150,92 +151,94 @@ export function CalculationSectionView({ section }: Props) {
     <section className="section">
       <SectionPointsCaption points={section.points} />
       <MarkdownBlock markdown={section.prompt} />
-      {showLatexHelp ? (
-        <div className="latex-help">
-          <button
-            ref={latexHelpButtonRef}
-            type="button"
-            className="latex-help-button"
-            aria-expanded={isLatexHelpOpen}
-            aria-controls={`${section.fieldId}-latex-help-popover`}
-            onClick={() => setIsLatexHelpOpen((open) => !open)}
-          >
-            How to type equations
-          </button>
-          {isLatexHelpOpen ? (
-            <div
-              id={`${section.fieldId}-latex-help-popover`}
-              className="latex-help-popover"
-              role="dialog"
-              aria-label="How to type equations using LaTeX"
+      <AnswerCard>
+        {showLatexHelp ? (
+          <div className="latex-help">
+            <button
+              ref={latexHelpButtonRef}
+              type="button"
+              className="latex-help-button"
+              aria-expanded={isLatexHelpOpen}
+              aria-controls={`${section.fieldId}-latex-help-popover`}
+              onClick={() => setIsLatexHelpOpen((open) => !open)}
             >
-              <p>Type math using LaTeX commands. A few of the basics:</p>
-              <table className="latex-help-table">
-                <thead>
-                  <tr>
-                    <th>Type</th>
-                    <th>Meaning</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {LATEX_HELP_EXAMPLES.map((example) => (
-                    <tr key={example.latex}>
-                      <td>
-                        <code>{example.latex}</code>
-                      </td>
-                      <td>{example.description}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <p>
-                <a
-                  href="https://en.wikibooks.org/wiki/LaTeX/Mathematics"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Full LaTeX math reference
-                </a>
-              </p>
-              <button type="button" onClick={() => setIsLatexHelpOpen(false)}>
-                Close
-              </button>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-      {modes ? (
-        <>
-          <div className="calc-mode-switcher" role="tablist" aria-label="Response mode">
-            {modes.map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                role="tab"
-                id={`${section.fieldId}-tab-${mode}`}
-                className="calc-mode-tab"
-                aria-selected={mode === activeMode}
-                aria-controls={panelId}
-                tabIndex={mode === activeMode ? 0 : -1}
-                data-active={mode === activeMode ? '' : undefined}
-                onClick={() => setResponseSelection(section.fieldId, mode)}
-                onKeyDown={handleTabKeyDown}
+              How to type equations
+            </button>
+            {isLatexHelpOpen ? (
+              <div
+                id={`${section.fieldId}-latex-help-popover`}
+                className="latex-help-popover"
+                role="dialog"
+                aria-label="How to type equations using LaTeX"
               >
-                {MODE_LABELS[mode]}
-              </button>
-            ))}
+                <p>Type math using LaTeX commands. A few of the basics:</p>
+                <table className="latex-help-table">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Meaning</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {LATEX_HELP_EXAMPLES.map((example) => (
+                      <tr key={example.latex}>
+                        <td>
+                          <code>{example.latex}</code>
+                        </td>
+                        <td>{example.description}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p>
+                  <a
+                    href="https://en.wikibooks.org/wiki/LaTeX/Mathematics"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Full LaTeX math reference
+                  </a>
+                </p>
+                <button type="button" onClick={() => setIsLatexHelpOpen(false)}>
+                  Close
+                </button>
+              </div>
+            ) : null}
           </div>
-          <div
-            id={panelId}
-            role="tabpanel"
-            aria-labelledby={`${section.fieldId}-tab-${activeMode}`}
-          >
-            {renderInput(activeMode)}
-          </div>
-        </>
-      ) : (
-        renderInput(activeMode)
-      )}
+        ) : null}
+        {modes ? (
+          <>
+            <div className="calc-mode-switcher" role="tablist" aria-label="Response mode">
+              {modes.map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  role="tab"
+                  id={`${section.fieldId}-tab-${mode}`}
+                  className="calc-mode-tab"
+                  aria-selected={mode === activeMode}
+                  aria-controls={panelId}
+                  tabIndex={mode === activeMode ? 0 : -1}
+                  data-active={mode === activeMode ? '' : undefined}
+                  onClick={() => setResponseSelection(section.fieldId, mode)}
+                  onKeyDown={handleTabKeyDown}
+                >
+                  {MODE_LABELS[mode]}
+                </button>
+              ))}
+            </div>
+            <div
+              id={panelId}
+              role="tabpanel"
+              aria-labelledby={`${section.fieldId}-tab-${activeMode}`}
+            >
+              {renderInput(activeMode)}
+            </div>
+          </>
+        ) : (
+          renderInput(activeMode)
+        )}
+      </AnswerCard>
     </section>
   );
 }

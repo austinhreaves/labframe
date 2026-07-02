@@ -411,4 +411,22 @@ The generated PDF should include Student Info, worksheet responses, table and de
 Review your entries before export. The signed report is the submission artifact for grading.`,
     },
   ],
+  // Pass 5: both parts use the single Coulomb's Law sim (reuse across parts is
+  // intended, so the student keeps the same sim state from 2A into 2B). Sections
+  // [35, 38) are the sim-less review tail (Discussion & Conclusion + PDF notes),
+  // surfaced in Finish & Review.
+  parts: [
+    {
+      key: '2A',
+      title: 'Force and Charge',
+      simulationId: 'coulombsLaw',
+      sectionRange: [0, 18],
+    },
+    {
+      key: '2B',
+      title: 'Force and Distance',
+      simulationId: 'coulombsLaw',
+      sectionRange: [18, 35],
+    },
+  ],
 };

@@ -7,6 +7,7 @@ import {
   phy112KirchhoffsRulesLab,
   phy112ResistorsSeriesParallelLab,
   phy114CapacitorsLab,
+  phy114ChargeBuildupLab,
   phy114ChargesFieldsLab,
   phy114ConvergingLensLab,
   phy114CoulombsLawLab,
@@ -42,6 +43,7 @@ import {
 import type { Course, Lab } from '@/domain/schema';
 import { Catalog } from '@/ui/Catalog';
 import { LabPage } from '@/ui/LabPage';
+import { Sims } from '@/ui/Sims';
 import { PrimitivesShowcase } from '@/ui/visual/PrimitivesShowcase';
 
 const courses: Course[] = [phy132Course, phy114Course, phy112Course, welcomeCourse];
@@ -70,8 +72,9 @@ const labsByCourse: Record<string, Record<string, Lab>> = {
     theveninsTheorem: phy132TheveninsTheoremLab,
   },
   phy114: {
+    // PHY-114-owned Charge Buildup copy carrying the Pass 5 parts grouping.
+    chargeBuildup: phy114ChargeBuildupLab,
     // Core E&M reused from PHY 132 (no uncertainty content to strip).
-    chargeBuildup: phy132ChargeBuildupLab,
     chargeConfigurations: phy132ChargeConfigurationsLab,
     capacitorFundamentals: phy132CapacitorFundamentalsLab,
     capacitorNetworks: phy132CapacitorNetworksLab,
@@ -176,6 +179,9 @@ export function AppRoutes() {
         element={<Catalog courses={courses} labsByCourse={labsByCourse} showWizard={false} />}
       />
       <Route path="/phy_114" element={<Navigate to="/c/phy114" replace />} />
+      {/* "Just explore": outbound sim cards derived from the same manifest +
+          lab registry the router uses (see docs/specs/SIMS_SPEC.md). */}
+      <Route path="/sims" element={<Sims courses={courses} labsByCourse={labsByCourse} />} />
       {/* Friendly alias for the onboarding demo lab. Pass 2 adds ?tour=1 behavior. */}
       <Route
         path="/welcome"

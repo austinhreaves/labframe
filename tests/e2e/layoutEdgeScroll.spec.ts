@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('scrollwheel on worksheet and simulation panes moves page scroll', async ({ page }) => {
-  await page.goto('/c/phy132/snellsLaw?layout=side');
+  await page.goto('/c/phy132/snellsLaw?layout=parallel');
   await expect(page.getByRole('heading', { name: /snell's law/i })).toBeVisible();
 
   await page.evaluate(() => window.scrollTo(0, 0));

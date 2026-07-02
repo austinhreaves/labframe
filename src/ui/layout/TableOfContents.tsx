@@ -1,13 +1,97 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 
-import type { Section } from '@/domain/schema';
+import type { Part, Section } from '@/domain/schema';
 import { buildTocEntries } from '@/domain/tocEntries';
 import { Icon } from '@/ui/primitives/Icon';
 
 type Props = {
   sections: Section[];
+  /** Pass 5: when the lab has parts, the menu navigates parts (and the review
+   *  step) via `onNavigatePart` instead of listing in-scroll section anchors,
+   *  since only the active part's sections are mounted at any time. */
+  parts?: Part[];
+  activePartKey?: string | null;
+  onNavigatePart?: (partKey: string) => void;
 };
+
+/** Parts-aware variant: a flat list of parts plus the Finish & review step. */
+function PartsMenu({
+  parts,
+  activePartKey,
+  onNavigatePart,
+}: {
+  parts: Part[];
+  activePartKey: string | null;
+  onNavigatePart: (partKey: string) => void;
+}) {
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    const details = detailsRef.current;
+    if (!details) {
+      return;
+    }
+    const onPointerDown = (event: PointerEvent) => {
+      if (!details.open) {
+        return;
+      }
+      const target = event.target;
+      if (target instanceof Node && details.contains(target)) {
+        return;
+      }
+      details.open = false;
+    };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    return () => document.removeEventListener('pointerdown', onPointerDown, true);
+  }, []);
+
+  const select = (key: string) => {
+    if (detailsRef.current) {
+      detailsRef.current.open = false;
+    }
+    onNavigatePart(key);
+  };
+
+  return (
+    <details ref={detailsRef} className="table-of-contents-popover">
+      <summary>
+        Sections
+        <Icon icon={ChevronDown} size={14} className="icon-chevron" />
+      </summary>
+      <nav className="table-of-contents-popover-panel" aria-label="Parts">
+        <ul>
+          {parts.map((part) => (
+            <li key={part.key}>
+              <a
+                href={`?part=${encodeURIComponent(part.key)}`}
+                aria-current={activePartKey === part.key ? 'location' : undefined}
+                onClick={(event) => {
+                  event.preventDefault();
+                  select(part.key);
+                }}
+              >
+                Part {part.key} - {part.title}
+              </a>
+            </li>
+          ))}
+          <li>
+            <a
+              href="?part=review"
+              aria-current={activePartKey === 'review' ? 'location' : undefined}
+              onClick={(event) => {
+                event.preventDefault();
+                select('review');
+              }}
+            >
+              Discussion
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </details>
+  );
+}
 
 const PANEL_MARGIN_PX = 12;
 const GAP_BELOW_TRIGGER_PX = 4;
@@ -17,7 +101,20 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
-export function TableOfContents({ sections }: Props) {
+export function TableOfContents({ sections, parts, activePartKey, onNavigatePart }: Props) {
+  if (parts && parts.length > 0 && onNavigatePart) {
+    return (
+      <PartsMenu
+        parts={parts}
+        activePartKey={activePartKey ?? null}
+        onNavigatePart={onNavigatePart}
+      />
+    );
+  }
+  return <SectionsMenu sections={sections} />;
+}
+
+function SectionsMenu({ sections }: { sections: Section[] }) {
   const tocEntries = useMemo(() => buildTocEntries(sections), [sections]);
   const tocIdSet = useMemo(() => new Set(tocEntries.map((entry) => entry.id)), [tocEntries]);
 

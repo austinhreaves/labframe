@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 
-import type { Section, TableRow } from '@/domain/schema';
+import type { Section } from '@/domain/schema';
 import { buildTocEntries } from '@/domain/tocEntries';
 import { Progress } from '@/ui/primitives/Progress';
+import { isCountedSection, sectionHasText } from '@/state/answered';
 import { useLabStore, type LabStoreState } from '@/state/labStore';
 
 type Props = {
@@ -13,42 +14,6 @@ type SectionGroup = {
   /** Sections within this TOC entry's range that have a fillable input. */
   fillables: Section[];
 };
-
-function hasText(value: string | undefined): boolean {
-  return Boolean(value && value.trim().length > 0);
-}
-
-function isCountedSection(section: Section): boolean {
-  return section.kind !== 'instructions' && section.kind !== 'plot';
-}
-
-function rowHasText(row: TableRow | undefined): boolean {
-  if (!row) {
-    return false;
-  }
-  return Object.values(row).some((cell) => hasText(cell.text));
-}
-
-function sectionHasText(section: Section, state: LabStoreState): boolean {
-  if (
-    section.kind === 'objective' ||
-    section.kind === 'measurement' ||
-    section.kind === 'calculation' ||
-    section.kind === 'concept'
-  ) {
-    return hasText(state.fields[section.fieldId]?.text);
-  }
-  if (section.kind === 'multiMeasurement') {
-    return section.rows.some((row) => hasText(state.fields[row.id]?.text));
-  }
-  if (section.kind === 'image') {
-    return hasText(state.fields[section.captionFieldId]?.text);
-  }
-  if (section.kind === 'dataTable') {
-    return (state.tables[section.tableId] ?? []).some((row) => rowHasText(row));
-  }
-  return false;
-}
 
 /**
  * Group fillable subsections under each TOC entry. The total count is therefore

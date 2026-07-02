@@ -1,6 +1,7 @@
 import { lazy } from 'react';
 import type { MeasurementSection } from '@/domain/schema';
 import { useLabStore } from '@/state/labStore';
+import { AnswerCard } from '@/ui/sections/AnswerCard';
 import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
 import { Field } from '@/ui/primitives/Field';
 const MarkdownInline = lazy(() => import('@/ui/primitives/MarkdownInline'));
@@ -23,13 +24,15 @@ export function MeasurementSectionView({ section }: Props) {
   return (
     <section className="section">
       <SectionPointsCaption points={section.points} />
-      <Field
-        id={section.fieldId}
-        label={label}
-        labelDisplay={labelDisplay}
-        value={value}
-        onChange={(next) => setField(section.fieldId, next)}
-      />
+      <AnswerCard hideEyebrow>
+        <Field
+          id={section.fieldId}
+          label={label}
+          labelDisplay={labelDisplay}
+          value={value}
+          onChange={(next) => setField(section.fieldId, next)}
+        />
+      </AnswerCard>
     </section>
   );
 }

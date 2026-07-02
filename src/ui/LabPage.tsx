@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { Info } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { ArrowLeftRight, Info } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
-import type { Course, Lab, Section } from '@/domain/schema';
+import type { Course, Lab, Part, Section } from '@/domain/schema';
 import {
   clearParentMessagingContext,
   configureParentMessaging,
@@ -18,23 +18,32 @@ import {
   configureTelemetry,
   reportError,
 } from '@/services/telemetry/errorReporter';
+import { isCountedSection, sectionHasText } from '@/state/answered';
 import { useLabStore, type RecoverableAttachment } from '@/state/labStore';
+import { saveReport } from '@/state/reports';
 import { AccessibleDialog } from '@/ui/AccessibleDialog';
+import { downloadBlob } from '@/ui/downloadBlob';
 import { IntegrityAgreement } from '@/ui/IntegrityAgreement';
 import { ProgressBar } from '@/ui/ProgressBar';
 import { StudentInfoPreflightDialog } from '@/ui/StudentInfoPreflightDialog';
-import { LayoutToggle } from '@/ui/layout/LayoutToggle';
+import { OverflowMenu } from '@/ui/layout/OverflowMenu';
+import { PartProgressSegments } from '@/ui/layout/PartProgressSegments';
 import { SplitHandle } from '@/ui/layout/SplitHandle';
 import { TableOfContents } from '@/ui/layout/TableOfContents';
+import { TextSizeToggle } from '@/ui/layout/TextSizeToggle';
+import { ThemePill } from '@/ui/layout/ThemePill';
 import { Icon } from '@/ui/primitives/Icon';
 import { Select } from '@/ui/primitives/Select';
 import { SectionRenderer } from '@/ui/sections/SectionRenderer';
 import {
-  applyThemePreference,
-  getStoredThemePreference,
-  storeThemePreference,
-  type ThemePreference,
-} from '@/ui/theme';
+  getStoredLayout,
+  getStoredTextSize,
+  storeLayout,
+  storeTextSize,
+  textSizeZoom,
+  type LayoutMode,
+  type TextSize,
+} from '@/ui/viewSettings';
 import {
   buildPhaseBSteps,
   depositAfterTour,
@@ -83,9 +92,19 @@ type SimulationFrameProps = {
   title: string;
   url: string;
   allow?: string;
+  /** Keep-alive (Pass 5): hide a non-active sim with display:none rather than
+   *  unmounting, so its iframe runtime state (the wired circuit, the built-up
+   *  charge) survives part navigation. Never re-key on hide; that remounts. */
+  hidden?: boolean;
 };
 
-function StableSimulationFrame({ simulationId, title, url, allow }: SimulationFrameProps) {
+function StableSimulationFrame({
+  simulationId,
+  title,
+  url,
+  allow,
+  hidden = false,
+}: SimulationFrameProps) {
   const mountId = useRef(`${simulationId}-${Math.random().toString(36).slice(2, 10)}`);
   return (
     <iframe
@@ -95,7 +114,50 @@ function StableSimulationFrame({ simulationId, title, url, allow }: SimulationFr
       loading="lazy"
       className="simulation-frame"
       data-mount-id={mountId.current}
+      style={hidden ? { display: 'none' } : undefined}
     />
+  );
+}
+
+type PartNavProps = {
+  parts: Part[];
+  activePart: Part;
+  onNavigate: (partKey: string) => void;
+};
+
+/**
+ * Pass 6 (functional form): the bottom, non-sticky part nav at the end of a
+ * part's scroll. Last part shows "Finish & review" into the review step rather
+ * than advancing. The slimmer top arrows and the sticky header land in Pass 3.
+ */
+function PartNav({ parts, activePart, onNavigate }: PartNavProps) {
+  const index = parts.findIndex((part) => part.key === activePart.key);
+  const prev = index > 0 ? parts[index - 1] : undefined;
+  const next = index < parts.length - 1 ? parts[index + 1] : undefined;
+  return (
+    <nav className="part-nav" aria-label="Part navigation">
+      <div className="part-nav-side">
+        {prev ? (
+          <button type="button" onClick={() => onNavigate(prev.key)}>
+            {'‹'} Part {prev.key}
+          </button>
+        ) : null}
+      </div>
+      <span className="part-nav-status">
+        Part {activePart.key} - {index + 1} of {parts.length}
+      </span>
+      <div className="part-nav-side part-nav-side-end">
+        {next ? (
+          <button type="button" onClick={() => onNavigate(next.key)}>
+            Next: Part {next.key} {'›'}
+          </button>
+        ) : (
+          <button type="button" className="part-nav-finish" onClick={() => onNavigate('review')}>
+            Discussion {'›'}
+          </button>
+        )}
+      </div>
+    </nav>
   );
 }
 
@@ -138,11 +200,34 @@ export function LabPage({ course, lab }: Props) {
   const [isPreflightDialogOpen, setIsPreflightDialogOpen] = useState(false);
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
   const [isStorageInfoDialogOpen, setIsStorageInfoDialogOpen] = useState(false);
-  const [themePreference, setThemePreference] = useState<ThemePreference>('system');
+  const [textSize, setTextSize] = useState<TextSize>(() => getStoredTextSize());
   const [isStorageBannerDismissed, setIsStorageBannerDismissed] = useState<boolean>(
     () => safeStorageGet(STORAGE_NOTE_DISMISSED_KEY) === '1',
   );
   const exportPdfButtonRef = useRef<HTMLButtonElement | null>(null);
+  const labHeaderRef = useRef<HTMLElement | null>(null);
+
+  // Keep --lab-header-offset equal to the toolbar's real height so the sticky
+  // section header (Pass 3) and the sticky simulation pane sit flush below it at
+  // any width, instead of guessing with a fixed value that gaps or underlaps as
+  // the one-row toolbar wraps.
+  useEffect(() => {
+    const header = labHeaderRef.current;
+    if (!header || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    const apply = () => {
+      const height = Math.ceil(header.getBoundingClientRect().height);
+      document.documentElement.style.setProperty('--lab-header-offset', `${height}px`);
+    };
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(header);
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty('--lab-header-offset');
+    };
+  }, []);
 
   useEffect(() => {
     void initLab(course.id, lab.id, lab);
@@ -236,15 +321,8 @@ export function LabPage({ course, lab }: Props) {
   };
 
   useEffect(() => {
-    const nextTheme = getStoredThemePreference();
-    setThemePreference(nextTheme);
-    applyThemePreference(nextTheme);
-  }, []);
-
-  useEffect(() => {
-    applyThemePreference(themePreference);
-    storeThemePreference(themePreference);
-  }, [themePreference]);
+    storeTextSize(textSize);
+  }, [textSize]);
 
   useEffect(() => {
     configureTelemetry({
@@ -279,11 +357,19 @@ export function LabPage({ course, lab }: Props) {
     void listRecoverableAttachments().then(setRecoverable);
   }, [listRecoverableAttachments, status.lastError]);
 
-  const savedLabel = useMemo(() => {
+  // Short form in the toolbar ("Saved 22:47"); the full sentence is the hover
+  // title (Pass 4), so the status stays compact in the single row.
+  const { savedLabel, savedTitle } = useMemo(() => {
     if (!status.lastSavedAt) {
-      return 'Not saved yet in this browser';
+      const full = 'Not saved yet in this browser';
+      return { savedLabel: 'Not saved yet', savedTitle: full };
     }
-    return `Saved ${new Date(status.lastSavedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })} in this browser`;
+    const time = new Date(status.lastSavedAt).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+    return { savedLabel: `Saved ${time}`, savedTitle: `Saved ${time} in this browser` };
   }, [status.lastSavedAt]);
 
   const commitStudentName = () => {
@@ -314,15 +400,6 @@ export function LabPage({ course, lab }: Props) {
       return `${(bytes / 1024).toFixed(1)} KB`;
     }
     return `${bytes} B`;
-  };
-
-  const downloadBlob = (blob: Blob, filename: string) => {
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = filename;
-    anchor.click();
-    URL.revokeObjectURL(url);
   };
 
   const exportPdf = async () => {
@@ -392,6 +469,24 @@ export function LabPage({ course, lab }: Props) {
       downloadBlob(sealed, filename);
       setSubmitted(true);
       postSubmitAnswersToParent();
+      // Persist the sealed report so the course page's Completed section can
+      // re-download the exact original. Awaited so a student who navigates away
+      // immediately still has it saved; the download already happened above, so
+      // a storage failure (e.g. quota) is swallowed and never undoes the export.
+      await saveReport(
+        {
+          courseId: course.id,
+          labId: lab.id,
+          studentName: studentNameForPdf,
+          submittedAt: signing.signedAt,
+          signature: signing.signature,
+          filename,
+          bytes: sealed.size,
+        },
+        sealed,
+      ).catch((error) => {
+        void reportError({ error, sectionId: 'report-persist', labId: lab.id });
+      });
     } catch (error) {
       void reportError({ error, sectionId: 'pdf-export', labId: lab.id });
       const message =
@@ -451,8 +546,15 @@ export function LabPage({ course, lab }: Props) {
     exportPdfButtonRef.current?.focus();
   };
 
-  const layout = searchParams.get('layout') === 'tabs' ? 'tabs' : 'side';
-  const tab = searchParams.get('tab') === 'simulation' ? 'simulation' : 'worksheet';
+  // URL param wins (shareable/deep-linkable); the persisted preference is the
+  // fallback when no param is present (Pass 7).
+  const layoutParam = searchParams.get('layout');
+  const layout: LayoutMode =
+    layoutParam === 'series'
+      ? 'series'
+      : layoutParam === 'parallel'
+        ? 'parallel'
+        : (getStoredLayout() ?? 'parallel');
   const side = searchParams.get('side') === 'right' ? 'right' : 'left';
 
   useEffect(() => {
@@ -461,71 +563,294 @@ export function LabPage({ course, lab }: Props) {
     }
   }, [setSimSide, side, simSide]);
 
+  // Pass 5: the optional parts grouping. A parts lab renders one part at a time
+  // (sim bound to the part); `?part=review` is the terminal review step. Labs
+  // without parts keep the single-scroll behavior unchanged.
+  const parts = lab.parts;
+  const hasParts = Boolean(parts && parts.length > 0);
+  const partParam = searchParams.get('part');
+  const isReview = hasParts && partParam === 'review';
+  const activePart =
+    hasParts && !isReview
+      ? (parts!.find((part) => part.key === partParam) ?? parts![0])
+      : undefined;
+  const reviewTailStart = parts ? parts[parts.length - 1]!.sectionRange[1] : lab.sections.length;
+
   const simulationEntries = useMemo(() => Object.entries(lab.simulations), [lab.simulations]);
-  const [activeSimulationId, setActiveSimulationId] = useState<string>(
+
+  // Picker state is only used by labs without parts (parts bind the sim to the
+  // active part, so the picker is removed for them).
+  const [pickedSimulationId, setPickedSimulationId] = useState<string>(
     () => simulationEntries[0]?.[0] ?? '',
   );
-
   useEffect(() => {
-    if (!simulationEntries.some(([id]) => id === activeSimulationId)) {
-      setActiveSimulationId(simulationEntries[0]?.[0] ?? '');
+    if (!hasParts && !simulationEntries.some(([id]) => id === pickedSimulationId)) {
+      setPickedSimulationId(simulationEntries[0]?.[0] ?? '');
     }
-  }, [simulationEntries, activeSimulationId]);
+  }, [hasParts, simulationEntries, pickedSimulationId]);
 
-  const activeSimulation = activeSimulationId ? lab.simulations[activeSimulationId] : undefined;
+  // The effective active simulation: bound to the active part in a parts lab,
+  // otherwise the picked sim. During review the sim pane is hidden, so fall back
+  // to the first part's sim purely to keep the keep-alive set coherent.
+  const activeSimulationId = hasParts
+    ? (activePart?.simulationId ?? parts![0]!.simulationId)
+    : pickedSimulationId;
 
-  const simulationPane = (
+  // Keep-alive (Pass 5): the set of sim ids mounted so far (insertion order =
+  // navigation order). Once a sim is mounted it stays in the tree for the
+  // session, toggled with display:none, so its iframe runtime state survives
+  // part navigation. Every id here is a part's simulationId, so it always
+  // resolves in lab.simulations.
+  const [activatedSimIds, setActivatedSimIds] = useState<Set<string>>(
+    () => new Set(hasParts ? [activeSimulationId] : []),
+  );
+  useEffect(() => {
+    if (!hasParts) {
+      return;
+    }
+    setActivatedSimIds((prev) => {
+      if (prev.has(activeSimulationId)) {
+        return prev;
+      }
+      const next = new Set(prev);
+      next.add(activeSimulationId);
+      return next;
+    });
+  }, [hasParts, activeSimulationId]);
+
+  const goToPart = (partKey: string) => {
+    const updated = new URLSearchParams(searchParams);
+    updated.set('part', partKey);
+    setSearchParams(updated);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  };
+
+  // On entering review, auto-place the student at the review tail (the sim-less
+  // discussion / conclusion) rather than the top of the long page; if there is
+  // no tail, drop them at the integrity / export block. The worksheet renders
+  // lazy (Suspense) section bodies whose heights settle after the first paint,
+  // so re-run the scroll a few times until the target position stabilizes
+  // rather than scrolling once against a still-growing layout.
+  useEffect(() => {
+    if (!isReview || typeof document === 'undefined') {
+      return;
+    }
+    const hasTail = reviewTailStart < lab.sections.length;
+    const scrollToTarget = () => {
+      const target = hasTail ? document.getElementById(`section-${reviewTailStart}`) : null;
+      if (target) {
+        target.scrollIntoView({ behavior: 'auto', block: 'start' });
+      } else {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'auto' });
+      }
+    };
+    scrollToTarget();
+    const timers = [80, 250, 600].map((delay) => window.setTimeout(scrollToTarget, delay));
+    // Stop re-pinning the moment the student takes over scrolling, so the retry
+    // volley (which fights lazy layout shift) never yanks them back after they
+    // have deliberately scrolled elsewhere.
+    const cancel = () => {
+      timers.forEach((id) => window.clearTimeout(id));
+      window.removeEventListener('wheel', cancel);
+      window.removeEventListener('touchstart', cancel);
+      window.removeEventListener('keydown', cancel);
+    };
+    window.addEventListener('wheel', cancel, { passive: true });
+    window.addEventListener('touchstart', cancel, { passive: true });
+    window.addEventListener('keydown', cancel);
+    return () => {
+      timers.forEach((id) => window.clearTimeout(id));
+      window.removeEventListener('wheel', cancel);
+      window.removeEventListener('touchstart', cancel);
+      window.removeEventListener('keydown', cancel);
+    };
+  }, [isReview, reviewTailStart, lab.sections.length]);
+
+  // Pass 3: the active part's answerable sections (excluding instructions / plot,
+  // mirroring ProgressBar's counting) and how many are answered, for the slim
+  // section header's "n/m answered" count.
+  const partAnswerable = activePart
+    ? lab.sections
+        .slice(activePart.sectionRange[0], activePart.sectionRange[1])
+        .filter(isCountedSection)
+    : [];
+  const partAnsweredCount = useLabStore(
+    (state) => partAnswerable.filter((section) => sectionHasText(section, state)).length,
+  );
+
+  const activePartIndex =
+    hasParts && activePart ? parts!.findIndex((part) => part.key === activePart.key) : -1;
+
+  const pickedSimulation = lab.simulations[pickedSimulationId];
+
+  const simulationPane = hasParts ? (
+    <div className="simulation-pane">
+      {[...activatedSimIds].map((id) => {
+        const sim = lab.simulations[id];
+        if (!sim) {
+          return null;
+        }
+        return (
+          <StableSimulationFrame
+            key={id}
+            simulationId={id}
+            title={sim.title}
+            url={sim.url}
+            hidden={id !== activeSimulationId}
+            {...(sim.allow ? { allow: sim.allow } : {})}
+          />
+        );
+      })}
+    </div>
+  ) : (
     <div className="simulation-pane">
       {simulationEntries.length > 1 ? (
         <label className="simulation-picker">
           Simulation
           <Select
-            value={activeSimulationId}
-            onChange={setActiveSimulationId}
+            value={pickedSimulationId}
+            onChange={setPickedSimulationId}
             options={simulationEntries.map(([id, def]) => ({ value: id, label: def.title }))}
             size="md"
           />
         </label>
       ) : null}
-      {activeSimulation ? (
+      {pickedSimulation ? (
         <StableSimulationFrame
-          key={activeSimulationId}
-          simulationId={activeSimulationId}
-          title={activeSimulation.title}
-          url={activeSimulation.url}
-          {...(activeSimulation.allow ? { allow: activeSimulation.allow } : {})}
+          key={pickedSimulationId}
+          simulationId={pickedSimulationId}
+          title={pickedSimulation.title}
+          url={pickedSimulation.url}
+          {...(pickedSimulation.allow ? { allow: pickedSimulation.allow } : {})}
         />
       ) : null}
     </div>
   );
 
-  const worksheet = (
-    <div className="worksheet-pane">
-      <h1>{lab.title}</h1>
-      {lab.sections.map((section, index) => (
-        <div
-          key={`${section.kind}-${index}`}
-          id={`section-${index}`}
-          className="worksheet-section-anchor"
-          data-field-id={sectionFieldId(section)}
-        >
-          <SectionRenderer section={section} />
-        </div>
-      ))}
-      <IntegrityAgreement
-        ref={exportPdfButtonRef}
-        lab={lab}
-        isExporting={isExportingPdf}
-        onExport={() => void exportPdf()}
-      />
+  const renderSectionAt = (section: Section, index: number) => (
+    <div
+      key={`${section.kind}-${index}`}
+      id={`section-${index}`}
+      className="worksheet-section-anchor"
+      data-field-id={sectionFieldId(section)}
+    >
+      <SectionRenderer section={section} />
     </div>
   );
 
+  const worksheetBody =
+    hasParts && !isReview && activePart
+      ? lab.sections
+          .slice(activePart.sectionRange[0], activePart.sectionRange[1])
+          .map((section, i) => renderSectionAt(section, activePart.sectionRange[0] + i))
+      : lab.sections.map((section, index) => renderSectionAt(section, index));
+
+  // The integrity accept-gate + export live in the single scroll for non-parts
+  // labs and in the review step for parts labs (never inside an individual part).
+  const showSubmission = !hasParts || isReview;
+  const lastPart = hasParts ? parts![parts!.length - 1]! : undefined;
+
+  // Pass 3 + 6 (revised): the active-part context now lives in the toolbar's
+  // center gap instead of a separate slim row. Arrows move between parts and dim
+  // at the first / last part (Discussion is reached from the bottom nav or the
+  // Sections menu, not the top arrow).
+  let partToolbar: ReactNode = null;
+  if (hasParts && activePart) {
+    const simTitle = lab.simulations[activePart.simulationId]?.title ?? activePart.title;
+    partToolbar = (
+      <div className="lab-toolbar-part">
+        <span className="lab-toolbar-part-label">
+          Part {activePart.key} - {simTitle}
+        </span>
+        <span className="lab-toolbar-part-count" aria-live="polite">
+          {partAnsweredCount}/{partAnswerable.length} answered
+        </span>
+        <div className="lab-part-arrows">
+          <button
+            type="button"
+            aria-label="Previous part"
+            disabled={activePartIndex <= 0}
+            onClick={() => goToPart(parts![activePartIndex - 1]!.key)}
+          >
+            {'‹'}
+          </button>
+          <button
+            type="button"
+            aria-label="Next part"
+            disabled={activePartIndex >= parts!.length - 1}
+            onClick={() => goToPart(parts![activePartIndex + 1]!.key)}
+          >
+            {'›'}
+          </button>
+        </div>
+      </div>
+    );
+  } else if (isReview && lastPart) {
+    partToolbar = (
+      <div className="lab-toolbar-part">
+        <span className="lab-toolbar-part-label">Discussion</span>
+        <div className="lab-part-arrows">
+          <button
+            type="button"
+            aria-label="Back to last part"
+            onClick={() => goToPart(lastPart.key)}
+          >
+            {'‹'}
+          </button>
+          <button type="button" aria-label="Next part" disabled onClick={() => undefined}>
+            {'›'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const worksheet = (
+    <div className="worksheet-pane">
+      {/* Text-size zoom is scoped to the worksheet content wrapper only; it must
+          never sit on an ancestor of the simulation iframe (iframe-stability
+          invariant). */}
+      <div className="worksheet-zoom" style={{ zoom: textSizeZoom(textSize) }}>
+        {/* In a parts lab the toolbar already shows the active part, so the
+            visible h1 is redundant; keep it for screen readers (heading landmark)
+            but hide it visually. Non-parts labs keep the visible h1. */}
+        <h1 className={hasParts ? 'visually-hidden' : undefined}>{lab.title}</h1>
+        {isReview && lastPart ? (
+          <div className="review-banner">
+            <button type="button" onClick={() => goToPart(lastPart.key)}>
+              {'‹'} Back to Part {lastPart.key}
+            </button>
+            <p>Discussion: check your work above, answer the questions below, then submit.</p>
+          </div>
+        ) : null}
+        {worksheetBody}
+        {hasParts && !isReview && activePart ? (
+          <PartNav parts={parts!} activePart={activePart} onNavigate={goToPart} />
+        ) : null}
+        {showSubmission ? (
+          <IntegrityAgreement
+            ref={exportPdfButtonRef}
+            lab={lab}
+            isExporting={isExportingPdf}
+            onExport={() => void exportPdf()}
+          />
+        ) : null}
+      </div>
+    </div>
+  );
+
+  // Review and Series both render as a single column. Review additionally hides
+  // the (still-mounted) simulation pane so each sim's iframe state survives.
+  const singleColumn = isReview || layout === 'series';
+  const simHidden = isReview;
+
   return (
     <main className="lab-page">
-      <header className="lab-header">
-        <div className="lab-header-top">
-          <div className="lab-header-left">
+      <header className="lab-header" ref={labHeaderRef}>
+        <div className="lab-toolbar">
+          <div className="lab-toolbar-context">
             {/* Track O: a pinned student returns to their scoped course, not the
                 full /labs staff index. Falls back to /labs when unpinned. */}
             <Link to={pinnedCourseId ? `/c/${pinnedCourseId}` : '/labs'} className="lab-wordmark">
@@ -534,56 +859,31 @@ export function LabPage({ course, lab }: Props) {
             <Link to={`/c/${course.id}`} className="lab-back-link">
               Back to {course.title}
             </Link>
-          </div>
-          <div className="lab-header-right">
-            <div className="layout-controls">
-              <label className="lab-theme-select">
-                Theme
-                <Select
-                  value={themePreference}
-                  onChange={(next) => setThemePreference(next as ThemePreference)}
-                  options={[
-                    { value: 'system', label: 'System' },
-                    { value: 'light', label: 'Light' },
-                    { value: 'dark', label: 'Dark' },
-                  ]}
-                  size="sm"
-                />
-              </label>
-              <button type="button" onClick={() => setIsAboutDialogOpen(true)}>
-                About
-              </button>
-              <button type="button" className="lab-tour-button" onClick={startRefresherTour}>
-                Take the tour
-              </button>
-              <LayoutToggle
-                layout={layout}
-                onChange={(next) => {
-                  const updated = new URLSearchParams(searchParams);
-                  updated.set('layout', next);
-                  if (next === 'tabs' && !updated.get('tab')) {
-                    updated.set('tab', 'worksheet');
+            <span className="lab-toolbar-divider" aria-hidden="true" />
+            <TableOfContents
+              sections={lab.sections}
+              {...(hasParts
+                ? {
+                    parts: parts!,
+                    activePartKey: isReview ? 'review' : (activePart?.key ?? null),
+                    onNavigatePart: goToPart,
                   }
-                  setSearchParams(updated);
-                }}
+                : {})}
+            />
+            {hasParts ? (
+              <PartProgressSegments
+                parts={parts!}
+                sections={lab.sections}
+                reviewTailStart={reviewTailStart}
+                activeKey={isReview ? 'review' : (activePart?.key ?? null)}
+                onNavigate={goToPart}
               />
-              <button
-                type="button"
-                onClick={() => {
-                  const updated = new URLSearchParams(searchParams);
-                  updated.set('side', simSide === 'left' ? 'right' : 'left');
-                  setSearchParams(updated);
-                }}
-              >
-                Swap sides
-              </button>
-            </div>
+            ) : (
+              <ProgressBar sections={lab.sections} />
+            )}
+            {partToolbar}
           </div>
-        </div>
-        <div className="lab-header-bottom">
-          <div className="lab-header-bottom-main">
-            <TableOfContents sections={lab.sections} />
-            <ProgressBar sections={lab.sections} />
+          <div className="lab-toolbar-controls">
             <label className="lab-student-name">
               Student
               <input
@@ -614,7 +914,7 @@ export function LabPage({ course, lab }: Props) {
                 aria-label="TA name(s)"
               />
             </label>
-            <p className="lab-save-status" aria-live="polite">
+            <p className="lab-save-status" aria-live="polite" title={savedTitle}>
               {savedLabel}
               <button
                 type="button"
@@ -625,21 +925,58 @@ export function LabPage({ course, lab }: Props) {
                 <Icon icon={Info} size={14} />
               </button>
             </p>
-          </div>
-          <div className="lab-header-actions">
-            <button
-              type="button"
-              onClick={() => {
-                if (window.confirm('Clear all saved work for this lab and student?')) {
-                  void clearCurrentLab();
-                }
-              }}
-            >
-              Start fresh
-            </button>
+            <span className="lab-toolbar-divider" aria-hidden="true" />
+            <ThemePill />
+            <TextSizeToggle value={textSize} onChange={setTextSize} />
+            {/* Swap only makes sense in Parallel (Series stacks the sim on top). */}
+            {layout === 'parallel' && !isReview ? (
+              <button
+                type="button"
+                className="lab-swap-button"
+                aria-label="Swap sides"
+                onClick={() => {
+                  const updated = new URLSearchParams(searchParams);
+                  updated.set('side', simSide === 'left' ? 'right' : 'left');
+                  setSearchParams(updated);
+                }}
+              >
+                <Icon icon={ArrowLeftRight} size={18} />
+              </button>
+            ) : null}
+            <span className="lab-toolbar-divider" aria-hidden="true" />
             <button type="button" onClick={() => void exportDraftPdf()} disabled={isExportingDraft}>
               {isExportingDraft ? 'Saving draft...' : 'Save draft'}
             </button>
+            <OverflowMenu
+              radioGroup={{
+                label: 'View',
+                value: layout,
+                options: [
+                  { value: 'parallel', label: 'Parallel' },
+                  { value: 'series', label: 'Series' },
+                ],
+                onSelect: (value) => {
+                  const mode: LayoutMode = value === 'series' ? 'series' : 'parallel';
+                  storeLayout(mode);
+                  const updated = new URLSearchParams(searchParams);
+                  updated.set('layout', mode);
+                  updated.delete('tab');
+                  setSearchParams(updated);
+                },
+              }}
+              items={[
+                {
+                  label: 'Start fresh',
+                  onSelect: () => {
+                    if (window.confirm('Clear all saved work for this lab and student?')) {
+                      void clearCurrentLab();
+                    }
+                  },
+                },
+                { label: 'About', onSelect: () => setIsAboutDialogOpen(true) },
+                { label: 'Take the tour', onSelect: startRefresherTour },
+              ]}
+            />
           </div>
         </div>
       </header>
@@ -753,68 +1090,34 @@ export function LabPage({ course, lab }: Props) {
           </a>
         </p>
       </AccessibleDialog>
-      <div className={layout === 'tabs' ? 'lab-shell lab-shell-tabs' : 'lab-shell'}>
+      <div className="lab-shell">
         <div
           className={
-            layout === 'tabs'
-              ? 'lab-layout lab-layout-tabs'
-              : `lab-layout lab-layout-side ${simSide === 'right' ? 'lab-layout-sim-right' : 'lab-layout-sim-left'}`
+            singleColumn
+              ? 'lab-layout lab-layout-series'
+              : `lab-layout lab-layout-parallel ${simSide === 'right' ? 'lab-layout-sim-right' : 'lab-layout-sim-left'}`
           }
           style={
-            layout === 'side'
-              ? ({ '--split-sim': `${splitFraction * 100}%` } as CSSProperties)
-              : undefined
+            singleColumn
+              ? undefined
+              : ({ '--split-sim': `${splitFraction * 100}%` } as CSSProperties)
           }
         >
-          {layout === 'tabs' ? (
-            <div className="tabs">
-              <button
-                type="button"
-                onClick={() => {
-                  const updated = new URLSearchParams(searchParams);
-                  updated.set('layout', 'tabs');
-                  updated.set('tab', 'simulation');
-                  setSearchParams(updated);
-                }}
-                aria-pressed={tab === 'simulation'}
-              >
-                Simulation
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const updated = new URLSearchParams(searchParams);
-                  updated.set('layout', 'tabs');
-                  updated.set('tab', 'worksheet');
-                  setSearchParams(updated);
-                }}
-                aria-pressed={tab === 'worksheet'}
-              >
-                Worksheet
-              </button>
-            </div>
-          ) : null}
+          {/* The sim pane stays mounted even when hidden (review), so each
+              kept-alive iframe keeps its runtime state. */}
           <section
             className={
-              layout === 'tabs' && tab !== 'simulation'
+              simHidden
                 ? 'layout-pane layout-pane-simulation is-hidden'
                 : 'layout-pane layout-pane-simulation'
             }
           >
             {simulationPane}
           </section>
-          {layout === 'side' ? (
+          {!singleColumn ? (
             <SplitHandle splitFraction={splitFraction} onChange={setSplitFraction} />
           ) : null}
-          <section
-            className={
-              layout === 'tabs' && tab !== 'worksheet'
-                ? 'layout-pane layout-pane-worksheet is-hidden'
-                : 'layout-pane layout-pane-worksheet'
-            }
-          >
-            {worksheet}
-          </section>
+          <section className="layout-pane layout-pane-worksheet">{worksheet}</section>
         </div>
       </div>
     </main>
