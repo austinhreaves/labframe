@@ -7,7 +7,6 @@ import {
   type ResponseMode,
 } from '@/domain/calculationResponse';
 import type { CalculationSection } from '@/domain/schema';
-import { hasText } from '@/state/answered';
 import { createEmptyFieldValue, useLabStore } from '@/state/labStore';
 import { AnswerCard } from '@/ui/sections/AnswerCard';
 import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
@@ -152,7 +151,7 @@ export function CalculationSectionView({ section }: Props) {
     <section className="section">
       <SectionPointsCaption points={section.points} />
       <MarkdownBlock markdown={section.prompt} />
-      <AnswerCard answered={hasText(value?.text)}>
+      <AnswerCard>
         {showLatexHelp ? (
           <div className="latex-help">
             <button

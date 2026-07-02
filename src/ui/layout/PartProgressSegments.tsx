@@ -66,7 +66,7 @@ export function PartProgressSegments({
     state: states[index] ?? 'none',
   }));
   if (hasReviewTail) {
-    segments.push({ key: 'review', label: 'Review', state: states[parts.length] ?? 'none' });
+    segments.push({ key: 'review', label: 'Discussion', state: states[parts.length] ?? 'none' });
   }
 
   return (
