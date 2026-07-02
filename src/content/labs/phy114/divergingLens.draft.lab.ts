@@ -42,6 +42,22 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'instructions',
+      tocLabel: 'Background: The Diverging Lens',
+      pdfHidden: true,
+      html: `## Background: The Diverging Lens
+
+A **diverging (concave) lens** is thinner in the middle than at the edges, so it spreads incoming parallel rays apart instead of bringing them together. Those rays leave the lens as if they came from a single point on the *object* side, a **virtual focal point**. By convention this makes the focal length of a diverging lens **negative** ($f < 0$).
+
+Unlike a converging lens, a diverging lens forms the same kind of image for a real object at *any* distance:
+
+- **Same side as the object.** The rays never actually cross; only their backward extensions meet, on the object's side. The image is always **virtual** and never switches sides.
+- **Always upright**, because the rays do not cross.
+- **Always smaller** than the object, and located between the lens and the focal point.
+
+Moving the object changes the image only slightly (it stays small and upright). Because the image is virtual it cannot be projected on a screen, but looking through the lens the eye sees the object shrunk and upright.`,
+    },
+    {
+      kind: 'instructions',
       html: `### Part 2A: Diverging/Concave Lens (Qualitative)
 
 
@@ -114,6 +130,26 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'instructions',
+      tocLabel: 'Background: Thin-Lens Equation with Diverging-Lens Signs',
+      pdfHidden: true,
+      html: `## Background: The Thin-Lens Equation with Diverging-Lens Signs
+
+The same **thin-lens equation** from the converging-lens lab applies here:
+
+$$\\frac{1}{f} = \\frac{1}{d_0} + \\frac{1}{d_i}$$
+
+with the same sign conventions: $d_0$ is positive for a real object, and $d_i$ is **negative** for a virtual image. A diverging lens always forms a virtual image, so $d_i$ is always negative, and $f$ comes out **negative** as a diverging lens requires. Record the image distance as a negative number, carry the sign through, and check that your computed $f$ is negative: a positive focal length for a concave lens is the sign of a dropped minus.
+
+---
+
+Magnification is found the same two ways as before:
+
+$$M = -\\frac{d_i}{d_0} = \\frac{h_i}{h_0}$$
+
+Since $d_i$ is negative, $M = -d_i/d_0$ is **positive** (upright) and between 0 and 1 (reduced), matching what you observed. The two expressions must agree, so computing $M$ both ways checks your measurements.`,
+    },
+    {
+      kind: 'instructions',
       html: `### Part 2B: Diverging/Concave Lens (Quantitative)
 
 
@@ -122,8 +158,8 @@ Your report includes a process record. You may use any tools you wish, but paste
 
 
 1. At the top right, grab the horizontal and vertical rulers from the toolbar.
-2. With the same lens, RoC, n, and D parameters from Part 2A, use the horizontal ruler to place the object at the object distance d<sub>₀</sub> (see Part 2B Parameters). You may enable rays for a visual aide if you wish.
-3. Use the rulers to measure the image distance d<sub>ᵢ</sub>, object height h<sub>₀</sub>, and image height h<sub>ᵢ</sub> and record your measurements in the Part 2B data table. Don't forget: the virtual image has a negative image distance.
+2. With the same lens, RoC, n, and D parameters from Part 2A, use the horizontal ruler to place the object at the object distance $d_0$ (see Part 2B Parameters). You may enable rays for a visual aide if you wish.
+3. Use the rulers to measure the image distance $d_i$, object height $h_0$, and image height $h_i$ and record your measurements in the Part 2B data table. Don't forget: the virtual image has a negative image distance.
 4. Take a screenshot of the simulation with all relevant labels and values clearly shown and attach it below.`,
     },
     {
@@ -139,7 +175,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     {
       kind: 'image',
       imageId: 'part2B_screenshot',
-      captionFieldId: 'part2B_screenshot',
+      captionFieldId: 'part2B_caption',
       maxMB: 5,
       points: 1,
     },
@@ -148,7 +184,7 @@ Your report includes a process record. You may use any tools you wish, but paste
       responseModes: ['text', 'draw', 'image'],
       fieldId: 'part2B_focalLengthCalculation',
       prompt:
-        'Calculate the experimental focal length using 1/f = 1/d₀ + 1/dᵢ. Show work and units.',
+        'Calculate the experimental focal length using $1/f = 1/d_0 + 1/d_i$. Show work and units.',
       equationEditor: true,
       points: 1.25,
     },
@@ -157,9 +193,23 @@ Your report includes a process record. You may use any tools you wish, but paste
       responseModes: ['text', 'draw', 'image'],
       fieldId: 'part2B_magnificationCalculation',
       prompt:
-        'Compute the magnification two ways: M = -dᵢ/d₀ and M = hᵢ/h₀. If these magnifications do not agree, please reach out for help before moving on.',
+        'Compute the magnification two ways: $M = -d_i/d_0$ and $M = h_i/h_0$. If these magnifications do not agree, please reach out for help before moving on.',
       equationEditor: true,
       points: 1.25,
+    },
+    {
+      kind: 'instructions',
+      tocLabel: 'Background: Many, Principal, and Marginal Rays',
+      pdfHidden: true,
+      html: `## Background: Many, Principal, and Marginal Rays
+
+Light leaves each point of the object in every direction; a ray diagram is a choice of which paths to draw.
+
+- **Many rays** shows a fan of paths, a reminder that the image is formed by countless rays, not just a chosen few.
+- **Principal rays** keeps the three rays whose paths are known by rule: one through the center of the lens (undeflected), one arriving parallel to the axis and leaving through a focal point, and one aimed at a focal point that leaves parallel to the axis. Any two of them already fix the image, which is why hand-drawn diagrams use these.
+- **Marginal rays** uses the center ray plus the two that just graze the top and bottom edges of the lens, showing how the finite lens size bounds the light that forms the image.
+
+The simulation draws a two-dimensional slice, so it shows three principal or three marginal rays; a real lens has a full cone of them around the optical axis.`,
     },
     {
       kind: 'instructions',
@@ -205,10 +255,29 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'instructions',
+      tocLabel: 'Background: The Lens-Maker Equation',
+      pdfHidden: true,
+      html: `## Background: The Lens-Maker Equation
+
+The focal length of a thin lens is set by its material and the curvature of its two surfaces. For a lens of index of refraction $n$ in air,
+
+$$\\frac{1}{f} = (n - 1)\\left(\\frac{1}{R_1} - \\frac{1}{R_2}\\right)$$
+
+where $R_1$ and $R_2$ are the radii of curvature of the first and second surfaces (in the order the light meets them). Each radius is positive when its center of curvature lies on the outgoing side of the surface and negative when it lies on the incoming side.
+
+For the symmetric lenses in this simulation, both surfaces share one radius-of-curvature magnitude $R$, and the signs give a simple pair of results:
+
+- **Symmetric convex (converging):** $f = \\frac{R}{2(n - 1)}$, a positive focal length.
+- **Symmetric concave (diverging):** $f = -\\frac{R}{2(n - 1)}$, a negative focal length.
+
+Compare each theoretical $f$ to your experimental value with a percent error.`,
+    },
+    {
+      kind: 'instructions',
       html: `### Part 4A (Optional Extra Credit, up to +3 pts): Lens-Maker Equation and Theoretical Focal Length
 
 
-**Using the Lens-Maker Equation from the lab manual:**`,
+**Using the Lens-Maker Equation from the background above:**`,
     },
     {
       kind: 'calculation',
@@ -239,7 +308,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'instructions',
-      html: '## DISCUSSION & CONCLUSION',
+      html: '## Discussion and Conclusion',
     },
     {
       kind: 'concept',

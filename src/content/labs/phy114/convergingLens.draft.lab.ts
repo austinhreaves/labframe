@@ -41,6 +41,28 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'instructions',
+      tocLabel: 'Background: Lenses, Focal Points, and Images',
+      pdfHidden: true,
+      html: `## Background: Lenses, Focal Points, and Images
+
+A **lens** uses refraction to redirect light in a controlled way. A **converging (convex) lens** is thicker in the middle than at the edges, so it bends incoming rays toward one another.
+
+Rays arriving parallel to the *optical axis* (the horizontal line through the center of the lens) are all bent through a single point on the far side, the **focal point**. The distance from the lens to that point is the **focal length** $f$. A converging lens has a focal point on each side at the same distance, and its focal length is counted as **positive**. The focal length is fixed by the lens itself; moving the object changes where the image forms, never $f$.
+
+---
+
+A lens forms an **image** where the rays from each point of the object are brought back together, or appear to come from.
+
+- A **real image** forms where the refracted rays *actually* intersect, on the opposite side of the lens from the object. Real light reaches it, so it can be projected onto a screen, and for a single lens it is inverted.
+- A **virtual image** forms where the rays only *appear* to come from: they spread apart after the lens, but their backward extensions meet at a point on the *same* side as the object. No light passes through that point, so a virtual image cannot land on a screen, though the eye can see it by looking through the lens. Virtual images are upright.
+
+The honest test for real vs. virtual is whether the rays themselves intersect at the image, or only their backward extensions do.
+
+> [!NOTE]
+> This lab treats the lens as a **thin lens**: its thickness is small compared to the object and image distances, so all the ray-bending can be treated as happening at a single plane through the lens center.`,
+    },
+    {
+      kind: 'instructions',
       html: `### Part 1A: Converging/Convex Lens (Qualitative)
 
 
@@ -121,6 +143,26 @@ Your report includes a process record. You may use any tools you wish, but paste
     },
     {
       kind: 'instructions',
+      tocLabel: 'Background: Thin-Lens Equation and Magnification',
+      pdfHidden: true,
+      html: `## Background: The Thin-Lens Equation and Magnification
+
+The object distance $d_0$ (lens to object), the image distance $d_i$ (lens to image), and the focal length $f$ are linked by the **thin-lens equation**:
+
+$$\\frac{1}{f} = \\frac{1}{d_0} + \\frac{1}{d_i}$$
+
+The signs carry the geometry: $d_0$ is positive for a real object; $d_i$ is **positive** for a real image (opposite side of the lens) and **negative** for a virtual image (same side as the object); and $f$ is positive for a converging lens. Solving for $f$ with the correct sign of $d_i$ gives the focal length from your measurements.
+
+---
+
+The **magnification** $M$ compares the image to the object and can be found two equivalent ways:
+
+$$M = -\\frac{d_i}{d_0} = \\frac{h_i}{h_0}$$
+
+where $h_0$ is the object height and $h_i$ the image height, with an inverted image counted as a **negative** height. $M$ is a pure number: negative means inverted (real images), positive means upright (virtual images); $|M| > 1$ is enlarged, $|M| < 1$ reduced. Because the two expressions must agree, computing $M$ both ways checks your four measured values.`,
+    },
+    {
+      kind: 'instructions',
       html: `### Part 1B: Converging/Convex Lens (Quantitative)
 
 
@@ -129,8 +171,8 @@ Your report includes a process record. You may use any tools you wish, but paste
 
 
 1. At the top right, grab the horizontal and vertical rulers from the toolbar.
-2. With the same lens, RoC, n, and D parameters from Part 1A, use the horizontal ruler to place the object at the object distance d<sub>₀</sub> (see Part 1B Parameters). You may enable rays for a visual aide if you wish.
-3. Use the rulers to measure the image distance d<sub>ᵢ</sub>, object height h<sub>₀</sub>, and image height h<sub>ᵢ</sub> and record your measurements in the table below. Don't forget: an inverted image has a negative height!
+2. With the same lens, RoC, n, and D parameters from Part 1A, use the horizontal ruler to place the object at the object distance $d_0$ (see Part 1B Parameters). You may enable rays for a visual aide if you wish.
+3. Use the rulers to measure the image distance $d_i$, object height $h_0$, and image height $h_i$ and record your measurements in the table below. Don't forget: an inverted image has a negative height!
 4. Take a screenshot of the simulation with all relevant labels and values clearly shown and attach it below.`,
     },
     {
@@ -146,7 +188,7 @@ Your report includes a process record. You may use any tools you wish, but paste
     {
       kind: 'image',
       imageId: 'part1B_screenshot',
-      captionFieldId: 'part1B_screenshot',
+      captionFieldId: 'part1B_caption',
       maxMB: 5,
       points: 1,
     },
@@ -155,7 +197,7 @@ Your report includes a process record. You may use any tools you wish, but paste
       responseModes: ['text', 'draw', 'image'],
       fieldId: 'part1B_focalLengthCalculation',
       prompt:
-        'Calculate the experimental focal length using 1/f = 1/d₀ + 1/dᵢ. Show work and units.',
+        'Calculate the experimental focal length using $1/f = 1/d_0 + 1/d_i$. Show work and units.',
       equationEditor: true,
       points: 1.25,
     },
@@ -164,13 +206,13 @@ Your report includes a process record. You may use any tools you wish, but paste
       responseModes: ['text', 'draw', 'image'],
       fieldId: 'part1B_magnificationCalculation',
       prompt:
-        'Compute the magnification two ways: M = -dᵢ/d₀ and M = hᵢ/h₀. If these magnifications do not agree, please reach out for help before moving on.',
+        'Compute the magnification two ways: $M = -d_i/d_0$ and $M = h_i/h_0$. If these magnifications do not agree, please reach out for help before moving on.',
       equationEditor: true,
       points: 1.25,
     },
     {
       kind: 'instructions',
-      html: '## DISCUSSION & CONCLUSION',
+      html: '## Discussion and Conclusion',
     },
     {
       kind: 'concept',

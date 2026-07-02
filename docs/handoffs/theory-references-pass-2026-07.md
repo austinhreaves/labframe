@@ -1,11 +1,31 @@
 # Handoff: PHY 114 theory reference pass (2026-07)
 
-> **Status (2026-07-02): complete.** All 11 theory docs exist as `.md` + `.html` pairs
-> under `docs/theory/`, the Lab 1 induction fix below is applied to both Lab 1 files,
-> everything is Prettier-clean and em-dash-free, and the HTML was verified in the
-> theory-preview server. The Lab 1 fix covered only the theory doc; the matching in-lab
-> Background fix (tracked in the Lab 01 pedagogy review under A1) is still a lab-content
-> edit for a separate pass, as are the other out-of-scope items below.
+> **Status (2026-07-02): complete, plus in-lab reconciliation done.** All 11 theory docs
+> exist as `.md` + `.html` pairs under `docs/theory/`, everything is Prettier-clean and
+> em-dash-free, and the HTML was verified in the theory-preview server.
+>
+> A follow-up pass then reconciled the in-lab Background blocks with these docs and the
+> Track 2 reviews:
+>
+> - **Labs 10 & 11 (converging/diverging lens):** the missing in-lab Background blocks
+>   were authored (they had none). Lab 10 gets focal-point/real-vs-virtual and
+>   thin-lens/magnification blocks; Lab 11 gets diverging-lens, thin-lens-signs, ray-types,
+>   and lens-maker blocks (the lens-maker equation is now stated in-app for the extra
+>   credit). Both use house-style LaTeX; also fixed the all-caps heading, the
+>   double-subscript `d<sub>0</sub>`, and the reused image/caption id.
+> - **Lab 1 induction (both `phy114/chargeBuildup.lab.ts` and
+>   `phy132/chargeBuildup.draft.lab.ts`):** the split-conductor physics fix is now applied
+>   in-lab, matching the theory doc; also aligned the mechanism 1/2 wording.
+> - **Lab 5 discharge (shared `phy132/capacitorFundamentals`):** the review's blocker was
+>   already fixed on disk (discharge tracks capacitance, brightness tracks voltage) - no
+>   further edit needed; verified.
+> - **Lab 9 (`phy114/snellsLaw.lab.ts`):** both Background blocks converted to LaTeX, the
+>   empty `## Background:` heading titled, and the mismatched sine column labels aligned.
+>
+> Verified: `npm run verify:labs` 0 errors (no LaTeX leaks), typecheck + build pass, and
+> the new backgrounds render in the dev server (KaTeX, no raw `$$`). Still deferred (not
+> theory): the non-theory review items in the out-of-scope section below, and the
+> pre-existing en-dashes in the retired `snellsLaw.draft.lab.ts` grader-record draft.
 
 ## Goal
 

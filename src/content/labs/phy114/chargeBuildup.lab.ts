@@ -62,21 +62,23 @@ There are three common mechanisms that produce such an imbalance.
 
 ---
 
-**1. Charging by friction (triboelectric).** When two materials with different electron affinities rub together, friction transfers electrons from the electron donor (low electronegativity) to the electron acceptor (high electronegativity). The two surfaces end up with charges of opposite signs.
+**1. Charging by friction (triboelectric).** Different materials hold onto their electrons with different strengths. When two materials rub together, friction transfers electrons from the material that holds them loosely to the one that holds them tightly. The two surfaces end up with charges of opposite signs.
 
-The *triboelectric series* ranks common materials by this tendency: wool, hair, and human skin sit high (lose electrons easily); rubber, vinyl, and Teflon sit low (gain them).
+The *triboelectric series* ranks common materials by this tendency: wool, hair, and human skin tend to give up electrons; rubber, vinyl, and Teflon tend to take them.
 
 ---
 
-**2. Charging by conduction.** When a charged object physically contacts a conductor, charge flows between them. Both end up with a charge of the **same sign** as the originally charged object.
+**2. Charging by conduction.** When a charged conductor touches another conductor, charge flows between them until both carry the **same sign** of charge.
 
 Conduction can also happen through a brief conductive path. A spark, for example, momentarily ionizes the air into a conductor.
 
 ---
 
-**3. Charging by induction.** A charged object brought *near* (without contact) a neutral conductor rearranges the conductor's free electrons.
+**3. Charging by induction.** A charged object brought *near* (without contact) a neutral conductor rearranges the conductor's free electrons, without ever touching it. Two effects can then lock that rearrangement in place, with different results.
 
-If the conductor is split apart, or grounded and then disconnected, *while the inducing object is still nearby*, the rearranged charges become trapped. The conductor then retains a net charge **opposite** to the inducing object even after the inducing object is removed.
+If the conductor is briefly grounded and then disconnected while the inducing object is nearby, charge flows in or out through the ground connection, and the conductor keeps a net charge **opposite** to the inducing object.
+
+If instead the conductor is split into two pieces while the inducing object is nearby, no charge enters or leaves: the piece **nearer** the object ends up charged opposite to it, the farther piece the **same** sign, and the two pieces together stay neutral.
 
 ---
 
@@ -205,9 +207,9 @@ In Part 1B you saw the balloon attract to a *neutral wall*. The wall is an insul
 
 ---
 
-**Induction** is the analogous process in a *conductor*, where free electrons can travel macroscopically across the whole object.
+The same idea applies to a *conductor*, but the effect is stronger: its free electrons travel freely across the whole object, not just within one molecule. This is **induction**.
 
-If you separate part of that conductor (or ground it and then disconnect the ground) *while a charged object is still held nearby*, the rearranged electrons get trapped in their new location. The conductor keeps a real net charge even after the inducing object is removed.
+If the conductor is grounded and then disconnected while a charged object is held nearby, the trapped electrons leave the conductor with a real net charge opposite to that object, even after it is removed. If instead the conductor is split into two pieces while the charged object is nearby, no charge enters or leaves: the piece nearer the object ends up charged opposite to it, the farther piece the same sign, and the two pieces together stay neutral.
 
 The next simulation lets you watch this happen with two metal cans resting on insulating stands.`,
     },
