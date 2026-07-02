@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { App } from './App';
 import { installGlobalTelemetryHandlers } from '@/services/telemetry/errorReporter';
+import { installPreloadErrorReload } from '@/services/app/installPreloadErrorReload';
 import { AppErrorBoundary } from '@/ui/AppErrorBoundary';
 import 'katex/dist/katex.min.css';
 import './main.css';
@@ -13,6 +14,7 @@ if (!rootEl) {
 }
 
 installGlobalTelemetryHandlers();
+installPreloadErrorReload();
 
 createRoot(rootEl).render(
   <StrictMode>
