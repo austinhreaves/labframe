@@ -301,6 +301,32 @@
             aria-label="Track angle in degrees"
           />
         </div>
+        <div class="param">
+          <label for="muSlider">Track friction mu</label>
+          <input type="range" id="muSlider" min="0" max="0.5" step="0.05" value="0" />
+          <input
+            type="number"
+            id="muNum"
+            min="0"
+            max="0.5"
+            step="0.05"
+            value="0"
+            aria-label="Track friction coefficient"
+          />
+        </div>
+        <div class="param">
+          <label for="MpSlider">Pulley mass (kg)</label>
+          <input type="range" id="MpSlider" min="0" max="1" step="0.1" value="0" />
+          <input
+            type="number"
+            id="MpNum"
+            min="0"
+            max="1"
+            step="0.1"
+            value="0"
+            aria-label="Pulley mass in kilograms"
+          />
+        </div>
         <div class="buttons">
           <button id="runBtn">Run</button>
           <button id="pauseBtn" disabled>Pause</button>
@@ -331,7 +357,12 @@
 
     <script type="module">
       import { createEngine } from '../lib/engine/engine.js';
-      import { atwoodAcceleration, createAtwoodModel } from './model.js';
+      import {
+        atwoodAcceleration,
+        atwoodBreakawayMargin,
+        atwoodTensions,
+        createAtwoodModel,
+      } from './model.js';
 
       /**
        * Physics runs on the shared sim engine (public/sims/lib/engine/, spec at
@@ -345,10 +376,12 @@
        * `t` in each detail is seconds since page load (performance.now based).
        *
        * Event shapes:
-       *   parameter_set:        { type, param: 'cart_mass'|'hanging_mass'|'angle', value, t }
-       *   trial_started:        { type, M, m, theta, t }
-       *   trial_completed:      { type, M, m, theta, duration, distance, a_measured,
-       *                           a_theoretical, near_equilibrium, t }
+       *   parameter_set:        { type, param: 'cart_mass'|'hanging_mass'|'angle'
+       *                           |'friction_mu'|'pulley_mass', value, t }
+       *   trial_started:        { type, M, m, theta, mu, pulley_mass, t }
+       *   trial_completed:      { type, M, m, theta, mu, pulley_mass, duration,
+       *                           distance, a_measured, a_theoretical,
+       *                           near_equilibrium, t }
        *   trial_reset:          { type, t }
        *   measurement_recorded: { type, field, value, t }
        *   engine_event:         { type, event: 'mode_enter'|'mode_exit'|'guard_fired'
@@ -450,6 +483,10 @@
         'mNum',
         'thetaSlider',
         'thetaNum',
+        'muSlider',
+        'muNum',
+        'MpSlider',
+        'MpNum',
         'runBtn',
         'pauseBtn',
         'stepBtn',
@@ -471,6 +508,8 @@
         M: 0.5,
         m: 0.1,
         theta: 0, // degrees
+        mu: 0, // track friction coefficient (mu_s = mu_k = mu; single slider)
+        Mp: 0, // pulley mass (kg); a uniform disk, I = (1/2) Mp R^2
         displayTheta: 0, // eased angle used for rendering only
         phase: 'idle', // 'idle' | 'running' | 'paused' | 'complete'
         t: 0,
@@ -488,8 +527,22 @@
         trialIndex: 0, // monotonic; the noise-layer sampleIndex for this session
       };
 
+      /** Physical parameter set for the current control values. */
+      function physicsParams() {
+        return {
+          M: state.M,
+          m: state.m,
+          thetaDeg: state.theta,
+          g: G,
+          muS: state.mu,
+          muK: state.mu,
+          pulleyI: 0.5 * state.Mp * PULLEY_R * PULLEY_R, // uniform disk
+          pulleyR: PULLEY_R,
+        };
+      }
+
       function aTheoretical() {
-        return atwoodAcceleration({ M: state.M, m: state.m, thetaDeg: state.theta, g: G });
+        return atwoodAcceleration(physicsParams());
       }
 
       // ---------- parameters ----------
@@ -521,6 +574,24 @@
           decimals: 0,
           telemetry: 'angle',
           aria: (v) => 'Track angle, ' + v + ' degrees',
+        },
+        mu: {
+          slider: els.muSlider,
+          num: els.muNum,
+          min: 0,
+          max: 0.5,
+          decimals: 2,
+          telemetry: 'friction_mu',
+          aria: (v) => 'Track friction coefficient, ' + v,
+        },
+        Mp: {
+          slider: els.MpSlider,
+          num: els.MpNum,
+          min: 0,
+          max: 1,
+          decimals: 1,
+          telemetry: 'pulley_mass',
+          aria: (v) => 'Pulley mass, ' + v + ' kilograms',
         },
       };
 
@@ -585,19 +656,29 @@
           state.m.toFixed(2) +
           ' kilograms, track angle ' +
           state.theta.toFixed(0) +
-          ' degrees.';
+          ' degrees, friction coefficient ' +
+          state.mu.toFixed(2) +
+          ', pulley mass ' +
+          state.Mp.toFixed(1) +
+          ' kilograms.';
       }
 
       // ---------- trial state machine ----------
 
       function updateRunAvailability() {
-        const a = aTheoretical();
+        const params = physicsParams();
+        const margin = atwoodBreakawayMargin(params);
         // The epsilon absorbs float noise so exact equilibrium (m = M sin theta)
         // reliably lands on the blocked side rather than epsilon-positive.
-        const blocked = a <= 1e-9 && (state.phase === 'idle' || state.phase === 'complete');
+        const blocked = margin <= 1e-9 && (state.phase === 'idle' || state.phase === 'complete');
+        // Distinguish "gravity cannot drive it" from "static friction holds it".
+        const frictionHolds =
+          blocked && state.mu > 0 && atwoodBreakawayMargin({ ...params, muS: 0 }) > 1e-9;
         els.runBtn.disabled = state.phase === 'running' || blocked;
         els.runMsg.textContent = blocked
-          ? 'Hanging mass cannot accelerate the cart at this angle.'
+          ? frictionHolds
+            ? 'Static friction holds the cart at these settings.'
+            : 'Hanging mass cannot accelerate the cart at this angle.'
           : '';
         els.pauseBtn.disabled = state.phase !== 'running';
         els.stepBtn.hidden = state.phase !== 'paused';
@@ -630,23 +711,24 @@
       }
 
       function startTrial() {
-        if (aTheoretical() <= 1e-9) return;
+        if (atwoodBreakawayMargin(physicsParams()) <= 1e-9) return;
         if (state.phase === 'complete') resetTrial();
         clearTrialData();
         state.samples.push({ t: 0, d: 0, v: 0 });
         state.trialIndex += 1;
-        state.engine = createEngine(
-          createAtwoodModel({
-            M: state.M,
-            m: state.m,
-            thetaDeg: state.theta,
-            g: G,
-            dLimit: D_LIMIT,
-          }),
-          { seed: NOISE_SEED },
-        );
+        state.engine = createEngine(createAtwoodModel({ ...physicsParams(), dLimit: D_LIMIT }), {
+          seed: NOISE_SEED,
+        });
         forwardEngineEvents();
-        emit({ type: 'trial_started', M: state.M, m: state.m, theta: state.theta, t: now() });
+        emit({
+          type: 'trial_started',
+          M: state.M,
+          m: state.m,
+          theta: state.theta,
+          mu: state.mu,
+          pulley_mass: state.Mp,
+          t: now(),
+        });
         if (reducedMotion.matches) {
           // prefers-reduced-motion: skip the animation and run the same
           // fixed-timestep engine loop to completion synchronously (the 20 s
@@ -679,6 +761,8 @@
           M: state.M,
           m: state.m,
           theta: state.theta,
+          mu: state.mu,
+          pulley_mass: state.Mp,
           duration: state.tReading,
           distance: state.d,
           a_measured: state.aMeasured,
@@ -868,7 +952,13 @@
 
       function drawForces(ctx, g) {
         const aTh = aTheoretical();
-        const T = state.m * (G - aTh);
+        // With pulley inertia the two string segments carry different tensions
+        // (their difference torques the pulley), labeled T1/T2; a massless
+        // pulley collapses them to one T.
+        const tensions = atwoodTensions(physicsParams());
+        const split = state.Mp > 0;
+        const cartTLabel = split ? 'T1' : 'T';
+        const hangTLabel = split ? 'T2' : 'T';
         const Wcart = state.M * G;
         const N = Wcart * Math.cos(g.rad);
         const cx = wx(g.cart.x);
@@ -895,7 +985,32 @@
           -2,
           -6,
         );
-        drawArrow(ctx, cx, cy, ux * forceLen(T), uy * forceLen(T), '#2563eb', 'T', 2, -8);
+        drawArrow(
+          ctx,
+          cx,
+          cy,
+          ux * forceLen(tensions.cart),
+          uy * forceLen(tensions.cart),
+          '#2563eb',
+          cartTLabel,
+          2,
+          -8,
+        );
+        // Kinetic friction on the cart, opposing the up-slope motion.
+        if (state.mu > 0) {
+          const f = state.mu * N;
+          drawArrow(
+            ctx,
+            cx + normX * 7,
+            cy + normY * 7,
+            -ux * forceLen(f),
+            -uy * forceLen(f),
+            '#dc2626',
+            'f',
+            -14,
+            10,
+          );
+        }
         const FnetCart = state.M * aTh;
         const fSign = FnetCart >= 0 ? 1 : -1;
         drawArrow(
@@ -913,7 +1028,7 @@
         const hx = wx(g.mass.x);
         const hy = wy(g.mass.y);
         drawArrow(ctx, hx, hy, 0, forceLen(state.m * G), '#f59e0b', 'mg', 0, 14);
-        drawArrow(ctx, hx, hy, 0, -forceLen(T), '#2563eb', 'T', 2, -8);
+        drawArrow(ctx, hx, hy, 0, -forceLen(tensions.hang), '#2563eb', hangTLabel, 2, -8);
         const fnetHang = state.m * aTh;
         drawArrow(
           ctx,

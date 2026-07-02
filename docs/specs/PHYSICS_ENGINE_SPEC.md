@@ -11,7 +11,13 @@ readout, seed fixed at 201 until the envelope seed slot is wired), and the sim
 forwards `engine_event` telemetry. Note the sim iframe now needs
 `sandbox: 'allow-scripts allow-same-origin'`: module scripts fetch in CORS mode,
 so relative engine imports fail under an opaque origin on static hosting.
-Phase E3 (pulley inertia + friction) is next.
+**Phase E3 built 2026-07-02:** pulley moment of inertia and track friction on the
+Atwood sim. New sim controls (single friction slider setting mu_s = mu_k, pulley
+mass as a uniform disk I = Mp R^2 / 2), the stuck/moving mode pair with breakaway
+and stiction-capture guards, split `tensionCart`/`tensionHang` observables, FBD
+friction arrow and T1/T2 labels, and honest `E_dissipated` accounting. Defaults
+(mu = 0, Mp = 0) reproduce Phase E2 behavior exactly, so the shipped PH 201 lab is
+unaffected. Phase E4 (spring-Atwood + sim-kit extraction) is a separate spec.
 
 **Companion to:** `docs/handoffs/n2l-atwood-sim-handoff.md` (the first custom sim, shipped
 without an engine), `docs/SPEC.md` (product/eng scope), and
