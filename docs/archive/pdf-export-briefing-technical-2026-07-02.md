@@ -216,3 +216,63 @@ scope and specific things to probe:
   artifact noted in CLAUDE.md.
 - **Report the findings** ranked by likelihood of real student work-loss / export failure,
   with concrete failure scenarios. Fix or file the confirmed ones.
+
+---
+
+## 8. ADDENDUM - independent verification pass, 2026-07-02 (follow-up agent)
+
+Tasks A and B were executed. All Task A claims verified except two corrections below.
+Task B found and fixed one high-severity work-loss bug that predates this branch.
+
+### 8.1 Corrections to this briefing
+
+- **Section 2.3 is wrong about the mechanism.** `persistNow` does NOT bail on a fresh
+  session: the store's default `studentName` is the truthy `'Student'` placeholder
+  (`DEFAULT_STUDENT_NAME`, `labStore.ts`), so nameless work always persisted, under
+  `lab:course:lab:Student`, and rehydrated fine. The gate is still the right fix, but the
+  problem it solves is the shared placeholder bucket (collisions on shared machines,
+  wrong-name filing, and the poison-record race in 8.2), not "nothing persists."
+- **Section 2.1's "Fonts are bundled assets, not runtime fetches" is imprecise.** The
+  `.ttf` imports resolve to hashed asset URLs that `@react-pdf/renderer` fetches at
+  render time. A client that has the render chunk cached but not the fonts can still hit
+  a stale-deploy 404 that the `vite:preloadError` guard does not see (the export fails
+  with an alert instead). Narrow: requires a pre-deploy export plus HTTP cache eviction.
+
+### 8.2 High-severity bug found (exists in production, predates this branch)
+
+On every page load the store boots as `'Student'`; the on-load rename
+(`setStudentName` -> `migrateStudentKeys`) is async. `initLab`'s synchronous reset queues
+a debounced persist, and when the rename takes longer than 250 ms that persist writes an
+EMPTY payload under `lab:course:lab:Student`. The NEXT load's migration then copied that
+empty record over the student's real named record and deleted nothing else - total loss
+of that lab's saved work. Reproduced deterministically by the chromium
+`persistence.spec.ts` failures under load. A timestamp guard cannot fix it (the poison is
+newer than the real record). Fixed by a content-aware guard: `migrateStudentKeys` now
+refuses to copy a payload with no student work (`payloadHasStudentWork`) over an existing
+destination, and deletes the artifact. Regression tests:
+`tests/unit/labStore.workLoss.test.ts` (verified to fail against the pre-fix code).
+
+### 8.3 Other defects fixed in this pass
+
+- `initLab` hydration: text answers now land before any IndexedDB access, image metadata
+  is kept through mid-hydration persists, and a rejecting `loadBlob` (broken/private-mode
+  IndexedDB) no longer aborts hydration - previously it wiped all text answers via the
+  pending empty persist.
+- Persistence middleware: switching labs inside the debounce window now flushes the
+  outgoing lab's state instead of repointing the timer at the incoming lab (which dropped
+  the last <250 ms of edits and could write mid-hydration state).
+- `tests/unit/labPage.exportButton.test.tsx`: 3 tests broke on this branch (the gate adds
+  a second "Student name" input). CI would have been red. Fixed by seeding the store name.
+- `studentNameGate.spec.ts` axe test now scopes to the dialog; the whole-page scan was
+  flaky against lazily rendered background content with pre-existing violations
+  (MathLive keyboard sink `aria-input-field-name`, `.table-column-formula` contrast) -
+  filed separately.
+
+### 8.4 Reported, not fixed
+
+- Student names containing `:` break `parseImageKey` (blob migration/recovery listing
+  skips them; main flow unaffected because hydration uses the stored `idbKey`).
+- `sectionRenderer` / `instructionsSectionView` unit tests flake under parallel load
+  (lazy chunks vs 1 s waitFor default) - filed separately.
+- `fast-check` was missing from this worktree's `node_modules` (stale install, lockfile
+  already correct); `npm install` fixed it, so typecheck and the property tests are green.

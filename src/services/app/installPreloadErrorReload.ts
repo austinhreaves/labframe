@@ -10,9 +10,10 @@ const RELOAD_SENTINEL_KEY = 'labframe.preload-reload';
  * `vite:preloadError` for exactly this case; reloading pulls a fresh index.html
  * with the current chunk hashes.
  *
- * Worksheet state autosaves to IndexedDB, so the reload is non-destructive; the
- * student re-clicks export afterward. A sessionStorage sentinel caps this at one
- * reload so a genuinely broken deploy or an offline client cannot loop.
+ * Worksheet answers autosave to localStorage (image blobs to IndexedDB) with a
+ * synchronous pagehide flush, so the reload is non-destructive; the student
+ * re-clicks export afterward. A sessionStorage sentinel caps this at one reload
+ * so a genuinely broken deploy or an offline client cannot loop.
  */
 export function installPreloadErrorReload(): void {
   window.addEventListener('vite:preloadError', (event) => {

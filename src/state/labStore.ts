@@ -286,6 +286,65 @@ function serializePersistedState(state: LabStoreState, savedAt: number): Persist
   };
 }
 
+function fieldValueHasWork(value: unknown): boolean {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const fv = value as {
+    text?: unknown;
+    pastes?: unknown[];
+    meta?: { activeMs?: number; keystrokes?: number };
+  };
+  if (typeof fv.text === 'string' && fv.text.trim().length > 0) {
+    return true;
+  }
+  if (Array.isArray(fv.pastes) && fv.pastes.length > 0) {
+    return true;
+  }
+  return (fv.meta?.activeMs ?? 0) > 0 || (fv.meta?.keystrokes ?? 0) > 0;
+}
+
+/**
+ * Whether a persisted payload contains anything a student actually did, as
+ * opposed to the untouched defaults initLab writes. Used to keep placeholder
+ * ("Student") records that hold no work from overwriting a real record during
+ * a rename migration: initLab's reset queues a debounced persist, and when the
+ * on-load rename takes longer than the debounce that persist lands an empty
+ * payload under the placeholder key. Treating such payloads as migratable data
+ * clobbers the student's named record on the next load.
+ */
+function payloadHasStudentWork(payload: PersistedLabState): boolean {
+  if (payload.status?.submitted) {
+    return true;
+  }
+  if (payload.aiUsed || (payload.aiSharedLinks ?? '').trim().length > 0) {
+    return true;
+  }
+  if (Object.keys(payload.images ?? {}).length > 0) {
+    return true;
+  }
+  if (Object.keys(payload.fits ?? {}).length > 0) {
+    return true;
+  }
+  if (Object.values(payload.selectedFits ?? {}).some((fitId) => fitId !== null)) {
+    return true;
+  }
+  if (Object.values(payload.fields ?? {}).some(fieldValueHasWork)) {
+    return true;
+  }
+  for (const table of Object.values(payload.tables ?? {})) {
+    if (
+      Array.isArray(table) &&
+      table.some((row) =>
+        Object.values((row ?? {}) as Record<string, unknown>).some(fieldValueHasWork),
+      )
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 async function migrateStudentKeys(
   adapter: PersistenceAdapter,
   courseId: string,
@@ -310,10 +369,18 @@ async function migrateStudentKeys(
         labId: parsed.labId,
         studentName: nextName,
       });
-      await adapter.saveJSON(nextKey, {
-        ...payload,
-        studentName: nextName,
-      });
+      // A workless payload only overwrites the destination when nothing is
+      // there yet; see payloadHasStudentWork. Either way the source key is
+      // deleted below, so a stale artifact cannot clobber on a later load.
+      const destination = payloadHasStudentWork(payload)
+        ? null
+        : await adapter.loadJSON<PersistedLabState>(nextKey);
+      if (!destination) {
+        await adapter.saveJSON(nextKey, {
+          ...payload,
+          studentName: nextName,
+        });
+      }
     }
     await adapter.deleteJSON(key);
   }
@@ -415,19 +482,14 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
         return;
       }
 
-      const hydratedImages: Record<string, RuntimeImage> = {};
-      for (const [imageId, imageMeta] of Object.entries(migrated.images ?? {})) {
-        const blob = await adapter.loadBlob(imageMeta.idbKey);
-        if (!blob) {
-          continue;
-        }
-        hydratedImages[imageId] = {
-          ...imageMeta,
-          objectUrl: URL.createObjectURL(blob),
-          persisted: true,
-        };
-      }
-
+      // Hydrate the JSON slices before touching IndexedDB: the reset above
+      // already queued a debounced persist, so every await between here and
+      // this set is a window where that timer can overwrite the saved record
+      // with the defaults. Blob loads are slow and can reject; they must not
+      // delay or veto the text answers. Image metadata is included now (with a
+      // placeholder object URL) so a persist that fires mid-hydration keeps
+      // the image references; the real object URLs land in a second set below.
+      const imageMetas = Object.entries(migrated.images ?? {});
       set((state) => ({
         aiUsed: migrated.aiUsed ?? false,
         aiSharedLinks: migrated.aiSharedLinks ?? '',
@@ -451,7 +513,12 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
           ...state.responseSelections,
           ...(migrated.responseSelections ?? {}),
         },
-        images: hydratedImages,
+        images: Object.fromEntries(
+          imageMetas.map(([imageId, imageMeta]) => [
+            imageId,
+            { ...imageMeta, objectUrl: '', persisted: true },
+          ]),
+        ),
         splitFraction: DEFAULT_SPLIT_FRACTION,
         status: {
           ...state.status,
@@ -460,6 +527,31 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
           lastError: null,
         },
       }));
+
+      if (imageMetas.length === 0) {
+        return;
+      }
+
+      const hydratedImages: Record<string, RuntimeImage> = {};
+      for (const [imageId, imageMeta] of imageMetas) {
+        let blob: Blob | null = null;
+        try {
+          blob = await adapter.loadBlob(imageMeta.idbKey);
+        } catch {
+          // A broken IndexedDB (private mode, eviction, corruption) must not
+          // reject hydration; the text answers above are already in place.
+          blob = null;
+        }
+        if (!blob) {
+          continue;
+        }
+        hydratedImages[imageId] = {
+          ...imageMeta,
+          objectUrl: URL.createObjectURL(blob),
+          persisted: true,
+        };
+      }
+      set({ images: hydratedImages });
     },
     setStudentName: async (studentName) => {
       const nextName = studentName.trim();

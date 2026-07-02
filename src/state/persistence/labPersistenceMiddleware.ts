@@ -174,8 +174,8 @@ export function attachLabPersistence(
   let timeout: ReturnType<typeof setTimeout> | null = null;
   let disposed = false;
 
-  const persistNow = async () => {
-    const state = store.getState();
+  const persistNow = async (stateOverride?: LabStoreState) => {
+    const state = stateOverride ?? store.getState();
     if (!state.courseId || !state.labId || !state.studentName) {
       return;
     }
@@ -220,6 +220,13 @@ export function attachLabPersistence(
 
     if (timeout) {
       clearTimeout(timeout);
+      // Switching labs would repoint the pending debounce at the new lab's
+      // key: the last <250 ms of edits on the outgoing lab would be dropped,
+      // and the timer would fire against the incoming lab's mid-hydration
+      // state. Persist the outgoing lab's final state synchronously instead.
+      if (next.courseId !== previous.courseId || next.labId !== previous.labId) {
+        void persistNow(prevState);
+      }
     }
     timeout = setTimeout(() => {
       void persistNow();

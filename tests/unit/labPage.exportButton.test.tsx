@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Course, Lab } from '@/domain/schema';
 import '@/main.css';
+import { useLabStore } from '@/state/labStore';
 import { LabPage } from '@/ui/LabPage';
 
 vi.mock('@/services/integrity/sign', () => ({
@@ -47,6 +48,10 @@ function renderLab() {
 
 describe('LabPage export PDF control', () => {
   beforeEach(() => {
+    // Seed a valid name in the store so the on-load StudentNameGateDialog stays
+    // closed; jsdom has no IndexedDB, so the localStorage seed + key-migration
+    // path the e2e suite uses is not available here.
+    useLabStore.setState({ studentName: 'Seeded Name' });
     const styleEl = document.createElement('style');
     styleEl.textContent = '.lab-header { position: sticky; }';
     document.head.appendChild(styleEl);
