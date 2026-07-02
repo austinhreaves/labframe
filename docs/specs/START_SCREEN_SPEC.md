@@ -238,26 +238,26 @@ links.
 
 ---
 
-## Deferred: Completed section
+## Completed section (shipped)
 
-The mock's Completed section is a foldable, horizontally scrolling slider of finished labs:
-header is a toggle (chevron + `COMPLETED` + count badge + "reports saved locally"); each card
-shows the lab tag, a check plus completion date, the title, and an `Open report` link that
-re-downloads the locally generated signed report. No "re-run" button.
+Each card shows the lab tag, a check plus completion date, the title, and an `Open report`
+button that re-downloads the locally generated signed report. No "re-run" button. Shipped as
+a `CourseStartBlock` section (renders on both `/c/:courseId` and the scoped start screen).
 
-This cannot be built faithfully yet because reports are ephemeral: the sealed PDF is generated,
-downloaded, and forgotten, nothing is stored, and `status.submitted` carries no timestamp. A
-later pass must add:
+Report persistence (keep-latest, one per lab + student):
 
-1. **A report registry slice** keyed per lab and student, recording at least `submittedAt` and
-   a signature reference, written from the export flow in `src/ui/LabPage.tsx` (where
-   `setSubmitted(true)` already fires).
-2. **Sealed-PDF persistence** to IndexedDB on export (the seal step lives in
-   `src/services/pdf/seal.ts`; blob storage already exists via
-   `src/state/persistence/idb.ts`), so `Open report` re-downloads the exact original rather
-   than re-signing. A suggested key shape: `pdf:<courseId>:<labId>:<studentName>:<sigPrefix>`.
+1. **Metadata + blob** are stored under `report:<courseId>:<labId>:<studentName>` (JSON in
+   localStorage, sealed PDF in IndexedDB), keyed via `makeReportKey` in
+   `src/state/persistence/keys.ts`. A re-export overwrites both, so there are no orphan blobs.
+2. **Written from the export flow** in `src/ui/LabPage.tsx` (`saveReport`, awaited after the
+   download so a fast navigation still persists it; the download already happened, so a storage
+   failure never undoes the export).
+3. **Read** by `listCourseReports` / `loadReportBlob` in `src/state/reports.ts`; the Completed
+   section calls them and re-downloads via `src/ui/downloadBlob.ts`.
 
-Until then, the Completed section is omitted from the rendered page.
+Deferred still: the horizontally scrolling slider treatment and a foldable header (the current
+section is a plain grid). A pre-feature lab marked `status.submitted` with no saved report will
+not appear here.
 
 ---
 
