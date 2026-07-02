@@ -27,6 +27,7 @@
     "migrate": "tsx scripts/migrate-from-legacy.ts",
     "verify:lab": "tsx scripts/verify-lab.ts",
     "verify:labs": "tsx scripts/verify-lab.ts --all",
+    "verify:lab:pedagogy": "node -e \"console.error('Track 2 (pedagogy) is not a script: run the /verify-lab-pedagogy skill in a Claude Code session. See docs/specs/VERIFY_LAB_TWO_TRACK_SPEC.md.'); process.exit(1);\"",
     "test:mutation": "stryker run",
     "analyze": "cross-env ANALYZE=true vite build"
   },

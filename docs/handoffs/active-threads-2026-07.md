@@ -27,8 +27,9 @@ grading automation (LLM-assisted scoring) is on the roadmap as a future evolutio
 
 **2. Verify-Lab two-track split** -- `docs/specs/VERIFY_LAB_TWO_TRACK_SPEC.md`
 Track 1 (deterministic CI gate: `npm run verify:labs`) is shipped. Track 2 (Fable pedagogy
-rubric, `npm run verify:lab:pedagogy`) is earmarked but not yet built. Rubric is in the spec;
-tooling and the Fable prompt are not written yet.
+rubric) is built 2026-07-02 as the `/verify-lab-pedagogy` skill; the elaborated rubric and
+resolved decisions are in the spec, reports go to `docs/reviews/`, and the npm command is a
+non-passing stub. First target: the 11 enabled PHY 114 labs.
 
 **3. Lab workspace redesign** -- see PR #22 above.
 
@@ -62,8 +63,6 @@ tooling and the Fable prompt are not written yet.
 - **Assignment Constructor Phase E** -- formula DSL for authored labs. Phases A-D shipped
   (labDoc schema, authoring services, file import, My Labs, `/i/:hash` route, `/author` UI).
   Phase E is the next step but has no spec yet.
-- **Fable pedagogy rubric** -- Track 2 of the verify-lab split. Needs a rubric + Fable
-  prompt. See `VERIFY_LAB_TWO_TRACK_SPEC.md` open questions before designing.
 - **LLM-assisted grading** -- future evolution of the Integrity Inspector. No spec yet.
 - **Theory references** -- PHY 114 student-facing `.md` / `.html` files in `docs/theory/`.
   Currently only Lab 1 exists. Authoring process is in

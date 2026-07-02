@@ -16,8 +16,8 @@ npm run verify:lab -- <labId> --json
 ```
 
 This returns, per lab: a `findings` array (schema errors, duplicate answer ids, unwired
-labs, unbalanced `$`, em dashes, and math-unsupported leaks where LaTeX such as `\tag`
-or `\tfrac` will render as raw text in the PDF) and you should also run it without
+labs, unbalanced `$`, em dashes, and math-unsupported leaks where LaTeX the converter
+cannot handle will render as raw text in the PDF) and you should also run it without
 `--json` once to read the **section outline** (ordered list of section kinds and
 instructions headings). Carry every checker finding into your final report verbatim - do
 not re-derive or second-guess them.

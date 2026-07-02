@@ -26,20 +26,20 @@ making non-trivial product changes. Architecture overview: `docs/ARCHITECTURE.md
 
 ## Commands
 
-| Task                        | Command                                                                                                            |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Dev server (frontend)       | `npm run dev`                                                                                                      |
-| Dev server with `/api/sign` | `npm run dev:vercel`                                                                                               |
-| Typecheck                   | `npm run typecheck`                                                                                                |
-| Lint (warnings fail)        | `npm run lint`                                                                                                     |
-| Format check / write        | `npm run format:check` / `npm run format`                                                                          |
-| Unit tests                  | `npm test` (Vitest)                                                                                                |
-| E2E tests                   | `npm run test:e2e` (Playwright)                                                                                    |
-| Full local CI               | `npm run ci` (typecheck + lint + format:check + test)                                                              |
-| Verify a lab                | `npm run verify:lab -- <labId>` or `-- <path/to/lab.lab.ts>` (use `--all` to list IDs)                             |
-| Verify every lab (CI gate)  | `npm run verify:labs` (`verify-lab --all`, errors-only; runs in CI after unit tests)                               |
-| Pedagogy review (authoring) | `npm run verify:lab:pedagogy -- <labId>` (Track 2 -- not yet built; see `docs/specs/VERIFY_LAB_TWO_TRACK_SPEC.md`) |
-| Mutation audit (on-demand)  | `npm run test:mutation` (Stryker; scoped to the modules in `stryker.config.json`)                                  |
+| Task                        | Command                                                                                                                      |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Dev server (frontend)       | `npm run dev`                                                                                                                |
+| Dev server with `/api/sign` | `npm run dev:vercel`                                                                                                         |
+| Typecheck                   | `npm run typecheck`                                                                                                          |
+| Lint (warnings fail)        | `npm run lint`                                                                                                               |
+| Format check / write        | `npm run format:check` / `npm run format`                                                                                    |
+| Unit tests                  | `npm test` (Vitest)                                                                                                          |
+| E2E tests                   | `npm run test:e2e` (Playwright)                                                                                              |
+| Full local CI               | `npm run ci` (typecheck + lint + format:check + test)                                                                        |
+| Verify a lab                | `npm run verify:lab -- <labId>` or `-- <path/to/lab.lab.ts>` (use `--all` to list IDs)                                       |
+| Verify every lab (CI gate)  | `npm run verify:labs` (`verify-lab --all`, errors-only; runs in CI after unit tests)                                         |
+| Pedagogy review (authoring) | `/verify-lab-pedagogy` skill (Track 2; the npm command is a non-passing stub; see `docs/specs/VERIFY_LAB_TWO_TRACK_SPEC.md`) |
+| Mutation audit (on-demand)  | `npm run test:mutation` (Stryker; scoped to the modules in `stryker.config.json`)                                            |
 
 Run `npm run ci` before opening or updating a PR. Add `npm run test:e2e` for any UI,
 accessibility, or routing/layout change. Lint warnings fail CI (`--max-warnings 0`).
@@ -96,9 +96,10 @@ verify in the browser that sections render, inputs save, plot/table labels are r
 
 To review an existing lab for defects, use the `verify-lab` skill (deterministic checks
 plus a theory/physics/clarity review) or run `npm run verify:lab -- <labId>` for the
-mechanical checks alone. The checker flags LaTeX that leaks as raw text in the PDF (e.g.
-`\tag`, `\tfrac` are not handled by the unicode converter in
-`src/services/pdf/markdown/latexToUnicode.ts`). The checker does NOT catch
+mechanical checks alone. The checker flags LaTeX that leaks as raw text in the PDF; it
+derives the unsupported-command list live from the unicode converter
+(`src/services/pdf/markdown/latexToUnicode.ts`), which now handles `\tag` and `\tfrac`,
+so do not hand-maintain examples. The checker does NOT catch
 `unit: 'Symbol(unevaluable)'`, a legacy-migration artifact that is a valid string but renders as
 the literal column unit; grep for it and drop the field or set a real unit.
 
