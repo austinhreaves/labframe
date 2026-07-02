@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Check, ChevronDown, ChevronRight } from 'lucide-react';
+import { Check, ChevronDown, ChevronRight, Download } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import type { Driver } from 'driver.js';
 
 import type { Course, CourseLabRef, Lab } from '@/domain/schema';
+import { listCourseReports, loadReportBlob, type ReportMeta } from '@/state/reports';
 import { LogoMark } from '@/ui/catalog/HeroIllustration';
 import { StartMotif } from '@/ui/catalog/StartMotif';
 import { deriveCourseProgress, type LabProgress } from '@/ui/catalog/startProgress';
+import { downloadBlob } from '@/ui/downloadBlob';
 import { Button } from '@/ui/primitives/Button';
 import { Icon } from '@/ui/primitives/Icon';
 import { ThemeToggle } from '@/ui/ThemeToggle';
@@ -67,26 +69,46 @@ function byLabNumber(a: CourseLabRef, b: CourseLabRef): number {
   return (a.labNumber ?? Number.MAX_SAFE_INTEGER) - (b.labNumber ?? Number.MAX_SAFE_INTEGER);
 }
 
+async function openReport(report: ReportMeta): Promise<void> {
+  const blob = await loadReportBlob(report.key);
+  if (blob) {
+    downloadBlob(blob, report.filename);
+  } else {
+    window.alert('That report is no longer saved in this browser.');
+  }
+}
+
+const REPORT_DATE = new Intl.DateTimeFormat(undefined, {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+});
+
 /**
- * One course's On deck / Up next block. On deck is derived read-only from the
- * manifest plus saved progress: enabled playable (`core`) labs not yet
- * completed, ordered by lab number. Up next is the remaining enabled labs
- * (coming-soon / enrichment) as quiet, non-navigable chips.
+ * One course's On deck / Up next / Completed block. On deck and Up next are
+ * derived read-only from the manifest plus saved progress; Completed lists the
+ * signed reports persisted on export, each re-openable (re-download of the exact
+ * stored PDF). All local to this browser.
  */
 function CourseStartBlock({
   course,
   labsByCourse,
   progress,
+  reports,
   studentToken,
   showCourseLink,
 }: {
   course: Course;
   labsByCourse: Record<string, Record<string, Lab>>;
   progress: Record<string, LabProgress>;
+  reports: ReportMeta[];
   studentToken: string;
   showCourseLink: boolean;
 }) {
   const labs = labsByCourse[course.id] ?? {};
+  const labNumberById = new Map(
+    course.labs.filter((ref) => ref.labNumber !== undefined).map((ref) => [ref.ref, ref.labNumber]),
+  );
   const playable = course.labs.filter(
     (labRef) => labRef.enabled && (labRef.group ?? 'core') === 'core',
   );
@@ -170,6 +192,50 @@ function CourseStartBlock({
                     <span className="start-pill">Lab {labRef.labNumber}</span>
                   ) : null}
                   {lab?.title ?? labRef.ref}
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      ) : null}
+
+      {reports.length > 0 ? (
+        <>
+          <h3 className="start-eyebrow">
+            Completed
+            <span className="start-eyebrow-sub">
+              {' '}
+              - {reports.length} {reports.length === 1 ? 'report' : 'reports'} saved on this device
+            </span>
+          </h3>
+          <ul className="start-completed">
+            {reports.map((report) => {
+              const labNumber = labNumberById.get(report.labId);
+              const title = labs[report.labId]?.title ?? report.labId;
+              return (
+                <li key={report.key}>
+                  <div className="start-completed-card">
+                    <span className="start-completed-top">
+                      {labNumber !== undefined ? (
+                        <span className="start-pill">Lab {labNumber}</span>
+                      ) : null}
+                      <span className="start-completed-date">
+                        <span className="start-completed-check" aria-hidden="true">
+                          <Icon icon={Check} size={12} />
+                        </span>
+                        {REPORT_DATE.format(new Date(report.submittedAt))}
+                      </span>
+                    </span>
+                    <span className="start-completed-title">{title}</span>
+                    <button
+                      type="button"
+                      className="start-completed-open"
+                      onClick={() => void openReport(report)}
+                    >
+                      <Icon icon={Download} size={14} />
+                      Open report
+                    </button>
+                  </div>
                 </li>
               );
             })}
@@ -284,6 +350,7 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
   const [progressByCourse, setProgressByCourse] = useState<
     Record<string, Record<string, LabProgress>>
   >({});
+  const [reportsByCourse, setReportsByCourse] = useState<Record<string, ReportMeta[]>>({});
 
   // Track S: first-run splash + Phase A tour driver. The splash only appears on
   // the student root (`/`, where the start screen shows) for a not-yet-onboarded
@@ -363,6 +430,25 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
     ).then((entries) => {
       if (!cancelled) {
         setProgressByCourse(Object.fromEntries(entries));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [displayCourses, savedStudentName]);
+
+  // Saved signed reports for the Completed section, re-derived on the same
+  // triggers as progress so returning from an export refreshes the list.
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.all(
+      displayCourses.map(
+        async (course) =>
+          [course.id, await listCourseReports(course.id, savedStudentName)] as const,
+      ),
+    ).then((entries) => {
+      if (!cancelled) {
+        setReportsByCourse(Object.fromEntries(entries));
       }
     });
     return () => {
@@ -643,6 +729,7 @@ export function Catalog({ courses, labsByCourse, showWizard }: CatalogProps) {
                   course={course}
                   labsByCourse={labsByCourse}
                   progress={progressByCourse[course.id] ?? {}}
+                  reports={reportsByCourse[course.id] ?? []}
                   studentToken={savedStudentName}
                   showCourseLink={standaloneCourse?.id !== course.id}
                 />
