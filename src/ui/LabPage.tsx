@@ -23,6 +23,7 @@ import { AccessibleDialog } from '@/ui/AccessibleDialog';
 import { IntegrityAgreement } from '@/ui/IntegrityAgreement';
 import { ProgressBar } from '@/ui/ProgressBar';
 import { StudentInfoPreflightDialog } from '@/ui/StudentInfoPreflightDialog';
+import { StudentNameGateDialog } from '@/ui/StudentNameGateDialog';
 import { LayoutToggle } from '@/ui/layout/LayoutToggle';
 import { SplitHandle } from '@/ui/layout/SplitHandle';
 import { TableOfContents } from '@/ui/layout/TableOfContents';
@@ -295,6 +296,32 @@ export function LabPage({ course, lab }: Props) {
     safeStorageSet(STUDENT_NAME_STORAGE_KEY, nextName);
     void setStudentName(nextName);
   };
+
+  const submitStudentNameGate = (name: string) => {
+    safeStorageSet(STUDENT_NAME_STORAGE_KEY, name);
+    void setStudentName(name);
+  };
+
+  // Gate a fresh lab load on a real name so work persists under the correct key
+  // from the first keystroke (the persistence key embeds the student name). The
+  // demo/welcome lab is exempt because it drives its own guided tour. Reads all
+  // the sources the restore effect uses, so a returning or LMS deep-linked
+  // student (?student=) never sees the gate flash.
+  const needsStudentName = useMemo(() => {
+    if (lab.id === WELCOME_LAB_ID) {
+      return false;
+    }
+    const paramStudent = searchParams.get('student')?.trim() ?? '';
+    const storedStudent = safeStorageGet(STUDENT_NAME_STORAGE_KEY)?.trim() ?? '';
+    // The default studentName is the "Student" placeholder, which is itself
+    // invalid, so check every source rather than short-circuiting on the first
+    // non-empty one. A valid name from any source (store, ?student=, or a prior
+    // session's saved name) means the gate is not needed.
+    const known = [studentName.trim(), paramStudent, storedStudent].some(
+      (name) => validateStudentInfoForPdf({ studentName: name }).ok,
+    );
+    return !known;
+  }, [lab.id, searchParams, studentName]);
 
   const commitTaName = () => {
     const nextName = taNameDraft.trim();
@@ -723,6 +750,7 @@ export function LabPage({ course, lab }: Props) {
           )}
         </section>
       ) : null}
+      <StudentNameGateDialog open={needsStudentName} onSubmit={submitStudentNameGate} />
       <StudentInfoPreflightDialog
         open={isPreflightDialogOpen}
         missing={missingPreflightFields}

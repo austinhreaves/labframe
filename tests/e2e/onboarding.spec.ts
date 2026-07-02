@@ -32,6 +32,11 @@ test('Get Started reveals the course picker and starts the tour', async ({ page 
 });
 
 test('deep-link first timer sees the tour toast on a real lab', async ({ page }) => {
+  // Seed only the name (not the onboarded flag) so the first-timer tour toast
+  // still shows while the student-name gate stays out of the way.
+  await page.context().addInitScript(() => {
+    window.localStorage.setItem('labframe:student-name', 'E2E Student');
+  });
   await page.goto('/c/phy132/chargeBuildup');
 
   const toast = page.locator('.lab-tour-toast');
