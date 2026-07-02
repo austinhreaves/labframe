@@ -101,7 +101,18 @@ derives the unsupported-command list live from the unicode converter
 (`src/services/pdf/markdown/latexToUnicode.ts`), which now handles `\tag` and `\tfrac`,
 so do not hand-maintain examples. The checker does NOT catch
 `unit: 'Symbol(unevaluable)'`, a legacy-migration artifact that is a valid string but renders as
-the literal column unit; grep for it and drop the field or set a real unit.
+the literal column unit (grep for it and drop the field or set a real unit), and it does
+NOT flag an id reused within a single section (e.g. an image section whose `imageId` and
+`captionFieldId` are the same string); the duplicate-id check only fires across sections.
+
+**Forking a lab for another course** (e.g. an algebra-based PHY 114 copy of a 132 lab):
+keep the same lab `id` (persistence is scoped per course by `storagePrefix`), create
+`src/content/labs/phy114/<name>.draft.lab.ts` with a prefixed export
+(`phy114FooLab`), document the exact deltas from the source in the header comment plus a
+"re-sync by hand" note, then wire the export in `src/content/labs/index.ts` and the
+per-course mapping in `src/app/Routes.tsx` (`labsByCourse`). The course manifest `ref` is
+unchanged. Existing examples: `phy114/coulombsLaw`, `pointCharge`, `ohmsLaw`,
+`kirchhoffsLaws`.
 
 ### Lab content style conventions
 
@@ -116,6 +127,8 @@ the literal column unit; grep for it and drop the field or set a real unit.
 ## Conventions
 
 - Match the style of surrounding code; the repo is Prettier- and ESLint-clean.
+- `.claude/` is gitignored but the skills under `.claude/skills/` are tracked; a new
+  skill file needs `git add -f` once, then behaves normally.
 - No secrets or `.env` values in commits.
 - Telemetry payloads are deliberately minimal (no answers, no PII) - preserve that.
 - Parent-frame messaging is allow-list gated (`parentOriginAllowList`); never

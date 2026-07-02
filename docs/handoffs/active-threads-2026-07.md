@@ -29,7 +29,13 @@ grading automation (LLM-assisted scoring) is on the roadmap as a future evolutio
 Track 1 (deterministic CI gate: `npm run verify:labs`) is shipped. Track 2 (Fable pedagogy
 rubric) is built 2026-07-02 as the `/verify-lab-pedagogy` skill; the elaborated rubric and
 resolved decisions are in the spec, reports go to `docs/reviews/`, and the npm command is a
-non-passing stub. First target: the 11 enabled PHY 114 labs.
+non-passing stub. First batch (all 11 enabled PHY 114 labs) is done: 2 blocked, 9
+needs-work, reports committed. Both blockers were fixed the same day on branch
+claude/nervous-rosalind-b3d3a4: capacitorFundamentals discharge framing corrected, and
+kirchhoffsLaws got the `powerTransfer` fit (see GRAPHING_EXPANSION_SPEC.md status note)
+plus a PHY-114-owned fork replacing the calculus derivation. Remaining batch-wide
+concerns (units on measurement rows, dangling Set of Parameters, missing prediction
+fields, theory references) are in the per-lab reports for the author to sequence.
 
 **3. Lab workspace redesign** -- see PR #22 above.
 

@@ -1,6 +1,30 @@
 # Graphing Utility — Expansion Spec
 
-**Status:** Future work. v1 ships with linear + proportional fits only. Execute the phases below only when a specific lab needs the new fit type — not preemptively.
+**Status:** Future work for Phases A-D as written. v1 shipped with linear + proportional
+fits only. Execute the phases below only when a specific lab needs the new fit type, not
+preemptively.
+
+**Implemented outside the phases (2026-07-02):** a single named nonlinear model,
+`powerTransfer` (P = A·R/(R+B)², A = EMF², B = internal resistance), needed by the
+Kirchhoff's Laws & Power lab and requested with residuals minimized in the original
+coordinates. Implementation: `src/services/math/powerTransferFit.ts` (closed-form seed
+from the sqrt(R/P) rearrangement, then damped Gauss-Newton; 1σ errors from the covariance
+matrix; no optimizer library). Constraints discovered that apply to any future phase:
+
+- `FitOptionSchema.id` is now a Zod enum (`linear | proportional | powerTransfer`);
+  unknown fit ids fail `verify:labs`. Add new ids there first (section 8 step 1).
+- The envelope's `fits[plotId].parameters` values pass through `canonicalize`, which
+  throws on non-finite numbers. Never persist stdErrs (they can be NaN); a fit function
+  must return null rather than non-finite parameters.
+- `powerTransfer` stores parameters under capital `A`/`B` keys so the PDF's straight-line
+  path (which reads `parameters.a`) stays inert for it by construction. Follow the same
+  key-separation trick for any fit the straight-line renderer cannot draw.
+- Nonlinear curves are sampled in two places: `Chart.tsx` (101 points) and
+  `src/services/pdf/fitLine.ts` `computeClippedFitCurveInPdfSvg` (sampled polyline,
+  per-segment Liang-Barsky clip). A new curved fit needs both.
+- Parameter symbols in the fit legend come from the `FIT_SYMBOLS` table in
+  `src/services/math/leastSquares.ts` `formatFitLabel`.
+- New pure fit modules belong in the Stryker `mutate` list (`stryker.config.json`).
 
 **Companion to:** `docs/SPEC.md` (living spec; rebuild history in `docs/archive/REBUILD_SPEC.md`). This document is scoped to the fit/regression subsystem inside the chart rendering pipeline (`src/ui/primitives/Chart.tsx`, plus a future `src/services/math/` module).
 
