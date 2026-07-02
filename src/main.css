@@ -2424,7 +2424,9 @@ th {
 
 .table-column-formula {
   font-size: var(--text-xs);
-  color: var(--text-tertiary);
+  /* text-secondary, not tertiary: tertiary (#64748b) on the sunken th
+     background (#f1f5f9) is ~4.33:1, just under WCAG AA for this xs text. */
+  color: var(--text-secondary);
   font-weight: var(--weight-regular);
 }
 
