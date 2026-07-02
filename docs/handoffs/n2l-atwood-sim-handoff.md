@@ -35,9 +35,7 @@ export const ph201Course: Course = {
   title: 'PH 201',
   storagePrefix: 'ph201',
   // No Canvas integration at this stage -- parentOriginAllowList omitted (defaults to []).
-  labs: [
-    { ref: 'n2l-atwood', labNumber: 1, enabled: true, group: 'core' },
-  ],
+  labs: [{ ref: 'n2l-atwood', labNumber: 1, enabled: true, group: 'core' }],
 };
 ```
 
@@ -92,14 +90,15 @@ which rejects root-relative paths. See schema changes below.
    Students transcribe the parameters they actually use into the table before running.
 
    Columns:
+
    ```ts
    [
-     { id: 'trial',      label: 'Trial',          kind: 'input' },
-     { id: 'M_pred',     label: 'M (kg)',          kind: 'input', unit: 'kg' },
-     { id: 'm_pred',     label: 'm (kg)',          kind: 'input', unit: 'kg' },
-     { id: 'theta_pred', label: 'theta (deg)',     kind: 'input', unit: 'deg' },
-     { id: 'a_pred',     label: 'Predicted a',    kind: 'input', unit: 'm/s^2' },
-   ]
+     { id: 'trial', label: 'Trial', kind: 'input' },
+     { id: 'M_pred', label: 'M (kg)', kind: 'input', unit: 'kg' },
+     { id: 'm_pred', label: 'm (kg)', kind: 'input', unit: 'kg' },
+     { id: 'theta_pred', label: 'theta (deg)', kind: 'input', unit: 'deg' },
+     { id: 'a_pred', label: 'Predicted a', kind: 'input', unit: 'm/s^2' },
+   ];
    ```
 
 3. **Data table:** `kind: 'dataTable'`, `tableId: 'dataTable'`, `rowCount: 3`.
@@ -107,13 +106,14 @@ which rejects root-relative paths. See schema changes below.
    Percent error is an input column (PHY 114 / PH 201 pedagogy: student computes it).
 
    Columns:
+
    ```ts
    [
-     { id: 'trial',      label: 'Trial',               kind: 'input' },
-     { id: 'M',          label: 'M (kg)',               kind: 'input', unit: 'kg' },
-     { id: 'm',          label: 'm (kg)',               kind: 'input', unit: 'kg' },
-     { id: 'theta',      label: 'theta (deg)',          kind: 'input', unit: 'deg' },
-     { id: 'a_measured', label: 'a_measured (m/s^2)',   kind: 'input', unit: 'm/s^2' },
+     { id: 'trial', label: 'Trial', kind: 'input' },
+     { id: 'M', label: 'M (kg)', kind: 'input', unit: 'kg' },
+     { id: 'm', label: 'm (kg)', kind: 'input', unit: 'kg' },
+     { id: 'theta', label: 'theta (deg)', kind: 'input', unit: 'deg' },
+     { id: 'a_measured', label: 'a_measured (m/s^2)', kind: 'input', unit: 'm/s^2' },
      {
        id: 'a_theoretical',
        label: 'a_theoretical (m/s^2)',
@@ -127,11 +127,11 @@ which rejects root-relative paths. See schema changes below.
          const m = row['m'] ?? 0;
          const theta = row['theta'] ?? 0;
          if (M + m === 0) return 0;
-         return g * (m - M * Math.sin(theta * Math.PI / 180)) / (M + m);
+         return (g * (m - M * Math.sin((theta * Math.PI) / 180))) / (M + m);
        },
      },
-     { id: 'pct_error',  label: 'Percent error (%)',   kind: 'input', unit: '%' },
-   ]
+     { id: 'pct_error', label: 'Percent error (%)', kind: 'input', unit: '%' },
+   ];
    ```
 
 4. **Analysis questions:** Four `kind: 'concept'` sections:
@@ -252,19 +252,19 @@ diagram drawn directly on top of the scene. When active, draw on every frame:
 
 **On the cart:**
 
-| Vector | Direction | Label |
-| ------ | --------- | ----- |
-| Weight component along track | down the slope (negative track direction) | `Mg sin(theta)` |
-| Normal force | perpendicular to track, away from surface | `N = Mg cos(theta)` |
-| Tension | up the slope (toward pulley) | `T` |
-| Net force | along track (up-slope when a > 0) | `F_net` |
+| Vector                       | Direction                                 | Label               |
+| ---------------------------- | ----------------------------------------- | ------------------- |
+| Weight component along track | down the slope (negative track direction) | `Mg sin(theta)`     |
+| Normal force                 | perpendicular to track, away from surface | `N = Mg cos(theta)` |
+| Tension                      | up the slope (toward pulley)              | `T`                 |
+| Net force                    | along track (up-slope when a > 0)         | `F_net`             |
 
 **On the hanging mass:**
 
-| Vector | Direction | Label |
-| ------ | --------- | ----- |
-| Weight | straight down | `mg` |
-| Tension | straight up | `T` |
+| Vector    | Direction                | Label   |
+| --------- | ------------------------ | ------- |
+| Weight    | straight down            | `mg`    |
+| Tension   | straight up              | `T`     |
 | Net force | straight down when a > 0 | `F_net` |
 
 Arrow length scales linearly with force magnitude, anchored to the center of each body.
@@ -356,10 +356,7 @@ does not cross iframe boundaries even same-origin, so postMessage is the correct
 
 ```js
 function emit(detail) {
-  window.parent.postMessage(
-    { type: 'labframe:sim-event', detail },
-    window.location.origin,
-  );
+  window.parent.postMessage({ type: 'labframe:sim-event', detail }, window.location.origin);
 }
 ```
 
@@ -393,10 +390,10 @@ to the student in the sim.
 
 ```ts
 export const SimulationSchema = z.object({
-  url: z.string().url().or(z.string().startsWith('/')),  // allow root-relative local paths
+  url: z.string().url().or(z.string().startsWith('/')), // allow root-relative local paths
   title: nonEmptyText,
   allow: z.string().min(1).optional(),
-  sandbox: z.string().min(1).optional(),                  // e.g. 'allow-scripts'
+  sandbox: z.string().min(1).optional(), // e.g. 'allow-scripts'
 });
 ```
 
@@ -462,7 +459,7 @@ Parameters are locked while a trial is running.
 Run `npm run verify:lab -- n2l-atwood` before opening the PR. Also confirm manually:
 
 - No LaTeX leaks in PDF export (write equations as plain text: `g(m - M sin(theta)) /
-  (M + m)`, not `\frac{...}{...}`).
+(M + m)`, not `\frac{...}{...}`).
 - No `unit: 'Symbol(unevaluable)'` in any table column.
 - PDF export renders all sections including both data tables.
 - `/sims/atwood/index.html` loads standalone (no LabFrame chrome) -- visit it directly
@@ -491,16 +488,16 @@ Run `npm run verify:lab -- n2l-atwood` before opening the PR. Also confirm manua
 
 ## Files to create / modify
 
-| Action | Path |
-| ------ | ---- |
-| Create | `public/sims/atwood/index.html` |
-| Create | `src/content/courses/ph201.course.ts` |
-| Create | `src/content/labs/ph201/n2l-atwood.lab.ts` |
-| Edit   | `src/content/courses/index.ts` -- export `ph201Course` |
-| Edit   | `src/content/labs/index.ts` -- export `ph201N2lAtwoodLab` |
-| Edit   | `src/app/Routes.tsx` -- add course, lab, and `labsByCourse.ph201` |
+| Action | Path                                                                      |
+| ------ | ------------------------------------------------------------------------- |
+| Create | `public/sims/atwood/index.html`                                           |
+| Create | `src/content/courses/ph201.course.ts`                                     |
+| Create | `src/content/labs/ph201/n2l-atwood.lab.ts`                                |
+| Edit   | `src/content/courses/index.ts` -- export `ph201Course`                    |
+| Edit   | `src/content/labs/index.ts` -- export `ph201N2lAtwoodLab`                 |
+| Edit   | `src/app/Routes.tsx` -- add course, lab, and `labsByCourse.ph201`         |
 | Edit   | `src/domain/schema/lab.ts` -- relax `SimulationSchema.url`, add `sandbox` |
-| Edit   | `src/ui/LabPage.tsx` -- add `sandbox` prop to `StableSimulationFrame` |
+| Edit   | `src/ui/LabPage.tsx` -- add `sandbox` prop to `StableSimulationFrame`     |
 
 ## Relevant files to read before starting
 

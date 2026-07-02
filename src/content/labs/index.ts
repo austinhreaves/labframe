@@ -51,6 +51,10 @@ export { phy114OhmsLawLab } from './phy114/ohmsLaw.draft.lab';
 export { phy114ConvergingLensLab } from './phy114/convergingLens.draft.lab';
 export { phy114DivergingLensLab } from './phy114/divergingLens.draft.lab';
 
+// PH 201 mechanics lab wrapping the custom standalone Atwood sim under
+// public/sims/atwood/ (see docs/handoffs/n2l-atwood-sim-handoff.md).
+export { ph201N2lAtwoodLab } from './ph201/n2l-atwood.lab';
+
 export { phy112CapacitorsSeriesParallelLab } from './phy112/capacitorsSeriesParallel.lab';
 export { phy112ResistorsSeriesParallelLab } from './phy112/resistorsSeriesParallel.lab';
 export { phy112KirchhoffsRulesLab } from './phy112/kirchhoffsRules.lab';

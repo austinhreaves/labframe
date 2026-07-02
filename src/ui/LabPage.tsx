@@ -83,15 +83,17 @@ type SimulationFrameProps = {
   title: string;
   url: string;
   allow?: string;
+  sandbox?: string;
 };
 
-function StableSimulationFrame({ simulationId, title, url, allow }: SimulationFrameProps) {
+function StableSimulationFrame({ simulationId, title, url, allow, sandbox }: SimulationFrameProps) {
   const mountId = useRef(`${simulationId}-${Math.random().toString(36).slice(2, 10)}`);
   return (
     <iframe
       title={title}
       src={url}
       allow={allow}
+      sandbox={sandbox}
       loading="lazy"
       className="simulation-frame"
       data-mount-id={mountId.current}
@@ -494,6 +496,7 @@ export function LabPage({ course, lab }: Props) {
           title={activeSimulation.title}
           url={activeSimulation.url}
           {...(activeSimulation.allow ? { allow: activeSimulation.allow } : {})}
+          {...(activeSimulation.sandbox ? { sandbox: activeSimulation.sandbox } : {})}
         />
       ) : null}
     </div>

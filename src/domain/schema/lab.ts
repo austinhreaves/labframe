@@ -25,9 +25,12 @@ export const DerivedColumnSchema = z.object({
 export const ColumnSchema = z.discriminatedUnion('kind', [InputColumnSchema, DerivedColumnSchema]);
 
 export const SimulationSchema = z.object({
-  url: z.string().url(),
+  // Absolute URL (PhET et al.) or a root-relative path to a local sim asset
+  // served from public/ (e.g. '/sims/atwood/index.html').
+  url: z.string().url().or(z.string().startsWith('/')),
   title: nonEmptyText,
   allow: z.string().min(1).optional(),
+  sandbox: z.string().min(1).optional(),
 });
 
 export const StudentInfoOverridesSchema = z

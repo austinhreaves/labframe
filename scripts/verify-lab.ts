@@ -20,6 +20,7 @@
 import * as labModule from '../src/content/labs/index.ts';
 import { LabSchema, type Lab } from '../src/domain/schema/index.ts';
 import {
+  ph201Course,
   phy112Course,
   phy114Course,
   phy132Course,
@@ -36,7 +37,7 @@ interface Finding {
   message: string;
 }
 
-const COURSES = [phy112Course, phy114Course, phy132Course, welcomeCourse];
+const COURSES = [ph201Course, phy112Course, phy114Course, phy132Course, welcomeCourse];
 
 /** Keys whose string values address an answer slot and must be unique per lab. */
 const ID_KEYS = new Set(['fieldId', 'tableId', 'plotId', 'imageId', 'captionFieldId']);

@@ -1,0 +1,1284 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Adjustable-Angle Atwood Machine</title>
+    <style>
+      :root {
+        --ink: #1e293b;
+        --muted: #64748b;
+        --line: #cbd5e1;
+        --panel: #f8fafc;
+        --accent: #2563eb;
+        --track: #475569;
+        --cart: #3b82f6;
+        --mass: #8b5cf6;
+        --trail: #38bdf8;
+        --weight: #f59e0b;
+        --tension: #2563eb;
+        --net: #16a34a;
+        --normal: #9333ea;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        color: var(--ink);
+        background: #fff;
+        font-size: 14px;
+      }
+      .sim {
+        max-width: 540px;
+        margin: 0 auto;
+        padding: 10px 12px 24px;
+      }
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 6px;
+      }
+      .toolbar h1 {
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0;
+      }
+      .toolbar-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      button {
+        font: inherit;
+        color: var(--ink);
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 4px 12px;
+        cursor: pointer;
+      }
+      button:hover:not(:disabled) {
+        background: #eef2ff;
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
+      button[aria-pressed='true'],
+      .speed button.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .speed {
+        display: inline-flex;
+      }
+      .speed button {
+        border-radius: 0;
+        padding: 4px 8px;
+        margin-left: -1px;
+      }
+      .speed button:first-child {
+        border-radius: 6px 0 0 6px;
+        margin-left: 0;
+      }
+      .speed button:last-child {
+        border-radius: 0 6px 6px 0;
+      }
+      .canvas-wrap {
+        position: relative;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fdfefe;
+      }
+      #popover {
+        position: absolute;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #0f172a;
+        color: #fff;
+        border-radius: 6px;
+        padding: 6px 14px;
+        font-weight: 600;
+        pointer-events: none;
+      }
+      #tooltip {
+        position: absolute;
+        background: #0f172a;
+        color: #fff;
+        border-radius: 6px;
+        padding: 5px 8px;
+        font-size: 12px;
+        line-height: 1.45;
+        pointer-events: none;
+        white-space: nowrap;
+        z-index: 2;
+      }
+      .controls {
+        margin-top: 10px;
+        display: grid;
+        gap: 6px;
+      }
+      .param {
+        display: grid;
+        grid-template-columns: 140px 1fr 74px;
+        align-items: center;
+        gap: 8px;
+      }
+      .param label {
+        font-size: 13px;
+      }
+      .param input[type='number'] {
+        font: inherit;
+        padding: 3px 5px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        width: 100%;
+      }
+      .buttons {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+        flex-wrap: wrap;
+      }
+      #runBtn {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+        min-width: 76px;
+      }
+      #runBtn:disabled {
+        background: var(--panel);
+        color: var(--ink);
+        border-color: var(--line);
+      }
+      #runMsg {
+        color: #b91c1c;
+        font-size: 13px;
+      }
+      .results {
+        margin-top: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px 14px;
+        background: var(--panel);
+      }
+      .results.pop {
+        animation: pop 0.35s ease-out;
+      }
+      @keyframes pop {
+        from {
+          opacity: 0;
+          transform: scale(0.96);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .results.pop {
+          animation: none;
+        }
+      }
+      .results h2 {
+        font-size: 13px;
+        margin: 0 0 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+      }
+      .results dl {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 3px 14px;
+        margin: 0;
+      }
+      .results dt {
+        color: var(--muted);
+      }
+      .results dd {
+        margin: 0;
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+      }
+      #graphs {
+        margin-top: 12px;
+      }
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sim">
+      <div class="toolbar">
+        <h1>Adjustable-Angle Atwood Machine</h1>
+        <div class="toolbar-controls">
+          <button id="forcesBtn" aria-pressed="false" title="Show or hide the free-body diagram">
+            Forces
+          </button>
+          <div class="speed" role="group" aria-label="Simulation speed">
+            <button data-speed="0.25" aria-pressed="false">0.25x</button>
+            <button data-speed="0.5" class="active" aria-pressed="true">0.5x</button>
+            <button data-speed="1" aria-pressed="false">1x</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="canvas-wrap">
+        <canvas id="scene" width="460" height="630"></canvas>
+        <div id="popover" hidden>Balanced!</div>
+        <div id="tooltip" hidden></div>
+      </div>
+
+      <div class="controls">
+        <div class="param">
+          <label for="MSlider">Cart mass M (kg)</label>
+          <input type="range" id="MSlider" min="0.2" max="2" step="0.1" value="0.5" />
+          <input
+            type="number"
+            id="MNum"
+            min="0.2"
+            max="2"
+            step="0.1"
+            value="0.5"
+            aria-label="Cart mass in kilograms"
+          />
+        </div>
+        <div class="param">
+          <label for="mSlider">Hanging mass m (kg)</label>
+          <input type="range" id="mSlider" min="0.05" max="0.5" step="0.05" value="0.1" />
+          <input
+            type="number"
+            id="mNum"
+            min="0.05"
+            max="0.5"
+            step="0.05"
+            value="0.1"
+            aria-label="Hanging mass in kilograms"
+          />
+        </div>
+        <div class="param">
+          <label for="thetaSlider">Track angle theta (deg)</label>
+          <input type="range" id="thetaSlider" min="0" max="60" step="1" value="0" />
+          <input
+            type="number"
+            id="thetaNum"
+            min="0"
+            max="60"
+            step="1"
+            value="0"
+            aria-label="Track angle in degrees"
+          />
+        </div>
+        <div class="buttons">
+          <button id="runBtn">Run</button>
+          <button id="pauseBtn" disabled>Pause</button>
+          <button id="stepBtn" hidden title="Advance one 0.01 second tick">Step</button>
+          <button id="resetBtn">Reset</button>
+          <span id="runMsg" role="status"></span>
+        </div>
+      </div>
+
+      <div id="results" class="results" hidden>
+        <h2>Results</h2>
+        <dl>
+          <dt>Time elapsed</dt>
+          <dd><span id="resT">0.00</span> s</dd>
+          <dt>Distance traveled by cart</dt>
+          <dd><span id="resD">0.00</span> m</dd>
+          <dt>Velocity at end</dt>
+          <dd><span id="resV">0.00</span> m/s</dd>
+          <dt>Measured acceleration (from your data, 2d / t&sup2;)</dt>
+          <dd><span id="resA">0.00</span> m/s&sup2;</dd>
+        </dl>
+      </div>
+
+      <canvas id="graphs" width="460" height="420"></canvas>
+
+      <div id="srSummary" class="visually-hidden" aria-live="polite"></div>
+    </div>
+
+    <script>
+      'use strict';
+
+      /**
+       * Telemetry: every event is posted to the parent LabFrame window as
+       * { type: 'labframe:sim-event', detail } via window.parent.postMessage.
+       * `t` in each detail is seconds since page load (performance.now based).
+       *
+       * Event shapes:
+       *   parameter_set:        { type, param: 'cart_mass'|'hanging_mass'|'angle', value, t }
+       *   trial_started:        { type, M, m, theta, t }
+       *   trial_completed:      { type, M, m, theta, duration, distance, a_measured,
+       *                           a_theoretical, near_equilibrium, t }
+       *   trial_reset:          { type, t }
+       *   measurement_recorded: { type, field, value, t }
+       *
+       * `near_equilibrium` is true when |a_theoretical| < 0.05 m/s^2.
+       * `a_theoretical` is for the AI layer only and is never shown in the sim.
+       */
+      const sessionStart = performance.now();
+      function emit(detail) {
+        try {
+          window.parent.postMessage({ type: 'labframe:sim-event', detail }, window.location.origin);
+        } catch {
+          /* standalone (no parent) or blocked; telemetry is best-effort */
+        }
+      }
+      function now() {
+        return (performance.now() - sessionStart) / 1000;
+      }
+
+      // Physics constants (SI units).
+      const G = 9.8;
+      const TRACK_LEN = 1.5; // cart travel distance from rest to the pulley end (m)
+      const DROP = 1.2; // hanging mass drop height to the floor (m)
+      const DT = 0.01; // fixed integrator timestep (s)
+      const T_MAX = 20; // near-equilibrium trial cap (s)
+      const NEAR_EQ = 0.05; // |a| below this counts as near equilibrium (m/s^2)
+      const D_LIMIT = Math.min(TRACK_LEN, DROP); // first termination distance
+
+      // Scene geometry (world units are meters, y up; pivot is the track's wall anchor).
+      const PIVOT = { x: 0, y: 1.55 };
+      const TRACK_VIS = 1.8; // drawn track length, pivot to pulley center
+      const TRACK_HALF = 0.015; // half thickness of the drawn track
+      const CART_W = 0.22;
+      const CART_H = 0.12;
+      // Pulley radius equals the cart center's perpendicular offset from the track
+      // line (about half the block height), so the string leaves the cart at its
+      // center of mass, runs parallel to the incline, and meets the pulley
+      // tangentially: tension is always parallel to the incline.
+      const PULLEY_R = TRACK_HALF + CART_H / 2;
+      const CART_OFFSET = 0.25; // cart center distance from pivot at d = 0
+      const HANG_INIT = 0.3; // string length below pulley center to mass top at d = 0
+      const MASS_W = 0.14;
+      const MASS_H = 0.14;
+
+      // World-to-canvas transform: fixed scale and margins covering theta = 0..60.
+      const XMIN = -0.2;
+      const YMIN = -0.15;
+      const SCALE = 180; // px per meter
+      const CANVAS_W = 460;
+      const CANVAS_H = 630;
+      // FBD arrow length for a force in Newtons. Square-root scaling keeps the
+      // ~0.5 N hanging weight and the ~20 N cart weight both readable on one
+      // canvas; lengths are ordinal (bigger force = longer arrow), not linear.
+      function forceLen(F) {
+        return 34 * Math.sqrt(Math.max(0, F));
+      }
+
+      const els = {};
+      for (const id of [
+        'scene',
+        'graphs',
+        'popover',
+        'tooltip',
+        'forcesBtn',
+        'MSlider',
+        'MNum',
+        'mSlider',
+        'mNum',
+        'thetaSlider',
+        'thetaNum',
+        'runBtn',
+        'pauseBtn',
+        'stepBtn',
+        'resetBtn',
+        'runMsg',
+        'results',
+        'resT',
+        'resD',
+        'resV',
+        'resA',
+        'srSummary',
+      ]) {
+        els[id] = document.getElementById(id);
+      }
+
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+      const state = {
+        M: 0.5,
+        m: 0.1,
+        theta: 0, // degrees
+        displayTheta: 0, // eased angle used for rendering only
+        phase: 'idle', // 'idle' | 'running' | 'paused' | 'complete'
+        t: 0,
+        d: 0,
+        v: 0,
+        samples: [], // { t, d, v } per integrator step
+        pulleyPhi: 0, // cumulative pulley rotation (rad)
+        speed: 0.5,
+        showForces: false,
+        acc: 0, // integrator time accumulator (s)
+        aMeasured: 0,
+        countUp: null, // { start } while the a_measured count-up runs
+      };
+
+      function aTheoretical() {
+        const { M, m, theta } = state;
+        const rad = (theta * Math.PI) / 180;
+        return (G * (m - M * Math.sin(rad))) / (M + m);
+      }
+
+      // ---------- parameters ----------
+
+      const paramDefs = {
+        M: {
+          slider: els.MSlider,
+          num: els.MNum,
+          min: 0.2,
+          max: 2,
+          decimals: 1,
+          telemetry: 'cart_mass',
+          aria: (v) => 'Cart mass, ' + v + ' kilograms',
+        },
+        m: {
+          slider: els.mSlider,
+          num: els.mNum,
+          min: 0.05,
+          max: 0.5,
+          decimals: 2,
+          telemetry: 'hanging_mass',
+          aria: (v) => 'Hanging mass, ' + v + ' kilograms',
+        },
+        theta: {
+          slider: els.thetaSlider,
+          num: els.thetaNum,
+          min: 0,
+          max: 60,
+          decimals: 0,
+          telemetry: 'angle',
+          aria: (v) => 'Track angle, ' + v + ' degrees',
+        },
+      };
+
+      let popoverTimer = 0;
+      function onParamChanged() {
+        // A parameter change while paused mid-trial invalidates the run:
+        // recorded t and d would no longer match the parameters. Reset it.
+        if (state.phase === 'paused') {
+          resetTrial();
+        }
+        updateRunAvailability();
+        updateSrSummary();
+        // Balanced popover: dismiss on any change, re-show while near equilibrium.
+        els.popover.hidden = true;
+        clearTimeout(popoverTimer);
+        if (Math.abs(aTheoretical()) < NEAR_EQ) {
+          els.popover.hidden = false;
+          popoverTimer = setTimeout(() => {
+            els.popover.hidden = true;
+          }, 2000);
+        }
+      }
+
+      function setParam(key, rawValue, fromSlider) {
+        const def = paramDefs[key];
+        let v = Number(rawValue);
+        if (!Number.isFinite(v)) v = state[key];
+        v = Math.min(def.max, Math.max(def.min, v));
+        state[key] = v;
+        const text = v.toFixed(def.decimals);
+        if (!fromSlider) def.slider.value = String(v);
+        def.slider.setAttribute('aria-label', def.aria(text));
+        def.num.value = text;
+        onParamChanged();
+      }
+
+      for (const key of Object.keys(paramDefs)) {
+        const def = paramDefs[key];
+        def.slider.setAttribute('aria-label', def.aria(state[key].toFixed(def.decimals)));
+        def.slider.addEventListener('input', () => setParam(key, def.slider.value, true));
+        def.slider.addEventListener('change', () =>
+          emit({ type: 'parameter_set', param: def.telemetry, value: state[key], t: now() }),
+        );
+        def.num.addEventListener('change', () => {
+          setParam(key, def.num.value, false);
+          emit({ type: 'parameter_set', param: def.telemetry, value: state[key], t: now() });
+        });
+      }
+
+      function lockParams(locked) {
+        for (const def of Object.values(paramDefs)) {
+          def.slider.disabled = locked;
+          def.num.disabled = locked;
+        }
+      }
+
+      function updateSrSummary() {
+        els.srSummary.textContent =
+          'Cart mass ' +
+          state.M.toFixed(1) +
+          ' kilograms, hanging mass ' +
+          state.m.toFixed(2) +
+          ' kilograms, track angle ' +
+          state.theta.toFixed(0) +
+          ' degrees.';
+      }
+
+      // ---------- trial state machine ----------
+
+      function updateRunAvailability() {
+        const a = aTheoretical();
+        // The epsilon absorbs float noise so exact equilibrium (m = M sin theta)
+        // reliably lands on the blocked side rather than epsilon-positive.
+        const blocked = a <= 1e-9 && (state.phase === 'idle' || state.phase === 'complete');
+        els.runBtn.disabled = state.phase === 'running' || blocked;
+        els.runMsg.textContent = blocked
+          ? 'Hanging mass cannot accelerate the cart at this angle.'
+          : '';
+        els.pauseBtn.disabled = state.phase !== 'running';
+        els.stepBtn.hidden = state.phase !== 'paused';
+        els.runBtn.textContent = state.phase === 'paused' ? 'Resume' : 'Run';
+      }
+
+      function clearTrialData() {
+        state.t = 0;
+        state.d = 0;
+        state.v = 0;
+        state.acc = 0;
+        state.samples = [];
+        state.pulleyPhi = 0;
+        state.aMeasured = 0;
+        state.countUp = null;
+        els.results.hidden = true;
+        els.results.classList.remove('pop');
+      }
+
+      function resetTrial() {
+        const hadTrial = state.phase !== 'idle' || state.d > 0;
+        state.phase = 'idle';
+        clearTrialData();
+        lockParams(false);
+        updateRunAvailability();
+        if (hadTrial) emit({ type: 'trial_reset', t: now() });
+      }
+
+      function startTrial() {
+        if (aTheoretical() <= 1e-9) return;
+        if (state.phase === 'complete') resetTrial();
+        clearTrialData();
+        state.samples.push({ t: 0, d: 0, v: 0 });
+        emit({ type: 'trial_started', M: state.M, m: state.m, theta: state.theta, t: now() });
+        if (reducedMotion.matches) {
+          completeInstantly();
+          return;
+        }
+        state.phase = 'running';
+        lockParams(true);
+        updateRunAvailability();
+      }
+
+      /** prefers-reduced-motion: skip the animation and jump to the end state. */
+      function completeInstantly() {
+        const a = aTheoretical();
+        let tEnd = Math.sqrt((2 * D_LIMIT) / a);
+        let dEnd = D_LIMIT;
+        if (tEnd > T_MAX) {
+          tEnd = T_MAX;
+          dEnd = 0.5 * a * T_MAX * T_MAX;
+        }
+        const steps = 160;
+        state.samples = [];
+        for (let i = 0; i <= steps; i += 1) {
+          const t = (tEnd * i) / steps;
+          state.samples.push({ t, d: 0.5 * a * t * t, v: a * t });
+        }
+        state.t = tEnd;
+        state.d = dEnd;
+        state.v = a * tEnd;
+        state.pulleyPhi = dEnd / PULLEY_R;
+        completeTrial();
+      }
+
+      function completeTrial() {
+        state.phase = 'complete';
+        lockParams(false);
+        const aTh = aTheoretical();
+        state.aMeasured = state.t > 0 ? (2 * state.d) / (state.t * state.t) : 0;
+        emit({
+          type: 'trial_completed',
+          M: state.M,
+          m: state.m,
+          theta: state.theta,
+          duration: state.t,
+          distance: state.d,
+          a_measured: state.aMeasured,
+          a_theoretical: aTh,
+          near_equilibrium: Math.abs(aTh) < NEAR_EQ,
+          t: now(),
+        });
+        for (const [field, value] of [
+          ['time', state.t],
+          ['distance', state.d],
+          ['final_velocity', state.v],
+          ['a_measured', state.aMeasured],
+        ]) {
+          emit({ type: 'measurement_recorded', field, value, t: now() });
+        }
+        els.resT.textContent = state.t.toFixed(2);
+        els.resD.textContent = state.d.toFixed(3);
+        els.resV.textContent = state.v.toFixed(2);
+        els.results.hidden = false;
+        if (reducedMotion.matches) {
+          els.resA.textContent = state.aMeasured.toFixed(3);
+        } else {
+          els.results.classList.add('pop');
+          els.resA.textContent = '0.000';
+          state.countUp = { start: performance.now() };
+        }
+        updateRunAvailability();
+      }
+
+      /** One fixed integrator tick. Returns true when the trial finished. */
+      function stepPhysics() {
+        const a = aTheoretical();
+        const vPrev = state.v;
+        const dPrev = state.d;
+        state.v += a * DT;
+        state.d += state.v * DT;
+        state.t += DT;
+        if (state.d >= D_LIMIT && state.v > 0) {
+          // Interpolate the exact crossing inside this step so t matches d.
+          const frac = Math.min(1, Math.max(0, (D_LIMIT - dPrev) / (state.d - dPrev)));
+          state.t += DT * (frac - 1);
+          state.v = vPrev + a * DT * frac;
+          state.d = D_LIMIT;
+        }
+        state.pulleyPhi = state.d / PULLEY_R;
+        state.samples.push({ t: state.t, d: state.d, v: state.v });
+        if (state.d >= D_LIMIT || state.t >= T_MAX) {
+          completeTrial();
+          return true;
+        }
+        return false;
+      }
+
+      els.runBtn.addEventListener('click', () => {
+        if (state.phase === 'paused') {
+          state.phase = 'running';
+          lockParams(true);
+          state.acc = 0;
+          updateRunAvailability();
+        } else {
+          startTrial();
+        }
+      });
+      els.pauseBtn.addEventListener('click', () => {
+        if (state.phase !== 'running') return;
+        state.phase = 'paused';
+        lockParams(false);
+        updateRunAvailability();
+      });
+      els.stepBtn.addEventListener('click', () => {
+        if (state.phase !== 'paused') return;
+        stepPhysics();
+      });
+      els.resetBtn.addEventListener('click', resetTrial);
+
+      els.forcesBtn.addEventListener('click', () => {
+        state.showForces = !state.showForces;
+        els.forcesBtn.setAttribute('aria-pressed', String(state.showForces));
+      });
+      for (const btn of document.querySelectorAll('.speed button')) {
+        btn.addEventListener('click', () => {
+          state.speed = Number(btn.dataset.speed);
+          for (const other of document.querySelectorAll('.speed button')) {
+            other.classList.toggle('active', other === btn);
+            other.setAttribute('aria-pressed', String(other === btn));
+          }
+        });
+      }
+
+      // ---------- scene rendering ----------
+
+      const sceneCtx = els.scene.getContext('2d');
+      const graphCtx = els.graphs.getContext('2d');
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      for (const [canvas, w, h] of [
+        [els.scene, CANVAS_W, CANVAS_H],
+        [els.graphs, CANVAS_W, 420],
+      ]) {
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+        canvas.getContext('2d').scale(dpr, dpr);
+      }
+
+      function wx(x) {
+        return (x - XMIN) * SCALE;
+      }
+      function wy(y) {
+        return CANVAS_H - (y - YMIN) * SCALE;
+      }
+
+      function sceneGeometry() {
+        const rad = (state.displayTheta * Math.PI) / 180;
+        const ux = Math.cos(rad);
+        const uy = Math.sin(rad);
+        const pulley = { x: PIVOT.x + ux * TRACK_VIS, y: PIVOT.y + uy * TRACK_VIS };
+        const s = CART_OFFSET + state.d;
+        const lift = TRACK_HALF + CART_H / 2;
+        const cart = {
+          x: PIVOT.x + ux * s - uy * lift,
+          y: PIVOT.y + uy * s + ux * lift,
+        };
+        const massTop = pulley.y - HANG_INIT - state.d;
+        // The vertical string segment leaves the pulley at its rightmost point,
+        // so the hanging mass is centered one pulley radius right of the axle.
+        const mass = { x: pulley.x + PULLEY_R, y: massTop - MASS_H / 2 };
+        const floorY = pulley.y - HANG_INIT - DROP - MASS_H;
+        return { rad, ux, uy, pulley, cart, mass, floorY, lift };
+      }
+
+      function hatchedLine(ctx, x1, y1, x2, y2, hatchDx, hatchDy) {
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        const n = 8;
+        for (let i = 0; i <= n; i += 1) {
+          const px = x1 + ((x2 - x1) * i) / n;
+          const py = y1 + ((y2 - y1) * i) / n;
+          ctx.beginPath();
+          ctx.moveTo(px, py);
+          ctx.lineTo(px + hatchDx, py + hatchDy);
+          ctx.stroke();
+        }
+      }
+
+      function drawArrowLabel(ctx, color, label, lx, ly) {
+        ctx.font = 'bold 12px system-ui, sans-serif';
+        // White halo keeps labels readable over the track, string, and bodies.
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(253, 254, 254, 0.85)';
+        ctx.strokeText(label, lx, ly);
+        ctx.fillStyle = color;
+        ctx.fillText(label, lx, ly);
+      }
+
+      function drawArrow(ctx, x, y, dx, dy, color, label, labelDx, labelDy) {
+        const len = Math.hypot(dx, dy);
+        ctx.fillStyle = color;
+        ctx.strokeStyle = color;
+        if (len < 2) {
+          // Zero net force at equilibrium collapses to a dot.
+          ctx.beginPath();
+          ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+          if (label) {
+            drawArrowLabel(ctx, color, label, x + 8 + (labelDx || 0), y - 8 + (labelDy || 0));
+          }
+          return;
+        }
+        const tx = x + dx;
+        const ty = y + dy;
+        const nx = dx / len;
+        const ny = dy / len;
+        const head = Math.min(12, len * 0.5);
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(tx - nx * head, ty - ny * head);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(tx, ty);
+        ctx.lineTo(tx - nx * head - ny * head * 0.55, ty - ny * head + nx * head * 0.55);
+        ctx.lineTo(tx - nx * head + ny * head * 0.55, ty - ny * head - nx * head * 0.55);
+        ctx.closePath();
+        ctx.fill();
+        if (label) {
+          drawArrowLabel(ctx, color, label, tx + 6 + (labelDx || 0), ty + (labelDy || 0));
+        }
+      }
+
+      function drawForces(ctx, g) {
+        const aTh = aTheoretical();
+        const T = state.m * (G - aTh);
+        const Wcart = state.M * G;
+        const N = Wcart * Math.cos(g.rad);
+        const cx = wx(g.cart.x);
+        const cy = wy(g.cart.y);
+        // Track direction and outward normal in canvas coordinates (canvas y is down):
+        // world up-slope (cos, sin) -> (cos, -sin); world normal (-sin, cos) -> (-sin, -cos).
+        const ux = g.ux;
+        const uy = -g.uy;
+        const normX = -Math.sin(g.rad);
+        const normY = -Math.cos(g.rad);
+        // Cart vectors. Gravity is drawn as the actual force (straight down, Mg);
+        // decomposing it along the incline is left to the student. At theta = 0
+        // gravity and the normal force are collinear, so their anchors are nudged
+        // apart along the track direction to keep both visible.
+        drawArrow(ctx, cx + ux * 4, cy + uy * 4, 0, forceLen(Wcart), '#f59e0b', 'Mg', 0, 14);
+        drawArrow(
+          ctx,
+          cx - ux * 4,
+          cy - uy * 4,
+          normX * forceLen(N),
+          normY * forceLen(N),
+          '#9333ea',
+          'N',
+          -2,
+          -6,
+        );
+        drawArrow(ctx, cx, cy, ux * forceLen(T), uy * forceLen(T), '#2563eb', 'T', 2, -8);
+        const FnetCart = state.M * aTh;
+        const fSign = FnetCart >= 0 ? 1 : -1;
+        drawArrow(
+          ctx,
+          cx + normX * 14,
+          cy + normY * 14,
+          ux * fSign * forceLen(Math.abs(FnetCart)),
+          uy * fSign * forceLen(Math.abs(FnetCart)),
+          '#16a34a',
+          'F_net',
+          2,
+          16,
+        );
+        // Hanging mass vectors (straight up and down).
+        const hx = wx(g.mass.x);
+        const hy = wy(g.mass.y);
+        drawArrow(ctx, hx, hy, 0, forceLen(state.m * G), '#f59e0b', 'mg', 0, 14);
+        drawArrow(ctx, hx, hy, 0, -forceLen(T), '#2563eb', 'T', 2, -8);
+        const fnetHang = state.m * aTh;
+        drawArrow(
+          ctx,
+          hx + 16,
+          hy,
+          0,
+          Math.sign(fnetHang) * forceLen(Math.abs(fnetHang)),
+          '#16a34a',
+          'F_net',
+          2,
+          14,
+        );
+      }
+
+      function drawScene() {
+        const ctx = sceneCtx;
+        ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+        const g = sceneGeometry();
+
+        // Wall (track pivot mount) with hatch marks.
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 2;
+        hatchedLine(ctx, wx(-0.06), wy(PIVOT.y + 0.45), wx(-0.06), wy(PIVOT.y - 0.45), -8, -6);
+
+        // Floor under the hanging mass terminal position.
+        hatchedLine(
+          ctx,
+          wx(g.mass.x - 0.35),
+          wy(g.floorY),
+          wx(g.mass.x + 0.35),
+          wy(g.floorY),
+          -6,
+          8,
+        );
+
+        // Track.
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = TRACK_HALF * 2 * SCALE;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(wx(PIVOT.x), wy(PIVOT.y));
+        ctx.lineTo(wx(g.pulley.x), wy(g.pulley.y));
+        ctx.stroke();
+        ctx.lineCap = 'butt';
+
+        // Motion trail: gradient from transparent (oldest, at the start) to the cart.
+        if (state.d > 0.005) {
+          const s0 = CART_OFFSET;
+          const lift = g.lift;
+          const x0 = PIVOT.x + g.ux * s0 - g.uy * lift;
+          const y0 = PIVOT.y + g.uy * s0 + g.ux * lift;
+          const grad = ctx.createLinearGradient(wx(x0), wy(y0), wx(g.cart.x), wy(g.cart.y));
+          grad.addColorStop(0, 'rgba(56, 189, 248, 0)');
+          grad.addColorStop(1, 'rgba(56, 189, 248, 0.75)');
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = 4;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(wx(x0), wy(y0));
+          // Straight-line path drawn as a (degenerate) bezier along the track.
+          ctx.bezierCurveTo(
+            wx((x0 + g.cart.x) / 2),
+            wy((y0 + g.cart.y) / 2),
+            wx((x0 + g.cart.x) / 2),
+            wy((y0 + g.cart.y) / 2),
+            wx(g.cart.x),
+            wy(g.cart.y),
+          );
+          ctx.stroke();
+          ctx.lineCap = 'butt';
+        }
+
+        // Pivot pin.
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.arc(wx(PIVOT.x), wy(PIVOT.y), 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pulley with rotating spokes.
+        const px = wx(g.pulley.x);
+        const py = wy(g.pulley.y);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(px, py, PULLEY_R * SCALE, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.lineWidth = 1.5;
+        for (let i = 0; i < 5; i += 1) {
+          const ang = state.pulleyPhi + (i * 2 * Math.PI) / 5;
+          ctx.beginPath();
+          ctx.moveTo(px, py);
+          ctx.lineTo(px + Math.cos(ang) * PULLEY_R * SCALE, py + Math.sin(ang) * PULLEY_R * SCALE);
+          ctx.stroke();
+        }
+        ctx.fillStyle = '#475569';
+        ctx.beginPath();
+        ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // String, drawn over the pulley so it visibly wraps the rim:
+        //  1. from the cart's uphill face (center-of-mass height) parallel to the
+        //     incline, tangent to the pulley at the incline-side tangent point,
+        //  2. an arc over the top of the rim between the two tangent points,
+        //  3. straight down from the rightmost rim point to the hanging mass.
+        // Both tangencies are exact because PULLEY_R equals the string's
+        // perpendicular offset from the track line.
+        const uphill = {
+          x: g.cart.x + g.ux * (CART_W / 2),
+          y: g.cart.y + g.uy * (CART_W / 2),
+        };
+        const tangent1 = {
+          x: g.pulley.x - g.uy * PULLEY_R,
+          y: g.pulley.y + g.ux * PULLEY_R,
+        };
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(wx(uphill.x), wy(uphill.y));
+        ctx.lineTo(wx(tangent1.x), wy(tangent1.y));
+        ctx.stroke();
+        ctx.beginPath();
+        // Canvas angles are the negatives of world angles (y is flipped). The
+        // incline-side tangent sits at world angle 90deg + theta, the vertical
+        // segment leaves at world angle 0; sweep clockwise over the top.
+        ctx.arc(px, py, PULLEY_R * SCALE, -(Math.PI / 2 + g.rad), 0, false);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(wx(g.pulley.x + PULLEY_R), wy(g.pulley.y));
+        ctx.lineTo(wx(g.mass.x), wy(g.mass.y + MASS_H / 2));
+        ctx.stroke();
+
+        // Cart: rectangle rotated to sit flush on the track.
+        ctx.save();
+        ctx.translate(wx(g.cart.x), wy(g.cart.y));
+        ctx.rotate(-g.rad);
+        ctx.fillStyle = '#3b82f6';
+        ctx.strokeStyle = '#1d4ed8';
+        ctx.lineWidth = 1.5;
+        const cw = CART_W * SCALE;
+        const ch = CART_H * SCALE;
+        ctx.beginPath();
+        ctx.roundRect(-cw / 2, -ch / 2, cw, ch, 3);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 11px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(state.M.toFixed(1) + ' kg', 0, 0);
+        ctx.restore();
+
+        // Hanging mass.
+        const mx = wx(g.mass.x);
+        const my = wy(g.mass.y);
+        const mw = MASS_W * SCALE;
+        const mh = MASS_H * SCALE;
+        ctx.fillStyle = '#8b5cf6';
+        ctx.strokeStyle = '#6d28d9';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(mx - mw / 2, my - mh / 2, mw, mh, 3);
+        ctx.fill();
+        ctx.stroke();
+        // Label beside the box; the box itself is too small to hold the text.
+        ctx.fillStyle = '#6d28d9';
+        ctx.font = 'bold 11px system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(state.m.toFixed(2) + ' kg', mx + mw / 2 + 6, my);
+        ctx.textBaseline = 'alphabetic';
+
+        // FBD overlay.
+        if (state.showForces) drawForces(ctx, g);
+
+        // Live readouts overlay.
+        if (state.phase !== 'idle') {
+          ctx.fillStyle = 'rgba(248, 250, 252, 0.9)';
+          ctx.strokeStyle = '#cbd5e1';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.roundRect(8, 8, 128, 62, 6);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#1e293b';
+          ctx.font = '12px system-ui, sans-serif';
+          ctx.fillText('t = ' + state.t.toFixed(2) + ' s', 16, 25);
+          ctx.fillText('d = ' + state.d.toFixed(3) + ' m', 16, 43);
+          ctx.fillText('v = ' + state.v.toFixed(2) + ' m/s', 16, 61);
+        }
+      }
+
+      // ---------- graphs ----------
+
+      const PLOT = {
+        left: 48,
+        right: 14,
+        p1Top: 20,
+        p1H: 150,
+        p2Top: 240,
+        p2H: 150,
+      };
+
+      function niceMax(v, candidates) {
+        for (const c of candidates) if (v <= c) return c;
+        return candidates[candidates.length - 1];
+      }
+
+      function drawPlotFrame(ctx, top, height, yMax, yLabel, xMax, legend) {
+        const w = CANVAS_W - PLOT.left - PLOT.right;
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.fillStyle = '#64748b';
+        ctx.font = '10px system-ui, sans-serif';
+        ctx.lineWidth = 1;
+        const xTicks = 5;
+        const yTicks = 5;
+        for (let i = 0; i <= xTicks; i += 1) {
+          const x = PLOT.left + (w * i) / xTicks;
+          ctx.beginPath();
+          ctx.moveTo(x, top);
+          ctx.lineTo(x, top + height);
+          ctx.stroke();
+          ctx.textAlign = 'center';
+          ctx.fillText(((xMax * i) / xTicks).toFixed(1), x, top + height + 13);
+        }
+        for (let i = 0; i <= yTicks; i += 1) {
+          const y = top + height - (height * i) / yTicks;
+          ctx.beginPath();
+          ctx.moveTo(PLOT.left, y);
+          ctx.lineTo(PLOT.left + w, y);
+          ctx.stroke();
+          ctx.textAlign = 'right';
+          ctx.fillText(((yMax * i) / yTicks).toFixed(1), PLOT.left - 5, y + 3);
+        }
+        ctx.strokeStyle = '#94a3b8';
+        ctx.strokeRect(PLOT.left, top, w, height);
+        ctx.textAlign = 'center';
+        ctx.fillText('t (s)', PLOT.left + w / 2, top + height + 26);
+        ctx.save();
+        ctx.translate(12, top + height / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText(yLabel, 0, 0);
+        ctx.restore();
+        ctx.fillStyle = '#1e293b';
+        ctx.font = 'bold 11px system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(legend, PLOT.left + 6, top + 13);
+      }
+
+      function plotCurve(ctx, top, height, xMax, yMax, getY, color) {
+        const w = CANVAS_W - PLOT.left - PLOT.right;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        let started = false;
+        for (const s of state.samples) {
+          const x = PLOT.left + (s.t / xMax) * w;
+          const y = top + height - (Math.min(getY(s), yMax) / yMax) * height;
+          if (!started) {
+            ctx.moveTo(x, y);
+            started = true;
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+        ctx.stroke();
+      }
+
+      function drawGraphs() {
+        const ctx = graphCtx;
+        ctx.clearRect(0, 0, CANVAS_W, 420);
+        const lastT = state.samples.length ? state.samples[state.samples.length - 1].t : 0;
+        const xMax = niceMax(Math.max(lastT, 1), [1, 2, 5, 10, 20]);
+        const vPeak = state.samples.reduce((acc, s) => Math.max(acc, s.v), 0);
+        const yMaxV = niceMax(Math.max(vPeak, 0.4), [0.5, 1, 1.5, 2, 3, 4, 5, 6]);
+        const w = CANVAS_W - PLOT.left - PLOT.right;
+
+        drawPlotFrame(ctx, PLOT.p1Top, PLOT.p1H, 1.5, 'x (m)', xMax, 'x(t)');
+        drawPlotFrame(ctx, PLOT.p2Top, PLOT.p2H, yMaxV, 'v (m/s)', xMax, 'v(t)');
+
+        if (state.samples.length > 1) {
+          plotCurve(ctx, PLOT.p1Top, PLOT.p1H, xMax, 1.5, (s) => s.d, '#2563eb');
+          plotCurve(ctx, PLOT.p2Top, PLOT.p2H, xMax, yMaxV, (s) => s.v, '#8b5cf6');
+        }
+
+        if (state.phase === 'complete' && state.samples.length > 1) {
+          // Plot 1: dashed line at the terminal position.
+          const yTerm = PLOT.p1Top + PLOT.p1H - (state.d / 1.5) * PLOT.p1H;
+          ctx.strokeStyle = '#94a3b8';
+          ctx.setLineDash([5, 4]);
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(PLOT.left, yTerm);
+          ctx.lineTo(PLOT.left + w, yTerm);
+          ctx.stroke();
+          // Plot 2: dashed best-fit line v = a_measured * t through the origin.
+          ctx.strokeStyle = '#16a34a';
+          ctx.beginPath();
+          const tFit = Math.min(state.t, xMax);
+          const vFit = Math.min(state.aMeasured * tFit, yMaxV);
+          ctx.moveTo(PLOT.left, PLOT.p2Top + PLOT.p2H);
+          ctx.lineTo(
+            PLOT.left + (tFit / xMax) * w,
+            PLOT.p2Top + PLOT.p2H - (vFit / yMaxV) * PLOT.p2H,
+          );
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = '#16a34a';
+          ctx.font = '11px system-ui, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.fillText(
+            'slope = a_measured = ' + state.aMeasured.toFixed(3) + ' m/s²',
+            PLOT.left + w - 6,
+            PLOT.p2Top + 14,
+          );
+          ctx.textAlign = 'left';
+        }
+      }
+
+      // ---------- hover tooltip ----------
+
+      let mouse = null;
+      els.scene.addEventListener('mousemove', (e) => {
+        const rect = els.scene.getBoundingClientRect();
+        mouse = {
+          x: ((e.clientX - rect.left) / rect.width) * CANVAS_W,
+          y: ((e.clientY - rect.top) / rect.height) * CANVAS_H,
+          cssX: e.clientX - rect.left,
+          cssY: e.clientY - rect.top,
+        };
+      });
+      els.scene.addEventListener('mouseleave', () => {
+        mouse = null;
+        els.tooltip.hidden = true;
+      });
+
+      function updateTooltip() {
+        if (!mouse) {
+          els.tooltip.hidden = true;
+          return;
+        }
+        const g = sceneGeometry();
+        const moving = state.phase === 'running' || state.phase === 'paused';
+        const v = moving ? state.v : 0;
+        const cartDist = Math.hypot(mouse.x - wx(g.cart.x), mouse.y - wy(g.cart.y));
+        const massDist = Math.hypot(mouse.x - wx(g.mass.x), mouse.y - wy(g.mass.y));
+        let html = '';
+        if (cartDist <= 20) {
+          html =
+            'v = ' +
+            v.toFixed(2) +
+            ' m/s<br>a = ' +
+            aTheoretical().toFixed(2) +
+            ' m/s²<br>KE = ' +
+            (0.5 * state.M * v * v).toFixed(2) +
+            ' J';
+        } else if (massDist <= 20) {
+          html =
+            'v = ' + v.toFixed(2) + ' m/s<br>KE = ' + (0.5 * state.m * v * v).toFixed(2) + ' J';
+        }
+        if (!html) {
+          els.tooltip.hidden = true;
+          return;
+        }
+        els.tooltip.innerHTML = html;
+        els.tooltip.style.left = mouse.cssX + 14 + 'px';
+        els.tooltip.style.top = mouse.cssY + 10 + 'px';
+        els.tooltip.hidden = false;
+      }
+
+      // ---------- main loop ----------
+
+      let lastFrame = performance.now();
+      function frame(nowMs) {
+        const wallDt = Math.min(0.1, (nowMs - lastFrame) / 1000);
+        lastFrame = nowMs;
+
+        if (state.phase === 'running') {
+          // Fixed-timestep accumulator; speed scales steps per frame, not dt.
+          state.acc = Math.min(state.acc + wallDt * state.speed, DT * 10);
+          while (state.acc >= DT) {
+            state.acc -= DT;
+            if (stepPhysics()) break;
+          }
+        }
+
+        // Smooth track rotation toward the target angle outside a trial.
+        const delta = state.theta - state.displayTheta;
+        state.displayTheta =
+          Math.abs(delta) < 0.05 ? state.theta : state.displayTheta + delta * 0.25;
+
+        // a_measured count-up (~0.5 s) after trial completion.
+        if (state.countUp) {
+          const p = Math.min(1, (nowMs - state.countUp.start) / 500);
+          els.resA.textContent = (state.aMeasured * p).toFixed(3);
+          if (p >= 1) state.countUp = null;
+        }
+
+        drawScene();
+        drawGraphs();
+        updateTooltip();
+        requestAnimationFrame(frame);
+      }
+
+      updateSrSummary();
+      updateRunAvailability();
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>

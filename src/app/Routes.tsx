@@ -1,8 +1,15 @@
 import { useEffect } from 'react';
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 
-import { phy112Course, phy114Course, phy132Course, welcomeCourse } from '@/content/courses';
 import {
+  ph201Course,
+  phy112Course,
+  phy114Course,
+  phy132Course,
+  welcomeCourse,
+} from '@/content/courses';
+import {
+  ph201N2lAtwoodLab,
   phy112CapacitorsSeriesParallelLab,
   phy112KirchhoffsRulesLab,
   phy112ResistorsSeriesParallelLab,
@@ -44,7 +51,7 @@ import { Catalog } from '@/ui/Catalog';
 import { LabPage } from '@/ui/LabPage';
 import { PrimitivesShowcase } from '@/ui/visual/PrimitivesShowcase';
 
-const courses: Course[] = [phy132Course, phy114Course, phy112Course, welcomeCourse];
+const courses: Course[] = [phy132Course, phy114Course, phy112Course, ph201Course, welcomeCourse];
 
 const labsByCourse: Record<string, Record<string, Lab>> = {
   phy132: {
@@ -96,6 +103,9 @@ const labsByCourse: Record<string, Record<string, Lab>> = {
     capacitorsSeriesParallel: phy112CapacitorsSeriesParallelLab,
     resistorsSeriesParallel: phy112ResistorsSeriesParallelLab,
     kirchhoffsRules: phy112KirchhoffsRulesLab,
+  },
+  ph201: {
+    'n2l-atwood': ph201N2lAtwoodLab,
   },
   welcome: {
     intro: welcomeIntroLab,
