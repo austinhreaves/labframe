@@ -91,8 +91,13 @@ export const DataTableSectionSchema = SectionMetadataSchema.extend({
   points: z.number().nonnegative().optional(),
 });
 
+// GRAPHING_EXPANSION_SPEC.md section 8 sketches a discriminated union; until a
+// fit variant carries extra fields (Phase B transforms), an id enum gives the
+// same validation with less noise. Convert to z.discriminatedUnion when a
+// variant gains per-fit fields. Unknown fit ids fail at validateLab time
+// (enforced repo-wide by `npm run verify:labs`), not at render time.
 export const FitOptionSchema = z.object({
-  id: idSchema,
+  id: z.enum(['linear', 'proportional', 'powerTransfer']),
   label: nonEmptyText,
 });
 

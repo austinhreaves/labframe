@@ -20,6 +20,7 @@ import {
   type FitResult,
   type XYPoint,
 } from '@/services/math/leastSquares';
+import { powerTransferFit } from '@/services/math/powerTransferFit';
 import { useLabStore } from '@/state/labStore';
 
 type ChartProps = {
@@ -76,6 +77,9 @@ export function Chart({ section, data }: ChartProps) {
     if (selectedFit.id === 'proportional') {
       return proportionalLeastSquares(points);
     }
+    if (selectedFit.id === 'powerTransfer') {
+      return powerTransferFit(points);
+    }
     if (isDev) {
       console.warn(`[Chart] Unsupported fit "${selectedFit.id}" for plot "${section.plotId}".`);
     }
@@ -93,10 +97,14 @@ export function Chart({ section, data }: ChartProps) {
       return;
     }
 
+    // powerTransfer's parameters are A/B (P = A·x/(x+B)^2), deliberately not
+    // the line-family a/b keys so the PDF's straight-line path stays inert.
     const parameters =
-      fitResult.intercept === undefined
-        ? { a: fitResult.slope }
-        : { a: fitResult.slope, b: fitResult.intercept };
+      selectedFit.id === 'powerTransfer' && fitResult.intercept !== undefined
+        ? { A: fitResult.slope, B: fitResult.intercept }
+        : fitResult.intercept === undefined
+          ? { a: fitResult.slope }
+          : { a: fitResult.slope, b: fitResult.intercept };
 
     setFitSelection(section.plotId, {
       model: selectedFit.id,
@@ -105,14 +113,23 @@ export function Chart({ section, data }: ChartProps) {
   }, [fitResult, pointSignature, section.plotId, selectedFit, setFitSelection]);
 
   if (selectedFit && fitResult && Number.isFinite(minX) && Number.isFinite(maxX)) {
-    const yAt = (x: number) =>
-      fitResult.intercept === undefined
+    const isPowerTransfer = selectedFit.id === 'powerTransfer';
+    const yAt = (x: number) => {
+      if (isPowerTransfer) {
+        const b = fitResult.intercept ?? 0;
+        return (fitResult.slope * x) / ((x + b) * (x + b));
+      }
+      return fitResult.intercept === undefined
         ? fitResult.slope * x
         : fitResult.slope * x + fitResult.intercept;
-    const linePoints: ScatterDataPoint[] = [
-      { x: minX, y: yAt(minX) },
-      { x: maxX, y: yAt(maxX) },
-    ];
+    };
+    // Straight fits need only their endpoints; the nonlinear curve is sampled
+    // densely so chart.js draws it smoothly (spec requires >= 50 samples).
+    const sampleCount = isPowerTransfer ? 101 : 2;
+    const linePoints: ScatterDataPoint[] = Array.from({ length: sampleCount }, (_, i) => {
+      const x = minX + ((maxX - minX) * i) / (sampleCount - 1);
+      return { x, y: yAt(x) };
+    });
     datasets.push({
       label: formatFitLabel(selectedFit, fitResult),
       data: linePoints,

@@ -23,7 +23,10 @@ import type {
 } from '@/domain/schema';
 import { resolveIntegrityAgreementText } from '@/services/integrity/agreementText';
 import { attributePastes } from '@/services/pdf/attributePastes';
-import { computeClippedFitLineInPdfSvg } from '@/services/pdf/fitLine';
+import {
+  computeClippedFitCurveInPdfSvg,
+  computeClippedFitLineInPdfSvg,
+} from '@/services/pdf/fitLine';
 import { renderMarkdownToPdf } from '@/services/pdf/markdown/renderMarkdownToPdf';
 import {
   calcImageId,
@@ -625,6 +628,12 @@ function sectionView(
     const mapX = (x: number) => pad + ((x - minX) / rangeX) * (width - pad * 2);
     const mapY = (y: number) => height - pad - ((y - minY) / rangeY) * (height - pad * 2);
 
+    const plotBounds = {
+      minX: pad,
+      maxX: width - pad,
+      minY: pad,
+      maxY: height - pad,
+    };
     const a = typeof fit?.parameters?.a === 'number' ? fit.parameters.a : undefined;
     const b = typeof fit?.parameters?.b === 'number' ? fit.parameters.b : 0;
     const fitLine =
@@ -637,13 +646,24 @@ function sectionView(
             b,
             mapX,
             mapY,
-            plotBounds: {
-              minX: pad,
-              maxX: width - pad,
-              minY: pad,
-              maxY: height - pad,
-            },
+            plotBounds,
           });
+
+    // powerTransfer stores A/B (not the line-family a/b), so the straight-line
+    // path above stays inert for it and the curve is sampled instead.
+    const curveA = typeof fit?.parameters?.A === 'number' ? fit.parameters.A : undefined;
+    const curveB = typeof fit?.parameters?.B === 'number' ? fit.parameters.B : undefined;
+    const fitCurve =
+      fit?.model === 'powerTransfer' && curveA !== undefined && curveB !== undefined
+        ? computeClippedFitCurveInPdfSvg({
+            minX,
+            maxX,
+            evalY: (x) => (curveA * x) / ((x + curveB) * (x + curveB)),
+            mapX,
+            mapY,
+            plotBounds,
+          })
+        : [];
 
     return (
       <View key={`section-${index}`} style={styles.section}>
@@ -680,6 +700,17 @@ function sectionView(
               strokeWidth={1}
             />
           ) : null}
+          {fitCurve.map((segment, segmentIndex) => (
+            <Line
+              key={`${section.plotId}-fit-${segmentIndex}`}
+              x1={segment.x1}
+              y1={segment.y1}
+              x2={segment.x2}
+              y2={segment.y2}
+              stroke="#d26c00"
+              strokeWidth={1}
+            />
+          ))}
         </Svg>
       </View>
     );

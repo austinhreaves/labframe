@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { PlotSection, TableData } from '@/domain/schema';
+import type { FitOption, PlotSection, TableData } from '@/domain/schema';
 import { createEmptyFieldValue } from '@/state/labStore';
 import { useLabStore } from '@/state/labStore';
 import { Chart } from '@/ui/primitives/Chart';
@@ -173,7 +173,10 @@ describe('Chart', () => {
       yCol: 'y',
       xLabel: 'X',
       yLabel: 'Y',
-      fits: [{ id: 'polynomial', label: 'Polynomial' }],
+      // The schema now rejects unknown fit ids at validateLab time, so this
+      // cast simulates stale persisted content; the render guard is the
+      // defense-in-depth layer under test here.
+      fits: [{ id: 'polynomial', label: 'Polynomial' } as unknown as FitOption],
     };
     const data = makeTable([
       { x: 1, y: 2 },

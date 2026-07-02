@@ -14,6 +14,7 @@ import {
   phy114DcCircuitsLab,
   phy114DivergingLensLab,
   phy114GeometricOpticsLab,
+  phy114KirchhoffsLawsLab,
   phy114OhmsLawLab,
   phy114PointChargeLab,
   phy114SnellsLawLab,
@@ -78,11 +79,12 @@ const labsByCourse: Record<string, Record<string, Lab>> = {
     chargeConfigurations: phy132ChargeConfigurationsLab,
     capacitorFundamentals: phy132CapacitorFundamentalsLab,
     capacitorNetworks: phy132CapacitorNetworksLab,
-    kirchhoffsLaws: phy132KirchhoffsLawsLab,
-    // Core E&M: PHY-114-owned copies of 132 labs with uncertainty removed.
+    // Core E&M: PHY-114-owned copies of 132 labs with uncertainty removed
+    // (kirchhoffsLaws instead swaps the calculus derivation for graph reading).
     coulombsLaw: phy114CoulombsLawLab,
     pointCharge: phy114PointChargeLab,
     ohmsLaw: phy114OhmsLawLab,
+    kirchhoffsLaws: phy114KirchhoffsLawsLab,
     // Optics: snellsLaw unchanged; geometricOptics split into the lens labs.
     snellsLaw: phy114SnellsLawLab,
     convergingLens: phy114ConvergingLensLab,

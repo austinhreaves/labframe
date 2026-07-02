@@ -1,77 +1,27 @@
-// Split from phy132/dcCircuits.draft.lab.ts on 2026-05-23 per
-// docs/handoffs/split-labs-3-7-handoff.md. Takes Parts 2A (KVL / KCL on a
-// two-battery, three-resistor, two-loop network) and 2B (non-ideal battery,
-// maximum power transfer theorem, and the Stereo System synthesis problem)
-// from the source draft.
+// PHY 114 variant of the PHY 132 Kirchhoff's Laws & Power lab.
 //
-// Restructure decisions:
-// - JIT theory delivery: KVL / KCL background placed before Part 2A; a
-//   second background block on internal resistance and the maximum-power-
-//   transfer theorem is placed before Part 2B. The Stereo System Problem
-//   stays at the end of Part 2B as a synthesis application.
-// - Procedure-step lead-ins consolidated into `concept.preamble` where the
-//   following block is a concept; for measurement / multiMeasurement /
-//   dataTable / image / plot blocks (which the schema does not give a
-//   `preamble` field) the procedure step lives in a preceding
-//   `instructions { tocHidden: true }` block, matching the coulombsLaw /
-//   pointCharge convention.
-// - For calculation blocks the procedure-step text is folded into the
-//   `prompt` itself.
-// - Two source RecordTable placeholders in Part 2A ported to schema
-//   sections:
-//     (1) "Circuit Parameters" -- a 5-row `multiMeasurement` of the
-//         component values the sim is configured with (eps1, eps2, R1, R2,
-//         R3). The legacy RecordTable was a labeled scalar grid; the new
-//         `multiMeasurement` shape captures that exactly without inventing
-//         a numeric `dataTable` schema for what is really five named
-//         scalars.
-//     (2) "Branch Measurements" -- a 6-row `multiMeasurement` of the
-//         per-branch currents and per-resistor voltages (I1, I2, I3, V1,
-//         V2, V3). Same justification: labeled scalars, not tabular data.
-//   See the kirchhoffsRules.lab.ts file (phy112) for a precedent of
-//   modeling per-component readings as multiMeasurement blocks.
-// - Two source `powerTable` derived-column TODOs resolved:
-//     * The `resistance` column was a row-index-keyed lookup into a
-//       hardcoded 15-element array. The schema's `formula(row)` signature
-//       has no row index, so a clean derived port is not possible. **Took
-//       the source draft's Option A**: changed the column to `kind:
-//       'input'` and pre-printed the 15 prescribed load-resistance values
-//       in the preceding procedure step ("set the load resistance to: 1.0,
-//       1.5, ... 40.0 Ohm across the 15 rows of the table"). Simplest fix
-//       that compiles; consistent with the in-spec future plan of
-//       supporting default cell values when the schema gains them.
-//     * The `power` column is `voltage * current`. Ported as a derived
-//       column with `deps: ['voltage', 'current']`, returning `0` whenever
-//       either input is missing (the schema's NumericRow uses 0 as the
-//       default for unset cells, so the derived value reads as 0 until
-//       both inputs are populated).
-// - Standalone "Concept Check Questions" divider blocks dropped where
-//   present (chargeBuildup / coulombsLaw convention).
-// - The Stereo System Problem's four sub-parts (a-d) stay split between
-//   concept and calculation blocks exactly as in the source -- the source
-//   already split them appropriately.
-// - Em dashes stripped from HTML / preamble / prompt strings; paragraph
-//   breaks added inside long HTML blocks.
-// - "Set of Parameters" references in the body text are intentionally LEFT
-//   IN PLACE. The interim Givens-markdown migration from the handoff is
-//   superseded by the per-user-randomized-givens spec (see
-//   docs/specs/per-user-randomized-givens.md). Do not inline parameter
-//   values here.
-// - Manual extraction of the docx was blocked by the sandbox during this
-//   pass; prompt text was taken verbatim from the (already manual-derived)
-//   source draft. If a downstream review surfaces a manual / source
-//   disagreement, the manual wins (per the handoff brief).
-// - TODO(ai-coaching): the "Not confident in your answer?" Socratic-prompt
-//   affordance is a future per-concept-block feature.
-// - 2026-07-02: Part 2B's plot now offers the powerTransfer fit
-//   (P = A*R/(R+B)^2, implemented in src/services/math/powerTransferFit.ts)
-//   instead of the meaningless linear/proportional options, and the fit
-//   parameter rows carry units. A PHY-114 fork exists at
-//   phy114/kirchhoffsLaws.draft.lab.ts (calculus derivation replaced with
-//   graph reading); re-sync it by hand when this file changes.
+// Derived from phy132/kirchhoffsLaws.draft.lab.ts. PHY 114 is algebra-based
+// and does NOT cover calculus, so this copy replaces the 132 version's
+// symbolic maximum-power-transfer derivation (setting dP_R/dR = 0) with an
+// empirical graph-reading analysis:
+//   - the Part 2B background's "you will derive in Part 2B" now reads
+//     "you will read off your graph in Part 2B",
+//   - the maximumPowerTransferDerivation calculation block is replaced by a
+//     maximumPowerTransferReading concept block (read the peak off the
+//     P_R vs R plot, compare to r and to the fit parameter B, state the
+//     R = r rule, and check eps^2/(4r) against the observed peak power),
+//   - the Stereo System part (a) cross-reference now points at "the rule you
+//     found from your graph" instead of "the calculation above",
+//   - Part 2B procedure step 5 drops the "(with their 1 sigma uncertainties)"
+//     reading clause (114 carries no uncertainty content; the powerTransfer
+//     fit itself is algebra-appropriate and KEPT).
+// There is no uncertainty content to strip in the 132 source.
+//
+// If the 132 source changes, re-sync this copy by hand (the two are
+// intentionally independent files, one per course).
 import type { Lab, NumericRow } from '@/domain/schema';
 
-export const phy132KirchhoffsLawsLab: Lab = {
+export const phy114KirchhoffsLawsLab: Lab = {
   id: 'kirchhoffsLaws',
   title: "Kirchhoff's Laws & Power",
   description:
@@ -216,7 +166,7 @@ The **power delivered to the load** is then:
 
 $$P_R = I^{2} R = \\frac{\\varepsilon^{2}\\,R}{(R + r)^{2}}\\tag{13}$$
 
-Equation (13) has an interesting shape. When $R \\ll r$ the bottom dominates and $P_R \\to 0$. When $R \\gg r$ the top dominates linearly while the bottom dominates quadratically, so again $P_R \\to 0$. Somewhere in between is a **maximum**. The **maximum-power-transfer theorem** says that this maximum occurs at a specific value of $R$ that you will derive in Part 2B.
+Equation (13) has an interesting shape. When $R \\ll r$ the bottom dominates and $P_R \\to 0$. When $R \\gg r$ the top dominates linearly while the bottom dominates quadratically, so again $P_R \\to 0$. Somewhere in between is a **maximum**. The **maximum-power-transfer theorem** says that this maximum occurs at a specific value of $R$ that you will read off your graph in Part 2B.
 
 In Part 2B you will sweep $R$ through 15 values bracketing the internal resistance $r$, plot the load power $P_R$ vs. the load resistance $R$, and extract experimental values of $\\varepsilon$ and $r$ from a custom fit of equation (13).`,
     },
@@ -299,7 +249,7 @@ $$R = 1.0,\\ 1.5,\\ 2.0,\\ 2.5,\\ 3.0,\\ 3.5,\\ 4.0,\\ 5.0,\\ 6.0,\\ 7.0,\\ 8.0,
     {
       kind: 'instructions',
       tocHidden: true,
-      html: '**Procedure step 5.** On the plot above, choose **Power transfer (P = A·R/(R + B)²)** from the fit menu. This fits your data to the model $P_R = A \\cdot R / (R + B)^{2}$, where $A = \\varepsilon^{2}$ and $B = r$. Read the best-fit parameters $A$ and $B$ (with their 1σ uncertainties) from the fit summary under the plot and record them below.',
+      html: '**Procedure step 5.** On the plot above, choose **Power transfer (P = A·R/(R + B)²)** from the fit menu. This fits your data to the model $P_R = A \\cdot R / (R + B)^{2}$, where $A = \\varepsilon^{2}$ and $B = r$. Read the best-fit parameters $A$ and $B$ from the fit summary under the plot and record them below.',
     },
     {
       kind: 'multiMeasurement',
@@ -328,12 +278,11 @@ $$R = 1.0,\\ 1.5,\\ 2.0,\\ 2.5,\\ 3.0,\\ 3.5,\\ 4.0,\\ 5.0,\\ 6.0,\\ 7.0,\\ 8.0,
       points: 1,
     },
     {
-      kind: 'calculation',
-      responseModes: ['text', 'draw', 'image'],
-      fieldId: 'maximumPowerTransferDerivation',
+      kind: 'concept',
+      fieldId: 'maximumPowerTransferReading',
       prompt:
-        'Use calculus to find the theoretical prediction for the condition for **maximum power transfer** in a simple DC circuit with a non-ideal battery. Do this symbolically (no numerical values), and solve for $R$ in terms of $r$. Show your work. Hint: start from equation (13). Ask yourself, given the function $P_R(R)$, what should $dP_R/dR$ equal at the location of the maximum?',
-      equationEditor: true,
+        'From your plot of $P_R$ vs. $R$, read off the load resistance at which the delivered power is greatest. Compare that resistance to the source resistance $r$ you set in the sim (and to your fit parameter $B$). State the general rule this suggests for **maximum power transfer**: at what value of $R$, relative to $r$, is the delivered power a maximum? As a numerical check, compute $\\varepsilon^{2}/(4r)$ using your sim values and compare it to the peak power on your graph.',
+      rows: 5,
       points: 2,
     },
     {
@@ -347,7 +296,7 @@ Suppose you're building a custom stereo system and you decide to use an amplifie
       kind: 'concept',
       fieldId: 'stereoSystemPartA',
       prompt:
-        "(a) Since you obviously want the subwoofer to be as loud as possible (meaning it consumes the most power), what should be the value of the subwoofer's resistance? Justify briefly using your maximum-power-transfer result from the calculation above.",
+        "(a) Since you obviously want the subwoofer to be as loud as possible (meaning it consumes the most power), what should be the value of the subwoofer's resistance? Justify briefly using the maximum-power-transfer rule you found from your graph above.",
       rows: 3,
       points: 0.5,
     },

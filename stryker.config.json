@@ -11,6 +11,7 @@
     "src/services/integrity/buildAnswers.ts",
     "src/services/pdf/markdown/latexToUnicode.ts",
     "src/services/math/leastSquares.ts",
+    "src/services/math/powerTransferFit.ts",
     "src/state/persistence/labPersistenceMiddleware.ts"
   ]
 }

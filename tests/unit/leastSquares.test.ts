@@ -121,7 +121,7 @@ describe('leastSquares', () => {
 
   describe('formatFitLabel', () => {
     it('formats linear fit labels with 1σ slope and intercept terms', () => {
-      const fit = { id: 'linear', label: 'Linear Fit' };
+      const fit = { id: 'linear', label: 'Linear Fit' } as const;
       const result: FitResult = {
         slope: 2,
         slopeStdErr: 0.01,
@@ -140,7 +140,7 @@ describe('leastSquares', () => {
     });
 
     it('formats proportional labels with forced intercept text', () => {
-      const fit = { id: 'proportional', label: 'Proportional Fit' };
+      const fit = { id: 'proportional', label: 'Proportional Fit' } as const;
       const result: FitResult = {
         slope: 2,
         slopeStdErr: 0.01,
@@ -157,7 +157,7 @@ describe('leastSquares', () => {
     });
 
     it('renders insufficient-data uncertainty labels for NaN standard errors', () => {
-      const fit = { id: 'linear', label: 'Linear Fit' };
+      const fit = { id: 'linear', label: 'Linear Fit' } as const;
       const result: FitResult = {
         slope: 2,
         slopeStdErr: Number.NaN,

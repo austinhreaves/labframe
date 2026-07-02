@@ -1,6 +1,6 @@
 // Split from phy132/capacitors.draft.lab.ts on 2026-05-23 per
 // docs/handoffs/split-labs-3-7-handoff.md. Takes Parts 1A (predict C, Q, U for
-// a single capacitor), 1B (distance dependence), and 1C (area dependence) —
+// a single capacitor), 1B (distance dependence), and 1C (area dependence) --
 // the parallel-plate-fundamentals half of the source draft.
 //
 // Restructure decisions:
@@ -92,7 +92,7 @@ The capacitor also stores **electrical potential energy** $U$ in the field betwe
 
 $$U = \\tfrac{1}{2}\\,C V^{2} = \\tfrac{1}{2}\\,Q V = \\tfrac{1}{2}\\,\\frac{Q^{2}}{C} \\tag{3}$$
 
-In Part 1A you'll use these three equations to predict $C$, $Q$, and $U$ for a single parallel-plate capacitor at a given plate separation $d$, plate area $A$, and battery voltage $V$, then compare your predictions against the values the PhET sim reports. You'll also discharge the capacitor through a lightbulb and time how long it takes for the bulb to go dark, a qualitative proxy for the stored energy.
+In Part 1A you'll use these three equations to predict $C$, $Q$, and $U$ for a single parallel-plate capacitor at a given plate separation $d$, plate area $A$, and battery voltage $V$, then compare your predictions against the values the PhET sim reports. You'll also discharge the capacitor through a lightbulb and time how long it takes for the bulb to go dark. The discharge duration tracks the **capacitance** (a larger $C$ holds more charge at a given voltage and takes longer to empty through the bulb), while the bulb's initial brightness tracks the starting **voltage** across the plates. Keep both observations in mind: you'll repeat the discharge in Parts 1B and 1C and use the changes as evidence of how $C$ and $V$ shifted.
 
 In Parts 1B and 1C you'll then change $d$ or $A$ *after disconnecting the battery* from the capacitor. With the battery disconnected, no charge can flow on or off the plates, so $Q$ is locked at its Part 1A value. You'll predict how $C$, $V$, and $U$ shift under that constraint.`,
     },
@@ -372,7 +372,7 @@ Now change the plate area $A$ to the new value given in your Set of Parameters b
       kind: 'concept',
       fieldId: 'discussionConclusion',
       prompt:
-        'Write your discussion and conclusion below according to the guidelines given in the Lab Report Rubric, found in the Course Information module on Canvas. (e.g., summarize how well your Part 1A predictions of $C$, $Q$, and $U$ matched the simulated values; how varying plate separation and plate area affected each of those quantities with the battery disconnected (fixed $Q$); and what the discharge-time observations imply about stored energy.)',
+        'Write your discussion and conclusion below according to the guidelines given in the Lab Report Rubric, found in the Course Information module on Canvas. (e.g., summarize how well your Part 1A predictions of $C$, $Q$, and $U$ matched the simulated values; how varying plate separation and plate area affected each of those quantities with the battery disconnected (fixed $Q$); and what the discharge observations (duration and initial bulb brightness) imply about how the capacitance and the starting voltage changed in each part.)',
       rows: 12,
       points: 6,
     },

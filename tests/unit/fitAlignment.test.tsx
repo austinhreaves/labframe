@@ -3,7 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PlotSection, TableData } from '@/domain/schema';
 import { linearLeastSquares, proportionalLeastSquares } from '@/services/math/leastSquares';
-import { computeClippedFitLineInPdfSvg } from '@/services/pdf/fitLine';
+import {
+  computeClippedFitCurveInPdfSvg,
+  computeClippedFitLineInPdfSvg,
+} from '@/services/pdf/fitLine';
 import { createEmptyFieldValue, useLabStore } from '@/state/labStore';
 import { Chart } from '@/ui/primitives/Chart';
 
@@ -174,5 +177,91 @@ describe('fit alignment', () => {
     expect(line.x2).toBeCloseTo(mapX(maxX), 6);
     expect(line.y1).toBeCloseTo(mapY(truth.slope * minX), 6);
     expect(line.y2).toBeCloseTo(mapY(truth.slope * maxX), 6);
+  });
+
+  describe('computeClippedFitCurveInPdfSvg (powerTransfer curve in the PDF)', () => {
+    // Document.tsx plot geometry.
+    const width = 360;
+    const height = 220;
+    const pad = 20;
+    const plotBounds = { minX: pad, maxX: width - pad, minY: pad, maxY: height - pad };
+    const evalY = (x: number) => (36 * x) / ((x + 3) * (x + 3));
+    const minX = 1;
+    const maxX = 40;
+
+    it('returns >= 50 in-bounds segments that track the model', () => {
+      // Data-space y range covers the whole curve (peak P = 3 at R = 3).
+      const minY = evalY(maxX);
+      const maxY = 3;
+      const rangeX = maxX - minX;
+      const rangeY = maxY - minY;
+      const mapX = (x: number) => pad + ((x - minX) / rangeX) * (width - pad * 2);
+      const mapY = (y: number) => height - pad - ((y - minY) / rangeY) * (height - pad * 2);
+      const samples = 60;
+
+      const segments = computeClippedFitCurveInPdfSvg({
+        minX,
+        maxX,
+        evalY,
+        samples,
+        mapX,
+        mapY,
+        plotBounds,
+      });
+
+      expect(segments.length).toBe(samples - 1);
+      expect(segments.length).toBeGreaterThanOrEqual(50);
+      for (const segment of segments) {
+        for (const px of [segment.x1, segment.x2]) {
+          expect(px).toBeGreaterThanOrEqual(plotBounds.minX);
+          expect(px).toBeLessThanOrEqual(plotBounds.maxX);
+        }
+        for (const py of [segment.y1, segment.y2]) {
+          expect(py).toBeGreaterThanOrEqual(plotBounds.minY);
+          expect(py).toBeLessThanOrEqual(plotBounds.maxY);
+        }
+      }
+      // Sample endpoints coincide with the mapped model (nothing was clipped).
+      const sampleX = (i: number) => minX + ((maxX - minX) * i) / (samples - 1);
+      const midSegment = segments[10];
+      if (!midSegment) {
+        throw new Error('Expected a mid-curve segment');
+      }
+      expect(midSegment.x1).toBeCloseTo(mapX(sampleX(10)), 6);
+      expect(midSegment.y1).toBeCloseTo(mapY(evalY(sampleX(10))), 6);
+      expect(midSegment.x2).toBeCloseTo(mapX(sampleX(11)), 6);
+      expect(midSegment.y2).toBeCloseTo(mapY(evalY(sampleX(11))), 6);
+    });
+
+    it('leaves a gap where the curve exits the plot box', () => {
+      // Pretend the data only reached P = 2.5, so the peak region (P up to 3)
+      // maps above the plot box and must be clipped out.
+      const minY = evalY(maxX);
+      const maxY = 2.5;
+      const rangeX = maxX - minX;
+      const rangeY = maxY - minY;
+      const mapX = (x: number) => pad + ((x - minX) / rangeX) * (width - pad * 2);
+      const mapY = (y: number) => height - pad - ((y - minY) / rangeY) * (height - pad * 2);
+      const samples = 60;
+
+      const segments = computeClippedFitCurveInPdfSvg({
+        minX,
+        maxX,
+        evalY,
+        samples,
+        mapX,
+        mapY,
+        plotBounds,
+      });
+
+      expect(segments.length).toBeLessThan(samples - 1);
+      expect(segments.length).toBeGreaterThan(0);
+      for (const segment of segments) {
+        for (const py of [segment.y1, segment.y2]) {
+          expect(py).toBeGreaterThanOrEqual(plotBounds.minY);
+          expect(py).toBeLessThanOrEqual(plotBounds.maxY);
+        }
+      }
+    });
   });
 });

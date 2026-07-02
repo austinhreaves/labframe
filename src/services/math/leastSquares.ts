@@ -24,12 +24,18 @@ function formatTermWithUncertainty(symbol: string, value: number, stdErr: number
   return `${symbol} = ${formatValue(value)} ± ${formatValue(stdErr)} (1σ)`;
 }
 
+/** Per-fit parameter symbols; fits absent here use the line-family m/b. */
+const FIT_SYMBOLS: Record<string, { slope: string; intercept: string }> = {
+  powerTransfer: { slope: 'A', intercept: 'B' },
+};
+
 export function formatFitLabel(fit: FitOption, result: FitResult): string {
-  const slopePart = formatTermWithUncertainty('m', result.slope, result.slopeStdErr);
+  const symbols = FIT_SYMBOLS[fit.id] ?? { slope: 'm', intercept: 'b' };
+  const slopePart = formatTermWithUncertainty(symbols.slope, result.slope, result.slopeStdErr);
   const interceptPart =
     result.intercept === undefined || result.interceptStdErr === undefined
-      ? 'b ≡ 0 (no intercept term)'
-      : formatTermWithUncertainty('b', result.intercept, result.interceptStdErr);
+      ? `${symbols.intercept} ≡ 0 (no intercept term)`
+      : formatTermWithUncertainty(symbols.intercept, result.intercept, result.interceptStdErr);
   const rSquaredPart = `R^2 = ${result.rSquared.toFixed(3)}`;
   return `${fit.label}: ${slopePart}, ${interceptPart}, ${rSquaredPart}`;
 }

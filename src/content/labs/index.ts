@@ -41,12 +41,15 @@ export { phy114DcCircuitsLab } from './phy114/dcCircuits.draft.lab';
 export { phy114GeometricOpticsLab } from './phy114/geometricOptics.draft.lab';
 export { phy114StaticElectricityLab } from './phy114/staticElectricity.draft.lab';
 
-// PHY 114 algebra-based copies of three PHY 132 core labs, with the 132
+// PHY 114 algebra-based copies of four PHY 132 core labs, with the 132
 // version's uncertainty / error-propagation content removed (114 does not
-// teach it). See each file's header for the exact deletions.
+// teach it) or, for kirchhoffsLaws, the calculus maximum-power-transfer
+// derivation replaced with a graph-reading analysis. See each file's header
+// for the exact deletions.
 export { phy114CoulombsLawLab } from './phy114/coulombsLaw.draft.lab';
 export { phy114PointChargeLab } from './phy114/pointCharge.draft.lab';
 export { phy114OhmsLawLab } from './phy114/ohmsLaw.draft.lab';
+export { phy114KirchhoffsLawsLab } from './phy114/kirchhoffsLaws.draft.lab';
 
 // PHY 114 optics: structural split of geometricOptics into converging /
 // diverging lens labs (snellsLaw stays a separate single-part lab above).

@@ -6,11 +6,13 @@ export const phy114Course: Course = {
   storagePrefix: 'phy114',
   parentOriginAllowList: ['https://canvas.asu.edu'],
   labs: [
-    // Core E&M. chargeBuildup, chargeConfigurations, capacitorFundamentals,
-    // capacitorNetworks, and kirchhoffsLaws reuse the PHY 132 lab objects
-    // directly (no uncertainty content to strip). coulombsLaw, pointCharge,
-    // and ohmsLaw are PHY-114-owned copies of the 132 labs with uncertainty /
-    // error propagation removed (114 is algebra-based).
+    // Core E&M. chargeConfigurations, capacitorFundamentals, and
+    // capacitorNetworks reuse the PHY 132 lab objects directly (no uncertainty
+    // content to strip). coulombsLaw, pointCharge, ohmsLaw, and kirchhoffsLaws
+    // are PHY-114-owned copies of the 132 labs (114 is algebra-based):
+    // uncertainty / error propagation removed, and kirchhoffsLaws swaps the
+    // calculus maximum-power-transfer derivation for a graph-reading analysis.
+    // chargeBuildup is a PHY-114-owned copy carrying the parts grouping.
     { ref: 'chargeBuildup', labNumber: 1, enabled: true, group: 'core' },
     { ref: 'coulombsLaw', labNumber: 2, enabled: true, group: 'core' },
     { ref: 'pointCharge', labNumber: 3, enabled: true, group: 'coming-soon' },

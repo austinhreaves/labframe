@@ -56,6 +56,26 @@ describe('LabSchema rejects malformed labs', () => {
     expect(paths.some((p) => p.startsWith('sections'))).toBe(true);
   });
 
+  it('rejects an unknown fit id on a plot section (GRAPHING_EXPANSION_SPEC s8)', () => {
+    const lab = {
+      ...validLab(),
+      sections: [
+        {
+          kind: 'plot',
+          plotId: 'plot1',
+          sourceTableId: 'table1',
+          xCol: 'x',
+          yCol: 'y',
+          xLabel: 'X',
+          yLabel: 'Y',
+          fits: [{ id: 'polynomial', label: 'Polynomial' }],
+        },
+      ],
+    };
+    const paths = failurePaths(lab);
+    expect(paths.some((p) => p.startsWith('sections') && p.includes('fits'))).toBe(true);
+  });
+
   it('rejects a dataTable with zero columns', () => {
     const lab = {
       ...validLab(),

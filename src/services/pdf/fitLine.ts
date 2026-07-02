@@ -70,3 +70,41 @@ export function computeClippedFitLineInPdfSvg(args: FitLineArgs): LineSegment | 
   };
   return clipLineToRect(raw, args.plotBounds);
 }
+
+type FitCurveArgs = {
+  minX: number;
+  maxX: number;
+  evalY: (x: number) => number;
+  samples?: number;
+  mapX: (x: number) => number;
+  mapY: (y: number) => number;
+  plotBounds: LineBounds;
+};
+
+/**
+ * Sampled polyline for a nonlinear fit curve, clipped to the plot box. Each
+ * consecutive sample pair becomes a segment run through the same Liang-Barsky
+ * clip as the straight fit line, so the curve can exit and re-enter the box
+ * (a peaked curve taller than the y range renders as two runs with a gap).
+ * Segments with a non-finite endpoint (model undefined at that x) are skipped.
+ */
+export function computeClippedFitCurveInPdfSvg(args: FitCurveArgs): LineSegment[] {
+  const samples = args.samples ?? 60;
+  const segments: LineSegment[] = [];
+  let prev: { px: number; py: number } | null = null;
+  for (let i = 0; i < samples; i += 1) {
+    const x = args.minX + ((args.maxX - args.minX) * i) / (samples - 1);
+    const y = args.evalY(x);
+    const px = args.mapX(x);
+    const py = args.mapY(y);
+    const finite = Number.isFinite(px) && Number.isFinite(py);
+    if (prev && finite) {
+      const clipped = clipLineToRect({ x1: prev.px, y1: prev.py, x2: px, y2: py }, args.plotBounds);
+      if (clipped) {
+        segments.push(clipped);
+      }
+    }
+    prev = finite ? { px, py } : null;
+  }
+  return segments;
+}
