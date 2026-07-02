@@ -4,7 +4,9 @@
 // navigation with no param.
 
 export type TextSize = 'S' | 'M' | 'L';
-export type LayoutMode = 'side' | 'tabs';
+// Parallel = sim beside the worksheet (the split view); Series = sim stacked at
+// the top of a single-column scroll. (Formerly 'side' / 'tabs'.)
+export type LayoutMode = 'parallel' | 'series';
 
 export const TEXT_SIZE_STORAGE_KEY = 'labframe:text-size';
 export const LAYOUT_STORAGE_KEY = 'labframe:layout';
@@ -45,7 +47,17 @@ export function getStoredLayout(): LayoutMode | null {
   try {
     const stored =
       typeof localStorage !== 'undefined' ? localStorage.getItem(LAYOUT_STORAGE_KEY) : null;
-    return stored === 'side' || stored === 'tabs' ? stored : null;
+    if (stored === 'parallel' || stored === 'series') {
+      return stored;
+    }
+    // Migrate the pre-rename values from earlier on this branch.
+    if (stored === 'side') {
+      return 'parallel';
+    }
+    if (stored === 'tabs') {
+      return 'series';
+    }
+    return null;
   } catch {
     return null;
   }

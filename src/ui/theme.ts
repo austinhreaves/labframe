@@ -22,15 +22,21 @@ export function storeThemePreference(theme: ThemePreference): void {
   }
 }
 
+/** The concrete theme a preference resolves to right now ('system' -> OS setting). */
+export function resolveTheme(theme: ThemePreference): 'light' | 'dark' {
+  if (theme === 'light' || theme === 'dark') {
+    return theme;
+  }
+  const prefersDark =
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+      : false;
+  return prefersDark ? 'dark' : 'light';
+}
+
 export function applyThemePreference(theme: ThemePreference): void {
   if (typeof document === 'undefined' || typeof window === 'undefined') {
     return;
   }
-  const root = document.documentElement;
-  const prefersDark =
-    typeof window.matchMedia === 'function'
-      ? window.matchMedia('(prefers-color-scheme: dark)').matches
-      : false;
-  const resolved = theme === 'system' ? (prefersDark ? 'dark' : 'light') : theme;
-  root.dataset.theme = resolved;
+  document.documentElement.dataset.theme = resolveTheme(theme);
 }

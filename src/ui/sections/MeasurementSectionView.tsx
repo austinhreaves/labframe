@@ -1,6 +1,5 @@
 import { lazy } from 'react';
 import type { MeasurementSection } from '@/domain/schema';
-import { hasText } from '@/state/answered';
 import { useLabStore } from '@/state/labStore';
 import { AnswerCard } from '@/ui/sections/AnswerCard';
 import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
@@ -25,7 +24,7 @@ export function MeasurementSectionView({ section }: Props) {
   return (
     <section className="section">
       <SectionPointsCaption points={section.points} />
-      <AnswerCard answered={hasText(value?.text)} hideEyebrow>
+      <AnswerCard hideEyebrow>
         <Field
           id={section.fieldId}
           label={label}

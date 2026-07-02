@@ -36,4 +36,17 @@ describe('labStore', () => {
     expect(Number(row.sinIncidentAngle.text)).toBeCloseTo(0.5, 4);
     expect(Number(row.sinRefractedAngle.text)).toBeCloseTo(1 / 3, 4);
   });
+
+  it('keeps the integrity affirmation when submission succeeds', () => {
+    const store = useLabStore.getState();
+    store.setIntegrityAgreementAccepted(true);
+    expect(useLabStore.getState().integrityAgreementAccepted).toBe(true);
+
+    // A successful export flips submitted; the affirmation must not un-tick
+    // (the box used to clear itself the instant the PDF downloaded).
+    store.setSubmitted(true);
+    const after = useLabStore.getState();
+    expect(after.status.submitted).toBe(true);
+    expect(after.integrityAgreementAccepted).toBe(true);
+  });
 });

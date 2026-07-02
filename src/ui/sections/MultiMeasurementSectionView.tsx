@@ -1,6 +1,5 @@
 import { lazy } from 'react';
 import type { MultiMeasurementSection } from '@/domain/schema';
-import { hasText } from '@/state/answered';
 import { useLabStore } from '@/state/labStore';
 import { AnswerCard } from '@/ui/sections/AnswerCard';
 import { SectionPointsCaption } from '@/ui/sections/SectionPointsCaption';
@@ -14,12 +13,11 @@ type Props = {
 export function MultiMeasurementSectionView({ section }: Props) {
   const fields = useLabStore((state) => state.fields);
   const setField = useLabStore((state) => state.setField);
-  const answered = section.rows.some((row) => hasText(fields[row.id]?.text));
 
   return (
     <section className="section">
       <SectionPointsCaption points={section.points} />
-      <AnswerCard answered={answered} hideEyebrow>
+      <AnswerCard hideEyebrow>
         {section.rows.map((row) => {
           const label = row.unit ? `${row.label} (${row.unit})` : row.label;
           const labelDisplay = (

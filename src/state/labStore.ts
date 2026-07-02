@@ -772,8 +772,12 @@ export function createLabStore(adapter: PersistenceAdapter = browserPersistenceA
         simSide: value,
       }),
     setSubmitted: (value) =>
+      // Do not touch integrityAgreementAccepted here: a successful export calls
+      // setSubmitted(true), and clearing the affirmation made the checkbox
+      // un-tick itself the instant the PDF downloaded. The flag is session-only
+      // (initLab / clearCurrentLab reset it for a fresh lab), so leaving it set
+      // simply lets a re-export of the same signed report proceed.
       set((state) => ({
-        ...(value ? { integrityAgreementAccepted: false, integrityAgreementAcceptedAt: 0 } : {}),
         status: {
           ...state.status,
           submitted: value,
