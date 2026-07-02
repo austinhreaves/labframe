@@ -166,27 +166,6 @@ sim, just with a local URL.
 - Sandboxable via the iframe `sandbox` attribute (see schema changes below).
 - Future custom sims follow the same pattern: drop a folder under `public/sims/`.
 
-### Canvas layout
-
-- Track: line at angle `theta` from lower-left corner, pivoting about that corner.
-  Rotates smoothly as the angle slider changes (even outside a trial).
-- Cart: rectangle on the track, labeled with current `M` value.
-- Pulley: circle at the upper end of the track.
-- String: from cart over pulley, drops vertically to hanging mass.
-- Hanging mass: rectangle below pulley, labeled with current `m` value.
-- Motion trail: fading dots along the cart path during a trial.
-- Live readouts during trial: elapsed time (s) and cart distance traveled (m).
-
-### Controls (below the canvas)
-
-- Slider + numeric input for each of `M`, `m`, `theta`. Numeric inputs accept typed
-  values and clamp to range on blur.
-- **Run / Pause / Reset** buttons. Run is disabled when `a <= 0` (show a short inline
-  message: "Hanging mass cannot accelerate the cart at this angle.").
-- **Speed multiplier:** 0.25x / 0.5x / 1x toggle, default 0.5x. Scales the number of
-  integrator steps per frame (not `dt` itself), so `a_measured = 2d / t^2` is accurate
-  at any speed setting.
-
 ### Physics model
 
 ```
@@ -198,8 +177,8 @@ Frictionless throughout. Fixed geometry:
 - Track length: 1.5 m (cart travel distance from rest to pulley end)
 - Hanging mass drop height: 1.2 m
 
-Trial ends when the cart reaches the pulley end or the hanging mass reaches the floor
-(whichever comes first).
+Trial ends when the cart reaches the pulley end or the hanging mass reaches the floor,
+or when sim time reaches 20 s (near-equilibrium cap) -- whichever comes first.
 
 Special cases students can discover:
 
@@ -216,16 +195,147 @@ Fixed-timestep Euler with accumulator pattern:
   times as needed
 - Cap accumulated delta at `dt * 10` to prevent spiral-of-death after tab switching
 
+All sliders and inputs are **locked** while a trial is running. Unlock on Pause or
+Reset. This prevents mid-trial parameter changes that would make recorded t and d
+meaningless.
+
+### Canvas scene
+
+The scene is a 2D canvas that redraws every frame. All coordinates are in world units
+(meters) and transformed to canvas pixels via a fixed scale and margin.
+
+**Static elements (always visible, update when parameters change):**
+
+- **Wall:** vertical line at the left edge with hatch marks -- the track pivot mount.
+- **Track:** line from the pivot pin (lower-left) to the pulley position at angle
+  `theta`. Rotates smoothly when the angle slider changes outside a trial.
+- **Pivot pin:** small filled circle at the track's lower-left anchor.
+- **Pulley:** circle at the upper end of the track with 4--6 spokes. **Rotates** as the
+  string moves during a trial; rotation angle tracks cumulative string displacement.
+- **Cart:** rectangle sitting flush on the track, **rotated to match `theta`**
+  (not axis-aligned). Labeled with the current `M` value (small text, centered).
+- **String:** two segments -- (1) from the cart's uphill face to the pulley center,
+  (2) from the pulley center straight down to the hanging mass. Both segments update
+  every frame as the cart moves.
+- **Hanging mass:** rectangle below the pulley, labeled with current `m` value.
+- **Floor:** horizontal line with hatch marks below the hanging mass. Positioned at the
+  hanging mass's terminal drop position (1.2 m below pulley). Makes the "hits the
+  ground" termination condition visible before the trial starts.
+
+**Dynamic elements (active during and after a trial):**
+
+- **Motion trail:** smooth bezier path (not dots) tracing the cart's position along the
+  track. Drawn with a gradient from transparent to the trail color, fading as it ages.
+  Clears on Reset.
+- **Live readouts overlay:** positioned in the upper-left of the canvas during a trial --
+  elapsed time `t` (s), distance `d` (m), instantaneous velocity `v` (m/s). Updates
+  every frame.
+- **Trial-complete highlight:** when the trial ends, the results panel animates in with
+  a brief fade/scale; the final `a_measured` value counts up over ~0.5 s to draw the
+  eye.
+
+**Hover tooltip (always active):**
+
+When the mouse is within 20 px of the cart or hanging mass, show a small floating
+tooltip with instantaneous physics values:
+
+- Cart: `v = X.XX m/s`, `a = X.XX m/s^2`, `KE = X.XX J`
+- Hanging mass: `v = X.XX m/s` (same magnitude, opposite direction), `KE = X.XX J`
+
+Tooltip disappears when the mouse moves away. Works during a running trial and when
+paused.
+
+### Force diagram overlay (FBD toggle)
+
+A **"Forces" toggle button** above or beside the canvas shows/hides a live free-body
+diagram drawn directly on top of the scene. When active, draw on every frame:
+
+**On the cart:**
+
+| Vector | Direction | Label |
+| ------ | --------- | ----- |
+| Weight component along track | down the slope (negative track direction) | `Mg sin(theta)` |
+| Normal force | perpendicular to track, away from surface | `N = Mg cos(theta)` |
+| Tension | up the slope (toward pulley) | `T` |
+| Net force | along track (up-slope when a > 0) | `F_net` |
+
+**On the hanging mass:**
+
+| Vector | Direction | Label |
+| ------ | --------- | ----- |
+| Weight | straight down | `mg` |
+| Tension | straight up | `T` |
+| Net force | straight down when a > 0 | `F_net` |
+
+Arrow length scales linearly with force magnitude, anchored to the center of each body.
+Use a consistent scale (e.g., 1 N = 8 px) so forces are visually comparable across
+parameter changes. Arrows update every frame so they animate during the trial.
+
+Color code: weight components in one color (e.g., orange), tension in another (e.g.,
+blue), net force in a third (e.g., green). Labels sit at the arrowhead, offset to avoid
+overlap.
+
+At `theta = 0` the along-track weight component vanishes (correct -- no label needed).
+At equilibrium `T = mg = Mg sin(theta)` and `F_net = 0` on both bodies; net force
+arrows collapse to zero length (show as a dot or omit the arrowhead).
+
+The FBD toggle state persists across trials (does not reset on Reset).
+
+### Controls (below the canvas)
+
+- Slider + numeric input for each of `M`, `m`, `theta`. Locked during a running trial;
+  re-enabled on Pause or Reset.
+- **Run / Pause / Reset** buttons.
+  - Run is disabled when `a <= 0`. Show an inline message:
+    "Hanging mass cannot accelerate the cart at this angle."
+  - **Step** button (shown only when paused mid-trial): advance exactly one integrator
+    tick (`dt = 0.01 s`). Lets students watch the graph and readouts update one frame
+    at a time.
+  - Reset clears the trail, resets position to origin, clears the graph, re-enables
+    sliders.
+- **Speed multiplier:** 0.25x / 0.5x / 1x toggle, default 0.5x. Scales the number of
+  integrator steps per frame (not `dt` itself), keeping `a_measured = 2d / t^2`
+  accurate at any speed.
+- **Forces toggle:** show/hide the FBD overlay. Default off.
+
 ### Measurement output (shown after trial completes)
 
 Results panel below the controls:
 
 1. Time elapsed: `t` (s)
 2. Distance traveled by cart: `d` (m)
-3. Measured acceleration (labeled "from your data"): `a_measured = 2d / t^2`
+3. Instantaneous velocity at end: `v_f` (m/s)
+4. Measured acceleration (labeled "from your data"): `a_measured = 2d / t^2`
 
 Do not show theoretical acceleration here. It appears in the data table only after the
 student has typed their percent error -- preserving the prediction-and-compare loop.
+
+### Live graphs
+
+Two stacked mini-plots rendered on a second canvas (or with SVG) directly below the
+results panel. Both update every frame during a trial and persist after completion.
+Clear on Reset.
+
+**Plot 1 -- Position vs. time:**
+
+- x-axis: time (s), auto-scales to current trial duration, max 20 s
+- y-axis: cart displacement along track (m), 0 to 1.5 m
+- Curve: smooth line, drawn point-by-point as the trial runs
+- After trial: curve is complete and static; a dashed line marks the terminal position
+- Visual note: the parabolic shape is the geometric proof of `d = at^2 / 2`; label the
+  curve "x(t)" in the plot legend
+
+**Plot 2 -- Velocity vs. time:**
+
+- x-axis: same time axis as Plot 1 (synchronized scale)
+- y-axis: speed (m/s), 0 to v_max (auto-scales after first frame)
+- Curve: smooth line; should appear linear -- slope = a
+- After trial: add a dashed best-fit line and label its slope as `slope = a_measured`
+  (computed from the final a_measured value, not a separate regression)
+- Visual note: the linear slope is the direct visual confirmation that a is constant
+
+Both plots share an x-axis scale so time alignment is obvious. Grid lines at round
+intervals. Axis labels and units shown. No interactive zoom needed.
 
 ### Accessibility
 
@@ -235,7 +345,9 @@ student has typed their percent error -- preserving the prediction-and-compare l
 - A visually-hidden `<div aria-live="polite">` summarizes current parameters for screen
   readers, updated on each parameter change.
 - Respects `prefers-reduced-motion`: skip to end-state immediately on Run,
-  show final readouts without animation.
+  show final readouts and complete graphs without animation.
+- Force vectors in the FBD use both color and label (not color alone) for
+  accessibility.
 
 ### Telemetry
 
