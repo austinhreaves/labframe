@@ -18,6 +18,11 @@ making non-trivial product changes. Architecture overview: `docs/ARCHITECTURE.md
   `exactOptionalPropertyTypes` is set in `tsconfig.app.json` / `tsconfig.api.json` only,
   so a flat `tsc` invocation will not reproduce CI's results.
 - Node is pinned to 22.x (`.nvmrc`); run `nvm use` if versions drift.
+- **`npm run ci` checks your working tree, not your commit.** `tsc -b` is incremental and
+  typechecks working-tree files, so `npm run ci` can pass while the committed tree fails to
+  build (for example a file left out of `git add`). Vercel deploys with `npm run build` (full
+  type-check + Vite build). Run `npm run build` before pushing, and stage by reviewing
+  `git status` rather than a hand-typed file list.
 
 ## Commands
 
