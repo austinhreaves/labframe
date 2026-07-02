@@ -38,9 +38,9 @@ after the deploy requests a now-404 file, and the dynamic `import()` rejects wit
 "Failed to fetch dynamically imported module."
 
 **Why "save draft" also failing is confirming evidence, not a second bug.** The signed path
-depends on both the render chunk *and* the `/api/sign` network call
+depends on both the render chunk _and_ the `/api/sign` network call
 ([`sign.ts`](../../src/services/integrity/sign.ts)); the draft path depends only on the
-render chunk. Since *both* failed, the shared dependency (the chunk) is implicated and the
+render chunk. Since _both_ failed, the shared dependency (the chunk) is implicated and the
 signing endpoint is exonerated. `sign.ts` already has thorough status handling
 (400/413/500/network → specific messages).
 
@@ -51,9 +51,10 @@ The original `downloadBlob` in `LabPage.tsx` did:
 ```ts
 const url = URL.createObjectURL(blob);
 const anchor = document.createElement('a');
-anchor.href = url; anchor.download = filename;
+anchor.href = url;
+anchor.download = filename;
 anchor.click();
-URL.revokeObjectURL(url);   // synchronous — races the browser reading the blob URL
+URL.revokeObjectURL(url); // synchronous — races the browser reading the blob URL
 ```
 
 Two defects: (a) the anchor is never attached to the DOM (some browsers ignore a
@@ -95,6 +96,7 @@ The fix is to collect the name up front instead.
 ## 3. Changes made
 
 ### 3.1 Stale-deploy self-heal
+
 - **New** [`src/services/app/installPreloadErrorReload.ts`](../../src/services/app/installPreloadErrorReload.ts):
   listens for Vite's `vite:preloadError`, `preventDefault()`s it, and performs a one-shot
   reload guarded by a `sessionStorage` sentinel (cleared on successful `load`) to prevent
@@ -102,10 +104,12 @@ The fix is to collect the name up front instead.
 - **Wired** in [`src/main.tsx`](../../src/main.tsx) after `installGlobalTelemetryHandlers()`.
 
 ### 3.2 `downloadBlob` hardening
+
 - [`LabPage.tsx`](../../src/ui/LabPage.tsx) `downloadBlob`: append anchor to `document.body`,
   `click()`, `removeChild`, and defer `URL.revokeObjectURL` via `setTimeout(…, 0)`.
 
 ### 3.3 Student-name gate
+
 - **New** [`src/ui/StudentNameGateDialog.tsx`](../../src/ui/StudentNameGateDialog.tsx):
   blocking, focus-trapped modal (`role="dialog"`, `aria-modal`, `aria-labelledby`,
   `role="alert"` error, no Escape/backdrop/cancel). Validates with
@@ -118,6 +122,7 @@ The fix is to collect the name up front instead.
 - CSS in [`main.css`](../../src/main.css) (`.student-name-gate-label`, `.student-name-gate-error`).
 
 ### 3.4 Test changes
+
 - **New** [`tests/e2e/studentNameGate.spec.ts`](../../tests/e2e/studentNameGate.spec.ts):
   gate blocks fresh load; rejects empty and `"Student"`; accepts a real name and lands it on
   the header field; `?student=` skips the gate; axe pass on the open gate. Uses an inline
@@ -134,14 +139,16 @@ The fix is to collect the name up front instead.
   while the first-timer toast still shows (that test intentionally omits the onboarded flag).
 
 ### 3.5 Bug found and fixed during verification
+
 The first `needsStudentName` implementation used
 `const candidate = studentName.trim() || paramStudent || storedStudent`. Because the default
 `studentName` is the `"Student"` placeholder (truthy), it short-circuited and never consulted
-the stored/param name — so the gate would wrongly appear for students who *did* have a valid
+the stored/param name — so the gate would wrongly appear for students who _did_ have a valid
 saved or deep-linked name. Fixed to: a name is "known" if **any** source passes
 `validateStudentInfoForPdf`. Confirmed fixed in-browser.
 
 ## 4. Verification performed
+
 - **Typecheck:** clean on all changed source (the only `tsc` errors are pre-existing:
   `fast-check` is not installed in this worktree, breaking two unrelated property tests).
 - **Lint:** `eslint --max-warnings 0` clean on all changed `.ts/.tsx`.
@@ -160,6 +167,7 @@ saved or deep-linked name. Fixed to: a name is "known" if **any** source passes
   the committed config correctly.
 
 ## 5. Known pre-existing issue (not caused by this work)
+
 `tests/e2e/onboarding.spec.ts` "first run shows the splash and Skip tutorial reveals the
 catalog" fails on this machine (asserts the `/` hero heading count is 0 during first run;
 gets 1). It failed identically against the untouched main-checkout server before any of this
@@ -167,6 +175,7 @@ session's code was loaded, and this work does not touch the splash/catalog. Cons
 the known local e2e flakiness on this machine. Left alone.
 
 ## 6. Environment notes for the next agent
+
 - `.claude/launch.json` is **gitignored**. This session added a local `dev` config on port
   **5273** (the worktree server) because 5173 is held by the main checkout. Not committed.
 - Run PowerShell via `Bash` calling `pwsh -NoProfile -Command '...'`; the `PowerShell` tool
@@ -178,6 +187,7 @@ the known local e2e flakiness on this machine. Left alone.
 ## 7. HANDOFF — for a follow-up agent
 
 ### Task A: independently verify the problems were real and are solved
+
 1. **Confirm the stale-deploy failure mode.** Inspect the two export handlers and
    `render.tsx`; confirm the render pipeline is loaded via dynamic `import()` and that
    Vercel/Vite content-hash chunk names such that an old client 404s post-deploy. Confirm
@@ -197,8 +207,10 @@ the known local e2e flakiness on this machine. Left alone.
    `npm run lint`. Treat the §5 splash test as pre-existing unless proven otherwise.
 
 ### Task B: broaden the review — hunt for any other way a student loses work or cannot export
+
 Run `/code-review` (or a focused manual audit) over the work-loss / export surface. Suggested
 scope and specific things to probe:
+
 - **Export pipeline:** `src/ui/LabPage.tsx` (`exportPdf`, `exportDraftPdf`, `downloadBlob`),
   `src/services/pdf/*` (`render.tsx`, `Document.tsx`, `registerFonts.ts`, `collectImageData`,
   `collectDrawImages`), `src/services/integrity/{sign,canonicalize}.ts`, `api/sign.ts`,
